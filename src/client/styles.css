@@ -900,3 +900,27 @@
   color: var(--g-muted);
   margin-right: 10px;
 }
+
+.gal-identity {
+  position: relative;
+  margin: 48px auto;
+  max-width: 580px;
+  width: 100%;
+}
+.gal-identity form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.gal-identity label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+.gal-identity input {
+  width: 100%;
+}
+.gal-identity .gal-primary {
+  align-self: flex-start;
+}

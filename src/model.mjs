@@ -27,7 +27,7 @@ export function revision(value) {
     Number.isSafeInteger(value) && value > 0,
     400,
     "INVALID_REVISION",
-    "需要有效的草稿 revision / 版本号",
+    "需要有效的修改校验值 revision",
   );
   return value;
 }
@@ -72,6 +72,12 @@ export function normalizeResource(input) {
   const paths = new Set();
   const normalizedFiles = files
     .map((f) => {
+      demand(
+        f && typeof f === "object",
+        400,
+        "INVALID_FILES",
+        "文件必须为对象",
+      );
       const path = text(f.path, "文件路径", 500);
       demand(
         !path.startsWith("/") &&
@@ -132,12 +138,27 @@ export function normalizeResource(input) {
     "INVALID_REFERENCES",
     "最多 100 个资源引用",
   );
-  const refs = references.map((r) => ({
-    id: text(r.id, "引用 ID", 100),
-    version: revision(r.version),
-  }));
+  const refs = references.map((r) => {
+    demand(
+      r && typeof r === "object",
+      400,
+      "INVALID_REFERENCES",
+      "引用必须为对象",
+    );
+    if (r.digest !== undefined)
+      demand(
+        typeof r.digest === "string" && /^[a-f0-9]{64}$/.test(r.digest),
+        400,
+        "INVALID_REFERENCES",
+        "内容摘要必须为 SHA-256 十六进制字符串",
+      );
+    return {
+      id: text(r.id, "引用 ID", 100),
+      ...(r.digest ? { digest: r.digest } : {}),
+    };
+  });
   demand(
-    new Set(refs.map((r) => `${r.id}@${r.version}`)).size === refs.length,
+    new Set(refs.map((r) => r.id)).size === refs.length,
     400,
     "INVALID_REFERENCES",
     "资源引用重复",

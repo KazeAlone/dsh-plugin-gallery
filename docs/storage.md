@@ -1,33 +1,23 @@
-# 单用户存储契约 · schema v2
+# 共享服务存储
 
-`SqliteGalleryStore` 管理本地资源，宿主通过存储接口调用它，浏览器没有 SQL 或文件系统访问能力。
+浏览器 → DSH owner RPC → Host SDK → 共享 HTTP 服务 → 存储适配器。每个 DSH 只保存服务地址与已验证凭证，资源集中在服务端数据库。
 
-接口：
+`SqliteGalleryStore` 是首版适配器，Node >=24.9，WAL、busy timeout、事务写入。资源存储契约：`list(principal,query)`、`get(principal,id)`、`create(principal,input)`、`update(principal,id,input,expectedRevision)`。身份来自可信服务端提供器，不能直接使用请求体身份。
 
-- `list(query)`、`create(payload)`、`get(id)`、`update(id,payload,expectedRevision)`。
-- `publish(id,expectedRevision,note)`、`versions(id)`、`getVersion(id,version)`、`rollback(id,version,expectedRevision)`。
-- `close()`。
+不变量：
 
-这些方法不再接受成员身份。`GalleryReader` 可包装同步或异步适配器；宿主写入操作也会等待返回结果。
+1. 所有读写均按 principal.tenantId 过滤。默认团队使用 default 空间。
+2. 创建时所有者由 principal 派生，忽略请求中的 owner、subject、tenantId。
+3. 修改必须匹配 issuer、subject、tenantId；姓名不参与授权。
+4. 修改校验 revision，并在同一事务更新内容、摘要、修改时间与审计事件。revision 不提供历史恢复。
+5. 无主旧资源只读，只能由本机维护命令核实并一次性分配给已存在身份。
 
-## 不变量
+schema v3：resources 保存当前 payload、digest、revision、归属与时间；settings 保存稳定签发方 issuer；identities 保存接入身份；enrollment_codes 与 credentials 只保存随机秘密的 SHA-256 摘要；resource_audit 保存资源操作的身份主键，不记录凭证。
 
-1. 草稿可直接查看与修改。多窗口写入必须比较 revision，不静默覆盖旧编辑。
-2. 发布快照、摘要和版本号不可变。版本生成、发布指针更新、资源审计事件属于同一事务。
-3. 回滚生成新草稿，不改写发布历史。
-4. 发布时必须存在所有固定依赖版本。
-5. 服务边界校验文件路径、文件数量、大小及资源类型。
+维护者 `issueCode`、`assignUnowned` 不属于公开 HTTP/浏览器接口。一次性码兑换及凭证轮换用 BEGIN IMMEDIATE，恢复保留 subject 并撤销旧凭证；相同 subject 的其他接入码一并作废。码只应通过可信渠道发给对应成员，分发码本身是首版的身份信任根。
 
-## v1 → v2
+旧库迁移先用 VACUUM INTO 生成独立 0600 备份，再在事务内把原表重命名为 legacy_resources / legacy_versions / legacy_audit 等档案，从当前 draft 字段复制资源至新表。旧引用转换为 ID 引用；历史版本不再对外提供。旧归属不可信时不自动继承。单独的 import-local 使用 SQLite backup 读取原库一致快照，包含 WAL，并以独占链接落地，拒绝覆盖目标库。
 
-v2 只有 resources、versions、audit 三张业务表，没有成员、令牌或资源所有者字段。
+备份应使用 SQLite backup 或停止服务后复制完整库，避免只复制打开状态下的主文件漏掉 WAL。迁移备份与 legacy_* 表仍包含旧数据，应按团队保留政策保护，不会因移除版本界面自动清理。
 
-默认本地库不存在时，`openGalleryStore` 用 Node SQLite backup 复制旧 service DB 的一致快照（包含 WAL 中提交的数据），通过独占链接落到新路径。已有本地库不会被覆盖。原 service DB 保留。
-
-打开旧格式库时，在执行迁移前用 `VACUUM INTO` 保存独立备份；然后在一个事务内复制资源、版本和资源审计记录，删除旧表，重命名新表，设置 user_version=2。资源 ID、草稿 revision、时间戳、快照文本和 digest 保持原样；成员相关审计记录不迁入新库。
-
-若迁移事务失败则回滚。新版号大于 2 的数据库拒绝打开，避免旧插件改写新格式。数据库及备份文件使用 0600 权限。
-
-迁移后备份和原数据库仍可能包含旧成员数据，仅供恢复保留，不参与当前资源操作。清理这些备份应由操作者在确认升级后自行决定。
-
-以后更换存储需要迁移资源 ID、草稿 revision、版本快照、摘要与审计记录，并保持上述不变量；消费插件读取契约可保持不变。
+将来替换为数据库服务时，保持资源 ID、principal 归属、revision 并发语义、摘要算法和 HTTP 契约。认证码与凭证存储也需要迁移或替换；这不是仅修改一个连接字符串，但不应要求改动资源页与编排插件的读取接口。

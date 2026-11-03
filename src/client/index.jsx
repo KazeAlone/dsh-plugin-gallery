@@ -61,12 +61,13 @@ function Gallery({ remote }) {
     [offset, setOffset] = useState(0),
     [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null),
-    [versions, setVersions] = useState([]),
-    [editor, setEditor] = useState(null),
-    [tab, setTab] = useState("content"),
-    [publishNote, setPublishNote] = useState("");
-  const [reference, setReference] = useState(""),
-    [viewedVersion, setViewedVersion] = useState(null);
+    [editor, setEditor] = useState(null);
+  const [reference, setReference] = useState("");
+  const [identityForm, setIdentityForm] = useState({
+    displayName: "",
+    code: "",
+    serverUrl: "http://127.0.0.1:4318",
+  });
   const [confirmation, setConfirmation] = useState(null);
   const confirmAction = (message) =>
     new Promise((resolve) => setConfirmation({ message, resolve }));
@@ -93,6 +94,7 @@ function Gallery({ remote }) {
       .then((x) => {
         if (live) {
           setStatus(x);
+          setIdentityForm((f) => ({ ...f, serverUrl: x.url }));
         }
       })
       .catch((e) => {
@@ -129,21 +131,15 @@ function Gallery({ remote }) {
     };
   }, [status?.ready, type, scope, q, offset, refresh]);
   async function load(id) {
-    const [r, v] = await Promise.all([
-      call(remote, "uiGet", id),
-      call(remote, "uiVersions", id),
-    ]);
+    const r = await call(remote, "uiGet", id);
     setSelected(r);
-    setVersions(v.items);
-    setTab("content");
     setReference("");
-    setViewedVersion(null);
     return r;
   }
   function edit(r) {
     setNotice("");
     setError("");
-    const d = r?.draft || blank();
+    const d = r || blank();
     setEditor({
       id: r?.id,
       revision: r?.revision,
@@ -174,7 +170,7 @@ function Gallery({ remote }) {
         } catch {}
         if (
           bundle?.format === "dsh-gallery-resource" &&
-          bundle.schemaVersion === 1 &&
+          [1, 2].includes(bundle.schemaVersion) &&
           bundle.resource
         ) {
           const r = bundle.resource;
@@ -254,11 +250,9 @@ function Gallery({ remote }) {
     setEditor(null);
     await load(r.id);
     setRefresh((x) => x + 1);
-    setNotice("草稿已保存，检查后可发布为固定版本。");
+    setNotice("资源已保存，团队成员现在可以使用。");
   }
-  const snapshot = viewedVersion || selected?.published;
-  const content =
-    viewedVersion?.resource || selected?.draft || selected?.published?.resource;
+  const content = selected;
   const activeFile = editor?.resource.files[editor.fileIndex];
   const chooseFilter = (t) => {
     setType(t);
@@ -269,13 +263,36 @@ function Gallery({ remote }) {
       <header className="gal-header">
         <div>
           <div className="gal-eyebrow">
-            RESOURCE LIBRARY <span>PREVIEW · 0.2</span>
+            RESOURCE LIBRARY <span>PREVIEW · 0.3</span>
           </div>
           <h1>资源 Gallery</h1>
           <p>收集可复用资源，让每次编排都有积累。</p>
         </div>
         <div className="gal-header-actions">
-          <span className="gal-local">本地资源库</span>
+          <span className="gal-local">
+            {status?.identity?.displayName || "共享资源库"}
+          </span>
+          {status?.ready && (
+            <button
+              disabled={busy}
+              onClick={() =>
+                run(async () => {
+                  if (
+                    await confirmAction(
+                      "退出当前身份？重新接入需要维护者提供的接入码。",
+                    )
+                  ) {
+                    setStatus(await call(remote, "uiClearIdentity"));
+                    setSelected(null);
+                    setEditor(null);
+                    setItems([]);
+                  }
+                })
+              }
+            >
+              退出身份
+            </button>
+          )}
           <button
             className="gal-primary"
             disabled={!status?.ready}
@@ -302,11 +319,93 @@ function Gallery({ remote }) {
         </div>
       )}
       {!status?.ready ? (
-        <div className="gal-empty">
-          {error
-            ? "资源库暂时不可用，请检查提示后刷新。"
-            : "正在打开本地资源库…"}
-        </div>
+        <section
+          className="gal-identity gal-dialog"
+          aria-label="接入共享资源库"
+        >
+          <div className="gal-dialog-head">
+            <div>
+              <h2>接入共享资源库</h2>
+              <p>填写姓名和维护者提供的一次性接入码。</p>
+            </div>
+          </div>
+          {!status ? (
+            <p className="gal-hint">正在检查身份…</p>
+          ) : (
+            <form
+              className="gal-dialog-body"
+              onSubmit={(e) => {
+                e.preventDefault();
+                run(async () => {
+                  const next = await call(
+                    remote,
+                    "uiEnroll",
+                    json(identityForm),
+                  );
+                  setStatus(next);
+                  setIdentityForm((f) => ({ ...f, code: "" }));
+                  setRefresh((x) => x + 1);
+                });
+              }}
+            >
+              {status.error && (
+                <p role="alert" className="gal-hint">
+                  {status.error}
+                </p>
+              )}
+              <label>
+                共享服务地址
+                <input
+                  required
+                  aria-label="共享服务地址"
+                  value={identityForm.serverUrl}
+                  disabled={status.serverLocked || busy}
+                  onChange={(e) =>
+                    setIdentityForm((f) => ({
+                      ...f,
+                      serverUrl: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                姓名
+                <input
+                  required
+                  maxLength={100}
+                  autoComplete="name"
+                  aria-label="姓名"
+                  value={identityForm.displayName}
+                  onChange={(e) =>
+                    setIdentityForm((f) => ({
+                      ...f,
+                      displayName: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label>
+                一次性接入码
+                <input
+                  required
+                  type="password"
+                  autoComplete="off"
+                  aria-label="一次性接入码"
+                  value={identityForm.code}
+                  onChange={(e) =>
+                    setIdentityForm((f) => ({ ...f, code: e.target.value }))
+                  }
+                />
+              </label>
+              <p className="gal-hint">
+                资源保存即共享；只有上传者可以编辑。身份验证后会保存在这台电脑上。
+              </p>
+              <button className="gal-primary" disabled={busy} type="submit">
+                {busy ? "验证中…" : "验证身份并进入"}
+              </button>
+            </form>
+          )}
+        </section>
       ) : (
         <>
           <div className="gal-type-grid">
@@ -344,22 +443,13 @@ function Gallery({ remote }) {
                 全部资源
               </button>
               <button
-                className={scope === "drafts" ? "active" : ""}
+                className={scope === "mine" ? "active" : ""}
                 onClick={() => {
-                  setScope("drafts");
+                  setScope("mine");
                   setOffset(0);
                 }}
               >
-                草稿
-              </button>
-              <button
-                className={scope === "published" ? "active" : ""}
-                onClick={() => {
-                  setScope("published");
-                  setOffset(0);
-                }}
-              >
-                已发布
+                我的资源
               </button>
             </div>
             <input
@@ -418,8 +508,7 @@ function Gallery({ remote }) {
                       {TYPES[r.type]}
                     </span>
                     <span className="gal-version">
-                      {r.latestVersion ? `v${r.latestVersion}` : "未发布"}
-                      {r.hasDraft ? " · 草稿" : ""}
+                      {r.owner?.displayName || "归属待确认"}
                     </span>
                   </div>
                   <h3>{r.name}</h3>
@@ -457,7 +546,7 @@ function Gallery({ remote }) {
             </div>
           )}
           <footer className="gal-bottom">
-            <span>本地保存 · 使用固定版本引用资源</span>
+            <span>团队共享 · 保存后即可使用</span>
             <span>Skill · Agent · MCP · Workflow</span>
           </footer>
         </>
@@ -477,10 +566,8 @@ function Gallery({ remote }) {
                 </span>
                 <h2>{content.name}</h2>
                 <p>
-                  {selected.latestVersion
-                    ? `最新发布 v${selected.latestVersion}`
-                    : "尚未发布"}
-                  {selected.hasDraft ? " · 有草稿修改" : ""}
+                  {selected.owner?.displayName || "归属待确认"} · 更新于{" "}
+                  {when(selected.updatedAt)}
                 </p>
               </div>
               <button aria-label="关闭详情" onClick={() => setSelected(null)}>
@@ -488,254 +575,96 @@ function Gallery({ remote }) {
               </button>
             </div>
             <div className="gal-detail-actions">
-              {selected && (
-                <button onClick={() => edit(selected)}>编辑草稿</button>
+              {selected.canEdit && (
+                <button onClick={() => edit(selected)}>编辑资源</button>
               )}
-              {selected.published && (
-                <>
-                  <button
-                    onClick={() =>
-                      download(
-                        `${content.name}.gallery.json`,
-                        json(
-                          {
-                            format: "dsh-gallery-resource",
-                            schemaVersion: 1,
-                            resource: snapshot.resource,
-                            source: {
-                              id: selected.id,
-                              version: snapshot.version,
-                              digest: snapshot.digest,
-                            },
-                          },
-                          null,
-                          2,
-                        ),
-                      )
-                    }
-                  >
-                    下载 v{snapshot.version}
-                  </button>
-                  <button
-                    onClick={() =>
-                      setReference(
-                        json(
-                          {
-                            id: selected.id,
-                            version: snapshot.version,
-                            digest: snapshot.digest,
-                          },
-                          null,
-                          2,
-                        ),
-                      )
-                    }
-                  >
-                    获取引用
-                  </button>
-                </>
-              )}
-            </div>
-            {reference && (
-              <label className="gal-reference">
-                供编排插件使用的固定版本引用
-                <textarea readOnly rows={5} value={reference} />
-              </label>
-            )}
-            <div className="gal-scopes gal-detail-tabs">
               <button
-                className={tab === "content" ? "active" : ""}
-                onClick={() => setTab("content")}
-              >
-                资源内容
-              </button>
-              <button
-                className={tab === "versions" ? "active" : ""}
-                onClick={() => setTab("versions")}
-              >
-                版本历史 ({versions.length})
-              </button>
-            </div>
-            <div className="gal-dialog-body">
-              {tab === "content" ? (
-                <>
-                  {viewedVersion && (
-                    <p className="gal-hint">
-                      正在查看不可变历史版本 v{viewedVersion.version}。
-                    </p>
-                  )}
-                  <p className="gal-description">
-                    {content.description || "暂无描述"}
-                  </p>
-                  <div className="gal-tags">
-                    {content.tags.map((t) => (
-                      <span key={t}>{t}</span>
-                    ))}
-                  </div>
-                  {selected.hasDraft && (
-                    <p className="gal-hint">
-                      正在查看草稿。发布后可通过固定版本引用使用。
-                    </p>
-                  )}
-                  {content.files.map((f) => (
-                    <details className="gal-file" key={f.path}>
-                      <summary>
-                        {f.path}
-                        <span>
-                          {f.encoding === "base64" ? "二进制 · " : ""}
-                          {(
-                            f.bytes ?? new Blob([f.content]).size
-                          ).toLocaleString()}{" "}
-                          B
-                        </span>
-                      </summary>
-                      {f.encoding === "utf8" ? (
-                        <pre>{f.content}</pre>
-                      ) : (
-                        <p>二进制附件包含在下载的资源包中。</p>
-                      )}
-                    </details>
-                  ))}
-                  {!content.files.length && (
-                    <p className="gal-hint">尚未添加文件，请编辑草稿后上传。</p>
-                  )}
-                  <details className="gal-file">
-                    <summary>元数据与依赖</summary>
-                    <pre>
-                      {json(
-                        {
+                onClick={() =>
+                  download(
+                    `${content.name}.gallery.json`,
+                    json(
+                      {
+                        format: "dsh-gallery-resource",
+                        schemaVersion: 2,
+                        resource: {
+                          type: content.type,
+                          name: content.name,
+                          description: content.description,
+                          tags: content.tags,
+                          files: content.files,
                           metadata: content.metadata,
                           references: content.references,
                         },
-                        null,
-                        2,
-                      )}
-                    </pre>
-                  </details>
-                </>
-              ) : versions.length === 0 ? (
-                <p className="gal-hint">尚无发布版本。</p>
-              ) : (
-                versions.map((v) => (
-                  <div className="gal-history" key={v.version}>
-                    <div>
-                      <strong>v{v.version}</strong>
-                      <small>{when(v.createdAt)}</small>
-                      <p>{v.note || "未填写版本说明"}</p>
-                      <code title={v.digest}>
-                        SHA-256 {v.digest.slice(0, 16)}…
-                      </code>
-                    </div>
-                    <div>
-                      <button
-                        disabled={busy}
-                        onClick={() =>
-                          run(async () => {
-                            setReference(
-                              json(
-                                {
-                                  id: selected.id,
-                                  version: v.version,
-                                  digest: v.digest,
-                                },
-                                null,
-                                2,
-                              ),
-                            );
-                          })
-                        }
-                      >
-                        获取引用
-                      </button>
-                      <button
-                        disabled={busy}
-                        onClick={() =>
-                          run(async () => {
-                            setViewedVersion(
-                              await call(
-                                remote,
-                                "uiReadVersion",
-                                selected.id,
-                                json({ version: v.version }),
-                              ),
-                            );
-                            setTab("content");
-                          })
-                        }
-                      >
-                        查看内容
-                      </button>
-                      {selected && (
-                        <button
-                          disabled={busy}
-                          onClick={async () => {
-                            if (
-                              await confirmAction(
-                                `将 v${v.version} 恢复为新草稿？当前已保存草稿会被替换，发布历史保留。`,
-                              )
-                            )
-                              run(async () => {
-                                await call(
-                                  remote,
-                                  "uiRollback",
-                                  selected.id,
-                                  json({
-                                    version: v.version,
-                                    expectedRevision: selected.revision,
-                                  }),
-                                );
-                                await load(selected.id);
-                                setRefresh((x) => x + 1);
-                                setNotice(
-                                  `已将 v${v.version} 恢复为草稿，请检查后重新发布。`,
-                                );
-                              });
-                          }}
-                        >
-                          恢复为草稿
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
+                        source: { id: selected.id, digest: selected.digest },
+                      },
+                      null,
+                      2,
+                    ),
+                  )
+                }
+              >
+                下载资源
+              </button>
+              <button
+                onClick={() =>
+                  setReference(
+                    json({ id: selected.id, digest: selected.digest }, null, 2),
+                  )
+                }
+              >
+                获取引用
+              </button>
             </div>
-            {selected.hasDraft && (
-              <div className="gal-publish-bar">
-                <input
-                  aria-label="版本说明"
-                  placeholder="版本说明，例如：新增检查步骤"
-                  value={publishNote}
-                  onChange={(e) => setPublishNote(e.target.value)}
-                  maxLength={2000}
-                />
-                <button
-                  className="gal-primary"
-                  disabled={busy}
-                  onClick={() =>
-                    run(async () => {
-                      const v = await call(
-                        remote,
-                        "uiPublish",
-                        selected.id,
-                        json({
-                          expectedRevision: selected.revision,
-                          note: publishNote,
-                        }),
-                      );
-                      await load(selected.id);
-                      setPublishNote("");
-                      setRefresh((x) => x + 1);
-                      setNotice(`v${v.version} 已发布，可供编排插件引用。`);
-                    })
-                  }
-                >
-                  {busy
-                    ? "处理中…"
-                    : `发布 v${(selected.latestVersion ?? 0) + 1}`}
-                </button>
-              </div>
+            {reference && (
+              <label className="gal-reference">
+                供编排插件使用的资源引用
+                <textarea readOnly rows={4} value={reference} />
+                <small>摘要用于检测内容变化。编排运行时可保存内容快照。</small>
+              </label>
             )}
+            <div className="gal-dialog-body">
+              {!selected.canEdit && (
+                <p className="gal-hint">
+                  {selected.owner
+                    ? "由其他成员上传，可查看、下载和引用。"
+                    : "旧资源归属待维护者确认，当前仅可查看和使用。"}
+                </p>
+              )}
+              <p className="gal-description">
+                {content.description || "暂无描述"}
+              </p>
+              <div className="gal-tags">
+                {content.tags.map((t) => (
+                  <span key={t}>{t}</span>
+                ))}
+              </div>
+              {content.files.map((f) => (
+                <details className="gal-file" key={f.path}>
+                  <summary>
+                    {f.path}
+                    <span>{f.bytes ?? new Blob([f.content]).size} B</span>
+                  </summary>
+                  {f.encoding === "utf8" ? (
+                    <pre>{f.content}</pre>
+                  ) : (
+                    <p>二进制附件包含在下载的资源包中。</p>
+                  )}
+                </details>
+              ))}
+              <details className="gal-file">
+                <summary>元数据与依赖</summary>
+                <pre>
+                  {json(
+                    {
+                      metadata: content.metadata,
+                      references: content.references,
+                    },
+                    null,
+                    2,
+                  )}
+                </pre>
+              </details>
+            </div>
           </section>
         </div>
       )}
@@ -749,8 +678,8 @@ function Gallery({ remote }) {
           >
             <div className="gal-dialog-head">
               <div>
-                <div className="gal-eyebrow">RESOURCE DRAFT</div>
-                <h2>{editor.id ? "编辑草稿" : "创建资源"}</h2>
+                <div className="gal-eyebrow">RESOURCE EDITOR</div>
+                <h2>{editor.id ? "编辑资源" : "创建资源"}</h2>
                 <p>支持上传文件、文件夹或 Gallery 导出的 JSON 资源包。</p>
               </div>
               <button
@@ -953,8 +882,8 @@ function Gallery({ remote }) {
                   />
                 </label>
                 <label>
-                  固定版本依赖（JSON 数组，例如{" "}
-                  {'[{"id":"资源ID","version":1}]'}）
+                  资源依赖（JSON 数组，例如{" "}
+                  {'[{"id":"资源ID","digest":"SHA-256"}]'}）
                   <textarea
                     rows={5}
                     value={editor.references}
@@ -968,13 +897,13 @@ function Gallery({ remote }) {
               </details>
             </div>
             <footer className="gal-dialog-footer">
-              <span>草稿保存在本地，发布后生成不可变版本</span>
+              <span>保存后立即共享，只有你可以编辑</span>
               <button
                 className="gal-primary"
                 disabled={busy}
                 onClick={() => run(save)}
               >
-                {busy ? "保存中…" : "保存草稿"}
+                {busy ? "保存中…" : "保存并共享"}
               </button>
             </footer>
           </section>

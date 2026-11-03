@@ -1,14 +1,16 @@
 {
   "name": "dsh-plugin-gallery",
-  "version": "0.2.0",
-  "description": "Local resource gallery for DSH: skills, agents, MCP and workflows",
+  "version": "0.3.0",
+  "description": "Shared DSH resource gallery with verified identities and owner-only editing",
   "type": "module",
   "main": "./src/host.mjs",
   "exports": {
     ".": "./src/host.mjs",
     "./client": "./dist/client.js",
-    "./sdk": "./src/reader.mjs",
-    "./storage": "./src/store.mjs"
+    "./sdk": "./src/client-api.mjs",
+    "./storage": "./src/store.mjs",
+    "./identity": "./src/identity.mjs",
+    "./server": "./src/server.mjs"
   },
   "files": [
     "src",
@@ -75,5 +77,8 @@
   "homepage": "https://github.com/KazeAlone/dsh-plugin-gallery#readme",
   "bugs": {
     "url": "https://github.com/KazeAlone/dsh-plugin-gallery/issues"
+  },
+  "bin": {
+    "dsh-gallery": "./scripts/gallery.mjs"
   }
 }

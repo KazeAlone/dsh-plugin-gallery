@@ -25,10 +25,8 @@ const methods = {
   uiGet: ["id"],
   uiCreate: ["payload"],
   uiUpdate: ["id", "payload"],
-  uiPublish: ["id", "payload"],
-  uiVersions: ["id"],
-  uiReadVersion: ["id", "payload"],
-  uiRollback: ["id", "payload"],
+  uiEnroll: ["payload"],
+  uiClearIdentity: [],
 };
 export const DESCRIPTORS = Object.entries(methods).map(([method, names]) => ({
   id: `dsh-plugin-gallery#gallery/${method}`,
