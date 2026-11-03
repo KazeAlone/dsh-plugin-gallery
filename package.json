@@ -1,0 +1,85 @@
+{
+  "name": "dsh-plugin-gallery",
+  "version": "0.1.0",
+  "description": "Team resource gallery for DSH: skills, agents, MCP and workflows",
+  "type": "module",
+  "main": "./src/host.mjs",
+  "exports": {
+    ".": "./src/host.mjs",
+    "./client": "./dist/client.js",
+    "./sdk": "./src/client-api.mjs",
+    "./storage": "./src/store.mjs"
+  },
+  "bin": {
+    "dsh-gallery-server": "./src/server.mjs",
+    "dsh-gallery-admin": "./scripts/admin.mjs"
+  },
+  "files": [
+    "src",
+    "dist",
+    "scripts",
+    "docs",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "Dockerfile"
+  ],
+  "engines": {
+    "node": ">=24.9.0",
+    "dsh": "0.2.1-rc.5"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-modules",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ],
+      "immediately": false
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.5",
+    "react": ">=18 <20"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-typert-protocol": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "prettier": "3.6.2",
+    "react": "18.3.1"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node scripts/check.mjs",
+    "start": "node src/server.mjs",
+    "prepack": "npm run build && npm run check && npm test",
+    "format": "prettier --write src scripts test"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KazeAlone/dsh-plugin-gallery.git"
+  },
+  "homepage": "https://github.com/KazeAlone/dsh-plugin-gallery#readme",
+  "bugs": {
+    "url": "https://github.com/KazeAlone/dsh-plugin-gallery/issues"
+  }
+}

@@ -1,0 +1,3 @@
+- insert:
+    - id: gallery-host
+      name: dsh-plugin-gallery
