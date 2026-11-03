@@ -1,25 +1,33 @@
-# Storage adapter contract
+# 单用户存储契约 · schema v2
 
-The HTTP server receives a store instance (`createGalleryServer(store)`), rather than opening SQLite itself. Browser and DSH integration consume HTTP/SDK and have no SQL dependencies.
+`SqliteGalleryStore` 管理本地资源，宿主通过存储接口调用它，浏览器没有 SQL 或文件系统访问能力。
 
-Required operations:
+接口：
 
-- Authentication/members: `authenticate(token)`, `bootstrap(name)`, `listMembers(actor)`, `addMember(actor,input)`, `rotateMember(actor,id,active)`.
-- Resources: `list(actor,query)`, `create(actor,input)`, `get(actor,id)`, `update(actor,id,payload,expectedRevision)`.
-- Versions: `publish(actor,id,expectedRevision,note)`, `versions(actor,id)`, `getVersion(actor,id,version)`, `rollback(actor,id,version,expectedRevision)`.
-- Lifecycle: `close()`.
+- `list(query)`、`create(payload)`、`get(id)`、`update(id,payload,expectedRevision)`。
+- `publish(id,expectedRevision,note)`、`versions(id)`、`getVersion(id,version)`、`rollback(id,version,expectedRevision)`。
+- `close()`。
 
-The HTTP layer awaits all store operations. An adapter may implement synchronous methods (SQLite) or asynchronous methods (remote storage), without changing the UI, SDK or HTTP contract.
+这些方法不再接受成员身份。`GalleryReader` 可包装同步或异步适配器；宿主写入操作也会等待返回结果。
 
-Preserve these invariants in a replacement:
+## 不变量
 
-1. Server assigns author from authenticated identity, never a submitted owner field.
-2. Only author/admin can edit, publish or restore drafts. Team members can read all published versions, not others' drafts.
-3. Draft update and publication compare an expected revision. Snapshot insertion, monotonic version assignment, publication pointer and audit event are atomic.
-4. Published files and digest never change. Rollback writes a new draft; publication history remains reachable.
-5. Every referenced resource/version exists at publication. File path, count and size validation remain at the service boundary.
-6. Raw member tokens are never persisted in the shared database, returned by list endpoints or included in logs.
+1. 草稿可直接查看与修改。多窗口写入必须比较 revision，不静默覆盖旧编辑。
+2. 发布快照、摘要和版本号不可变。版本生成、发布指针更新、资源审计事件属于同一事务。
+3. 回滚生成新草稿，不改写发布历史。
+4. 发布时必须存在所有固定依赖版本。
+5. 服务边界校验文件路径、文件数量、大小及资源类型。
 
-SQLite schema v1: members, resources, versions, audit. File contents are stored in normalized snapshot JSON. This simplifies backups and migration at current size limits. Before migrating a live database, stop writers and back up the database (or use SQLite's backup facility including WAL consistency), export IDs, owner mappings, draft revisions, published snapshots, version digests and audit records, import them preserving identity, and run the contract tests against the replacement.
+## v1 → v2
 
-A future GitHub adapter also needs concurrency handling (commit leases/CAS), a member identity mapping and a consistent multi-object publish operation. GitHub as import/sync source may be simpler than using it as the authoritative transactional store. Changing storage is not a zero-cost migration.
+v2 只有 resources、versions、audit 三张业务表，没有成员、令牌或资源所有者字段。
+
+默认本地库不存在时，`openGalleryStore` 用 Node SQLite backup 复制旧 service DB 的一致快照（包含 WAL 中提交的数据），通过独占链接落到新路径。已有本地库不会被覆盖。原 service DB 保留。
+
+打开旧格式库时，在执行迁移前用 `VACUUM INTO` 保存独立备份；然后在一个事务内复制资源、版本和资源审计记录，删除旧表，重命名新表，设置 user_version=2。资源 ID、草稿 revision、时间戳、快照文本和 digest 保持原样；成员相关审计记录不迁入新库。
+
+若迁移事务失败则回滚。新版号大于 2 的数据库拒绝打开，避免旧插件改写新格式。数据库及备份文件使用 0600 权限。
+
+迁移后备份和原数据库仍可能包含旧成员数据，仅供恢复保留，不参与当前资源操作。清理这些备份应由操作者在确认升级后自行决定。
+
+以后更换存储需要迁移资源 ID、草稿 revision、版本快照、摘要与审计记录，并保持上述不变量；消费插件读取契约可保持不变。

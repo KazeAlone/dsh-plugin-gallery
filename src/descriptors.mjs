@@ -21,7 +21,6 @@ const string = (name) => ({
 });
 const methods = {
   uiStatus: [],
-  uiConnect: ["payload"],
   uiList: ["payload"],
   uiGet: ["id"],
   uiCreate: ["payload"],
@@ -30,9 +29,6 @@ const methods = {
   uiVersions: ["id"],
   uiReadVersion: ["id", "payload"],
   uiRollback: ["id", "payload"],
-  uiMembers: [],
-  uiAddMember: ["payload"],
-  uiMemberAccess: ["id", "payload"],
 };
 export const DESCRIPTORS = Object.entries(methods).map(([method, names]) => ({
   id: `dsh-plugin-gallery#gallery/${method}`,

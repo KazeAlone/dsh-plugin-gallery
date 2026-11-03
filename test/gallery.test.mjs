@@ -1,16 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { mkdtempSync, rmSync, existsSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { SqliteGalleryStore } from "../src/store.mjs";
-import { createGalleryServer } from "../src/server.mjs";
-import { GalleryClient, validateEndpoint } from "../src/client-api.mjs";
-
+import { openGalleryStore } from "../src/local-store.mjs";
+import { GalleryReader } from "../src/reader.mjs";
+import { digest, normalizeResource } from "../src/model.mjs";
 const data = (type = "skill", name = "代码审查") => ({
   type,
   name,
-  description: "团队审查说明",
+  description: "检查代码变更",
   tags: ["研发", "审查"],
   files: [
     {
@@ -21,122 +22,123 @@ const data = (type = "skill", name = "代码审查") => ({
   metadata: { runtime: "dsh" },
   references: [],
 });
-function setup(t, path = ":memory:") {
-  const store = new SqliteGalleryStore(path);
-  t.after(() => store.close());
-  const admin = store.bootstrap("管理员"),
-    alice = store.addMember(admin.member, { name: "Alice" }),
-    bob = store.addMember(admin.member, { name: "Bob" });
-  return { store, admin, alice, bob };
-}
 const code = (fn, c) => assert.throws(fn, (e) => e.code === c);
-test("bootstrap, member authorization, token hashing and revocation", (t) => {
-  const { store, admin, alice, bob } = setup(t);
-  assert.equal(store.authenticate(alice.token).id, alice.member.id);
-  code(() => store.authenticate("wrong-token"), "UNAUTHORIZED");
-  code(() => store.bootstrap("again"), "ALREADY_INITIALIZED");
-  code(
-    () => store.addMember(alice.member, { name: "intruder", role: "admin" }),
-    "FORBIDDEN",
-  );
-  code(() => store.listMembers(bob.member), "FORBIDDEN");
-  assert.ok(
-    !JSON.stringify(store.listMembers(admin.member)).includes(alice.token),
-  );
-  assert.notEqual(
-    store.db
-      .prepare("SELECT token_hash FROM members WHERE id=?")
-      .get(alice.member.id).token_hash,
-    alice.token,
-  );
-  const rotated = store.rotateMember(admin.member, alice.member.id);
-  code(() => store.authenticate(alice.token), "UNAUTHORIZED");
-  assert.equal(store.authenticate(rotated.token).name, "Alice");
-  store.rotateMember(admin.member, bob.member.id, false);
-  code(() => store.authenticate(bob.token), "UNAUTHORIZED");
-  code(
-    () => store.rotateMember(admin.member, admin.member.id, false),
-    "SELF_REVOKE",
-  );
-});
-test("four resource types, drafts private, published versions team-readable", (t) => {
-  const { store, alice, bob, admin } = setup(t);
-  for (const type of ["skill", "agent", "mcp", "workflow"]) {
-    const r = store.create(alice.member, {
-      ...data(type),
-      ownerId: bob.member.id,
-    });
-    assert.equal(r.ownerId, alice.member.id);
-    code(() => store.get(bob.member, r.id), "NOT_FOUND");
-    store.publish(alice.member, r.id, r.revision, "首次发布");
-    const shared = store.get(bob.member, r.id);
-    assert.equal(shared.draft, null);
-    assert.equal(shared.canEdit, false);
-    assert.equal(shared.published.resource.type, type);
-  }
-  assert.equal(store.list(bob.member).total, 4);
-  assert.equal(store.list(bob.member, { type: "skill" }).total, 1);
-  assert.equal(store.list(bob.member, { q: "Alice" }).total, 4);
-  assert.equal(store.list(admin.member, { scope: "mine" }).total, 0);
-});
-test("author/admin write policy, optimistic concurrency and no draft leakage", (t) => {
-  const { store, alice, bob, admin } = setup(t),
-    r = store.create(alice.member, data());
-  code(() => store.update(bob.member, r.id, data(), 1), "FORBIDDEN");
-  code(() => store.publish(bob.member, r.id, 1), "FORBIDDEN");
-  store.publish(alice.member, r.id, 1);
-  const changed = store.update(
-    admin.member,
-    r.id,
-    data("skill", "尚未发布的秘密名称"),
+function setup(t) {
+  const s = new SqliteGalleryStore(":memory:");
+  t.after(() => s.close());
+  return s;
+}
+function temp(t) {
+  const p = mkdtempSync(join(tmpdir(), "gallery-local-"));
+  t.after(() => rmSync(p, { recursive: true, force: true }));
+  return p;
+}
+function legacy(path) {
+  const db = new DatabaseSync(path);
+  db.exec(`PRAGMA journal_mode=WAL;
+    CREATE TABLE members(id TEXT PRIMARY KEY,name TEXT,role TEXT,token_hash TEXT,active INTEGER,created_at TEXT);
+    CREATE TABLE resources(id TEXT PRIMARY KEY,type TEXT,owner_id TEXT,draft TEXT,revision INTEGER,published_revision INTEGER,created_at TEXT,updated_at TEXT);
+    CREATE TABLE versions(resource_id TEXT,version INTEGER,snapshot TEXT,digest TEXT,note TEXT,actor_id TEXT,created_at TEXT,PRIMARY KEY(resource_id,version));
+    CREATE TABLE audit(id INTEGER PRIMARY KEY AUTOINCREMENT,actor_id TEXT,resource_id TEXT,action TEXT,detail TEXT,created_at TEXT);
+    INSERT INTO members VALUES('alice','Alice','member','fixture-only-hash',1,'2026-01-01');
+    INSERT INTO members VALUES('bob','Bob','admin','fixture-only-hash-2',1,'2026-01-01');
+    PRAGMA user_version=1;`);
+  const snapshot = JSON.stringify(normalizeResource(data())),
+    draft = JSON.stringify(normalizeResource(data("skill", "未发布修改")));
+  db.prepare("INSERT INTO resources VALUES(?,?,?,?,?,?,?,?)").run(
+    "old-skill",
+    "skill",
+    "alice",
+    draft,
+    2,
     1,
+    "2026-01-01",
+    "2026-01-02",
   );
-  assert.equal(changed.revision, 2);
-  assert.equal(store.get(bob.member, r.id).name, "代码审查");
-  assert.equal(store.list(bob.member, { q: "秘密名称" }).total, 0);
-  code(() => store.update(alice.member, r.id, data(), 1), "CONFLICT");
-  code(() => store.publish(alice.member, r.id, 1), "CONFLICT");
-  assert.equal(store.publish(admin.member, r.id, 2).version, 2);
-  code(() => store.publish(admin.member, r.id, 2), "NO_CHANGES");
+  db.prepare("INSERT INTO resources VALUES(?,?,?,?,?,?,?,?)").run(
+    "old-agent",
+    "agent",
+    "bob",
+    JSON.stringify(normalizeResource(data("agent", "旧草稿"))),
+    1,
+    0,
+    "2026-01-01",
+    "2026-01-02",
+  );
+  db.prepare("INSERT INTO versions VALUES(?,?,?,?,?,?,?)").run(
+    "old-skill",
+    1,
+    snapshot,
+    digest(snapshot),
+    "initial",
+    "alice",
+    "2026-01-01",
+  );
+  db.prepare(
+    "INSERT INTO audit(actor_id,resource_id,action,detail,created_at) VALUES(?,?,?,?,?)",
+  ).run("alice", "old-skill", "version.publish", '{"version":1}', "2026-01-01");
+  db.prepare(
+    "INSERT INTO audit(actor_id,action,detail,created_at) VALUES(?,?,?,?)",
+  ).run("bob", "member.create", "{}", "2026-01-01");
+  return { db, snapshot, hash: digest(snapshot) };
+}
+
+test("four resource types work without initialization, accounts or ownership", (t) => {
+  const s = setup(t);
+  assert.equal(s.authenticate, undefined);
+  assert.equal(s.addMember, undefined);
+  for (const type of ["skill", "agent", "mcp", "workflow"]) {
+    const r = s.create({ ...data(type), ownerId: "ignored", role: "admin" });
+    assert.equal(r.revision, 1);
+    assert.equal(r.hasDraft, true);
+    assert.ok(!("ownerId" in r));
+    assert.ok(!("canEdit" in r));
+    assert.equal(s.publish(r.id, 1).version, 1);
+  }
+  assert.equal(s.list().total, 4);
+  assert.equal(s.list({ type: "skill" }).total, 1);
+  assert.equal(s.list({ q: "研发" }).total, 4);
+  assert.equal(s.list({ scope: "drafts" }).total, 0);
+  assert.equal(s.list({ limit: 2, offset: 2 }).items.length, 2);
 });
-test("published snapshots immutable; rollback creates a draft, then a new version", (t) => {
-  const { store, alice, bob } = setup(t),
-    r = store.create(alice.member, data());
-  const v1 = store.publish(alice.member, r.id, 1);
-  store.update(alice.member, r.id, data("skill", "第二版"), 1);
-  store.publish(alice.member, r.id, 2);
-  code(() => store.rollback(bob.member, r.id, 1, 2), "FORBIDDEN");
-  const restored = store.rollback(alice.member, r.id, 1, 2);
+test("drafts are editable, published snapshots immutable and rollback preserves history", (t) => {
+  const s = setup(t),
+    r = s.create(data()),
+    v1 = s.publish(r.id, 1);
+  s.update(r.id, data("skill", "第二版"), 1);
+  assert.equal(s.list({ scope: "drafts" }).total, 1);
+  assert.equal(s.getVersion(r.id, 1).resource.name, "代码审查");
+  code(() => s.update(r.id, data(), 1), "CONFLICT");
+  code(() => s.publish(r.id, 1), "CONFLICT");
+  s.publish(r.id, 2);
+  const restored = s.rollback(r.id, 1, 2);
   assert.equal(restored.draft.name, "代码审查");
   assert.equal(restored.latestVersion, 2);
   assert.equal(restored.revision, 3);
-  const v3 = store.publish(alice.member, r.id, 3, "恢复 v1");
-  assert.equal(v3.version, 3);
+  const v3 = s.publish(r.id, 3, "恢复 v1");
   assert.equal(v3.digest, v1.digest);
-  assert.deepEqual(store.getVersion(bob.member, r.id, 1), v1);
+  assert.equal(v3.version, 3);
+  assert.deepEqual(s.getVersion(r.id, 1), v1);
+  assert.equal(s.versions(r.id).length, 3);
+  code(() => s.publish(r.id, 3), "NO_CHANGES");
 });
-test("published dependency references are pinned and publication is atomic", (t) => {
-  const { store, alice } = setup(t),
-    skill = store.create(alice.member, data()),
-    workflow = store.create(alice.member, {
+test("dependencies pin published versions and invalid publication rolls back", (t) => {
+  const s = setup(t),
+    skill = s.create(data()),
+    flow = s.create({
       ...data("workflow"),
       references: [{ id: skill.id, version: 1 }],
     });
-  code(() => store.publish(alice.member, workflow.id, 1), "VERSION_NOT_FOUND");
-  assert.equal(store.versions(alice.member, workflow.id).length, 0);
-  store.publish(alice.member, skill.id, 1);
-  const result = store.publish(alice.member, workflow.id, 1);
-  assert.deepEqual(result.resource.references, [{ id: skill.id, version: 1 }]);
-  store.update(alice.member, skill.id, data("skill", "v2"), 1);
-  store.publish(alice.member, skill.id, 2);
-  assert.equal(
-    store.getVersion(alice.member, workflow.id, 1).resource.references[0]
-      .version,
-    1,
-  );
+  code(() => s.publish(flow.id, 1), "VERSION_NOT_FOUND");
+  assert.equal(s.versions(flow.id).length, 0);
+  s.publish(skill.id, 1);
+  s.publish(flow.id, 1);
+  s.update(skill.id, data("skill", "v2"), 1);
+  s.publish(skill.id, 2);
+  assert.equal(s.getVersion(flow.id, 1).resource.references[0].version, 1);
 });
-test("file paths, duplicate names, file size, schema and type changes rejected", (t) => {
-  const { store, alice } = setup(t);
+test("file safety, size limits, types and empty publication are validated", (t) => {
+  const s = setup(t);
   for (const path of [
     "../bad",
     "/etc/passwd",
@@ -146,16 +148,12 @@ test("file paths, duplicate names, file size, schema and type changes rejected",
     "a//b",
   ])
     code(
-      () =>
-        store.create(alice.member, {
-          ...data(),
-          files: [{ path, content: "x" }],
-        }),
+      () => s.create({ ...data(), files: [{ path, content: "x" }] }),
       "INVALID_PATH",
     );
   code(
     () =>
-      store.create(alice.member, {
+      s.create({
         ...data(),
         files: [
           { path: "a", content: "x" },
@@ -166,7 +164,7 @@ test("file paths, duplicate names, file size, schema and type changes rejected",
   );
   code(
     () =>
-      store.create(alice.member, {
+      s.create({
         ...data(),
         files: [{ path: "big", content: "x".repeat(5 * 1024 * 1024 + 1) }],
       }),
@@ -174,109 +172,131 @@ test("file paths, duplicate names, file size, schema and type changes rejected",
   );
   code(
     () =>
-      store.create(alice.member, {
+      s.create({
         ...data(),
         files: [{ path: "a", content: "??", encoding: "base64" }],
       }),
     "INVALID_FILES",
   );
-  code(
-    () => store.create(alice.member, { ...data(), type: "unsupported" }),
-    "INVALID_TYPE",
-  );
-  const r = store.create(alice.member, data());
-  code(
-    () => store.update(alice.member, r.id, data("agent"), 1),
-    "TYPE_IMMUTABLE",
-  );
-  const empty = store.create(alice.member, { ...data(), files: [] });
-  code(() => store.publish(alice.member, empty.id, 1), "EMPTY_RESOURCE");
+  code(() => s.create({ ...data(), type: "unsupported" }), "INVALID_TYPE");
+  const r = s.create(data());
+  code(() => s.update(r.id, data("agent"), 1), "TYPE_IMMUTABLE");
+  const empty = s.create({ ...data(), files: [] });
+  code(() => s.publish(empty.id, 1), "EMPTY_RESOURCE");
 });
-test("storage survives restart and rejects edits from stale second connection", (t) => {
-  const dir = mkdtempSync(join(tmpdir(), "gallery-")),
-    path = join(dir, "gallery.sqlite");
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
-  const a = new SqliteGalleryStore(path),
-    admin = a.bootstrap("Admin"),
-    r = a.create(admin.member, data());
-  a.publish(admin.member, r.id, 1);
+test("database survives restart and rejects stale edits from a second window", (t) => {
+  const path = join(temp(t), "gallery.sqlite"),
+    a = new SqliteGalleryStore(path),
+    r = a.create(data());
+  a.publish(r.id, 1);
   const b = new SqliteGalleryStore(path);
-  a.update(admin.member, r.id, data("skill", "new"), 1);
-  code(() => b.update(admin.member, r.id, data(), 1), "CONFLICT");
+  a.update(r.id, data("skill", "新草稿"), 1);
+  code(() => b.update(r.id, data(), 1), "CONFLICT");
   b.close();
   a.close();
   const c = new SqliteGalleryStore(path);
   try {
-    assert.equal(c.authenticate(admin.token).role, "admin");
-    assert.equal(c.getVersion(admin.member, r.id, 1).resource.name, "代码审查");
-    assert.equal(c.get(admin.member, r.id).revision, 2);
+    assert.equal(c.getVersion(r.id, 1).resource.name, "代码审查");
+    assert.equal(c.get(r.id).revision, 2);
   } finally {
     c.close();
   }
 });
-test("two independently authenticated clients: CRUD, sharing, rollback, SDK resolution", async (t) => {
-  const { store, admin, alice, bob } = setup(t),
-    server = createGalleryServer(store);
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  t.after(() => {
-    server.closeAllConnections();
-    return new Promise((resolve) => server.close(resolve));
-  });
-  const url = `http://127.0.0.1:${server.address().port}`,
-    A = new GalleryClient({ url, token: alice.token }),
-    B = new GalleryClient({ url, token: bob.token }),
-    C = new GalleryClient({ url, token: admin.token });
-  const r = await A.createResource(data());
-  await assert.rejects(B.getResource(r.id), { code: "NOT_FOUND" });
-  await assert.rejects(B.updateDraft(r.id, data(), 1), { code: "FORBIDDEN" });
-  const v = await A.publish(r.id, 1, "shared");
-  assert.equal((await B.listResources()).total, 1);
-  assert.equal(
-    (await B.resolveReference({ id: r.id, version: 1, digest: v.digest }))
-      .resource.files[0].content,
-    data().files[0].content,
-  );
-  await assert.rejects(
-    B.resolveReference({ id: r.id, version: 1, digest: "wrong" }),
-    { code: "DIGEST_MISMATCH" },
-  );
-  await A.updateDraft(r.id, data("skill", "new"), 1);
-  await A.publish(r.id, 2);
-  await C.rollback(r.id, 1, 2);
-  assert.equal((await A.getResource(r.id)).draft.name, "代码审查");
-  await assert.rejects(
-    B.request("POST", "/v1/members", { name: "unauthorized" }),
-    { code: "FORBIDDEN" },
-  );
-  const newMember = await C.request("POST", "/v1/members", { name: "Charlie" });
-  assert.equal(newMember.member.name, "Charlie");
-  const raw = await fetch(url + "/v1/resources");
-  assert.equal(raw.status, 401);
-  const malformed = await fetch(url + "/v1/resources", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${alice.token}` },
-    body: "{broken",
-  });
-  assert.equal(malformed.status, 400);
+test("legacy migration removes membership and ownership while preserving all resources", (t) => {
+  const path = join(temp(t), "legacy.sqlite"),
+    old = legacy(path);
+  old.db.close();
+  const s = new SqliteGalleryStore(path);
+  try {
+    assert.ok(existsSync(s.backupPath));
+    assert.equal(statSync(s.backupPath).mode & 0o777, 0o600);
+    assert.equal(s.list().total, 2);
+    assert.equal(s.get("old-skill").revision, 2);
+    assert.equal(s.get("old-agent").draft.name, "旧草稿");
+    assert.equal(s.getVersion("old-skill", 1).digest, old.hash);
+    assert.equal(
+      JSON.stringify(s.getVersion("old-skill", 1).resource),
+      old.snapshot,
+    );
+    assert.equal(
+      s.db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name='members'",
+        )
+        .get().n,
+      0,
+    );
+    assert.ok(
+      !s.db
+        .prepare("PRAGMA table_info(resources)")
+        .all()
+        .some((x) => x.name === "owner_id"),
+    );
+    assert.ok(
+      !s.db
+        .prepare("PRAGMA table_info(versions)")
+        .all()
+        .some((x) => x.name === "actor_id"),
+    );
+    assert.equal(s.db.prepare("SELECT COUNT(*) AS n FROM audit").get().n, 1);
+    const backup = new DatabaseSync(s.backupPath, { readOnly: true });
+    assert.equal(
+      backup.prepare("SELECT COUNT(*) AS n FROM members").get().n,
+      2,
+    );
+    backup.close();
+    assert.equal(s.publish("old-skill", 2).version, 2);
+  } finally {
+    s.close();
+  }
+  const reopened = new SqliteGalleryStore(path);
+  try {
+    assert.equal(reopened.backupPath, undefined);
+    assert.equal(reopened.versions("old-skill").length, 2);
+  } finally {
+    reopened.close();
+  }
 });
-test("endpoint validation protects member credentials and refuses silent redirects", () => {
-  assert.equal(validateEndpoint("https://example.com/"), "https://example.com");
-  assert.equal(
-    validateEndpoint("http://127.0.0.1:4318"),
-    "http://127.0.0.1:4318",
-  );
-  for (const url of [
-    "http://remote.example",
-    "https://a:b@example.com",
-    "file:///tmp/test",
-    "https://example.com?token=x",
-  ])
-    assert.throws(() => validateEndpoint(url));
+test("first local open imports a consistent legacy WAL snapshot and leaves the original untouched", async (t) => {
+  const dir = temp(t),
+    original = join(dir, "service.sqlite"),
+    target = join(dir, "local.sqlite"),
+    old = legacy(original);
+  try {
+    const s = await openGalleryStore({
+      database: target,
+      legacyDatabase: original,
+    });
+    assert.equal(s.list().total, 2);
+    assert.equal(s.getVersion("old-skill", 1).digest, old.hash);
+    s.update("old-skill", data("skill", "本地修改"), 2);
+    s.close();
+    assert.equal(
+      old.db.prepare("SELECT name FROM members WHERE id='alice'").get().name,
+      "Alice",
+    );
+    assert.equal(
+      JSON.parse(
+        old.db.prepare("SELECT draft FROM resources WHERE id='old-skill'").get()
+          .draft,
+      ).name,
+      "未发布修改",
+    );
+    const again = await openGalleryStore({
+      database: target,
+      legacyDatabase: original,
+    });
+    assert.equal(again.get("old-skill").draft.name, "本地修改");
+    again.close();
+  } finally {
+    old.db.close();
+  }
 });
-
-test("HTTP contract supports an asynchronous storage adapter", async (t) => {
-  const { store, alice } = setup(t);
-  const asyncStore = new Proxy(store, {
+test("reader SDK preserves pinned integration, supports async adapters and cancellation", async (t) => {
+  const s = setup(t),
+    r = s.create(data()),
+    v = s.publish(r.id, 1);
+  const adapter = new Proxy(s, {
     get(target, key) {
       const value = target[key];
       return typeof value === "function"
@@ -284,20 +304,31 @@ test("HTTP contract supports an asynchronous storage adapter", async (t) => {
         : value;
     },
   });
-  const server = createGalleryServer(asyncStore);
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  t.after(() => {
-    server.closeAllConnections();
-    return new Promise((resolve) => server.close(resolve));
+  const reader = new GalleryReader(adapter);
+  assert.equal((await reader.listResources({ scope: "published" })).total, 1);
+  assert.equal((await reader.listVersions(r.id)).items.length, 1);
+  assert.equal((await reader.getResource(r.id)).id, r.id);
+  assert.equal(
+    (await reader.resolveReference({ id: r.id, version: 1, digest: v.digest }))
+      .resource.files[0].path,
+    "SKILL.md",
+  );
+  await assert.rejects(
+    reader.resolveReference({ id: r.id, version: 1, digest: "bad" }),
+    { code: "DIGEST_MISMATCH" },
+  );
+  const signal = AbortSignal.abort();
+  await assert.rejects(reader.listResources({}, { signal }), {
+    name: "AbortError",
   });
-  const client = new GalleryClient({
-    url: `http://127.0.0.1:${server.address().port}`,
-    token: alice.token,
-  });
-  assert.equal((await client.me()).name, "Alice");
-  const draft = await client.createResource(data("agent", "Async adapter"));
-  await client.publish(draft.id, 1);
-  assert.equal((await client.listResources()).items[0].name, "Async adapter");
-  assert.equal((await client.listVersions(draft.id)).items.length, 1);
-  assert.equal((await client.getVersion(draft.id, 1)).resource.type, "agent");
+});
+test("newer database schemas are rejected without modification", (t) => {
+  const path = join(temp(t), "future.sqlite"),
+    db = new DatabaseSync(path);
+  db.exec("PRAGMA user_version=3");
+  db.close();
+  code(() => new SqliteGalleryStore(path), "SCHEMA_TOO_NEW");
+  const check = new DatabaseSync(path);
+  assert.equal(check.prepare("PRAGMA user_version").get().user_version, 3);
+  check.close();
 });

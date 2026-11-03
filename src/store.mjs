@@ -1,30 +1,87 @@
 import { DatabaseSync } from "node:sqlite";
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { mkdirSync, chmodSync } from "node:fs";
 import { dirname } from "node:path";
-import {
-  demand,
-  digest,
-  normalizeResource,
-  revision,
-  text,
-  tokenHash,
-} from "./model.mjs";
+import { demand, digest, normalizeResource, revision } from "./model.mjs";
 
-/** Storage port: see docs/storage.md. HTTP and DSH never access SQL directly. */
+function schema(prefix = "") {
+  return `CREATE TABLE ${prefix}resources(id TEXT PRIMARY KEY,type TEXT NOT NULL,draft TEXT NOT NULL,revision INTEGER NOT NULL,published_revision INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+    CREATE TABLE ${prefix}versions(resource_id TEXT NOT NULL REFERENCES ${prefix}resources(id),version INTEGER NOT NULL,snapshot TEXT NOT NULL,digest TEXT NOT NULL,note TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(resource_id,version));
+    CREATE TABLE ${prefix}audit(id INTEGER PRIMARY KEY AUTOINCREMENT,resource_id TEXT,action TEXT NOT NULL,detail TEXT NOT NULL,created_at TEXT NOT NULL);`;
+}
+
+/** Single-user storage. Existing multi-user databases are backed up and migrated atomically. */
 export class SqliteGalleryStore {
   constructor(path) {
     if (path !== ":memory:")
       mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
     this.db = new DatabaseSync(path);
-    if (path !== ":memory:") chmodSync(path, 0o600);
-    this.db
-      .exec(`PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
-      CREATE TABLE IF NOT EXISTS members(id TEXT PRIMARY KEY,name TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('member','admin')),token_hash TEXT UNIQUE NOT NULL,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS resources(id TEXT PRIMARY KEY,type TEXT NOT NULL,owner_id TEXT NOT NULL REFERENCES members(id),draft TEXT NOT NULL,revision INTEGER NOT NULL,published_revision INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS versions(resource_id TEXT NOT NULL REFERENCES resources(id),version INTEGER NOT NULL,snapshot TEXT NOT NULL,digest TEXT NOT NULL,note TEXT NOT NULL,actor_id TEXT NOT NULL REFERENCES members(id),created_at TEXT NOT NULL,PRIMARY KEY(resource_id,version));
-      CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT,actor_id TEXT NOT NULL,resource_id TEXT,action TEXT NOT NULL,detail TEXT NOT NULL,created_at TEXT NOT NULL);
-      PRAGMA user_version=1;`);
+    try {
+      if (path !== ":memory:") chmodSync(path, 0o600);
+      this.db.exec(
+        "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;",
+      );
+      const version = this.db.prepare("PRAGMA user_version").get().user_version;
+      demand(
+        version <= 2,
+        409,
+        "SCHEMA_TOO_NEW",
+        "数据库由更新版本创建，请升级插件",
+      );
+      const legacy = this.db
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='members'",
+        )
+        .get();
+      if (legacy) this.migrate(path);
+      else if (
+        !this.db
+          .prepare(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='resources'",
+          )
+          .get()
+      ) {
+        this.transaction(() => {
+          this.db.exec(schema());
+          this.db.exec("PRAGMA user_version=2");
+        });
+      }
+    } catch (e) {
+      this.db.close();
+      throw e;
+    }
+  }
+  migrate(path) {
+    if (path !== ":memory:") {
+      this.backupPath = `${path}.before-single-user-${Date.now()}-${randomUUID().slice(0, 8)}.sqlite`;
+      this.db.exec(`VACUUM INTO '${this.backupPath.replaceAll("'", "''")}'`);
+      chmodSync(this.backupPath, 0o600);
+    }
+    this.db.exec("PRAGMA foreign_keys=OFF");
+    try {
+      this.transaction(() => {
+        if (
+          !this.db
+            .prepare(
+              "SELECT name FROM sqlite_master WHERE type='table' AND name='members'",
+            )
+            .get()
+        )
+          return;
+        this.db.exec(schema("single_"));
+        this.db
+          .exec(`INSERT INTO single_resources SELECT id,type,draft,revision,published_revision,created_at,updated_at FROM resources;
+          INSERT INTO single_versions SELECT resource_id,version,snapshot,digest,note,created_at FROM versions;
+          INSERT INTO single_audit SELECT id,resource_id,action,detail,created_at FROM audit WHERE resource_id IS NOT NULL;
+          DROP TABLE versions; DROP TABLE resources; DROP TABLE audit; DROP TABLE members;
+          ALTER TABLE single_resources RENAME TO resources;
+          ALTER TABLE single_versions RENAME TO versions;
+          ALTER TABLE single_audit RENAME TO audit;
+          PRAGMA user_version=2;`);
+      });
+    } finally {
+      this.db.exec("PRAGMA foreign_keys=ON");
+    }
   }
   close() {
     this.db.close();
@@ -32,144 +89,25 @@ export class SqliteGalleryStore {
   transaction(fn) {
     this.db.exec("BEGIN IMMEDIATE");
     try {
-      const x = fn();
+      const r = fn();
       this.db.exec("COMMIT");
-      return x;
+      return r;
     } catch (e) {
       this.db.exec("ROLLBACK");
       throw e;
     }
   }
-  event(actor, id, action, detail = {}) {
+  event(id, action, detail = {}) {
     this.db
       .prepare(
-        "INSERT INTO audit(actor_id,resource_id,action,detail,created_at) VALUES(?,?,?,?,?)",
+        "INSERT INTO audit(resource_id,action,detail,created_at) VALUES(?,?,?,?)",
       )
-      .run(
-        actor.id,
-        id,
-        action,
-        JSON.stringify(detail),
-        new Date().toISOString(),
-      );
-  }
-  publicMember(m) {
-    return {
-      id: m.id,
-      name: m.name,
-      role: m.role,
-      active: Boolean(m.active),
-      createdAt: m.created_at,
-    };
-  }
-  authenticate(token) {
-    demand(
-      typeof token === "string" && token.length >= 20 && token.length < 300,
-      401,
-      "UNAUTHORIZED",
-      "成员令牌无效",
-    );
-    const m = this.db
-      .prepare("SELECT * FROM members WHERE token_hash=? AND active=1")
-      .get(tokenHash(token));
-    demand(m, 401, "UNAUTHORIZED", "成员令牌无效或已撤销");
-    return this.publicMember(m);
-  }
-  bootstrap(name) {
-    return this.transaction(() => {
-      demand(
-        !this.db.prepare("SELECT id FROM members LIMIT 1").get(),
-        409,
-        "ALREADY_INITIALIZED",
-        "已有成员，不能重复初始化管理员",
-      );
-      return this.insertMember(name, "admin");
-    });
-  }
-  insertMember(name, role) {
-    name = text(name, "成员名称", 100);
-    demand(
-      ["member", "admin"].includes(role),
-      400,
-      "INVALID_ROLE",
-      "角色必须为 member 或 admin",
-    );
-    const id = randomUUID(),
-      token = `gal_${randomBytes(32).toString("base64url")}`,
-      now = new Date().toISOString();
-    this.db
-      .prepare(
-        "INSERT INTO members(id,name,role,token_hash,created_at) VALUES(?,?,?,?,?)",
-      )
-      .run(id, name, role, tokenHash(token), now);
-    return { member: { id, name, role, active: true, createdAt: now }, token };
-  }
-  listMembers(actor) {
-    this.admin(actor);
-    return this.db
-      .prepare("SELECT * FROM members ORDER BY created_at,id")
-      .all()
-      .map((m) => this.publicMember(m));
-  }
-  addMember(actor, input) {
-    this.admin(actor);
-    return this.transaction(() => {
-      const x = this.insertMember(input.name, input.role ?? "member");
-      this.event(actor, null, "member.create", {
-        id: x.member.id,
-        role: x.member.role,
-      });
-      return x;
-    });
-  }
-  rotateMember(actor, id, active = true) {
-    this.admin(actor);
-    demand(
-      typeof active === "boolean",
-      400,
-      "INVALID_INPUT",
-      "active 必须为布尔值",
-    );
-    return this.transaction(() => {
-      const m = this.db.prepare("SELECT * FROM members WHERE id=?").get(id);
-      demand(m, 404, "NOT_FOUND", "成员不存在");
-      demand(
-        id !== actor.id || active,
-        409,
-        "SELF_REVOKE",
-        "不能撤销当前管理员自身",
-      );
-      const token = `gal_${randomBytes(32).toString("base64url")}`;
-      this.db
-        .prepare("UPDATE members SET token_hash=?,active=? WHERE id=?")
-        .run(tokenHash(token), active ? 1 : 0, id);
-      this.event(actor, null, active ? "member.rotate" : "member.revoke", {
-        id,
-      });
-      return {
-        member: this.publicMember({ ...m, active: active ? 1 : 0 }),
-        ...(active ? { token } : {}),
-      };
-    });
-  }
-  admin(actor) {
-    demand(actor.role === "admin", 403, "FORBIDDEN", "仅管理员可管理成员");
+      .run(id, action, JSON.stringify(detail), new Date().toISOString());
   }
   row(id) {
     const r = this.db.prepare("SELECT * FROM resources WHERE id=?").get(id);
     demand(r, 404, "NOT_FOUND", "资源不存在");
     return r;
-  }
-  canEdit(actor, r) {
-    return actor.role === "admin" || actor.id === r.owner_id;
-  }
-  editable(actor, r) {
-    demand(
-      this.canEdit(actor, r),
-      403,
-      "FORBIDDEN",
-      "只有作者和管理员可以修改或发布",
-    );
   }
   latest(id) {
     return this.db
@@ -178,36 +116,26 @@ export class SqliteGalleryStore {
       )
       .get(id);
   }
-  summary(actor, r) {
+  summary(r) {
     const latest = this.latest(r.id),
-      canEdit = this.canEdit(actor, r);
-    demand(canEdit || latest, 404, "NOT_FOUND", "资源不存在");
-    const d = JSON.parse(canEdit ? r.draft : latest.snapshot);
-    const owner = this.db
-      .prepare("SELECT name FROM members WHERE id=?")
-      .get(r.owner_id);
+      d = JSON.parse(r.draft);
     return {
       id: r.id,
       type: r.type,
       name: d.name,
       description: d.description,
       tags: d.tags,
-      ownerId: r.owner_id,
-      ownerName: owner?.name ?? "",
-      canEdit,
-      revision: canEdit ? r.revision : null,
-      hasDraft: canEdit ? r.revision !== r.published_revision : false,
+      revision: r.revision,
+      hasDraft: r.revision !== r.published_revision,
       latestVersion: latest?.version ?? null,
+      fileCount: d.files.length,
       createdAt: r.created_at,
-      updatedAt: canEdit ? r.updated_at : latest.created_at,
+      updatedAt: r.updated_at,
     };
   }
-  list(
-    actor,
-    { type = "", q = "", scope = "all", limit = 100, offset = 0 } = {},
-  ) {
+  list({ type = "", q = "", scope = "all", limit = 100, offset = 0 } = {}) {
     demand(
-      ["all", "mine", "published"].includes(scope),
+      ["all", "drafts", "published"].includes(scope),
       400,
       "INVALID_SCOPE",
       "无效筛选范围",
@@ -230,15 +158,14 @@ export class SqliteGalleryStore {
       .filter(
         (r) =>
           (!type || r.type === type) &&
-          (scope !== "mine" || r.owner_id === actor.id) &&
-          (scope !== "published" || this.latest(r.id)) &&
-          (this.canEdit(actor, r) || this.latest(r.id)),
+          (scope !== "drafts" || r.revision !== r.published_revision) &&
+          (scope !== "published" || this.latest(r.id)),
       )
-      .map((r) => this.summary(actor, r))
+      .map((r) => this.summary(r))
       .filter(
         (r) =>
           !query ||
-          [r.name, r.description, r.ownerName, ...r.tags]
+          [r.name, r.description, ...r.tags]
             .join(" ")
             .toLocaleLowerCase()
             .includes(query),
@@ -250,42 +177,41 @@ export class SqliteGalleryStore {
       offset,
     };
   }
-  create(actor, input) {
+  create(input) {
     const d = normalizeResource(input),
       id = randomUUID(),
       now = new Date().toISOString();
     return this.transaction(() => {
       this.db
         .prepare(
-          "INSERT INTO resources(id,type,owner_id,draft,revision,created_at,updated_at) VALUES(?,?,?,?,1,?,?)",
+          "INSERT INTO resources(id,type,draft,revision,created_at,updated_at) VALUES(?,?,?,1,?,?)",
         )
-        .run(id, d.type, actor.id, JSON.stringify(d), now, now);
-      this.event(actor, id, "resource.create");
-      return this.get(actor, id);
+        .run(id, d.type, JSON.stringify(d), now, now);
+      this.event(id, "resource.create");
+      return this.get(id);
     });
   }
-  get(actor, id) {
+  get(id) {
     const r = this.row(id),
-      s = this.summary(actor, r);
+      s = this.summary(r);
     return {
       ...s,
-      draft: s.canEdit ? JSON.parse(r.draft) : null,
+      draft: JSON.parse(r.draft),
       published: this.latest(id)
-        ? this.getVersion(actor, id, this.latest(id).version)
+        ? this.getVersion(id, this.latest(id).version)
         : null,
     };
   }
-  update(actor, id, input, expectedRevision) {
+  update(id, input, expectedRevision) {
     const d = normalizeResource(input);
     revision(expectedRevision);
     return this.transaction(() => {
       const r = this.row(id);
-      this.editable(actor, r);
       demand(
         r.revision === expectedRevision,
         409,
         "CONFLICT",
-        "草稿已被其他成员修改，请刷新后再编辑",
+        "草稿已被其他窗口修改，请刷新后再编辑",
       );
       demand(
         d.type === r.type,
@@ -298,11 +224,11 @@ export class SqliteGalleryStore {
           "UPDATE resources SET draft=?,revision=revision+1,updated_at=? WHERE id=?",
         )
         .run(JSON.stringify(d), new Date().toISOString(), id);
-      this.event(actor, id, "draft.update", { revision: r.revision + 1 });
-      return this.get(actor, id);
+      this.event(id, "draft.update", { revision: r.revision + 1 });
+      return this.get(id);
     });
   }
-  publish(actor, id, expectedRevision, note = "") {
+  publish(id, expectedRevision, note = "") {
     revision(expectedRevision);
     demand(
       typeof note === "string" && note.length <= 2000,
@@ -312,7 +238,6 @@ export class SqliteGalleryStore {
     );
     return this.transaction(() => {
       const r = this.row(id);
-      this.editable(actor, r);
       demand(
         r.revision === expectedRevision,
         409,
@@ -332,43 +257,41 @@ export class SqliteGalleryStore {
         "EMPTY_RESOURCE",
         "请至少上传一个资源文件再发布",
       );
-      for (const ref of d.references)
-        this.getVersion(actor, ref.id, ref.version);
+      for (const ref of d.references) this.getVersion(ref.id, ref.version);
       const version = (this.latest(id)?.version ?? 0) + 1,
         now = new Date().toISOString();
       this.db
         .prepare(
-          "INSERT INTO versions(resource_id,version,snapshot,digest,note,actor_id,created_at) VALUES(?,?,?,?,?,?,?)",
+          "INSERT INTO versions(resource_id,version,snapshot,digest,note,created_at) VALUES(?,?,?,?,?,?)",
         )
-        .run(id, version, r.draft, digest(r.draft), note, actor.id, now);
+        .run(id, version, r.draft, digest(r.draft), note, now);
       this.db
         .prepare(
           "UPDATE resources SET published_revision=revision,updated_at=? WHERE id=?",
         )
         .run(now, id);
-      this.event(actor, id, "version.publish", {
+      this.event(id, "version.publish", {
         version,
         digest: digest(r.draft),
       });
-      return this.getVersion(actor, id, version);
+      return this.getVersion(id, version);
     });
   }
-  versions(actor, id) {
-    this.summary(actor, this.row(id));
+  versions(id) {
+    this.summary(this.row(id));
     return this.db
       .prepare(
-        "SELECT version,digest,note,actor_id,created_at FROM versions WHERE resource_id=? ORDER BY version DESC",
+        "SELECT version,digest,note,created_at FROM versions WHERE resource_id=? ORDER BY version DESC",
       )
       .all(id)
       .map((r) => ({
         version: r.version,
         digest: r.digest,
         note: r.note,
-        actorId: r.actor_id,
         createdAt: r.created_at,
       }));
   }
-  getVersion(actor, id, version) {
+  getVersion(id, version) {
     revision(version);
     const r = this.db
       .prepare("SELECT * FROM versions WHERE resource_id=? AND version=?")
@@ -379,14 +302,12 @@ export class SqliteGalleryStore {
       version: r.version,
       digest: r.digest,
       note: r.note,
-      actorId: r.actor_id,
       createdAt: r.created_at,
       resource: JSON.parse(r.snapshot),
     };
   }
-  rollback(actor, id, version, expectedRevision) {
-    this.editable(actor, this.row(id));
-    const v = this.getVersion(actor, id, version);
-    return this.update(actor, id, v.resource, expectedRevision);
+  rollback(id, version, expectedRevision) {
+    const v = this.getVersion(id, version);
+    return this.update(id, v.resource, expectedRevision);
   }
 }

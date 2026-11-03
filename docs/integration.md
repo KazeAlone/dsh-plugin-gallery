@@ -1,10 +1,24 @@
-# Gallery integration contract · API v1
+# Gallery 集成契约 · 0.2
 
-## Resource types and version identity
+## 同宿主 Cordis 服务
 
-`type`: `skill | agent | mcp | workflow`.
+声明 `inject = ['gallery']`，通过 `ctx.gallery` 获取资源：
 
-Resource payload:
+```ts
+listResources(query?: {type?: 'skill'|'agent'|'mcp'|'workflow'; q?: string; scope?: 'all'|'drafts'|'published'; limit?: number; offset?: number}, options?: {signal?: AbortSignal}): Promise<{items: Summary[]; total: number; limit: number; offset: number}>
+getResource(id: string, options?: {signal?: AbortSignal}): Promise<ResourceDetail>
+listVersions(id: string, options?: {signal?: AbortSignal}): Promise<{items: VersionSummary[]}>
+getVersion(id: string, version: number, options?: {signal?: AbortSignal}): Promise<PublishedVersion>
+resolveReference(ref: {id: string; version: number; digest?: string}, options?: {signal?: AbortSignal}): Promise<PublishedVersion>
+```
+
+资源 ID 与版本号在升级中保留。消费方保存 `{id,version,digest?}`，运行时获取固定版本，不隐式跟随 latest。更新资源不会改变已发布版本。
+
+`getResource` 包含当前草稿和最新发布内容；用于执行的节点应使用 `getVersion` / `resolveReference`。`listResources` 默认每页 100 条，limit 范围 1–100。
+
+摘要结构：`{id,type,name,description,tags,revision,hasDraft,latestVersion,fileCount,createdAt,updatedAt}`。
+
+发布结构：`{id,version,digest,note,createdAt,resource}`。
 
 ```json
 {
@@ -14,60 +28,41 @@ Resource payload:
   "tags":["engineering"],
   "files":[{"path":"SKILL.md","encoding":"utf8","content":"# Review","bytes":8}],
   "metadata":{},
-  "references":[{"id":"other-resource-uuid","version":1}]
+  "references":[{"id":"other-resource-id","version":1}]
 }
 ```
 
-The service normalizes file order/tags and computes a SHA-256 digest of the persisted JSON snapshot. `bytes` is computed by the server. Version numbers are positive monotonic integers scoped to a resource. Draft revision numbers are separate optimistic concurrency tokens.
+`digest` 为保存的规范 JSON 快照的 SHA-256。版本号是资源内递增正整数；草稿 revision 是独立的并发控制值。
 
-Pin a node dependency as `{id, version, digest?}`. Never resolve `latest` implicitly during a running workflow. A newer publication doesn't alter existing snapshots or references. `references` contains exact resource/version dependencies, not an executable workflow format.
+## 编排插件如何使用
 
-## Same-host Cordis service
+1. 节点编辑器查询 `listResources({type:'skill',scope:'published'})`。
+2. 展示名称、描述、标签及版本列表。
+3. 用户选择资源后，把固定版本引用存入节点配置。
+4. 执行前解析引用并检查摘要，再按自身 Agent 格式使用文件。
 
-Declare `inject = ['gallery']`. The trusted host service exposes:
+Gallery 返回文件内容，不自动写入项目、启动进程或改变运行权限。路径约束、资源格式转换和执行生命周期由消费方负责。
 
-```ts
-listResources(query?: {type?: string; q?: string; scope?: 'all'|'mine'|'published'; limit?: number; offset?: number}, options?: {signal?: AbortSignal}): Promise<{items: Summary[]; total: number; limit: number; offset: number}>
-listVersions(id: string): Promise<{items: VersionSummary[]}>
-getResource(id: string, options?: {signal?: AbortSignal}): Promise<ResourceDetail>
-getVersion(id: string, version: number, options?: {signal?: AbortSignal}): Promise<PublishedVersion>
-resolveReference(ref: {id: string; version: number; digest?: string}, options?: {signal?: AbortSignal}): Promise<PublishedVersion>
-```
+## 独立读取适配器
 
-`getResource` returns `draft` only to author/admin. For execution always use `getVersion` / `resolveReference`. Publication result: `{id,version,digest,note,actorId,createdAt,resource}`. Tool executors should forward their cancellation `signal`.
-
-The orchestration node editor can query published skills, show name/description/author, fetch version history through HTTP SDK if required, and save a pinned reference in its own node configuration. Resolving a reference returns files; it does not copy files to disk or grant execution permissions. Path confinement, conversion to the target agent's skill format and lifecycle belong to the consumer.
-
-## HTTP / independent process SDK
+`dsh-plugin-gallery/sdk` 导出 `GalleryReader`，可包装本地存储或兼容的异步适配器：
 
 ```js
-import { GalleryClient } from 'dsh-plugin-gallery/sdk'
-const gallery = new GalleryClient({url:process.env.GALLERY_URL,token:process.env.GALLERY_TOKEN})
-const page = await gallery.listResources({type:'skill',scope:'published'})
-const versions = await gallery.listVersions(page.items[0].id)
-const snapshot = await gallery.resolveReference({id:page.items[0].id,version:versions.items[0].version})
+import { GalleryReader } from 'dsh-plugin-gallery/sdk'
+import { SqliteGalleryStore } from 'dsh-plugin-gallery/storage'
+const store = new SqliteGalleryStore('/absolute/path/gallery.sqlite')
+try {
+  const reader = new GalleryReader(store)
+  const result = await reader.listResources({scope:'published'})
+} finally {
+  store.close()
+}
 ```
 
-All `/v1` endpoints require `Authorization: Bearer <member token>`. HTTP is permitted by the SDK only for loopback development; remote endpoints use HTTPS. Redirects are refused to keep credentials at the configured service. Default request timeout: 20 seconds.
+同一 dsh 内优先使用已加载的 `ctx.gallery`，避免重复连接。`GalleryReader` 不管理传入存储的生命周期，可接收存储实例或 Promise。读取操作支持取消信号。
 
-| Method | Endpoint | Operation |
-|---|---|---|
-| GET | `/health` | Unauthenticated service/API identity |
-| GET | `/v1/me` | Current member |
-| GET | `/v1/resources` | Query `type,q,scope,limit,offset` (limit 1–100) |
-| POST | `/v1/resources` | Create a draft; body is resource payload |
-| GET | `/v1/resources/:id` | Detail, permitted draft and latest publication |
-| PUT | `/v1/resources/:id/draft` | `{resource,expectedRevision}` |
-| POST | `/v1/resources/:id/publish` | `{expectedRevision,note}` |
-| GET | `/v1/resources/:id/versions` | Published version metadata |
-| GET | `/v1/resources/:id/versions/:version` | Immutable full snapshot |
-| POST | `/v1/resources/:id/rollback` | `{version,expectedRevision}` restores new draft |
-| GET | `/v1/members` | Admin: members without tokens |
-| POST | `/v1/members` | Admin: `{name,role:'member'|'admin'}`; returns one-time token |
-| POST | `/v1/members/:id/access` | Admin: `{active:true}` rotates token; false revokes access |
+## 从 0.1 升级
 
-Errors: `{error:{code,message}}`. `401` invalid/revoked credentials; `403` insufficient role/ownership; `404` missing or hidden resource/version; `409 CONFLICT` stale draft revision. On conflict, reload and reconcile changes; do not silently overwrite.
+移除了成员管理、作者/管理员权限、HTTP API、`GalleryClient`、URL/token 配置，以及摘要中的 owner/canEdit 字段。筛选 `mine` 改为 `drafts`。同宿主五个读取方法的名称和参数保持不变。
 
-## Browser RPC
-
-`src/descriptors.mjs` declares owner-only Gallery control methods. Shared service authorization is always enforced even when a client lies about button states, resource ownership or member IDs. The DSH browser uses host RPC so team credentials do not need browser localStorage and remote service doesn't need permissive CORS.
+浏览器 RPC 仍通过当前 DSH Host owner 上下文认证。不要把本地资源服务直接转发给未授权分享用户。

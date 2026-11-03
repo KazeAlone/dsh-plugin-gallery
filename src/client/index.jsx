@@ -65,14 +65,6 @@ function Gallery({ remote }) {
     [editor, setEditor] = useState(null),
     [tab, setTab] = useState("content"),
     [publishNote, setPublishNote] = useState("");
-  const [connection, setConnection] = useState(false),
-    [url, setUrl] = useState(""),
-    [token, setToken] = useState("");
-  const [membersOpen, setMembersOpen] = useState(false),
-    [members, setMembers] = useState([]),
-    [memberName, setMemberName] = useState(""),
-    [memberRole, setMemberRole] = useState("member"),
-    [newToken, setNewToken] = useState(null);
   const [reference, setReference] = useState(""),
     [viewedVersion, setViewedVersion] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
@@ -101,7 +93,6 @@ function Gallery({ remote }) {
       .then((x) => {
         if (live) {
           setStatus(x);
-          setUrl(x.url || "");
         }
       })
       .catch((e) => {
@@ -112,7 +103,7 @@ function Gallery({ remote }) {
     };
   }, []);
   useEffect(() => {
-    if (!status?.connected) return;
+    if (!status?.ready) return;
     let live = true;
     setLoading(true);
     const timer = setTimeout(
@@ -136,7 +127,7 @@ function Gallery({ remote }) {
       live = false;
       clearTimeout(timer);
     };
-  }, [status?.connected, type, scope, q, offset, refresh]);
+  }, [status?.ready, type, scope, q, offset, refresh]);
   async function load(id) {
     const [r, v] = await Promise.all([
       call(remote, "uiGet", id),
@@ -263,7 +254,7 @@ function Gallery({ remote }) {
     setEditor(null);
     await load(r.id);
     setRefresh((x) => x + 1);
-    setNotice("草稿已保存。发布后团队成员即可获取这个版本。");
+    setNotice("草稿已保存，检查后可发布为固定版本。");
   }
   const snapshot = viewedVersion || selected?.published;
   const content =
@@ -278,41 +269,19 @@ function Gallery({ remote }) {
       <header className="gal-header">
         <div>
           <div className="gal-eyebrow">
-            TEAM RESOURCE LIBRARY <span>PREVIEW · 0.1</span>
+            RESOURCE LIBRARY <span>PREVIEW · 0.2</span>
           </div>
           <h1>资源 Gallery</h1>
-          <p>把团队积累的能力，放在一个地方。</p>
+          <p>收集可复用资源，让每次编排都有积累。</p>
         </div>
         <div className="gal-header-actions">
-          {status?.connected && (
-            <>
-              <span className="gal-member">
-                <i />
-                {status.member.name}
-                <small>
-                  {status.member.role === "admin" ? "管理员" : "成员"}
-                </small>
-              </span>
-              {status.member.role === "admin" && (
-                <button
-                  onClick={() =>
-                    run(async () => {
-                      setMembers((await call(remote, "uiMembers")).items);
-                      setNewToken(null);
-                      setMembersOpen(true);
-                    })
-                  }
-                >
-                  成员
-                </button>
-              )}
-              <button className="gal-primary" onClick={() => edit(null)}>
-                ＋ 新建资源
-              </button>
-            </>
-          )}
-          <button title="Gallery 连接设置" onClick={() => setConnection(true)}>
-            连接设置
+          <span className="gal-local">本地资源库</span>
+          <button
+            className="gal-primary"
+            disabled={!status?.ready}
+            onClick={() => edit(null)}
+          >
+            ＋ 新建资源
           </button>
         </div>
       </header>
@@ -332,52 +301,12 @@ function Gallery({ remote }) {
           </button>
         </div>
       )}
-      {!status ? (
-        <div className="gal-empty">正在读取 Gallery 连接…</div>
-      ) : !status.connected ? (
-        <section className="gal-onboarding">
-          <div className="gal-large-icon">
-            <Icon />
-          </div>
-          <h2>连接你的团队资源库</h2>
-          <p>每位成员在自己的 dsh 中，使用独立令牌连接同一台 Gallery 服务。</p>
-          {status.error && <p className="gal-error">{status.error}</p>}
-          <label>
-            共享服务地址
-            <input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://gallery.your-team.com"
-            />
-          </label>
-          <label>
-            成员令牌
-            <input
-              type="password"
-              autoComplete="off"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="由团队管理员提供"
-            />
-          </label>
-          <button
-            disabled={busy || status.locked}
-            className="gal-primary"
-            onClick={() =>
-              run(async () => {
-                const s = await call(remote, "uiConnect", json({ url, token }));
-                setStatus(s);
-                setToken("");
-                setNotice("已连接团队 Gallery");
-              })
-            }
-          >
-            {busy ? "连接中…" : "连接 Gallery"}
-          </button>
-          {status.locked && (
-            <p>此连接由宿主配置管理，请修改宿主配置或环境变量。</p>
-          )}
-        </section>
+      {!status?.ready ? (
+        <div className="gal-empty">
+          {error
+            ? "资源库暂时不可用，请检查提示后刷新。"
+            : "正在打开本地资源库…"}
+        </div>
       ) : (
         <>
           <div className="gal-type-grid">
@@ -415,13 +344,13 @@ function Gallery({ remote }) {
                 全部资源
               </button>
               <button
-                className={scope === "mine" ? "active" : ""}
+                className={scope === "drafts" ? "active" : ""}
                 onClick={() => {
-                  setScope("mine");
+                  setScope("drafts");
                   setOffset(0);
                 }}
               >
-                我的资源
+                草稿
               </button>
               <button
                 className={scope === "published" ? "active" : ""}
@@ -436,7 +365,7 @@ function Gallery({ remote }) {
             <input
               aria-label="搜索资源"
               className="gal-search"
-              placeholder="搜索名称、描述、标签或作者…"
+              placeholder="搜索名称、描述或标签…"
               value={q}
               onChange={(e) => {
                 setQ(e.target.value);
@@ -446,7 +375,7 @@ function Gallery({ remote }) {
           </div>
           <div className="gal-list-heading">
             <span>
-              {type ? TYPES[type] : "团队资源"} <strong>{total}</strong>
+              {type ? TYPES[type] : "资源"} <strong>{total}</strong>
             </span>
             <div>
               {type && (
@@ -465,7 +394,7 @@ function Gallery({ remote }) {
               <h3>
                 {q || type || scope !== "all"
                   ? "没有匹配的资源"
-                  : "团队资源，从第一份积累开始"}
+                  : "资源，从第一份积累开始"}
               </h3>
               <p>
                 {q || type || scope !== "all"
@@ -501,7 +430,7 @@ function Gallery({ remote }) {
                     ))}
                   </div>
                   <footer>
-                    <span>{r.ownerName}</span>
+                    <span>{r.fileCount} 个文件</span>
                     <span>{new Date(r.updatedAt).toLocaleDateString()}</span>
                   </footer>
                 </button>
@@ -528,8 +457,8 @@ function Gallery({ remote }) {
             </div>
           )}
           <footer className="gal-bottom">
-            <span>团队内发布即共享 · 使用固定版本引用资源</span>
-            <span title={status.url}>{status.url}</span>
+            <span>本地保存 · 使用固定版本引用资源</span>
+            <span>Skill · Agent · MCP · Workflow</span>
           </footer>
         </>
       )}
@@ -548,7 +477,6 @@ function Gallery({ remote }) {
                 </span>
                 <h2>{content.name}</h2>
                 <p>
-                  {selected.ownerName} ·{" "}
                   {selected.latestVersion
                     ? `最新发布 v${selected.latestVersion}`
                     : "尚未发布"}
@@ -560,7 +488,7 @@ function Gallery({ remote }) {
               </button>
             </div>
             <div className="gal-detail-actions">
-              {selected.canEdit && (
+              {selected && (
                 <button onClick={() => edit(selected)}>编辑草稿</button>
               )}
               {selected.published && (
@@ -644,9 +572,9 @@ function Gallery({ remote }) {
                       <span key={t}>{t}</span>
                     ))}
                   </div>
-                  {selected.canEdit && selected.hasDraft && (
+                  {selected.hasDraft && (
                     <p className="gal-hint">
-                      正在查看作者草稿，团队其他成员仅能获取已发布版本。
+                      正在查看草稿。发布后可通过固定版本引用使用。
                     </p>
                   )}
                   {content.files.map((f) => (
@@ -737,7 +665,7 @@ function Gallery({ remote }) {
                       >
                         查看内容
                       </button>
-                      {selected.canEdit && (
+                      {selected && (
                         <button
                           disabled={busy}
                           onClick={async () => {
@@ -772,7 +700,7 @@ function Gallery({ remote }) {
                 ))
               )}
             </div>
-            {selected.canEdit && selected.hasDraft && (
+            {selected.hasDraft && (
               <div className="gal-publish-bar">
                 <input
                   aria-label="版本说明"
@@ -798,7 +726,7 @@ function Gallery({ remote }) {
                       await load(selected.id);
                       setPublishNote("");
                       setRefresh((x) => x + 1);
-                      setNotice(`v${v.version} 已发布，团队成员现在可以获取。`);
+                      setNotice(`v${v.version} 已发布，可供编排插件引用。`);
                     })
                   }
                 >
@@ -1040,7 +968,7 @@ function Gallery({ remote }) {
               </details>
             </div>
             <footer className="gal-dialog-footer">
-              <span>草稿仅作者和管理员可见</span>
+              <span>草稿保存在本地，发布后生成不可变版本</span>
               <button
                 className="gal-primary"
                 disabled={busy}
@@ -1049,217 +977,6 @@ function Gallery({ remote }) {
                 {busy ? "保存中…" : "保存草稿"}
               </button>
             </footer>
-          </section>
-        </div>
-      )}
-      {connection && (
-        <div className="gal-overlay">
-          <section
-            className="gal-dialog gal-small"
-            role="dialog"
-            aria-modal="true"
-            aria-label="连接设置"
-          >
-            <div className="gal-dialog-head">
-              <h2>连接团队 Gallery</h2>
-              <button
-                aria-label="关闭连接设置"
-                onClick={() => setConnection(false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="gal-dialog-body">
-              <label>
-                服务地址
-                <input
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://gallery.your-team.com"
-                />
-              </label>
-              <label>
-                成员令牌
-                <input
-                  type="password"
-                  autoComplete="off"
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  placeholder="填写新令牌以切换或重新连接"
-                />
-              </label>
-              <p className="gal-hint">
-                令牌仅保存在本机 dsh 宿主，不会返回浏览器。远程服务使用 HTTPS。
-              </p>
-              {status?.locked && (
-                <p className="gal-error">连接由宿主配置或环境变量管理。</p>
-              )}
-            </div>
-            <div className="gal-dialog-footer">
-              <span>{status?.member?.name || "未连接"}</span>
-              <button
-                className="gal-primary"
-                disabled={busy || status?.locked}
-                onClick={() =>
-                  run(async () => {
-                    const s = await call(
-                      remote,
-                      "uiConnect",
-                      json({ url, token }),
-                    );
-                    setStatus(s);
-                    setToken("");
-                    setConnection(false);
-                    setSelected(null);
-                    setRefresh((x) => x + 1);
-                    setNotice("Gallery 连接已更新");
-                  })
-                }
-              >
-                验证并连接
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-      {membersOpen && (
-        <div className="gal-overlay">
-          <section
-            className="gal-dialog gal-members"
-            role="dialog"
-            aria-modal="true"
-            aria-label="团队成员"
-          >
-            <div className="gal-dialog-head">
-              <div>
-                <div className="gal-eyebrow">TEAM ACCESS</div>
-                <h2>团队成员</h2>
-                <p>每位成员使用独立令牌，资源作者身份由共享服务确定。</p>
-              </div>
-              <button
-                aria-label="关闭成员管理"
-                onClick={() => {
-                  setMembersOpen(false);
-                  setNewToken(null);
-                }}
-              >
-                ×
-              </button>
-            </div>
-            <div className="gal-dialog-body">
-              {newToken && (
-                <div className="gal-token">
-                  <strong>{newToken.name} 的成员令牌</strong>
-                  <p>仅本次显示。请通过团队可信渠道交给本人。</p>
-                  <textarea
-                    aria-label="新成员令牌"
-                    readOnly
-                    rows={2}
-                    value={newToken.token}
-                  />
-                </div>
-              )}
-              <div className="gal-form-row">
-                <label className="gal-grow">
-                  成员名称
-                  <input
-                    value={memberName}
-                    onChange={(e) => setMemberName(e.target.value)}
-                    placeholder="输入成员名称"
-                  />
-                </label>
-                <label>
-                  角色
-                  <select
-                    value={memberRole}
-                    onChange={(e) => setMemberRole(e.target.value)}
-                  >
-                    <option value="member">成员</option>
-                    <option value="admin">管理员</option>
-                  </select>
-                </label>
-                <button
-                  className="gal-primary"
-                  disabled={busy || !memberName.trim()}
-                  onClick={() =>
-                    run(async () => {
-                      const x = await call(
-                        remote,
-                        "uiAddMember",
-                        json({ name: memberName, role: memberRole }),
-                      );
-                      setNewToken({ name: x.member.name, token: x.token });
-                      setMemberName("");
-                      setMembers((await call(remote, "uiMembers")).items);
-                    })
-                  }
-                >
-                  添加成员
-                </button>
-              </div>
-              {members.map((m) => (
-                <div className="gal-member-row" key={m.id}>
-                  <div>
-                    <strong>{m.name}</strong>
-                    <small>
-                      {m.role === "admin" ? "管理员" : "成员"} ·{" "}
-                      {m.active ? "有效" : "已停用"}
-                    </small>
-                  </div>
-                  {m.id !== status.member.id && (
-                    <div>
-                      <button
-                        disabled={busy}
-                        onClick={async () => {
-                          if (
-                            await confirmAction(
-                              "重置令牌后，原令牌将立即失效。继续？",
-                            )
-                          )
-                            run(async () => {
-                              const x = await call(
-                                remote,
-                                "uiMemberAccess",
-                                m.id,
-                                json({ active: true }),
-                              );
-                              setNewToken({ name: m.name, token: x.token });
-                              setMembers(
-                                (await call(remote, "uiMembers")).items,
-                              );
-                            });
-                        }}
-                      >
-                        重置令牌
-                      </button>
-                      {m.active && (
-                        <button
-                          disabled={busy}
-                          onClick={async () => {
-                            if (
-                              await confirmAction(`停用 ${m.name} 的访问权限？`)
-                            )
-                              run(async () => {
-                                await call(
-                                  remote,
-                                  "uiMemberAccess",
-                                  m.id,
-                                  json({ active: false }),
-                                );
-                                setMembers(
-                                  (await call(remote, "uiMembers")).items,
-                                );
-                              });
-                          }}
-                        >
-                          停用
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
           </section>
         </div>
       )}

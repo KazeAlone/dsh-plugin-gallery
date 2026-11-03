@@ -13,7 +13,6 @@ export function demand(ok, status, code, message) {
 export const TYPES = ["skill", "agent", "mcp", "workflow"];
 export const digest = (value) =>
   createHash("sha256").update(value).digest("hex");
-export const tokenHash = (token) => digest(token);
 export function text(value, name, max = 200) {
   demand(
     typeof value === "string" && value.trim().length > 0 && value.length <= max,

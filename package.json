@@ -1,18 +1,14 @@
 {
   "name": "dsh-plugin-gallery",
-  "version": "0.1.0",
-  "description": "Team resource gallery for DSH: skills, agents, MCP and workflows",
+  "version": "0.2.0",
+  "description": "Local resource gallery for DSH: skills, agents, MCP and workflows",
   "type": "module",
   "main": "./src/host.mjs",
   "exports": {
     ".": "./src/host.mjs",
     "./client": "./dist/client.js",
-    "./sdk": "./src/client-api.mjs",
+    "./sdk": "./src/reader.mjs",
     "./storage": "./src/store.mjs"
-  },
-  "bin": {
-    "dsh-gallery-server": "./src/server.mjs",
-    "dsh-gallery-admin": "./scripts/admin.mjs"
   },
   "files": [
     "src",
@@ -21,8 +17,7 @@
     "docs",
     "cordis.patch.yml",
     "README.md",
-    "LICENSE",
-    "Dockerfile"
+    "LICENSE"
   ],
   "engines": {
     "node": ">=24.9.0",
@@ -69,7 +64,6 @@
     "build": "node scripts/build.mjs",
     "test": "node --test test/*.test.mjs",
     "check": "node scripts/check.mjs",
-    "start": "node src/server.mjs",
     "prepack": "npm run build && npm run check && npm test",
     "format": "prettier --write src scripts test"
   },
