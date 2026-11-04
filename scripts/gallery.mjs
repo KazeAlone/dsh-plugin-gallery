@@ -6,6 +6,7 @@ import { writeFileSync, chmodSync } from "node:fs";
 import { SqliteGalleryStore } from "../src/store.mjs";
 import { importLocalDatabase } from "../src/import-local.mjs";
 import { createGalleryServer } from "../src/server.mjs";
+import { DevelopmentIdentityProvider } from "../src/identity.mjs";
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
@@ -18,6 +19,7 @@ const { values, positionals } = parseArgs({
     ttl: { type: "string", default: "86400" },
     output: { type: "string" },
     resource: { type: "string" },
+    "dev-auth": { type: "boolean", default: false },
   },
 });
 const command = positionals[0];
@@ -25,7 +27,7 @@ if (
   !["serve", "issue-code", "assign-owner", "import-local"].includes(command)
 ) {
   console.log(
-    "Usage: dsh-gallery import-local --from OLD_DB | serve | issue-code --output /secure/code.json | assign-owner --resource ID --subject SUBJECT\nOptions: --database PATH --host HOST --port PORT --tenant default --ttl 86400",
+    "Usage: dsh-gallery import-local --from OLD_DB | serve [--dev-auth] | issue-code --output /secure/code.json | assign-owner --resource ID --subject SUBJECT\nOptions: --database PATH --host HOST --port PORT --tenant default --ttl 86400",
   );
   process.exit(command ? 1 : 0);
 }
@@ -47,7 +49,14 @@ if (command === "import-local") {
 const store = new SqliteGalleryStore(database);
 try {
   if (command === "serve") {
-    const server = createGalleryServer({ store });
+    const server = createGalleryServer({
+      store,
+      ...(values["dev-auth"]
+        ? { identityProvider: new DevelopmentIdentityProvider(store) }
+        : {}),
+    });
+    if (values["dev-auth"])
+      console.warn("Gallery 开发认证已启用：无需接入码，请仅用于开发环境。");
     server.listen(Number(values.port), values.host, () =>
       console.log(
         `Gallery service listening on ${values.host}:${server.address().port}`,

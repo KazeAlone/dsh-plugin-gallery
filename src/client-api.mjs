@@ -67,6 +67,9 @@ export class GalleryClient {
       anonymous: true,
     });
   }
+  getHealth() {
+    return this.request("/health", { anonymous: true });
+  }
   getIdentity(options) {
     return this.request("/v1/identity", options);
   }

@@ -8,7 +8,10 @@ import { SqliteGalleryStore } from "../src/store.mjs";
 import { GalleryClient, serviceUrl } from "../src/client-api.mjs";
 import { createGalleryServer } from "../src/server.mjs";
 import { importLocalDatabase } from "../src/import-local.mjs";
-import { VerifiedPlatformIdentityProvider } from "../src/identity.mjs";
+import {
+  DevelopmentIdentityProvider,
+  VerifiedPlatformIdentityProvider,
+} from "../src/identity.mjs";
 import { digest, normalizeResource } from "../src/model.mjs";
 const resource = (name = "示例") => ({
   type: "skill",
@@ -46,6 +49,34 @@ async function service(t, store, provider) {
 }
 const throwsCode = (fn, code) => assert.throws(fn, (e) => e.code === code);
 const rejectsCode = (fn, code) => assert.rejects(fn, (e) => e.code === code);
+test("开发模式免接入码，仍隔离身份并验证写入归属", async (t) => {
+  const { store } = setup(t);
+  const url = await service(t, store, new DevelopmentIdentityProvider(store));
+  const anonymous = new GalleryClient({ url });
+  assert.equal((await anonymous.getHealth()).authMode, "development");
+  await rejectsCode(() => anonymous.listResources(), "UNAUTHORIZED");
+  const first = await anonymous.enroll({
+    displayName: "开发者",
+    subject: "forged",
+  });
+  const second = await anonymous.enroll({ displayName: "开发者" });
+  assert.notEqual(first.identity.subject, second.identity.subject);
+  assert.notEqual(first.identity.subject, "forged");
+  const a = new GalleryClient({ url, credential: first.credential });
+  const b = new GalleryClient({ url, credential: second.credential });
+  const r = await a.createResource(resource());
+  assert.equal((await b.listResources()).total, 1);
+  await rejectsCode(
+    () => b.updateResource(r.id, resource(), r.revision),
+    "FORBIDDEN",
+  );
+  const normal = new GalleryClient({ url: await service(t, store) });
+  assert.equal((await normal.getHealth()).authMode, "verified");
+  await rejectsCode(
+    () => normal.enroll({ displayName: "开发者" }),
+    "INVALID_CODE",
+  );
+});
 test("接入码单次使用、过期与恢复；服务端仅保存摘要", (t) => {
   const { store, enroll } = setup(t),
     code = store.issueCode();

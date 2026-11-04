@@ -72,6 +72,14 @@ node scripts/gallery.mjs assign-owner --database /srv/gallery/gallery.sqlite --r
 
 ## 开发
 
+开发阶段可显式启用免接入码模式（普通启动仍要求一次性接入码）：
+
+```bash
+node scripts/gallery.mjs serve --dev-auth --database .data/dev-gallery.sqlite
+```
+
+启动后刷新 Gallery 页面，填写姓名即可进入，不再显示接入码输入框。每次接入创建独立身份，凭证仍保存在本机；同名不会获得其他身份的编辑权限。退出身份后重新进入会创建新身份，无法编辑原身份的资源。此模式仅用于开发，请使用独立开发数据库，不要用于公开或正式团队服务。移除 `--dev-auth` 并重启可恢复接入码认证；已签发的凭证仍有效。
+
 ```bash
 npm ci
 npm run build

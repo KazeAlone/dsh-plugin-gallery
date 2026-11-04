@@ -116,6 +116,15 @@ export default class GalleryService extends TypertRemoteService {
   uiStatus() {
     return this.ownerCall(async () => {
       const base = { url: this.state.url, serverLocked: !!this.state.fixedUrl };
+      try {
+        const health = await new GalleryClient({
+          url: this.state.url,
+        }).getHealth();
+        base.developmentAuth = health.authMode === "development";
+        this.state.developmentAuth = base.developmentAuth;
+      } catch {
+        // Older or unavailable services retain the normal enrollment form.
+      }
       if (!this.state.client)
         return { ...base, ready: false, error: this.state.restoreError };
       try {
@@ -158,6 +167,7 @@ export default class GalleryService extends TypertRemoteService {
       this.state.client = null;
       return {
         ready: false,
+        developmentAuth: this.state.developmentAuth,
         url: this.state.url,
         serverLocked: !!this.state.fixedUrl,
       };

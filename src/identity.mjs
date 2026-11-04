@@ -37,6 +37,14 @@ export class EnrollmentIdentityProvider {
     return this.store.redeemCode(input.code, input.displayName);
   }
 }
+/** Explicit development opt-in; creates independent identities without a code. */
+export class DevelopmentIdentityProvider extends EnrollmentIdentityProvider {
+  authMode = "development";
+  async enroll(input) {
+    const displayName = text(input.displayName, "姓名", 100);
+    return this.store.redeemCode(this.store.issueCode().code, displayName);
+  }
+}
 /** The verifier is operator-supplied code; it must validate platform signatures/issuer/audience/expiry. */
 export class VerifiedPlatformIdentityProvider {
   constructor(verifyRequest) {

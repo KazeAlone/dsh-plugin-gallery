@@ -343,7 +343,7 @@ function Gallery({ remote }) {
       className: "gal-identity gal-dialog",
       "aria-label": "\u63A5\u5165\u5171\u4EAB\u8D44\u6E90\u5E93"
     },
-    /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("h2", null, "\u63A5\u5165\u5171\u4EAB\u8D44\u6E90\u5E93"), /* @__PURE__ */ import_react.default.createElement("p", null, "\u586B\u5199\u59D3\u540D\u548C\u7EF4\u62A4\u8005\u63D0\u4F9B\u7684\u4E00\u6B21\u6027\u63A5\u5165\u7801\u3002"))),
+    /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("h2", null, "\u63A5\u5165\u5171\u4EAB\u8D44\u6E90\u5E93"), /* @__PURE__ */ import_react.default.createElement("p", null, status?.developmentAuth ? "\u5F00\u53D1\u6A21\u5F0F\uFF1A\u586B\u5199\u59D3\u540D\u5373\u53EF\u8FDB\u5165\uFF0C\u65E0\u9700\u63A5\u5165\u7801\u3002" : "\u586B\u5199\u59D3\u540D\u548C\u7EF4\u62A4\u8005\u63D0\u4F9B\u7684\u4E00\u6B21\u6027\u63A5\u5165\u7801\u3002"))),
     !status ? /* @__PURE__ */ import_react.default.createElement("p", { className: "gal-hint" }, "\u6B63\u5728\u68C0\u67E5\u8EAB\u4EFD\u2026") : /* @__PURE__ */ import_react.default.createElement(
       "form",
       {
@@ -390,7 +390,7 @@ function Gallery({ remote }) {
           }))
         }
       )),
-      /* @__PURE__ */ import_react.default.createElement("label", null, "\u4E00\u6B21\u6027\u63A5\u5165\u7801", /* @__PURE__ */ import_react.default.createElement(
+      !status.developmentAuth && /* @__PURE__ */ import_react.default.createElement("label", null, "\u4E00\u6B21\u6027\u63A5\u5165\u7801", /* @__PURE__ */ import_react.default.createElement(
         "input",
         {
           required: true,

@@ -326,7 +326,11 @@ function Gallery({ remote }) {
           <div className="gal-dialog-head">
             <div>
               <h2>接入共享资源库</h2>
-              <p>填写姓名和维护者提供的一次性接入码。</p>
+              <p>
+                {status?.developmentAuth
+                  ? "开发模式：填写姓名即可进入，无需接入码。"
+                  : "填写姓名和维护者提供的一次性接入码。"}
+              </p>
             </div>
           </div>
           {!status ? (
@@ -384,19 +388,21 @@ function Gallery({ remote }) {
                   }
                 />
               </label>
-              <label>
-                一次性接入码
-                <input
-                  required
-                  type="password"
-                  autoComplete="off"
-                  aria-label="一次性接入码"
-                  value={identityForm.code}
-                  onChange={(e) =>
-                    setIdentityForm((f) => ({ ...f, code: e.target.value }))
-                  }
-                />
-              </label>
+              {!status.developmentAuth && (
+                <label>
+                  一次性接入码
+                  <input
+                    required
+                    type="password"
+                    autoComplete="off"
+                    aria-label="一次性接入码"
+                    value={identityForm.code}
+                    onChange={(e) =>
+                      setIdentityForm((f) => ({ ...f, code: e.target.value }))
+                    }
+                  />
+                </label>
+              )}
               <p className="gal-hint">
                 资源保存即共享；只有上传者可以编辑。身份验证后会保存在这台电脑上。
               </p>

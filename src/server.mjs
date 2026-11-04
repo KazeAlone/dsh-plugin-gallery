@@ -43,7 +43,11 @@ export function createGalleryServer({
         path = url.pathname;
       let result;
       if (req.method === "GET" && path === "/health")
-        result = { service: "dsh-plugin-gallery", apiVersion: 2 };
+        result = {
+          service: "dsh-plugin-gallery",
+          apiVersion: 2,
+          authMode: identityProvider.authMode ?? "verified",
+        };
       else if (req.method === "POST" && path === "/v1/identity/enroll") {
         demand(
           typeof identityProvider.enroll === "function",
