@@ -63,6 +63,10 @@ function Gallery({ remote }) {
   const [selected, setSelected] = useState(null),
     [editor, setEditor] = useState(null);
   const [reference, setReference] = useState("");
+  const [storageSettings, setStorageSettings] = useState(null);
+  const [targetLibrary, setTargetLibrary] = useState("local");
+  const [libraryName, setLibraryName] = useState("");
+  const [connectionResult, setConnectionResult] = useState("");
   const [confirmation, setConfirmation] = useState(null);
   const confirmAction = (message) =>
     new Promise((resolve) => setConfirmation({ message, resolve }));
@@ -89,6 +93,10 @@ function Gallery({ remote }) {
       .then((x) => {
         if (live) {
           setStatus(x);
+          if (x.storage && !x.storage.configured) {
+            setStorageSettings(x.storage);
+            setTargetLibrary(x.storage.activeLibraryId);
+          }
         }
       })
       .catch((e) => {
@@ -123,7 +131,15 @@ function Gallery({ remote }) {
       live = false;
       clearTimeout(timer);
     };
-  }, [status?.ready, type, scope, q, offset, refresh]);
+  }, [
+    status?.ready,
+    status?.storage?.activeLibraryId,
+    type,
+    scope,
+    q,
+    offset,
+    refresh,
+  ]);
   async function load(id) {
     const r = await call(remote, "uiGet", id);
     setSelected(r);
@@ -244,7 +260,7 @@ function Gallery({ remote }) {
     setEditor(null);
     await load(r.id);
     setRefresh((x) => x + 1);
-    setNotice("资源已保存到 DSH 本地资源库。");
+    setNotice("资源已保存。");
   }
   const content = selected;
   const activeFile = editor?.resource.files[editor.fileIndex];
@@ -263,7 +279,22 @@ function Gallery({ remote }) {
           <p>收集可复用资源，让每次编排都有积累。</p>
         </div>
         <div className="gal-header-actions">
-          <span className="gal-local">DSH 本地资源库</span>
+          <button
+            disabled={busy || !status?.ready}
+            onClick={() =>
+              run(async () => {
+                const settings = await call(remote, "uiStorageSettings");
+                setStorageSettings(settings);
+                setTargetLibrary(settings.activeLibraryId);
+                setConnectionResult("");
+              })
+            }
+          >
+            {status?.storage?.libraries.find(
+              (l) => l.id === status.storage.activeLibraryId,
+            )?.name || "资源库存储"}{" "}
+            · 存储设置
+          </button>
           <button
             className="gal-primary"
             disabled={!status?.ready}
@@ -472,7 +503,11 @@ function Gallery({ remote }) {
                           metadata: content.metadata,
                           references: content.references,
                         },
-                        source: { id: selected.id, digest: selected.digest },
+                        source: {
+                          libraryId: selected.libraryId,
+                          id: selected.id,
+                          digest: selected.digest,
+                        },
                       },
                       null,
                       2,
@@ -485,7 +520,15 @@ function Gallery({ remote }) {
               <button
                 onClick={() =>
                   setReference(
-                    json({ id: selected.id, digest: selected.digest }, null, 2),
+                    json(
+                      {
+                        libraryId: selected.libraryId,
+                        id: selected.id,
+                        digest: selected.digest,
+                      },
+                      null,
+                      2,
+                    ),
                   )
                 }
               >
@@ -774,6 +817,152 @@ function Gallery({ remote }) {
                 onClick={() => run(save)}
               >
                 {busy ? "保存中…" : "保存资源"}
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
+      {storageSettings && (
+        <div className="gal-overlay">
+          <section
+            className="gal-dialog gal-storage"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="gal-storage-title"
+          >
+            <div className="gal-dialog-head">
+              <h2 id="gal-storage-title">
+                {storageSettings.configured ? "资源库存储" : "选择资源库存储"}
+              </h2>
+              <button
+                aria-label="关闭存储设置"
+                disabled={busy}
+                onClick={() =>
+                  run(async () => {
+                    if (!storageSettings.configured) {
+                      const storage = await call(
+                        remote,
+                        "uiSwitchLibrary",
+                        json({ libraryId: storageSettings.activeLibraryId }),
+                      );
+                      setStatus((x) => ({ ...x, storage }));
+                    }
+                    setStorageSettings(null);
+                  })
+                }
+              >
+                ×
+              </button>
+            </div>
+            <div className="gal-dialog-body">
+              <div className="gal-storage-providers">
+                {storageSettings.providers.map((provider) => (
+                  <div
+                    key={provider.type}
+                    className={provider.available ? "active" : ""}
+                  >
+                    <strong>{provider.name}</strong>
+                    <span>
+                      {provider.available ? "已可用 · 无需配置" : "后续接入"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <label>
+                当前资源库
+                <select
+                  value={targetLibrary}
+                  disabled={busy}
+                  onChange={(e) => {
+                    setTargetLibrary(e.target.value);
+                    setConnectionResult("");
+                  }}
+                >
+                  {storageSettings.libraries.map((library) => (
+                    <option key={library.id} value={library.id}>
+                      {library.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p>切换只改变当前显示的资源库，原有资源保留，不会复制或合并。</p>
+              <div className="gal-storage-add">
+                <input
+                  aria-label="新资源库名称"
+                  placeholder="新本地资源库名称"
+                  maxLength={80}
+                  value={libraryName}
+                  disabled={busy}
+                  onChange={(e) => setLibraryName(e.target.value)}
+                />
+                <button
+                  disabled={busy || !libraryName.trim()}
+                  onClick={() =>
+                    run(async () => {
+                      const before = new Set(
+                        storageSettings.libraries.map((l) => l.id),
+                      );
+                      const settings = await call(
+                        remote,
+                        "uiAddLibrary",
+                        json({ type: "internal", name: libraryName }),
+                      );
+                      setStorageSettings(settings);
+                      setStatus((x) => ({ ...x, storage: settings }));
+                      setTargetLibrary(
+                        settings.libraries.find((l) => !before.has(l.id)).id,
+                      );
+                      setLibraryName("");
+                      setConnectionResult("");
+                    })
+                  }
+                >
+                  添加
+                </button>
+              </div>
+              {connectionResult && <p role="status">{connectionResult}</p>}
+              {error && <p role="alert">{error}</p>}
+            </div>
+            <footer className="gal-dialog-footer">
+              <button
+                disabled={busy}
+                onClick={() =>
+                  run(async () => {
+                    await call(
+                      remote,
+                      "uiTestStorage",
+                      json({ libraryId: targetLibrary }),
+                    );
+                    setConnectionResult("资源库可用");
+                  })
+                }
+              >
+                检查存储
+              </button>
+              <button
+                className="gal-primary"
+                disabled={busy}
+                onClick={() =>
+                  run(async () => {
+                    const storage = await call(
+                      remote,
+                      "uiSwitchLibrary",
+                      json({ libraryId: targetLibrary }),
+                    );
+                    setStatus((x) => ({ ...x, storage }));
+                    setStorageSettings(null);
+                    setSelected(null);
+                    setEditor(null);
+                    setReference("");
+                    setItems([]);
+                    setTotal(0);
+                    setOffset(0);
+                    setRefresh((x) => x + 1);
+                    setNotice("已切换资源库，原有资源保留。");
+                  })
+                }
+              >
+                {busy ? "处理中…" : "使用此资源库"}
               </button>
             </footer>
           </section>

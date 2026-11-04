@@ -924,3 +924,56 @@
 .gal-identity .gal-primary {
   align-self: flex-start;
 }
+
+.gal-storage {
+  max-width: 640px;
+}
+.gal-storage .gal-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-size: 14px;
+}
+.gal-storage-providers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.gal-storage-providers > div {
+  border: 1px solid var(--g-line);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gal-storage-providers > div:not(.active) {
+  color: var(--g-muted);
+}
+.gal-storage-providers .active {
+  border-color: currentColor;
+}
+.gal-storage-providers span {
+  font-size: 14px;
+}
+.gal-storage label {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gal-storage select {
+  font: inherit;
+  padding: 10px;
+  color: inherit;
+  background: var(--g-bg);
+  border: 1px solid var(--g-line);
+  border-radius: 6px;
+}
+.gal-storage-add {
+  display: flex;
+  gap: 12px;
+}
+.gal-storage-add input {
+  min-width: 0;
+  flex: 1;
+}

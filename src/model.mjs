@@ -154,6 +154,9 @@ export function normalizeResource(input) {
       );
     return {
       id: text(r.id, "引用 ID", 100),
+      ...(r.libraryId !== undefined
+        ? { libraryId: text(r.libraryId, "资源库 ID", 100) }
+        : {}),
       ...(r.digest ? { digest: r.digest } : {}),
     };
   });

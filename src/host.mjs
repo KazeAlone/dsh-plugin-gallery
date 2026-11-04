@@ -4,19 +4,15 @@ import {
 } from "@deepseek-ai/dsh-typert-protocol";
 import { join } from "node:path";
 import { homedir } from "node:os";
-import { LocalGalleryStore } from "./local-store.mjs";
+import { StorageManager } from "./storage-manager.mjs";
 import { DESCRIPTORS } from "./descriptors.mjs";
 
 export default class GalleryService extends TypertRemoteService {
   static inject = ["typert"];
   constructor(ctx) {
     super(ctx, "gallery");
-    this.store = new LocalGalleryStore(
-      join(
-        process.env.DSH_HOME ?? join(homedir(), ".dsh"),
-        "gallery",
-        "resources.json",
-      ),
+    this.store = new StorageManager(
+      join(process.env.DSH_HOME ?? join(homedir(), ".dsh"), "gallery"),
     );
     ctx.effect(() =>
       ctx.get("typert").register({
@@ -31,8 +27,8 @@ export default class GalleryService extends TypertRemoteService {
   async listResources(query) {
     return this.store.listResources(query);
   }
-  async getResource(id) {
-    return this.store.getResource(id);
+  async getResource(id, options) {
+    return this.store.getResource(id, options?.libraryId);
   }
   async resolveReference(ref) {
     return this.store.resolveReference(ref);
@@ -58,8 +54,8 @@ export default class GalleryService extends TypertRemoteService {
   }
   uiStatus() {
     return this.ownerCall(() => {
-      this.store.read();
-      return { ready: true, mode: "local" };
+      this.store.adapter().read();
+      return { ready: true, mode: "local", storage: this.store.settings() };
     });
   }
   uiList(payload) {
@@ -76,5 +72,17 @@ export default class GalleryService extends TypertRemoteService {
       const p = JSON.parse(payload);
       return this.store.updateResource(id, p.resource, p.expectedRevision);
     });
+  }
+  uiStorageSettings() {
+    return this.ownerCall(() => this.store.settings());
+  }
+  uiTestStorage(payload) {
+    return this.ownerCall(() => this.store.testConnection(JSON.parse(payload)));
+  }
+  uiAddLibrary(payload) {
+    return this.ownerCall(() => this.store.addLibrary(JSON.parse(payload)));
+  }
+  uiSwitchLibrary(payload) {
+    return this.ownerCall(() => this.store.switchLibrary(JSON.parse(payload)));
   }
 }
