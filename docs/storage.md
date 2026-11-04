@@ -1,23 +1,11 @@
-# 共享服务存储
+# Gallery 本地存储
 
-浏览器 → DSH owner RPC → Host SDK → 共享 HTTP 服务 → 存储适配器。每个 DSH 只保存服务地址与已验证凭证，资源集中在服务端数据库。
+当前数据写入 `$DSH_HOME/gallery/resources.json`，未设置 DSH_HOME 时为 `~/.dsh/gallery/resources.json`。无需数据库、共享服务或插件身份凭证。
 
-`SqliteGalleryStore` 是首版适配器，Node >=24.9，WAL、busy timeout、事务写入。资源存储契约：`list(principal,query)`、`get(principal,id)`、`create(principal,input)`、`update(principal,id,input,expectedRevision)`。身份来自可信服务端提供器，不能直接使用请求体身份。
+文件格式为 `{format:1,resources:[...]}`。每条资源有 UUID、规范化内容、SHA-256 摘要、revision 和创建/更新时间。文件及附件内容随资源存储。
 
-不变量：
+每次读操作读取当前文件；写操作先获取同目录 `.lock` 目录锁、读取最新数据并校验 revision，再写入权限 0600 的临时文件，最后原子替换。其他写入正在进行时返回 CONFLICT，可稍后重试。损坏或未知格式文件会报错，不会用空资源库覆盖。进程若在持锁期间异常退出，确认没有其他写入进程后可移除遗留的 `resources.json.lock` 目录；先备份数据。
 
-1. 所有读写均按 principal.tenantId 过滤。默认团队使用 default 空间。
-2. 创建时所有者由 principal 派生，忽略请求中的 owner、subject、tenantId。
-3. 修改必须匹配 issuer、subject、tenantId；姓名不参与授权。
-4. 修改校验 revision，并在同一事务更新内容、摘要、修改时间与审计事件。revision 不提供历史恢复。
-5. 无主旧资源只读，只能由本机维护命令核实并一次性分配给已存在身份。
+未设置最大资源库总容量，当前适用于开发和本地资源整理；每个资源仍受 100 个文件及 5 MiB 限制。后续统一数据库通过存储适配器扩展。
 
-schema v3：resources 保存当前 payload、digest、revision、归属与时间；settings 保存稳定签发方 issuer；identities 保存接入身份；enrollment_codes 与 credentials 只保存随机秘密的 SHA-256 摘要；resource_audit 保存资源操作的身份主键，不记录凭证。
-
-维护者 `issueCode`、`assignUnowned` 不属于公开 HTTP/浏览器接口。一次性码兑换及凭证轮换用 BEGIN IMMEDIATE，恢复保留 subject 并撤销旧凭证；相同 subject 的其他接入码一并作废。码只应通过可信渠道发给对应成员，分发码本身是首版的身份信任根。
-
-旧库迁移先用 VACUUM INTO 生成独立 0600 备份，再在事务内把原表重命名为 legacy_resources / legacy_versions / legacy_audit 等档案，从当前 draft 字段复制资源至新表。旧引用转换为 ID 引用；历史版本不再对外提供。旧归属不可信时不自动继承。单独的 import-local 使用 SQLite backup 读取原库一致快照，包含 WAL，并以独占链接落地，拒绝覆盖目标库。
-
-备份应使用 SQLite backup 或停止服务后复制完整库，避免只复制打开状态下的主文件漏掉 WAL。迁移备份与 legacy_* 表仍包含旧数据，应按团队保留政策保护，不会因移除版本界面自动清理。
-
-将来替换为数据库服务时，保持资源 ID、principal 归属、revision 并发语义、摘要算法和 HTTP 契约。认证码与凭证存储也需要迁移或替换；这不是仅修改一个连接字符串，但不应要求改动资源页与编排插件的读取接口。
+原 SQLite 数据和旧身份文件保持原样，不自动迁移，也不自动覆盖 JSON 数据。旧资源可通过 Gallery JSON 导出/导入。历史共享服务和迁移工具暂保留，但默认 DSH 插件不会加载它们。

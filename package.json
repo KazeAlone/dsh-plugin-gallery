@@ -1,7 +1,7 @@
 {
   "name": "dsh-plugin-gallery",
   "version": "0.3.0",
-  "description": "Shared DSH resource gallery with verified identities and owner-only editing",
+  "description": "Local DSH resource gallery for skills, agents, MCP and workflows",
   "type": "module",
   "main": "./src/host.mjs",
   "exports": {

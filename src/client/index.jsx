@@ -63,11 +63,6 @@ function Gallery({ remote }) {
   const [selected, setSelected] = useState(null),
     [editor, setEditor] = useState(null);
   const [reference, setReference] = useState("");
-  const [identityForm, setIdentityForm] = useState({
-    displayName: "",
-    code: "",
-    serverUrl: "http://127.0.0.1:4318",
-  });
   const [confirmation, setConfirmation] = useState(null);
   const confirmAction = (message) =>
     new Promise((resolve) => setConfirmation({ message, resolve }));
@@ -94,7 +89,6 @@ function Gallery({ remote }) {
       .then((x) => {
         if (live) {
           setStatus(x);
-          setIdentityForm((f) => ({ ...f, serverUrl: x.url }));
         }
       })
       .catch((e) => {
@@ -250,7 +244,7 @@ function Gallery({ remote }) {
     setEditor(null);
     await load(r.id);
     setRefresh((x) => x + 1);
-    setNotice("资源已保存，团队成员现在可以使用。");
+    setNotice("资源已保存到 DSH 本地资源库。");
   }
   const content = selected;
   const activeFile = editor?.resource.files[editor.fileIndex];
@@ -269,30 +263,7 @@ function Gallery({ remote }) {
           <p>收集可复用资源，让每次编排都有积累。</p>
         </div>
         <div className="gal-header-actions">
-          <span className="gal-local">
-            {status?.identity?.displayName || "共享资源库"}
-          </span>
-          {status?.ready && (
-            <button
-              disabled={busy}
-              onClick={() =>
-                run(async () => {
-                  if (
-                    await confirmAction(
-                      "退出当前身份？重新接入需要维护者提供的接入码。",
-                    )
-                  ) {
-                    setStatus(await call(remote, "uiClearIdentity"));
-                    setSelected(null);
-                    setEditor(null);
-                    setItems([]);
-                  }
-                })
-              }
-            >
-              退出身份
-            </button>
-          )}
+          <span className="gal-local">DSH 本地资源库</span>
           <button
             className="gal-primary"
             disabled={!status?.ready}
@@ -319,99 +290,11 @@ function Gallery({ remote }) {
         </div>
       )}
       {!status?.ready ? (
-        <section
-          className="gal-identity gal-dialog"
-          aria-label="接入共享资源库"
-        >
-          <div className="gal-dialog-head">
-            <div>
-              <h2>接入共享资源库</h2>
-              <p>
-                {status?.developmentAuth
-                  ? "开发模式：填写姓名即可进入，无需接入码。"
-                  : "填写姓名和维护者提供的一次性接入码。"}
-              </p>
-            </div>
-          </div>
-          {!status ? (
-            <p className="gal-hint">正在检查身份…</p>
-          ) : (
-            <form
-              className="gal-dialog-body"
-              onSubmit={(e) => {
-                e.preventDefault();
-                run(async () => {
-                  const next = await call(
-                    remote,
-                    "uiEnroll",
-                    json(identityForm),
-                  );
-                  setStatus(next);
-                  setIdentityForm((f) => ({ ...f, code: "" }));
-                  setRefresh((x) => x + 1);
-                });
-              }}
-            >
-              {status.error && (
-                <p role="alert" className="gal-hint">
-                  {status.error}
-                </p>
-              )}
-              <label>
-                共享服务地址
-                <input
-                  required
-                  aria-label="共享服务地址"
-                  value={identityForm.serverUrl}
-                  disabled={status.serverLocked || busy}
-                  onChange={(e) =>
-                    setIdentityForm((f) => ({
-                      ...f,
-                      serverUrl: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                姓名
-                <input
-                  required
-                  maxLength={100}
-                  autoComplete="name"
-                  aria-label="姓名"
-                  value={identityForm.displayName}
-                  onChange={(e) =>
-                    setIdentityForm((f) => ({
-                      ...f,
-                      displayName: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-              {!status.developmentAuth && (
-                <label>
-                  一次性接入码
-                  <input
-                    required
-                    type="password"
-                    autoComplete="off"
-                    aria-label="一次性接入码"
-                    value={identityForm.code}
-                    onChange={(e) =>
-                      setIdentityForm((f) => ({ ...f, code: e.target.value }))
-                    }
-                  />
-                </label>
-              )}
-              <p className="gal-hint">
-                资源保存即共享；只有上传者可以编辑。身份验证后会保存在这台电脑上。
-              </p>
-              <button className="gal-primary" disabled={busy} type="submit">
-                {busy ? "验证中…" : "验证身份并进入"}
-              </button>
-            </form>
-          )}
-        </section>
+        <div className="gal-empty">
+          {error
+            ? "资源库暂时不可用，请检查提示后刷新。"
+            : "正在打开本地资源库…"}
+        </div>
       ) : (
         <>
           <div className="gal-type-grid">
@@ -447,15 +330,6 @@ function Gallery({ remote }) {
                 }}
               >
                 全部资源
-              </button>
-              <button
-                className={scope === "mine" ? "active" : ""}
-                onClick={() => {
-                  setScope("mine");
-                  setOffset(0);
-                }}
-              >
-                我的资源
               </button>
             </div>
             <input
@@ -513,9 +387,7 @@ function Gallery({ remote }) {
                     <span className={"gal-pill " + r.type}>
                       {TYPES[r.type]}
                     </span>
-                    <span className="gal-version">
-                      {r.owner?.displayName || "归属待确认"}
-                    </span>
+                    <span className="gal-version">{"本地资源"}</span>
                   </div>
                   <h3>{r.name}</h3>
                   <p>{r.description || "暂无描述"}</p>
@@ -552,7 +424,7 @@ function Gallery({ remote }) {
             </div>
           )}
           <footer className="gal-bottom">
-            <span>团队共享 · 保存后即可使用</span>
+            <span>本地存储 · 保存后即可使用</span>
             <span>Skill · Agent · MCP · Workflow</span>
           </footer>
         </>
@@ -572,8 +444,7 @@ function Gallery({ remote }) {
                 </span>
                 <h2>{content.name}</h2>
                 <p>
-                  {selected.owner?.displayName || "归属待确认"} · 更新于{" "}
-                  {when(selected.updatedAt)}
+                  {"本地资源"} · 更新于 {when(selected.updatedAt)}
                 </p>
               </div>
               <button aria-label="关闭详情" onClick={() => setSelected(null)}>
@@ -629,13 +500,6 @@ function Gallery({ remote }) {
               </label>
             )}
             <div className="gal-dialog-body">
-              {!selected.canEdit && (
-                <p className="gal-hint">
-                  {selected.owner
-                    ? "由其他成员上传，可查看、下载和引用。"
-                    : "旧资源归属待维护者确认，当前仅可查看和使用。"}
-                </p>
-              )}
               <p className="gal-description">
                 {content.description || "暂无描述"}
               </p>
@@ -903,13 +767,13 @@ function Gallery({ remote }) {
               </details>
             </div>
             <footer className="gal-dialog-footer">
-              <span>保存后立即共享，只有你可以编辑</span>
+              <span>保存在当前 DSH 中，重启后仍可使用</span>
               <button
                 className="gal-primary"
                 disabled={busy}
                 onClick={() => run(save)}
               >
-                {busy ? "保存中…" : "保存并共享"}
+                {busy ? "保存中…" : "保存资源"}
               </button>
             </footer>
           </section>
