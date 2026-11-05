@@ -36,24 +36,19 @@ export class StorageManager {
       throw e;
     }
     demand(
-      config.format === 1 &&
-        Array.isArray(config.libraries) &&
-        config.libraries.length > 0 &&
-        new Set(config.libraries.map((l) => l.id)).size ===
-          config.libraries.length &&
-        config.libraries.every(
-          (l) =>
-            (l.id === "local" || /^[a-f0-9-]{36}$/.test(l.id)) &&
-            l.type === "internal" &&
-            typeof l.name === "string",
-        ) &&
-        config.libraries.some((l) => l.id === config.activeLibraryId),
+      config.format === 1 && typeof config.configured === "boolean",
       500,
       "INVALID_STORAGE_CONFIG",
       "存储配置无效，请先备份检查",
     );
-    return config;
+    return {
+      format: 1,
+      configured: config.configured,
+      activeLibraryId: "local",
+      libraries: [{ id: "local", type: "internal", name: "本地资源库" }],
+    };
   }
+
   settings() {
     return {
       ...this.read(),
@@ -75,13 +70,10 @@ export class StorageManager {
     return library;
   }
   adapter(id) {
-    const library = this.library(id);
-    return new LocalGalleryStore(
-      library.id === "local"
-        ? join(this.directory, "resources.json")
-        : join(this.directory, "libraries", library.id, "resources.json"),
-    );
+    this.library(id);
+    return new LocalGalleryStore(join(this.directory, "resources.json"));
   }
+
   change(update) {
     mkdirSync(this.directory, { recursive: true, mode: 0o700 });
     const lock = this.path + ".lock";
@@ -119,17 +111,9 @@ export class StorageManager {
     this.adapter(library.id).read();
     return { ready: true, libraryId: library.id, type: library.type };
   }
-  switchLibrary({ libraryId }) {
-    this.testConnection({ libraryId });
-    return this.change((config) => {
-      demand(
-        config.libraries.some((l) => l.id === libraryId),
-        404,
-        "LIBRARY_NOT_FOUND",
-        "资源库不存在",
-      );
-      config.activeLibraryId = libraryId;
-    });
+  configure() {
+    this.testConnection();
+    return this.change(() => {});
   }
   listResources(query) {
     const libraryId = this.read().activeLibraryId;

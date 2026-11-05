@@ -66,7 +66,6 @@ function Gallery({ remote }) {
     [editor, setEditor] = useState(null);
   const [reference, setReference] = useState("");
   const [storageSettings, setStorageSettings] = useState(null);
-  const [targetLibrary, setTargetLibrary] = useState("local");
   const [connectionResult, setConnectionResult] = useState("");
   const [confirmation, setConfirmation] = useState(null);
   const confirmAction = (message) =>
@@ -96,7 +95,6 @@ function Gallery({ remote }) {
           setStatus(x);
           if (x.storage && !x.storage.configured) {
             setStorageSettings(x.storage);
-            setTargetLibrary(x.storage.activeLibraryId);
           }
         }
       })
@@ -271,11 +269,7 @@ function Gallery({ remote }) {
     if (busy) return;
     return run(async () => {
       if (!storageSettings.configured) {
-        const storage = await call(
-          remote,
-          "uiSwitchLibrary",
-          json({ libraryId: storageSettings.activeLibraryId }),
-        );
+        const storage = await call(remote, "uiConfigureStorage");
         setStatus((x) => ({ ...x, storage }));
       }
       setStorageSettings(null);
@@ -311,7 +305,7 @@ function Gallery({ remote }) {
               run(async () => {
                 const settings = await call(remote, "uiStorageSettings");
                 setStorageSettings(settings);
-                setTargetLibrary(settings.activeLibraryId);
+
                 setConnectionResult("");
               })
             }
@@ -875,33 +869,11 @@ function Gallery({ remote }) {
                   </div>
                 ))}
               </div>
-              {storageSettings.libraries.length > 1 && (
-                <>
-                  <label>
-                    当前资源库
-                    <select
-                      value={targetLibrary}
-                      disabled={busy}
-                      onChange={(e) => {
-                        setTargetLibrary(e.target.value);
-                        setConnectionResult("");
-                      }}
-                    >
-                      {storageSettings.libraries.map((library) => (
-                        <option key={library.id} value={library.id}>
-                          {library.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <p>切换不会移动或合并已有资源。</p>
-                </>
-              )}
               {connectionResult && <p role="status">{connectionResult}</p>}
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.4.2</span>
+              <span className="gal-local">v0.4.3</span>
               <button
                 disabled={busy}
                 onClick={() =>
@@ -909,7 +881,7 @@ function Gallery({ remote }) {
                     await call(
                       remote,
                       "uiTestStorage",
-                      json({ libraryId: targetLibrary }),
+                      json({ libraryId: "local" }),
                     );
                     setConnectionResult("资源库可用");
                   })
@@ -920,35 +892,9 @@ function Gallery({ remote }) {
               <button
                 className="gal-primary"
                 disabled={busy}
-                onClick={() =>
-                  run(async () => {
-                    if (targetLibrary === storageSettings.activeLibraryId) {
-                      await closeStorage();
-                      return;
-                    }
-                    const storage = await call(
-                      remote,
-                      "uiSwitchLibrary",
-                      json({ libraryId: targetLibrary }),
-                    );
-                    setStatus((x) => ({ ...x, storage }));
-                    setStorageSettings(null);
-                    setSelected(null);
-                    setEditor(null);
-                    setReference("");
-                    setItems([]);
-                    setTotal(0);
-                    setOffset(0);
-                    setRefresh((x) => x + 1);
-                    setNotice("已切换资源库。");
-                  })
-                }
+                onClick={closeStorage}
               >
-                {busy
-                  ? "处理中…"
-                  : storageSettings.libraries.length > 1
-                    ? "使用此资源库"
-                    : "完成"}
+                {busy ? "处理中…" : "完成"}
               </button>
             </footer>
           </section>

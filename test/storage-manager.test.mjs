@@ -12,119 +12,85 @@ import { tmpdir } from "node:os";
 import { StorageManager } from "../src/storage-manager.mjs";
 import { LocalGalleryStore } from "../src/local-store.mjs";
 import { DESCRIPTORS } from "../src/descriptors.mjs";
-import { normalizeResource } from "../src/model.mjs";
-const resource = (name = "资源") => ({
+const resource = {
   type: "skill",
-  name,
+  name: "资源",
   files: [{ path: "SKILL.md", content: "# Test" }],
-});
+};
 function setup(t) {
   const directory = mkdtempSync(join(tmpdir(), "gallery-registry-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   return { directory, manager: new StorageManager(directory) };
 }
-// Compatibility fixture: an extra local library created by an earlier version.
-function legacyLibrary(manager, name) {
-  const settings = manager.read();
-  settings.configured = true;
-  settings.libraries.push({
-    id: "11111111-1111-4111-8111-111111111111",
-    type: "internal",
-    name,
-  });
-  writeFileSync(manager.path, JSON.stringify(settings));
-  return settings;
-}
-test("内部存储不再暴露创建资源库接口", (t) => {
+test("内部存储固定单库，没有创建或切换接口", (t) => {
   const { manager } = setup(t);
   assert.equal(manager.addLibrary, undefined);
+  assert.equal(manager.switchLibrary, undefined);
   assert.equal(
-    DESCRIPTORS.some((d) => d.method === "uiAddLibrary"),
+    DESCRIPTORS.some((d) =>
+      ["uiAddLibrary", "uiSwitchLibrary"].includes(d.method),
+    ),
     false,
   );
   assert.equal(manager.settings().libraries.length, 1);
 });
-test("首次默认内部存储，保留已有本地资源，选择后持久化", (t) => {
+test("首次直接读取默认数据，确认配置后重启仍可使用", (t) => {
   const { manager, directory } = setup(t);
-  const old = new LocalGalleryStore(
+  const r = new LocalGalleryStore(
     join(directory, "resources.json"),
-  ).createResource(resource());
+  ).createResource(resource);
   assert.equal(manager.settings().configured, false);
-  assert.equal(manager.listResources().items[0].id, old.id);
-  manager.switchLibrary({ libraryId: "local" });
+  assert.equal(manager.listResources().items[0].id, r.id);
+  manager.configure();
   const restored = new StorageManager(directory);
   assert.equal(restored.settings().configured, true);
-  assert.equal(restored.getResource(old.id).libraryId, "local");
-  assert.equal(
-    restored.settings().providers.filter((p) => p.available).length,
-    1,
-  );
+  assert.equal(restored.getResource(r.id).libraryId, "local");
 });
-test("旧额外资源库保留访问，切换不迁移，固定引用及快照在重启后仍可解析", (t) => {
-  const { manager, directory } = setup(t);
-  const first = manager.createResource(resource("原资源"));
-  const settings = legacyLibrary(manager, "工作资源");
-  assert.equal(settings.activeLibraryId, "local");
-  const id = settings.libraries[1].id;
-  manager.switchLibrary({ libraryId: id });
-  assert.equal(manager.listResources().total, 0);
-  const second = manager.createResource(resource("新资源"));
-  assert.equal(second.libraryId, id);
-  assert.throws(() => manager.getResource(first.id), { code: "NOT_FOUND" });
-  const ref = { libraryId: "local", id: first.id, digest: first.digest };
-  assert.equal(manager.resolveReference(ref).name, "原资源");
-  assert.equal(manager.getSnapshot(ref).libraryId, "local");
-  assert.equal(
-    new StorageManager(directory).getSnapshot(ref).resource.name,
-    "原资源",
-  );
-  manager.switchLibrary({ libraryId: "local" });
-  assert.equal(manager.listResources().total, 1);
-  assert.equal(
-    manager.resolveReference({ libraryId: id, id: second.id }).name,
-    "新资源",
-  );
-});
-test("未实现后端和无效资源库不改变当前配置", (t) => {
+test("旧多库配置不会影响默认库，确认后只保存单库配置", (t) => {
   const { manager } = setup(t);
-  manager.switchLibrary({ libraryId: "local" });
+  const r = manager.createResource(resource);
+  writeFileSync(
+    manager.path,
+    JSON.stringify({
+      format: 1,
+      configured: true,
+      activeLibraryId: "old",
+      libraries: [{ id: "old", type: "internal", name: "旧资源库" }],
+    }),
+  );
+  assert.equal(manager.settings().activeLibraryId, "local");
+  assert.deepEqual(
+    manager.settings().libraries.map((l) => l.id),
+    ["local"],
+  );
+  assert.equal(manager.getResource(r.id).name, "资源");
+  assert.throws(
+    () => manager.resolveReference({ id: r.id, libraryId: "old" }),
+    { code: "LIBRARY_NOT_FOUND" },
+  );
+  manager.configure();
+  assert.deepEqual(
+    JSON.parse(readFileSync(manager.path)).libraries.map((l) => l.id),
+    ["local"],
+  );
+});
+test("不可用后端及未知库不改变配置", (t) => {
+  const { manager } = setup(t);
+  manager.configure();
   const saved = readFileSync(manager.path, "utf8");
-  for (const type of ["github", "service"]) {
-    assert.throws(() => manager.testConnection({ type }), {
-      code: "PROVIDER_UNAVAILABLE",
-    });
-  }
-  assert.throws(() => manager.switchLibrary({ libraryId: "../outside" }), {
+  assert.throws(() => manager.testConnection({ type: "service" }), {
+    code: "PROVIDER_UNAVAILABLE",
+  });
+  assert.throws(() => manager.testConnection({ libraryId: "../outside" }), {
     code: "LIBRARY_NOT_FOUND",
   });
   assert.equal(readFileSync(manager.path, "utf8"), saved);
 });
-test("目标损坏或配置加锁时切换失败，源资源与配置不变", (t) => {
+test("损坏资源和配置锁仍阻止写入", (t) => {
   const { manager, directory } = setup(t);
-  const r = manager.createResource(resource());
-  const settings = legacyLibrary(manager, "损坏的库");
-  const id = settings.libraries[1].id;
-  const dir = join(directory, "libraries", id);
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, "resources.json"), "broken");
-  assert.throws(() => manager.switchLibrary({ libraryId: id }), SyntaxError);
-  assert.equal(manager.settings().activeLibraryId, "local");
-  assert.equal(manager.getResource(r.id).name, "资源");
+  writeFileSync(join(directory, "resources.json"), "broken");
+  assert.throws(() => manager.configure(), SyntaxError);
+  rmSync(join(directory, "resources.json"));
   mkdirSync(manager.path + ".lock");
-  assert.throws(() => manager.switchLibrary({ libraryId: "local" }), {
-    code: "CONFLICT",
-  });
-});
-test("资源引用规范化保留 libraryId，未知库不会退回当前库", (t) => {
-  const { manager } = setup(t);
-  const r = manager.createResource(resource());
-  const ref = { libraryId: "local", id: r.id, digest: r.digest };
-  assert.deepEqual(
-    normalizeResource({ ...resource(), references: [ref] }).references,
-    [ref],
-  );
-  assert.throws(
-    () => manager.resolveReference({ ...ref, libraryId: "missing" }),
-    { code: "LIBRARY_NOT_FOUND" },
-  );
+  assert.throws(() => manager.configure(), { code: "CONFLICT" });
 });

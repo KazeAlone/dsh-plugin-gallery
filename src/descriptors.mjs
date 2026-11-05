@@ -27,7 +27,7 @@ const methods = {
   uiUpdate: ["id", "payload"],
   uiStorageSettings: [],
   uiTestStorage: ["payload"],
-  uiSwitchLibrary: ["payload"],
+  uiConfigureStorage: [],
 };
 export const DESCRIPTORS = Object.entries(methods).map(([method, names]) => ({
   id: `dsh-plugin-gallery#gallery/${method}`,

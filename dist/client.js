@@ -66,7 +66,7 @@ var methods = {
   uiUpdate: ["id", "payload"],
   uiStorageSettings: [],
   uiTestStorage: ["payload"],
-  uiSwitchLibrary: ["payload"]
+  uiConfigureStorage: []
 };
 var DESCRIPTORS = Object.entries(methods).map(([method, names]) => ({
   id: `dsh-plugin-gallery#gallery/${method}`,
@@ -380,7 +380,6 @@ function Gallery({ remote }) {
   const [selected, setSelected] = (0, import_react3.useState)(null), [editor, setEditor] = (0, import_react3.useState)(null);
   const [reference, setReference] = (0, import_react3.useState)("");
   const [storageSettings, setStorageSettings] = (0, import_react3.useState)(null);
-  const [targetLibrary, setTargetLibrary] = (0, import_react3.useState)("local");
   const [connectionResult, setConnectionResult] = (0, import_react3.useState)("");
   const [confirmation, setConfirmation] = (0, import_react3.useState)(null);
   const confirmAction = (message) => new Promise((resolve) => setConfirmation({ message, resolve }));
@@ -408,7 +407,6 @@ function Gallery({ remote }) {
         setStatus(x);
         if (x.storage && !x.storage.configured) {
           setStorageSettings(x.storage);
-          setTargetLibrary(x.storage.activeLibraryId);
         }
       }
     }).catch((e) => {
@@ -569,11 +567,7 @@ function Gallery({ remote }) {
     if (busy) return;
     return run(async () => {
       if (!storageSettings.configured) {
-        const storage = await call(
-          remote,
-          "uiSwitchLibrary",
-          json2({ libraryId: storageSettings.activeLibraryId })
-        );
+        const storage = await call(remote, "uiConfigureStorage");
         setStatus((x) => ({ ...x, storage }));
       }
       setStorageSettings(null);
@@ -597,7 +591,6 @@ function Gallery({ remote }) {
       onClick: () => run(async () => {
         const settings = await call(remote, "uiStorageSettings");
         setStorageSettings(settings);
-        setTargetLibrary(settings.activeLibraryId);
         setConnectionResult("");
       })
     },
@@ -946,19 +939,8 @@ function Gallery({ remote }) {
       },
       /* @__PURE__ */ import_react3.default.createElement("strong", null, provider.name),
       /* @__PURE__ */ import_react3.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
-    ))), storageSettings.libraries.length > 1 && /* @__PURE__ */ import_react3.default.createElement(import_react3.default.Fragment, null, /* @__PURE__ */ import_react3.default.createElement("label", null, "\u5F53\u524D\u8D44\u6E90\u5E93", /* @__PURE__ */ import_react3.default.createElement(
-      "select",
-      {
-        value: targetLibrary,
-        disabled: busy,
-        onChange: (e) => {
-          setTargetLibrary(e.target.value);
-          setConnectionResult("");
-        }
-      },
-      storageSettings.libraries.map((library) => /* @__PURE__ */ import_react3.default.createElement("option", { key: library.id, value: library.id }, library.name))
-    )), /* @__PURE__ */ import_react3.default.createElement("p", null, "\u5207\u6362\u4E0D\u4F1A\u79FB\u52A8\u6216\u5408\u5E76\u5DF2\u6709\u8D44\u6E90\u3002")), connectionResult && /* @__PURE__ */ import_react3.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react3.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react3.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-local" }, "v0.4.2"), /* @__PURE__ */ import_react3.default.createElement(
+    ))), connectionResult && /* @__PURE__ */ import_react3.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react3.default.createElement("p", { role: "alert" }, error)),
+    /* @__PURE__ */ import_react3.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-local" }, "v0.4.3"), /* @__PURE__ */ import_react3.default.createElement(
       "button",
       {
         disabled: busy,
@@ -966,7 +948,7 @@ function Gallery({ remote }) {
           await call(
             remote,
             "uiTestStorage",
-            json2({ libraryId: targetLibrary })
+            json2({ libraryId: "local" })
           );
           setConnectionResult("\u8D44\u6E90\u5E93\u53EF\u7528");
         })
@@ -977,29 +959,9 @@ function Gallery({ remote }) {
       {
         className: "gal-primary",
         disabled: busy,
-        onClick: () => run(async () => {
-          if (targetLibrary === storageSettings.activeLibraryId) {
-            await closeStorage();
-            return;
-          }
-          const storage = await call(
-            remote,
-            "uiSwitchLibrary",
-            json2({ libraryId: targetLibrary })
-          );
-          setStatus((x) => ({ ...x, storage }));
-          setStorageSettings(null);
-          setSelected(null);
-          setEditor(null);
-          setReference("");
-          setItems([]);
-          setTotal(0);
-          setOffset(0);
-          setRefresh((x) => x + 1);
-          setNotice("\u5DF2\u5207\u6362\u8D44\u6E90\u5E93\u3002");
-        })
+        onClick: closeStorage
       },
-      busy ? "\u5904\u7406\u4E2D\u2026" : storageSettings.libraries.length > 1 ? "\u4F7F\u7528\u6B64\u8D44\u6E90\u5E93" : "\u5B8C\u6210"
+      busy ? "\u5904\u7406\u4E2D\u2026" : "\u5B8C\u6210"
     ))
   )), confirmation && /* @__PURE__ */ import_react3.default.createElement(Modal, { confirmation: true, onClose: () => answerConfirmation(false) }, /* @__PURE__ */ import_react3.default.createElement(
     "section",
