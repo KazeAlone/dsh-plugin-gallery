@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { REMOTE } from "../descriptors.mjs";
 import styles from "./styles.css";
+import { Modal } from "./modal.jsx";
 
 const NS = "dsh-gallery",
   TYPES = { skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" };
-const ICONS = { skill: "✦", agent: "◉", mcp: "⌘", workflow: "⌁" };
 const blank = () => ({
   type: "skill",
   name: "",
@@ -33,6 +33,7 @@ function download(name, value, type = "application/json") {
 function Icon() {
   return (
     <svg
+      aria-hidden="true"
       width="20"
       height="20"
       viewBox="0 0 24 24"
@@ -262,6 +263,24 @@ function Gallery({ remote }) {
     setRefresh((x) => x + 1);
     setNotice("资源已保存。");
   }
+  async function closeEditor() {
+    if (busy) return;
+    if (await confirmAction("放弃尚未保存的修改？")) setEditor(null);
+  }
+  function closeStorage() {
+    if (busy) return;
+    return run(async () => {
+      if (!storageSettings.configured) {
+        const storage = await call(
+          remote,
+          "uiSwitchLibrary",
+          json({ libraryId: storageSettings.activeLibraryId }),
+        );
+        setStatus((x) => ({ ...x, storage }));
+      }
+      setStorageSettings(null);
+    });
+  }
   const content = selected;
   const activeFile = editor?.resource.files[editor.fileIndex];
   const chooseFilter = (t) => {
@@ -296,7 +315,7 @@ function Gallery({ remote }) {
             disabled={!status?.ready}
             onClick={() => edit(null)}
           >
-            ＋ 新建资源
+            新建资源
           </button>
         </div>
       </header>
@@ -324,30 +343,29 @@ function Gallery({ remote }) {
         </div>
       ) : (
         <>
-          <div className="gal-type-grid">
-            {Object.entries(TYPES).map(([key, label]) => (
-              <button
-                key={key}
-                className={"gal-type-card " + (type === key ? "active" : "")}
-                onClick={() => chooseFilter(type === key ? "" : key)}
-              >
-                <span className={"gal-type-icon " + key}>{ICONS[key]}</span>
-                <strong>{label}</strong>
-              </button>
-            ))}
-          </div>
           <div className="gal-toolbar">
-            <div className="gal-scopes">
+            <nav className="gal-filters" aria-label="资源类型">
               <button
-                className={scope === "all" && !type ? "active" : ""}
+                className={!type ? "active" : ""}
+                aria-pressed={!type}
                 onClick={() => {
                   setScope("all");
                   chooseFilter("");
                 }}
               >
-                全部资源
+                全部
               </button>
-            </div>
+              {Object.entries(TYPES).map(([key, label]) => (
+                <button
+                  key={key}
+                  className={type === key ? "active" : ""}
+                  aria-pressed={type === key}
+                  onClick={() => chooseFilter(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
             <input
               aria-label="搜索资源"
               className="gal-search"
@@ -365,7 +383,7 @@ function Gallery({ remote }) {
             </span>
             <div>
               <button disabled={busy} onClick={() => setRefresh((x) => x + 1)}>
-                刷新 ↻
+                刷新
               </button>
             </div>
           </div>
@@ -392,15 +410,15 @@ function Gallery({ remote }) {
                 <button
                   key={r.id}
                   className="gal-resource-card"
+                  title={r.name}
+                  disabled={busy}
                   onClick={() => run(() => load(r.id))}
                 >
-                  <div className="gal-card-top">
-                    <span className={"gal-pill " + r.type}>
-                      {TYPES[r.type]}
-                    </span>
+                  <span className="gal-resource-type">{TYPES[r.type]}</span>
+                  <div className="gal-resource-content">
+                    <h3>{r.name}</h3>
+                    {r.description && <p>{r.description}</p>}
                   </div>
-                  <h3>{r.name}</h3>
-                  <p>{r.description || "暂无描述"}</p>
                   <div className="gal-tags">
                     {r.tags.slice(0, 4).map((t) => (
                       <span key={t}>{t}</span>
@@ -436,8 +454,9 @@ function Gallery({ remote }) {
         </>
       )}
       {selected && !editor && (
-        <div className="gal-overlay">
+        <Modal onClose={() => !busy && setSelected(null)}>
           <section
+            tabIndex={-1}
             className="gal-dialog gal-detail"
             role="dialog"
             aria-modal="true"
@@ -508,13 +527,13 @@ function Gallery({ remote }) {
                 获取引用
               </button>
             </div>
-            {reference && (
-              <label className="gal-reference">
-                资源引用
-                <textarea readOnly rows={4} value={reference} />
-              </label>
-            )}
             <div className="gal-dialog-body">
+              {reference && (
+                <label className="gal-reference">
+                  资源引用
+                  <textarea readOnly rows={4} value={reference} />
+                </label>
+              )}
               <p className="gal-description">
                 {content.description || "暂无描述"}
               </p>
@@ -551,11 +570,12 @@ function Gallery({ remote }) {
               </details>
             </div>
           </section>
-        </div>
+        </Modal>
       )}
       {editor && (
-        <div className="gal-overlay">
+        <Modal onClose={closeEditor}>
           <section
+            tabIndex={-1}
             className="gal-dialog gal-editor"
             role="dialog"
             aria-modal="true"
@@ -567,10 +587,8 @@ function Gallery({ remote }) {
               </div>
               <button
                 aria-label="关闭编辑"
-                onClick={async () => {
-                  if (await confirmAction("放弃尚未保存的修改？"))
-                    setEditor(null);
-                }}
+                onClick={closeEditor}
+                disabled={busy}
               >
                 ×
               </button>
@@ -776,6 +794,9 @@ function Gallery({ remote }) {
               </details>
             </div>
             <footer className="gal-dialog-footer">
+              <button disabled={busy} onClick={closeEditor}>
+                取消
+              </button>
               <button
                 className="gal-primary"
                 disabled={busy}
@@ -785,11 +806,12 @@ function Gallery({ remote }) {
               </button>
             </footer>
           </section>
-        </div>
+        </Modal>
       )}
       {storageSettings && (
-        <div className="gal-overlay">
+        <Modal onClose={closeStorage}>
           <section
+            tabIndex={-1}
             className="gal-dialog gal-storage"
             role="dialog"
             aria-modal="true"
@@ -802,19 +824,7 @@ function Gallery({ remote }) {
               <button
                 aria-label="关闭存储设置"
                 disabled={busy}
-                onClick={() =>
-                  run(async () => {
-                    if (!storageSettings.configured) {
-                      const storage = await call(
-                        remote,
-                        "uiSwitchLibrary",
-                        json({ libraryId: storageSettings.activeLibraryId }),
-                      );
-                      setStatus((x) => ({ ...x, storage }));
-                    }
-                    setStorageSettings(null);
-                  })
-                }
+                onClick={closeStorage}
               >
                 ×
               </button>
@@ -849,8 +859,10 @@ function Gallery({ remote }) {
                 </select>
               </label>
               <p>切换不会移动或合并已有资源。</p>
+              <label htmlFor="gal-library-name">添加本地资源库</label>
               <div className="gal-storage-add">
                 <input
+                  id="gal-library-name"
                   aria-label="新资源库名称"
                   placeholder="新本地资源库名称"
                   maxLength={80}
@@ -887,7 +899,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.3.1</span>
+              <span className="gal-local">v0.4.0</span>
               <button
                 disabled={busy}
                 onClick={() =>
@@ -930,11 +942,12 @@ function Gallery({ remote }) {
               </button>
             </footer>
           </section>
-        </div>
+        </Modal>
       )}
       {confirmation && (
-        <div className="gal-overlay gal-confirm-overlay">
+        <Modal confirmation onClose={() => answerConfirmation(false)}>
           <section
+            tabIndex={-1}
             className="gal-dialog gal-small"
             role="alertdialog"
             aria-modal="true"
@@ -958,7 +971,7 @@ function Gallery({ remote }) {
               </button>
             </div>
           </section>
-        </div>
+        </Modal>
       )}
     </div>
   );
