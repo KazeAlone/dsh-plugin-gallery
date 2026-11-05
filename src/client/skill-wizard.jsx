@@ -428,7 +428,6 @@ export function SkillWizard({ resource, onClose, onSave }) {
           <button disabled={busy} onClick={step ? () => go(step - 1) : onClose}>
             {step ? "上一步" : "取消"}
           </button>
-          <span>{step + 1} / 4</span>
           {step < 3 ? (
             <button
               className="gal-primary"
