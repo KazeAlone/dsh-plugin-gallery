@@ -339,10 +339,10 @@ function Gallery({ remote }) {
           <div className="gal-toolbar">
             <div className="gal-scopes">
               <button
-                className={scope === "all" ? "active" : ""}
+                className={scope === "all" && !type ? "active" : ""}
                 onClick={() => {
                   setScope("all");
-                  setOffset(0);
+                  chooseFilter("");
                 }}
               >
                 全部资源
@@ -364,9 +364,6 @@ function Gallery({ remote }) {
               {type ? TYPES[type] : "资源"} <strong>{total}</strong>
             </span>
             <div>
-              {type && (
-                <button onClick={() => chooseFilter("")}>清除分类 ×</button>
-              )}
               <button disabled={busy} onClick={() => setRefresh((x) => x + 1)}>
                 刷新 ↻
               </button>

@@ -361,10 +361,10 @@ function Gallery({ remote }) {
   ))), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-toolbar" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-scopes" }, /* @__PURE__ */ import_react.default.createElement(
     "button",
     {
-      className: scope === "all" ? "active" : "",
+      className: scope === "all" && !type ? "active" : "",
       onClick: () => {
         setScope("all");
-        setOffset(0);
+        chooseFilter("");
       }
     },
     "\u5168\u90E8\u8D44\u6E90"
@@ -380,7 +380,7 @@ function Gallery({ remote }) {
         setOffset(0);
       }
     }
-  )), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-list-heading" }, /* @__PURE__ */ import_react.default.createElement("span", null, type ? TYPES[type] : "\u8D44\u6E90", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, total)), /* @__PURE__ */ import_react.default.createElement("div", null, type && /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => chooseFilter("") }, "\u6E05\u9664\u5206\u7C7B \xD7"), /* @__PURE__ */ import_react.default.createElement("button", { disabled: busy, onClick: () => setRefresh((x) => x + 1) }, "\u5237\u65B0 \u21BB"))), loading ? /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-empty" }, "\u6B63\u5728\u52A0\u8F7D\u8D44\u6E90\u2026") : items.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-empty" }, /* @__PURE__ */ import_react.default.createElement(Icon, null), /* @__PURE__ */ import_react.default.createElement("h3", null, q || type || scope !== "all" ? "\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90" : "\u6682\u65E0\u8D44\u6E90"), /* @__PURE__ */ import_react.default.createElement("p", null, q || type || scope !== "all" ? "\u8BD5\u8BD5\u5176\u4ED6\u5173\u952E\u8BCD\u6216\u5206\u7C7B\u3002" : "\u65B0\u5EFA\u8D44\u6E90\u6216\u4E0A\u4F20\u6587\u4EF6\u3002"), /* @__PURE__ */ import_react.default.createElement("button", { className: "gal-primary", onClick: () => edit(null) }, "\u65B0\u5EFA\u8D44\u6E90")) : /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-resource-grid" }, items.map((r) => /* @__PURE__ */ import_react.default.createElement(
+  )), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-list-heading" }, /* @__PURE__ */ import_react.default.createElement("span", null, type ? TYPES[type] : "\u8D44\u6E90", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, total)), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("button", { disabled: busy, onClick: () => setRefresh((x) => x + 1) }, "\u5237\u65B0 \u21BB"))), loading ? /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-empty" }, "\u6B63\u5728\u52A0\u8F7D\u8D44\u6E90\u2026") : items.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-empty" }, /* @__PURE__ */ import_react.default.createElement(Icon, null), /* @__PURE__ */ import_react.default.createElement("h3", null, q || type || scope !== "all" ? "\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90" : "\u6682\u65E0\u8D44\u6E90"), /* @__PURE__ */ import_react.default.createElement("p", null, q || type || scope !== "all" ? "\u8BD5\u8BD5\u5176\u4ED6\u5173\u952E\u8BCD\u6216\u5206\u7C7B\u3002" : "\u65B0\u5EFA\u8D44\u6E90\u6216\u4E0A\u4F20\u6587\u4EF6\u3002"), /* @__PURE__ */ import_react.default.createElement("button", { className: "gal-primary", onClick: () => edit(null) }, "\u65B0\u5EFA\u8D44\u6E90")) : /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-resource-grid" }, items.map((r) => /* @__PURE__ */ import_react.default.createElement(
     "button",
     {
       key: r.id,
