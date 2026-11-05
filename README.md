@@ -59,6 +59,6 @@ npm pack
 
 首次打开可直接选择默认的「DSH 内部存储」。右上角「存储设置」可添加多个本地资源库、检查存储及切换当前资源库。关闭首次选择会保留并确认默认资源库，无需身份或接入码。
 
-当前仅内部存储可用；GitHub 仓库与中心服务作为后续适配方向展示，暂不可配置或启用。切换只改变当前资源库，不会复制、合并或删除源数据。配置保存在 `gallery/storage.json`；原有 `gallery/resources.json` 自动对应默认库，新增本地库保存于 `gallery/libraries/<libraryId>/resources.json`。
+当前仅内部存储可用；中心服务作为后续适配方向展示，暂不可配置或启用。切换只改变当前资源库，不会复制、合并或删除源数据。配置保存在 `gallery/storage.json`；原有 `gallery/resources.json` 自动对应默认库，新增本地库保存于 `gallery/libraries/<libraryId>/resources.json`。
 
-引用增加 `libraryId`，切换当前库后仍可定位原资源。旧引用不含 libraryId 时仍按当前库解析，建议重新获取完整引用。资源迁移、GitHub 授权和中心服务凭据将在对应后端实现时提供。
+引用增加 `libraryId`，切换当前库后仍可定位原资源。旧引用不含 libraryId 时仍按当前库解析，建议重新获取完整引用。资源迁移和中心服务凭据将在对应后端实现时提供。

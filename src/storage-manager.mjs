@@ -12,7 +12,6 @@ import { demand, text } from "./model.mjs";
 
 export const STORAGE_PROVIDERS = [
   { type: "internal", name: "DSH 内部存储", available: true },
-  { type: "github", name: "GitHub 仓库", available: false },
   { type: "service", name: "中心服务", available: false },
 ];
 
