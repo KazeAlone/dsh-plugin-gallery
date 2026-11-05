@@ -829,7 +829,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.5.3</span>
+              <span className="gal-local">v0.5.4</span>
               <button
                 disabled={busy}
                 onClick={() =>

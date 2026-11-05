@@ -971,7 +971,8 @@
 
 /* Skill folder creation */
 .gal-skill-wizard {
-  width: min(1000px, 96vw);
+  width: min(1000px, 100%);
+  height: min(760px, calc(100dvh - 48px));
 }
 .gal-skill-steps {
   display: grid;
@@ -999,6 +1000,9 @@
   flex-shrink: 0;
 }
 .gal-skill-layout {
+  flex: 1;
+  align-content: start;
+  scrollbar-gutter: stable;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 220px;
   gap: 24px;
