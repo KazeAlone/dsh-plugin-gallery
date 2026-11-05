@@ -160,18 +160,6 @@ function BrandIcon({ size = 20 }) {
       focusable: "false"
     },
     /* @__PURE__ */ import_react2.default.createElement(
-      "rect",
-      {
-        x: "1",
-        y: "1",
-        width: "30",
-        height: "30",
-        rx: "7",
-        stroke: "currentColor",
-        strokeOpacity: "0.25"
-      }
-    ),
-    /* @__PURE__ */ import_react2.default.createElement(
       "path",
       {
         d: "M8 12h16l1 14H7l1-14Z",
@@ -973,7 +961,7 @@ function Gallery({ remote }) {
       /* @__PURE__ */ import_react4.default.createElement("strong", null, provider.name),
       /* @__PURE__ */ import_react4.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
     ))), connectionResult && /* @__PURE__ */ import_react4.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react4.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react4.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react4.default.createElement("span", { className: "gal-local" }, "v0.4.6"), /* @__PURE__ */ import_react4.default.createElement(
+    /* @__PURE__ */ import_react4.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react4.default.createElement("span", { className: "gal-local" }, "v0.4.7"), /* @__PURE__ */ import_react4.default.createElement(
       "button",
       {
         disabled: busy,

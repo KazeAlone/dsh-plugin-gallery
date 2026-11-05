@@ -11,15 +11,6 @@ export function BrandIcon({ size = 20 }) {
       aria-hidden="true"
       focusable="false"
     >
-      <rect
-        x="1"
-        y="1"
-        width="30"
-        height="30"
-        rx="7"
-        stroke="currentColor"
-        strokeOpacity="0.25"
-      />
       <path
         d="M8 12h16l1 14H7l1-14Z"
         stroke="currentColor"
