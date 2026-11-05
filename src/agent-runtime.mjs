@@ -14,7 +14,7 @@ export function galleryAgents(store) {
 export function registerGalleryAgentListTool(ctx, store) {
   const list = defineTool({
     name: 'gallery_agent_list',
-    description: 'List Agent personas saved in Gallery. Use gallery_agent_run to delegate a task to one.',
+    description: 'Find saved Gallery Agents by listing their names, descriptions, and IDs. Use this when the user names a Gallery Agent in natural language, asks for delegation, or a specialized Agent would help with an independent subtask. Match the requested name or role against the catalog, then call gallery_agent_run with the matching ID and a concrete task. Ask for clarification if the requested Agent is ambiguous.',
     parameters: {},
     output: { schema: { type: 'object', additionalProperties: false, properties: { agents: { type: 'array', required: true, items: { type: 'object', additionalProperties: false, properties: { id: { type: 'string', required: true }, name: { type: 'string', required: true }, description: { type: 'string', required: true } } } } } }, render: (_args, value) => [{ type: 'text', text: value.agents.length ? value.agents.map(a => `${a.name} (${a.id}): ${a.description}`).join('\n') : 'Gallery 中没有可用 Agent。' }] },
     async execute() { return { agents: galleryAgents(store).map(({ resource, parsed }) => ({ id: resource.id, name: resource.name, description: parsed.description })) }; },
@@ -24,7 +24,7 @@ export function registerGalleryAgentListTool(ctx, store) {
 export function registerGalleryAgentRunTool(ctx, store) {
   const run = defineTool({
     name: 'gallery_agent_run',
-    description: 'Start a DSH subagent using a Gallery Agent definition. Pass the Gallery Agent ID and a concrete task. The child reports back to this conversation.',
+    description: 'Delegate a concrete task to a saved Gallery Agent. Look up its ID with gallery_agent_list when needed. This starts an asynchronous child conversation. Report the result after the child sends it back, and do not claim the task is complete from the launch response alone.',
     parameters: { id: { type: 'string', required: true, description: 'Gallery Agent resource ID from gallery_agent_list.' }, task: { type: 'string', required: true, description: 'Concrete task for the child Agent.' } },
     output: { schema: { type: 'object', additionalProperties: false, properties: { child_id: { type: 'string', required: true }, agent: { type: 'string', required: true } } }, render: (_args, value) => [{ type: 'text', text: `Gallery Agent ${value.agent} 已启动，子会话 ${value.child_id}。结果会返回当前会话。` }] },
     async execute(args, exec) {
