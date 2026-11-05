@@ -4,6 +4,7 @@ import { REMOTE } from "../descriptors.mjs";
 import styles from "./styles.css";
 import { Leaderboards } from "./leaderboards.jsx";
 import { createGalleryTrigger } from "./gallery-trigger.mjs";
+import { AgentWizard } from "./agent-wizard.jsx";
 import { SkillWizard } from "./skill-wizard.jsx";
 import { Modal } from "./modal.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
@@ -86,6 +87,7 @@ function Gallery({ remote }) {
   const [selected, setSelected] = useState(null),
     [editor, setEditor] = useState(null);
   const [skillWizard, setSkillWizard] = useState(false);
+  const [agentWizard, setAgentWizard] = useState(false);
   const [storageSettings, setStorageSettings] = useState(null);
   const [connectionResult, setConnectionResult] = useState("");
   const [confirmation, setConfirmation] = useState(null);
@@ -189,6 +191,10 @@ function Gallery({ remote }) {
     setSelected(null);
     if ((r?.type || type) === "skill") {
       setSkillWizard({ resource: r || null });
+      return;
+    }
+    if ((r?.type || type) === "agent") {
+      setAgentWizard({ resource: r || null });
       return;
     }
     const d = r || { ...blank(), type };
@@ -556,6 +562,30 @@ function Gallery({ remote }) {
           )}
         </>
       )}
+      {agentWizard && (
+        <AgentWizard
+          resource={agentWizard.resource}
+          onClose={async () => {
+            if (await confirmAction("放弃尚未保存的 Agent？"))
+              setAgentWizard(false);
+          }}
+          onSave={async (resource) => {
+            const existing = agentWizard.resource;
+            await (existing
+              ? call(
+                  remote,
+                  "uiUpdate",
+                  existing.id,
+                  json({ resource, expectedRevision: existing.revision }),
+                )
+              : call(remote, "uiCreate", json(resource)));
+            setSelected(null);
+            setAgentWizard(false);
+            setRefresh((x) => x + 1);
+            setNotice("Agent 已保存。");
+          }}
+        />
+      )}
       {skillWizard && (
         <SkillWizard
           resource={skillWizard.resource}
@@ -580,7 +610,7 @@ function Gallery({ remote }) {
           }}
         />
       )}
-      {selected && !editor && !skillWizard && (
+      {selected && !editor && !skillWizard && !agentWizard && (
         <Modal onClose={() => !busy && setSelected(null)}>
           <section
             tabIndex={-1}
@@ -975,7 +1005,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.7.2</span>
+              <span className="gal-local">v0.8.0</span>
               <button
                 disabled={busy}
                 onClick={() =>
