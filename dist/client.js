@@ -7138,6 +7138,7 @@ function Gallery({ remote }) {
     setNotice("");
     setError("");
     if (!r && !type) return;
+    setSelected(null);
     if ((r?.type || type) === "skill") {
       setSkillWizard({ resource: r || null });
       return;
@@ -7606,7 +7607,7 @@ function Gallery({ remote }) {
       /* @__PURE__ */ import_react5.default.createElement("strong", null, provider.name),
       /* @__PURE__ */ import_react5.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
     ))), connectionResult && /* @__PURE__ */ import_react5.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react5.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react5.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react5.default.createElement("span", { className: "gal-local" }, "v0.5.2"), /* @__PURE__ */ import_react5.default.createElement(
+    /* @__PURE__ */ import_react5.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react5.default.createElement("span", { className: "gal-local" }, "v0.5.3"), /* @__PURE__ */ import_react5.default.createElement(
       "button",
       {
         disabled: busy,

@@ -135,6 +135,7 @@ function Gallery({ remote }) {
     setNotice("");
     setError("");
     if (!r && !type) return;
+    setSelected(null);
     if ((r?.type || type) === "skill") {
       setSkillWizard({ resource: r || null });
       return;
@@ -828,7 +829,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.5.2</span>
+              <span className="gal-local">v0.5.3</span>
               <button
                 disabled={busy}
                 onClick={() =>
