@@ -96,7 +96,7 @@ export class LocalGalleryStore {
       );
     const items = rows.slice(offset, offset + limit).map((row) => {
       const { files, metadata, references, ...summary } = this.detail(row);
-      return summary;
+      return typeof metadata?.cover === "string" ? { ...summary, cover: metadata.cover } : summary;
     });
     return { items, total: rows.length, limit, offset };
   }

@@ -1,4 +1,5 @@
 import React from "react";
+import { ResourceCoverMark } from "./resource-cover.jsx";
 import { Glyph } from "./icons.jsx";
 const names = {
   skill: "Skill",
@@ -49,6 +50,7 @@ export function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
                         {i === 0 && <Glyph name="trophy" size={16} />}
                         <span>{String(i + 1).padStart(2, "0")}</span>
                       </span>
+                      <ResourceCoverMark resource={r} />
                       <span className="gal-rank-info">
                         <strong>{r.name}</strong>
                         <span className="gal-rank-author">

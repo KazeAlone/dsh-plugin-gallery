@@ -1,3 +1,4 @@
+import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
@@ -16,6 +17,7 @@ const parseRefs = (value) =>
     }),
   );
 export function McpWizard({ resource, onClose, onSave, onCheck }) {
+  const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const saved = resource?.metadata?.mcp || {};
   const [step, setStep] = useState(0),
     [name, setName] = useState(resource?.name || ""),
@@ -91,7 +93,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
         name: name.trim(),
         description: description.trim(),
         tags: parsedTags,
-        metadata: { ...(resource?.metadata || {}), mcp: data },
+        metadata: { ...withResourceCover(resource?.metadata, cover), mcp: data },
         references: resource?.references || [],
         files: [
           {
@@ -301,6 +303,10 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
                     {transport === "stdio" ? "本地进程" : "远程 HTTP"}
                   </span>
                 </div>
+                <ResourceCoverPicker
+                  resource={{ type: "mcp", name, description, tags: tags.split(/[,，]/), cover }}
+                  onChange={setCover}
+                />
                 <label>
                   标签（选填）
                   <input

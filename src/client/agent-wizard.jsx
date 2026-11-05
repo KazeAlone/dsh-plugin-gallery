@@ -1,3 +1,4 @@
+import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import React, { useEffect, useState, useRef } from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
@@ -9,6 +10,7 @@ import {
 } from "./agent-format.mjs";
 const steps = ["身份", "职责", "能力与附件", "检查保存"];
 export function AgentWizard({ resource, onClose, onSave }) {
+  const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const [initial] = useState(() => readAgent(resource));
   const [step, setStep] = useState(0),
     [slug, setSlug] = useState(initial.slug),
@@ -118,7 +120,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
         description: description.trim(),
         tags: parsedTags,
         metadata: {
-          ...(resource?.metadata || {}),
+          ...withResourceCover(resource?.metadata, cover),
           agent: {
             ...(resource?.metadata?.agent || {}),
             slug: slug.trim(),
@@ -411,6 +413,10 @@ export function AgentWizard({ resource, onClose, onSave }) {
                     {files.length + 1 + (hasConfig ? 1 : 0)} 个文件 · 整体保存
                   </span>
                 </div>
+                <ResourceCoverPicker
+                  resource={{ type: "agent", name, description, tags: tags.split(/[,，]/), cover }}
+                  onChange={setCover}
+                />
                 <label>
                   标签（选填）
                   <input

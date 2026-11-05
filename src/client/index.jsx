@@ -10,7 +10,8 @@ import { AgentWizard } from "./agent-wizard.jsx";
 import { SkillWizard } from "./skill-wizard.jsx";
 import { Modal } from "./modal.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
-import { Glyph, ResourceVisual } from "./icons.jsx";
+import { Glyph } from "./icons.jsx";
+import { ResourceCover, hasResourceCover } from "./resource-cover.jsx";
 import { THEMES, loadTheme, saveTheme } from "./theme.mjs";
 
 const NS = "dsh-gallery",
@@ -564,7 +565,7 @@ function Gallery({ remote }) {
                   disabled={busy}
                   onClick={() => run(() => load(r.id))}
                 >
-                  <ResourceVisual type={r.type} />
+                  <ResourceCover resource={r} />
                   <div className="gal-resource-content">
                     <h3>{r.name}</h3>
                     {r.description && <p>{r.description}</p>}
@@ -730,6 +731,7 @@ function Gallery({ remote }) {
                 <Glyph name="close" />
               </button>
             </div>
+            {hasResourceCover(content.type) && <ResourceCover resource={content} />}
             <div className="gal-detail-actions">
               {selected.type === "workflow" && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await call(remote, "uiPublishWorkflow", selected.id); setNotice(`已安装到 TeamFlow：${result.name} v${result.version}`); })}><Glyph name="workflow" />安装到 TeamFlow</button>}
               {selected.canEdit && (

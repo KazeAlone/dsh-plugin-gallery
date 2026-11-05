@@ -1,3 +1,4 @@
+import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import React, { useState, useRef, useEffect } from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
@@ -27,6 +28,7 @@ function Preview({ text }) {
   );
 }
 export function SkillWizard({ resource, onClose, onSave }) {
+  const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const [initial] = useState(() => readSkill(resource));
   const [step, setStep] = useState(0),
     [name, setName] = useState(initial.name),
@@ -133,7 +135,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
         name: name.trim(),
         description: description.trim(),
         tags: parsedTags,
-        metadata: resource?.metadata || {},
+        metadata: withResourceCover(resource?.metadata, cover),
         references: resource?.references || [],
         files: [
           { path: "SKILL.md", encoding: "utf8", content: document },
@@ -358,6 +360,10 @@ export function SkillWizard({ resource, onClose, onSave }) {
                   <p>{description}</p>
                   <span>{files.length + 1} 个文件 · 整体保存</span>
                 </div>
+                <ResourceCoverPicker
+                  resource={{ type: "skill", name, description, tags: tags.split(/[,，]/), cover }}
+                  onChange={setCover}
+                />
                 <label>
                   标签（选填）
                   <input
