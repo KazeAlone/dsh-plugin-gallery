@@ -1,7 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
-import { SKILL_TEMPLATE, skillDocument, skillIssues } from "./skill-format.mjs";
+import {
+  SKILL_TEMPLATE,
+  skillDocument,
+  skillIssues,
+  readSkill,
+} from "./skill-format.mjs";
 const steps = ["基本信息", "编写指引", "附属文件", "检查保存"];
 const folders = [
   ["references", "参考资料", "执行时需要查阅的文档", "file"],
@@ -20,12 +25,13 @@ function Preview({ text }) {
     </div>
   );
 }
-export function SkillWizard({ onClose, onSave }) {
+export function SkillWizard({ resource, onClose, onSave }) {
+  const [initial] = useState(() => readSkill(resource));
   const [step, setStep] = useState(0),
-    [name, setName] = useState(""),
-    [description, setDescription] = useState(""),
-    [body, setBody] = useState(SKILL_TEMPLATE),
-    [files, setFiles] = useState([]),
+    [name, setName] = useState(initial.name),
+    [description, setDescription] = useState(initial.description),
+    [body, setBody] = useState(initial.body),
+    [files, setFiles] = useState(initial.files),
     [active, setActive] = useState(-1),
     [preview, setPreview] = useState(false),
     [error, setError] = useState(""),
@@ -34,8 +40,11 @@ export function SkillWizard({ onClose, onSave }) {
   useEffect(() => {
     heading.current?.focus();
   }, [step]);
-  const document = skillDocument(name, description, body);
-  const issues = skillIssues(name, description, body, files);
+  const document = skillDocument(name, description, body, initial.frontmatter);
+  const issues = [
+    ...(initial.error ? [initial.error] : []),
+    ...skillIssues(name, description, body, files),
+  ];
   const basicValid =
     /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) &&
     name.length <= 64 &&
@@ -100,9 +109,9 @@ export function SkillWizard({ onClose, onSave }) {
         type: "skill",
         name: name.trim(),
         description: description.trim(),
-        tags: [],
-        metadata: {},
-        references: [],
+        tags: resource?.tags || [],
+        metadata: resource?.metadata || {},
+        references: resource?.references || [],
         files: [
           { path: "SKILL.md", encoding: "utf8", content: document },
           ...files,
@@ -120,14 +129,14 @@ export function SkillWizard({ onClose, onSave }) {
         className="gal-dialog gal-skill-wizard"
         role="dialog"
         aria-modal="true"
-        aria-label="新建 Skill"
+        aria-label={resource ? "编辑 Skill" : "新建 Skill"}
         tabIndex={-1}
       >
         <header className="gal-dialog-head">
           <h2>
-            <Glyph name="skill" /> 新建 Skill
+            <Glyph name="skill" /> {resource ? "编辑 Skill" : "新建 Skill"}
           </h2>
-          <button aria-label="关闭创建" disabled={busy} onClick={onClose}>
+          <button aria-label="关闭编辑" disabled={busy} onClick={onClose}>
             <Glyph name="close" />
           </button>
         </header>

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   skillDocument,
+  readSkill,
   skillIssues,
   SKILL_TEMPLATE,
 } from "../src/client/skill-format.mjs";
@@ -13,7 +14,11 @@ test("Skill document safely quotes YAML values and forms a valid Gallery bundle"
     description,
     "# 步骤\n审查代码。",
   );
-  assert.ok(content.includes("description: " + JSON.stringify(description)));
+  assert.equal(
+    readSkill({ files: [{ path: "SKILL.md", encoding: "utf8", content }] })
+      .description,
+    description,
+  );
   const resource = normalizeResource({
     type: "skill",
     name: "code-review",
@@ -60,5 +65,55 @@ test("Skill validation resolves attachment links and enforces package limits", (
         content: "a".repeat(5 * 1024 * 1024),
       },
     ]).some((x) => x.includes("5 MiB")),
+  );
+});
+test("editing round trips frontmatter extensions, body and attachments", () => {
+  const content =
+    "---\nname: review\ndescription: |\n  Review code\nlicense: MIT\ncompatibility: shell\n---\n\n# Review\n\nRun checks.\n";
+  const attachment = {
+    path: "assets/logo.png",
+    encoding: "base64",
+    content: "aGVsbG8=",
+  };
+  const original = {
+    name: "stale",
+    description: "stale",
+    files: [{ path: "SKILL.md", encoding: "utf8", content }, attachment],
+  };
+  const draft = readSkill(original);
+  assert.equal(draft.name, "review");
+  assert.equal(draft.body, "# Review\n\nRun checks.\n");
+  assert.deepEqual(draft.files, [attachment]);
+  const saved = skillDocument(
+    draft.name,
+    "Updated",
+    draft.body,
+    draft.frontmatter,
+  );
+  const reopened = readSkill({
+    ...original,
+    files: [{ path: "SKILL.md", encoding: "utf8", content: saved }, attachment],
+  });
+  assert.equal(reopened.frontmatter.license, "MIT");
+  assert.equal(reopened.description, "Updated");
+  assert.equal(reopened.body, draft.body);
+});
+test("legacy escaped headers are recovered and malformed YAML is not silently overwritten", () => {
+  const legacy = String.raw`---\nname: "review"\ndescription: "Review"\n---\n\n# Review\n`;
+  const draft = readSkill({
+    files: [{ path: "SKILL.md", encoding: "utf8", content: legacy }],
+  });
+  assert.equal(draft.name, "review");
+  assert.equal(draft.body, "# Review");
+  assert.ok(
+    readSkill({
+      files: [
+        {
+          path: "SKILL.md",
+          encoding: "utf8",
+          content: "---\nname: [\n---\nBody",
+        },
+      ],
+    }).error,
   );
 });

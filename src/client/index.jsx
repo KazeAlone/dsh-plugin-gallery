@@ -52,7 +52,6 @@ function Gallery({ remote }) {
   const [selected, setSelected] = useState(null),
     [editor, setEditor] = useState(null);
   const [skillWizard, setSkillWizard] = useState(false);
-  const [reference, setReference] = useState("");
   const [storageSettings, setStorageSettings] = useState(null);
   const [connectionResult, setConnectionResult] = useState("");
   const [confirmation, setConfirmation] = useState(null);
@@ -130,15 +129,14 @@ function Gallery({ remote }) {
   async function load(id) {
     const r = await call(remote, "uiGet", id);
     setSelected(r);
-    setReference("");
     return r;
   }
   function edit(r) {
     setNotice("");
     setError("");
     if (!r && !type) return;
-    if (!r && type === "skill") {
-      setSkillWizard(true);
+    if ((r?.type || type) === "skill") {
+      setSkillWizard({ resource: r || null });
       return;
     }
     const d = r || { ...blank(), type };
@@ -471,12 +469,21 @@ function Gallery({ remote }) {
       )}
       {skillWizard && (
         <SkillWizard
+          resource={skillWizard.resource}
           onClose={async () => {
             if (await confirmAction("放弃尚未保存的 Skill？"))
               setSkillWizard(false);
           }}
           onSave={async (resource) => {
-            const r = await call(remote, "uiCreate", json(resource));
+            const existing = skillWizard.resource;
+            const r = existing
+              ? await call(
+                  remote,
+                  "uiUpdate",
+                  existing.id,
+                  json({ resource, expectedRevision: existing.revision }),
+                )
+              : await call(remote, "uiCreate", json(resource));
             setSkillWizard(false);
             setRefresh((x) => x + 1);
             setNotice("Skill 已保存。");
@@ -545,32 +552,8 @@ function Gallery({ remote }) {
                 <Glyph name="download" />
                 下载资源
               </button>
-              <button
-                onClick={() =>
-                  setReference(
-                    json(
-                      {
-                        libraryId: selected.libraryId,
-                        id: selected.id,
-                        digest: selected.digest,
-                      },
-                      null,
-                      2,
-                    ),
-                  )
-                }
-              >
-                <Glyph name="link" />
-                获取引用
-              </button>
             </div>
             <div className="gal-dialog-body">
-              {reference && (
-                <label className="gal-reference">
-                  资源引用
-                  <textarea readOnly rows={4} value={reference} />
-                </label>
-              )}
               <p className="gal-description">
                 {content.description || "暂无描述"}
               </p>
@@ -592,19 +575,6 @@ function Gallery({ remote }) {
                   )}
                 </details>
               ))}
-              <details className="gal-file">
-                <summary>元数据与依赖</summary>
-                <pre>
-                  {json(
-                    {
-                      metadata: content.metadata,
-                      references: content.references,
-                    },
-                    null,
-                    2,
-                  )}
-                </pre>
-              </details>
             </div>
           </section>
         </Modal>
@@ -805,27 +775,6 @@ function Gallery({ remote }) {
                   )}
                 </div>
               </div>
-              <details className="gal-advanced">
-                <summary>元数据与资源引用</summary>
-                <label>
-                  元数据（JSON 对象）
-                  <textarea
-                    rows={5}
-                    value={editor.metadata}
-                    onChange={(e) => change("metadata", e.target.value)}
-                    spellCheck="false"
-                  />
-                </label>
-                <label>
-                  资源依赖（JSON）
-                  <textarea
-                    rows={5}
-                    value={editor.references}
-                    onChange={(e) => change("references", e.target.value)}
-                    spellCheck="false"
-                  />
-                </label>
-              </details>
             </div>
             <footer className="gal-dialog-footer">
               <button disabled={busy} onClick={closeEditor}>
@@ -879,7 +828,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.5.0</span>
+              <span className="gal-local">v0.5.1</span>
               <button
                 disabled={busy}
                 onClick={() =>
