@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { agentDocument } from '../src/client/agent-format.mjs';
-import { registerGalleryAgentTools } from '../src/agent-runtime.mjs';
+import { registerGalleryAgentTools, registerGalleryAgentListTool } from '../src/agent-runtime.mjs';
 
 test('Gallery Agent tools list and delegate a saved Agent to DSH spawn', async () => {
   const resource = { id: 'agent-one', type: 'agent', name: 'Reviewer', description: 'Review code', tags: [], metadata: { agent: { slug: 'reviewer', goal: 'Review code', instructions: 'Check correctness.' } }, files: [{ path: 'AGENT.md', encoding: 'utf8', content: agentDocument({ slug: 'reviewer', description: 'Review code', goal: 'Review code', boundaries: '', instructions: 'Check correctness.' }) }] };
@@ -17,4 +17,13 @@ test('Gallery Agent tools list and delegate a saved Agent to DSH spawn', async (
   assert.match(activation.request.prompt[0].text, /Check correctness/);
   assert.match(activation.request.prompt[0].text, /Review this file/);
   dispose(); assert.equal(tools.size, 0);
+});
+test('Gallery Agent catalog remains available without the subagent service', async () => {
+  const rows = new Map();
+  const ctx = { tools: { register: def => { rows.set(def.name, def); return () => rows.delete(def.name); } } };
+  const store = { adapter: () => ({ read: () => ({ resources: [] }) }) };
+  const dispose = registerGalleryAgentListTool(ctx, store);
+  assert.deepEqual(await rows.get('gallery_agent_list').execute({}), { agents: [] });
+  assert.equal(rows.has('gallery_agent_run'), false);
+  dispose(); assert.equal(rows.size, 0);
 });

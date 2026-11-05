@@ -82,4 +82,4 @@ Gallery MCP 资源保存 `mcp.json` 和 metadata.mcp，字段 transport 仅允�
 
 ## Agent 会话调用（0.11.0）
 
-在启用 tools、subagents、spawn 的 DSH 预设中，Gallery 注册 `gallery_agent_list` 和 `gallery_agent_run`。前者列出有效的 Agent 资源，后者把 `AGENT.md` 指令、本次任务和按需读取的附件目录交给 `spawn` 子 Agent，完成通知返回当前会话。资源内容作为子 Agent 的任务输入，尚不是独立的 DSH Agent preset；其 `config.json` 模型配置当前不作为子 Agent 模型覆盖。
+在启用 tools 的 DSH 预设中，Gallery 注册只读的 `gallery_agent_list`；启用 subagents 后另注册 `gallery_agent_run`，并要求 spawn 提供方可用。后者把 `AGENT.md` 指令、本次任务和按需读取的附件目录交给 `spawn` 子 Agent，完成通知返回当前会话。资源内容作为子 Agent 的任务输入，尚不是独立的 DSH Agent preset；其 `config.json` 模型配置当前不作为子 Agent 模型覆盖。

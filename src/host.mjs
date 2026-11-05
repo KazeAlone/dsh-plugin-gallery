@@ -9,7 +9,7 @@ import { demand } from "./model.mjs";
 import { validateMcpConfig } from "./mcp-config.mjs";
 import { checkMcpConnection } from "./mcp-check.mjs";
 import { GalleryMcpRuntime } from "./mcp-runtime.mjs";
-import { registerGalleryAgentTools } from "./agent-runtime.mjs";
+import { registerGalleryAgentListTool, registerGalleryAgentRunTool } from "./agent-runtime.mjs";
 import { workflowFromResource } from "./workflow-template.mjs";
 import { publishToTeamflow } from "./teamflow-publish.mjs";
 import { createSkillProvider } from "./skill-provider.mjs";
@@ -36,6 +36,7 @@ export default class GalleryService extends TypertRemoteService {
     ctx.inject(["tools"], (scope) => {
       const runtime = new GalleryMcpRuntime(scope, this.store);
       this.mcpRuntime = runtime;
+      scope.effect(() => registerGalleryAgentListTool(scope, this.store));
       scope.effect(() => {
         void runtime.refresh();
         return async () => {
@@ -45,7 +46,7 @@ export default class GalleryService extends TypertRemoteService {
       });
     });
     ctx.inject(["tools", "subagents"], (scope) => {
-      scope.effect(() => registerGalleryAgentTools(scope, this.store));
+      scope.effect(() => registerGalleryAgentRunTool(scope, this.store));
     });
     ctx.effect(() =>
       ctx.get("typert").register({
