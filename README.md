@@ -70,3 +70,6 @@ npm pack
 使用支持原生 Skill 加载的预设，例如 **standard**。Gallery 会注册 Skill 提供方，并在加载时准备附属文件的运行目录；不需要手动复制到 `.dsh/skills`。无效或禁止用户调用的 Skill 不显示。该功能使用 DSH 的原生输入建议与 Skill 加载机制，尚未进行完整模型会话端到端验证。
 
 打开列表、选择、预览和加载不会增加累计调用次数；执行端确认使用后仍需调用统计接口，见 [集成说明](docs/integration.md)。
+
+
+Gallery Skill 的 `SKILL.md` 和附件一起写入运行目录。加载 Skill 时会列出 `references/`、`scripts/`、`assets/` 中的文件路径；需要读取具体附件的任务，应使用支持文件读取工具的 DSH 会话。

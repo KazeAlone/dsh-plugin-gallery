@@ -35,7 +35,11 @@ test("provider lists valid Skills, preserves invocation policy and produces immu
   const rows = await provider.list();
   assert.equal(rows.length, 1);
   const loaded = await provider.get(rows[0]);
-  assert.equal(loaded.content, "# Review");
+  assert.match(loaded.content, /^# Review/);
+  assert.match(loaded.content, /## Gallery 附件/);
+  assert.ok(
+    loaded.content.includes(join(loaded.resourceBase.path, "assets/icon.bin")),
+  );
   assert.deepEqual(
     readFileSync(join(loaded.resourceBase.path, "assets/icon.bin")),
     Buffer.from([0, 1, 2, 255]),

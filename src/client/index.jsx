@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 import { REMOTE } from "../descriptors.mjs";
 import styles from "./styles.css";
 import { Leaderboards } from "./leaderboards.jsx";
@@ -48,8 +49,30 @@ function Gallery({ remote }) {
   }
   useEffect(() => {
     if (!notice) return;
-    const timer = setTimeout(() => updateNotice(null), 3500);
-    return () => clearTimeout(timer);
+    const root = document.createElement("div");
+    root.className = "gal gal-toast-host";
+    const toast = document.createElement("div");
+    toast.className = "gal-notice";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    const mark = document.createElement("span");
+    mark.textContent = "✓";
+    mark.setAttribute("aria-hidden", "true");
+    const message = document.createElement("span");
+    message.textContent = notice.message;
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "×";
+    close.setAttribute("aria-label", "关闭提示");
+    close.addEventListener("click", () => updateNotice(null));
+    toast.append(mark, message, close);
+    root.append(toast);
+    document.body.append(root);
+    const timer = setTimeout(() => updateNotice(null), 5000);
+    return () => {
+      clearTimeout(timer);
+      root.remove();
+    };
   }, [notice]);
   const [boards, setBoards] = useState([]);
   const [items, setItems] = useState([]),
@@ -363,20 +386,6 @@ function Gallery({ remote }) {
         <div role="alert" className="gal-alert">
           {error}
           <button aria-label="关闭错误" onClick={() => setError("")}>
-            <Glyph name="close" />
-          </button>
-        </div>
-      )}
-      {notice && (
-        <div
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-          className="gal-notice"
-        >
-          <Glyph name="check" size={18} />
-          <span>{notice.message}</span>
-          <button aria-label="关闭提示" onClick={() => setNotice("")}>
             <Glyph name="close" />
           </button>
         </div>
@@ -966,7 +975,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.7.1</span>
+              <span className="gal-local">v0.7.2</span>
               <button
                 disabled={busy}
                 onClick={() =>

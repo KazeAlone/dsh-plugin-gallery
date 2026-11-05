@@ -1442,3 +1442,19 @@ fieldset.gal-skill-fields {
     --rank-tint: #3b3121;
   }
 }
+
+.gal.gal-toast-host {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  width: auto;
+  min-height: 0;
+  overflow: visible;
+  padding: 0;
+  background: transparent;
+}
+.gal-toast-host .gal-notice {
+  position: absolute;
+  pointer-events: auto;
+}
