@@ -1,0 +1,45 @@
+import * as mcpClient from '@deepseek-ai/dsh-mcp-client';
+import { resolveMcpConfig } from './mcp-config.mjs';
+
+/** Keep official DSH MCP plugin instances in sync with Gallery's saved resources. */
+export class GalleryMcpRuntime {
+  constructor(ctx, store) {
+    this.ctx = ctx;
+    this.store = store;
+    this.active = new Map();
+    this.pending = Promise.resolve();
+  }
+  refresh() {
+    this.pending = this.pending.catch(() => {}).then(() => this.sync());
+    return this.pending;
+  }
+  async sync() {
+    const resources = this.store.adapter().read().resources.filter(r => r.type === 'mcp');
+    const wanted = new Map(resources.map(r => [r.id, r]));
+    for (const [id, current] of this.active) {
+      const resource = wanted.get(id);
+      if (resource && JSON.stringify(resource.metadata?.mcp) === current.serialized) continue;
+      await current.fiber.dispose();
+      this.active.delete(id);
+    }
+    for (const resource of resources) {
+      if (this.active.has(resource.id)) continue;
+      const serialized = JSON.stringify(resource.metadata?.mcp);
+      try {
+        const safe = resolveMcpConfig(resource.metadata?.mcp);
+        const config = safe.transport === 'stdio'
+          ? { transport: safe.transport, serverName: safe.serverName, command: safe.command, args: safe.args, cwd: safe.cwd, env: safe.env }
+          : { transport: safe.transport, serverName: safe.serverName, url: safe.url, headers: safe.headers };
+        const fiber = await this.ctx.plugin(mcpClient, config);
+        this.active.set(resource.id, { serialized, fiber });
+      } catch (error) {
+        this.ctx.logger?.warn?.(`gallery: MCP ${resource.id} could not activate: ${error.message}`);
+      }
+    }
+  }
+  async dispose() {
+    await this.pending.catch(() => {});
+    for (const { fiber } of this.active.values()) await fiber.dispose();
+    this.active.clear();
+  }
+}

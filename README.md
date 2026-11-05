@@ -35,7 +35,7 @@ $DSH_HOME/gallery/resources.json
 - 每个资源最多 100 个文件，总计 5 MiB；资源类型创建后固定。
 - `metadata` 保存扩展配置，`references` 保存 `{id,digest?}` 引用。
 
-Gallery 保存和读取资源。Workflow 可以安装到 TeamFlow 模板库，再从 TeamFlow 模板库应用到会话；Gallery 本身不执行 Workflow。默认模板目录为 `~/.dsh-teamflow/templates`，如 TeamFlow 配置了其他 `templateDirectory`，请给 Gallery 进程设置 `DSH_TEAMFLOW_TEMPLATE_DIR` 为相同路径。当前不提供发布版本、历史回滚和远程同步。
+Gallery 保存和读取资源。有效的 Agent 可通过会话工具 `gallery_agent_list`、`gallery_agent_run` 交给 DSH `spawn` 子 Agent 执行；需要启用 DSH tools、subagents 和 spawn 提供方。保存的 MCP 服务通过 DSH 官方 MCP 客户端注册为 `mcp__<serverName>__<tool>` 会话工具，所引用的环境变量必须在宿主启动时可用。Workflow 可以安装到 TeamFlow 模板库，再从 TeamFlow 模板库应用到会话；Gallery 本身不执行 Workflow。默认模板目录为 `~/.dsh-teamflow/templates`，如 TeamFlow 配置了其他 `templateDirectory`，请给 Gallery 进程设置 `DSH_TEAMFLOW_TEMPLATE_DIR` 为相同路径。当前不提供发布版本、历史回滚和远程同步。
 
 ## 其他插件接入
 

@@ -78,4 +78,8 @@ StorageManager 在创建时写入 `creator: {username}`，取自 storage.json �
 
 Gallery MCP 资源保存 `mcp.json` 和 metadata.mcp，字段 transport 仅允许 stdio、streamable-http。stdio 配置为 serverName、command、args、cwd、envRefs；HTTP 配置为 serverName、url、envRefs。envRefs 将服务端字段名映射到 DSH 宿主环境变量名称，检查连接时从进程环境读取值，资源文件不含值。HTTP Authorization 需要环境变量本身提供完整请求头值（如 `Bearer ...`）。
 
-`uiCheckMcp(payload)` 只允许 owner 调用，按需启动或连接服务，列出工具名称与描述后关闭连接；超时 12 秒。保存不要求连接成功；同一资源库内服务器名称不能重复。该向导只是配置管理，不自动把 MCP 服务启用为 DSH 工具；启用仍需将配置转为 dsh-mcp-client 插件项。
+`uiCheckMcp(payload)` 只允许 owner 调用，按需启动或连接服务，列出工具名称与描述后关闭连接；超时 12 秒。保存不要求连接成功；同一资源库内服务器名称不能重复。Gallery 通过官方 `dsh-mcp-client` 插件实例启用资源库中的 MCP 服务，并随资源更新或删除刷新。连接失败会记入宿主日志；需要 DSH 的 tools 和 MCP 插件依赖服务。工具在会话中以 `mcp__<serverName>__<tool>` 出现。
+
+## Agent 会话调用（0.11.0）
+
+在启用 tools、subagents、spawn 的 DSH 预设中，Gallery 注册 `gallery_agent_list` 和 `gallery_agent_run`。前者列出有效的 Agent 资源，后者把 `AGENT.md` 指令、本次任务和按需读取的附件目录交给 `spawn` 子 Agent，完成通知返回当前会话。资源内容作为子 Agent 的任务输入，尚不是独立的 DSH Agent preset；其 `config.json` 模型配置当前不作为子 Agent 模型覆盖。

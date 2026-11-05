@@ -8728,7 +8728,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react9.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react9.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react9.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-local" }, "v0.9.0"), /* @__PURE__ */ import_react9.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-local" }, "v0.11.0"), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         disabled: busy,

@@ -8,6 +8,8 @@ import { StorageManager } from "./storage-manager.mjs";
 import { demand } from "./model.mjs";
 import { validateMcpConfig } from "./mcp-config.mjs";
 import { checkMcpConnection } from "./mcp-check.mjs";
+import { GalleryMcpRuntime } from "./mcp-runtime.mjs";
+import { registerGalleryAgentTools } from "./agent-runtime.mjs";
 import { workflowFromResource } from "./workflow-template.mjs";
 import { publishToTeamflow } from "./teamflow-publish.mjs";
 import { createSkillProvider } from "./skill-provider.mjs";
@@ -22,6 +24,7 @@ export default class GalleryService extends TypertRemoteService {
     );
     this.skillProvider = createSkillProvider(this.store);
     this.invalidateSkills = () => {};
+    this.mcpRuntime = null;
     ctx.inject(["skills"], (scope) => {
       scope.effect(() =>
         scope.skills.registerProvider((control) => {
@@ -29,6 +32,20 @@ export default class GalleryService extends TypertRemoteService {
           return this.skillProvider;
         }),
       );
+    });
+    ctx.inject(["tools"], (scope) => {
+      const runtime = new GalleryMcpRuntime(scope, this.store);
+      this.mcpRuntime = runtime;
+      scope.effect(() => {
+        void runtime.refresh();
+        return async () => {
+          if (this.mcpRuntime === runtime) this.mcpRuntime = null;
+          await runtime.dispose();
+        };
+      });
+    });
+    ctx.inject(["tools", "subagents"], (scope) => {
+      scope.effect(() => registerGalleryAgentTools(scope, this.store));
     });
     ctx.effect(() =>
       ctx.get("typert").register({
@@ -85,12 +102,13 @@ export default class GalleryService extends TypertRemoteService {
     return this.ownerCall(() => this.store.getResource(id));
   }
   uiCreate(payload) {
-    return this.ownerCall(() => {
+    return this.ownerCall(async () => {
       const input = JSON.parse(payload);
       if (input.type === "mcp") this.validateMcpName(input);
       if (input.type === "workflow") workflowFromResource(input);
       const r = this.store.createResource(input);
       this.invalidateSkills();
+      if (input.type === "mcp") await this.mcpRuntime?.refresh();
       return r;
     });
   }
@@ -137,22 +155,25 @@ export default class GalleryService extends TypertRemoteService {
     });
   }
   uiUpdate(id, payload) {
-    return this.ownerCall(() => {
+    return this.ownerCall(async () => {
       const p = JSON.parse(payload);
       if (p.resource?.type === "mcp") this.validateMcpName(p.resource, id);
       if (p.resource?.type === "workflow") workflowFromResource(p.resource);
       const r = this.store.updateResource(id, p.resource, p.expectedRevision);
       this.invalidateSkills();
+      if (r.type === "mcp") await this.mcpRuntime?.refresh();
       return r;
     });
   }
   uiDelete(id, payload) {
-    return this.ownerCall(() => {
+    return this.ownerCall(async () => {
+      const before = this.store.getResource(id);
       const result = this.store.deleteResource(
         id,
         JSON.parse(payload).expectedRevision,
       );
       this.invalidateSkills();
+      if (before.type === "mcp") await this.mcpRuntime?.refresh();
       return result;
     });
   }

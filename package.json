@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-gallery",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Local DSH resource gallery for skills, agents, MCP and workflows",
   "type": "module",
   "main": "./src/host.mjs",
@@ -84,6 +84,8 @@
     "dsh-gallery": "./scripts/gallery.mjs"
   },
   "dependencies": {
+    "@deepseek-ai/dsh-mcp-client": "^0.2.1-rc.5",
+    "@deepseek-ai/dsh-tools": "^0.2.1-rc.5",
     "@modelcontextprotocol/client": "^2.2.0",
     "yaml": "^2.9.1"
   }
