@@ -394,8 +394,8 @@ function download(name, value, type = "application/json") {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1e3);
 }
-function Icon() {
-  return /* @__PURE__ */ import_react4.default.createElement(BrandIcon, null);
+function Icon({ size = 20 }) {
+  return /* @__PURE__ */ import_react4.default.createElement(BrandIcon, { size });
 }
 function Gallery({ remote }) {
   const [status, setStatus] = (0, import_react4.useState)(null), [error, setError] = (0, import_react4.useState)(""), [notice, setNotice] = (0, import_react4.useState)(""), [busy, setBusy] = (0, import_react4.useState)(false);
@@ -961,7 +961,7 @@ function Gallery({ remote }) {
       /* @__PURE__ */ import_react4.default.createElement("strong", null, provider.name),
       /* @__PURE__ */ import_react4.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
     ))), connectionResult && /* @__PURE__ */ import_react4.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react4.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react4.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react4.default.createElement("span", { className: "gal-local" }, "v0.4.7"), /* @__PURE__ */ import_react4.default.createElement(
+    /* @__PURE__ */ import_react4.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react4.default.createElement("span", { className: "gal-local" }, "v0.4.8"), /* @__PURE__ */ import_react4.default.createElement(
       "button",
       {
         disabled: busy,

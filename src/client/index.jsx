@@ -32,8 +32,8 @@ function download(name, value, type = "application/json") {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-function Icon() {
-  return <BrandIcon />;
+function Icon({ size = 20 }) {
+  return <BrandIcon size={size} />;
 }
 function Gallery({ remote }) {
   const [status, setStatus] = useState(null),
@@ -858,7 +858,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.4.7</span>
+              <span className="gal-local">v0.4.8</span>
               <button
                 disabled={busy}
                 onClick={() =>
