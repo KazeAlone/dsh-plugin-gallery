@@ -971,8 +971,8 @@
 
 /* Skill folder creation */
 .gal-skill-wizard {
-  width: min(1000px, 100%);
-  height: min(760px, calc(100dvh - 48px));
+  width: min(1200px, 100%);
+  height: min(860px, calc(100dvh - 48px));
 }
 .gal-skill-steps {
   display: grid;
@@ -1146,4 +1146,30 @@ fieldset.gal-skill-fields {
 .gal-skill-steps,
 .gal-skill-footer {
   flex-shrink: 0;
+}
+
+.gal-skill-footer > .gal-primary {
+  width: 168px;
+  height: 42px;
+  flex: 0 0 168px;
+  justify-content: center;
+  white-space: nowrap;
+}
+.gal-skill-attachments {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr);
+  align-items: start;
+  gap: 16px;
+}
+.gal-skill-attachments > fieldset.gal-skill-fields {
+  margin: 0;
+}
+.gal-skill-attachments textarea {
+  min-height: 240px;
+  font-family: monospace;
+}
+@media (max-width: 900px) {
+  .gal-skill-attachments {
+    grid-template-columns: 1fr;
+  }
 }

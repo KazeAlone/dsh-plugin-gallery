@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   skillDocument,
   readSkill,
+  syncSkillAttachments,
   skillIssues,
   SKILL_TEMPLATE,
 } from "../src/client/skill-format.mjs";
@@ -116,4 +117,24 @@ test("legacy escaped headers are recovered and malformed YAML is not silently ov
       ],
     }).error,
   );
+});
+
+test("attachment links are synchronized without duplicates and survive special filenames", () => {
+  const body = "# Instructions\n\nKeep this text.";
+  const file = {
+    path: "references/check (中文).md",
+    encoding: "utf8",
+    content: "check",
+  };
+  const linked = syncSkillAttachments(body, [file]);
+  assert.ok(linked.includes("references/check%20%28%E4%B8%AD%E6%96%87%29.md"));
+  assert.equal(syncSkillAttachments(linked, [file]), linked);
+  assert.deepEqual(skillIssues("review", "Review", linked, [file]), []);
+  const renamed = syncSkillAttachments(linked, [
+    { ...file, path: "references/new.md" },
+  ]);
+  assert.ok(!renamed.includes("check%20"));
+  assert.ok(renamed.includes("references/new.md"));
+  assert.equal(syncSkillAttachments(renamed, []), body);
+  assert.equal(syncSkillAttachments(SKILL_TEMPLATE, []), SKILL_TEMPLATE);
 });

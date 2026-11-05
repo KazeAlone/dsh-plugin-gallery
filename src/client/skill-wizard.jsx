@@ -6,6 +6,7 @@ import {
   skillDocument,
   skillIssues,
   readSkill,
+  syncSkillAttachments,
 } from "./skill-format.mjs";
 const steps = ["基本信息", "编写指引", "附属文件", "检查保存"];
 const folders = [
@@ -41,7 +42,16 @@ export function SkillWizard({ resource, onClose, onSave }) {
   useEffect(() => {
     heading.current?.focus();
   }, [step]);
-  const document = skillDocument(name, description, body, initial.frontmatter);
+  const linkedBody = syncSkillAttachments(body, files);
+  const document = skillDocument(
+    name,
+    description,
+    linkedBody,
+    initial.frontmatter,
+  );
+  useEffect(() => {
+    setBody((value) => syncSkillAttachments(value, files));
+  }, [files]);
   const parsedTags = [
     ...new Set(
       tags
@@ -56,7 +66,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
       ? ["每个标签最多 40 个字符。"]
       : []),
     ...(initial.error ? [initial.error] : []),
-    ...skillIssues(name, description, body, files),
+    ...skillIssues(name, description, linkedBody, files),
   ];
   const basicValid =
     /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) &&
@@ -222,15 +232,11 @@ export function SkillWizard({ resource, onClose, onSave }) {
                     />
                   </label>
                 )}
-                <details>
-                  <summary>完整 SKILL.md</summary>
-                  <pre className="gal-skill-preview">{document}</pre>
-                </details>
               </div>
             )}
             {step === 2 && (
               <div className="gal-skill-fields">
-                <p>按需添加，也可以直接跳过。</p>
+                <p>按需添加，文件路径会自动写入指引。</p>
                 <div className="gal-skill-folders">
                   {folders.map(([folder, title, hint, icon]) => (
                     <section
@@ -275,79 +281,73 @@ export function SkillWizard({ resource, onClose, onSave }) {
                     </section>
                   ))}
                 </div>
-                {files.length > 0 && (
-                  <div className="gal-skill-filelist">
-                    {files.map((f, i) => (
-                      <div key={i}>
-                        <button
-                          onClick={() => setActive(i)}
-                          aria-pressed={active === i}
-                        >
-                          <Glyph name="file" />
-                          {f.path}
-                        </button>
-                        <button
-                          aria-label={`删除 ${f.path}`}
-                          disabled={busy}
-                          onClick={() => {
-                            setFiles(files.filter((_, j) => i !== j));
-                            setActive(-1);
-                          }}
-                        >
-                          <Glyph name="close" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {current && (
-                  <fieldset disabled={busy} className="gal-skill-fields">
-                    <label>
-                      文件路径
-                      <input
-                        value={current.path}
-                        onChange={(e) =>
-                          setFiles(
-                            files.map((f, i) =>
-                              i === active ? { ...f, path: e.target.value } : f,
-                            ),
-                          )
-                        }
-                      />
-                    </label>
-                    {current.encoding === "utf8" ? (
+                <div className="gal-skill-attachments">
+                  {files.length > 0 && (
+                    <div className="gal-skill-filelist">
+                      {files.map((f, i) => (
+                        <div key={i}>
+                          <button
+                            onClick={() => setActive(i)}
+                            aria-pressed={active === i}
+                          >
+                            <Glyph name="file" />
+                            {f.path}
+                          </button>
+                          <button
+                            aria-label={`删除 ${f.path}`}
+                            disabled={busy}
+                            onClick={() => {
+                              setFiles(files.filter((_, j) => i !== j));
+                              setActive(-1);
+                            }}
+                          >
+                            <Glyph name="close" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {current && (
+                    <fieldset disabled={busy} className="gal-skill-fields">
                       <label>
-                        文件内容
-                        <textarea
-                          aria-label="文件内容"
-                          rows={8}
-                          value={current.content}
+                        文件路径
+                        <input
+                          value={current.path}
                           onChange={(e) =>
                             setFiles(
                               files.map((f, i) =>
                                 i === active
-                                  ? { ...f, content: e.target.value }
+                                  ? { ...f, path: e.target.value }
                                   : f,
                               ),
                             )
                           }
                         />
                       </label>
-                    ) : (
-                      <p>二进制附件将原样保存。</p>
-                    )}
-                    <button
-                      onClick={() => {
-                        setBody(
-                          body + `\n[${current.path}](${current.path})\n`,
-                        );
-                        go(1);
-                      }}
-                    >
-                      插入到指引
-                    </button>
-                  </fieldset>
-                )}
+                      {current.encoding === "utf8" ? (
+                        <label>
+                          文件内容
+                          <textarea
+                            aria-label="文件内容"
+                            rows={8}
+                            value={current.content}
+                            onChange={(e) =>
+                              setFiles(
+                                files.map((f, i) =>
+                                  i === active
+                                    ? { ...f, content: e.target.value }
+                                    : f,
+                                ),
+                              )
+                            }
+                          />
+                        </label>
+                      ) : (
+                        <p>二进制附件将原样保存。</p>
+                      )}
+                    </fieldset>
+                  )}
+                </div>
               </div>
             )}
             {step === 3 && (

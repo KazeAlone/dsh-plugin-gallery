@@ -94,7 +94,34 @@ export function skillIssues(name, description, body, files) {
   for (const match of body.matchAll(
     /\]\((?:\.\/)?((?:scripts|references|assets)\/[^)]+)\)/g,
   )) {
-    if (!paths.has(match[1])) issues.push(`引用的文件不存在：${match[1]}`);
+    let path = match[1];
+    try {
+      path = decodeURIComponent(path);
+    } catch {}
+    if (!paths.has(path)) issues.push(`引用的文件不存在：${path}`);
   }
   return [...new Set(issues)];
+}
+
+const ATTACHMENTS_START = "<!-- gallery:attachments:start -->";
+const ATTACHMENTS_END = "<!-- gallery:attachments:end -->";
+export function syncSkillAttachments(body, files) {
+  const clean = body.replace(
+    /\n*<!-- gallery:attachments:start -->[\s\S]*?<!-- gallery:attachments:end -->/g,
+    "",
+  );
+  if (!files.length) return clean;
+  const links = files.map((file) => {
+    const label = file.path.replace(/[\[\]\\]/g, "\\$&");
+    const target = file.path
+      .split("/")
+      .map((part) =>
+        encodeURIComponent(part).replace(/[()]/g, (char) =>
+          char === "(" ? "%28" : "%29",
+        ),
+      )
+      .join("/");
+    return `- [${label}](${target})`;
+  });
+  return `${clean.trimEnd()}\n\n${ATTACHMENTS_START}\n## 附属文件\n\n${links.join("\n")}\n${ATTACHMENTS_END}`;
 }
