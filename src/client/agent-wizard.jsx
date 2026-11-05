@@ -8,7 +8,7 @@ import {
   readAgent,
   agentIssues,
 } from "./agent-format.mjs";
-const steps = ["身份", "职责", "能力与附件", "检查保存"];
+const steps = ["身份与职责", "行为指引与附件", "检查保存"];
 export function AgentWizard({ resource, onClose, onSave }) {
   const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const [initial] = useState(() => readAgent(resource));
@@ -16,10 +16,20 @@ export function AgentWizard({ resource, onClose, onSave }) {
     [slug, setSlug] = useState(initial.slug),
     [name, setName] = useState(resource?.name || ""),
     [description, setDescription] = useState(initial.description),
-    [goal, setGoal] = useState(initial.goal),
-    [boundaries, setBoundaries] = useState(initial.boundaries),
-    [instructions, setInstructions] = useState(initial.instructions),
-    [model, setModel] = useState(resource?.metadata?.agent?.model || ""),
+    [instructions, setInstructions] = useState(() =>
+      [
+        initial.goal && "## 任务目标\n" + initial.goal,
+        initial.boundaries && "## 处理边界\n" + initial.boundaries,
+        initial.instructions,
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    ),
+    [model, setModel] = useState(
+      resource?.metadata?.agent?.model ||
+        resource?.metadata?.agent?.config?.model ||
+        "",
+    ),
     [tags, setTags] = useState((resource?.tags || []).join(", ")),
     [files, setFiles] = useState(
       (resource?.files || []).filter(
@@ -42,6 +52,8 @@ export function AgentWizard({ resource, onClose, onSave }) {
         .filter(Boolean),
     ),
   ];
+  const goal = "",
+    boundaries = "";
   const config = {
     ...(resource?.metadata?.agent?.config || {}),
     ...(model.trim() ? { model: model.trim() } : {}),
@@ -68,8 +80,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
     slug.length <= 64 &&
     !!name.trim() &&
     !!description.trim();
-  const dutiesOK =
-    !!goal.trim() && !!instructions.trim() && instructions !== AGENT_TEMPLATE;
+  const dutiesOK = !!instructions.trim() && instructions !== AGENT_TEMPLATE;
   async function upload(folder, list) {
     setBusy(true);
     setError("");
@@ -169,7 +180,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
             <Glyph name="close" />
           </button>
         </header>
-        <nav className="gal-skill-steps" aria-label="创建进度">
+        <nav className="gal-skill-steps gal-three-steps" aria-label="创建进度">
           {steps.map((title, i) => (
             <button
               key={title}
@@ -225,26 +236,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
             )}
             {step === 1 && (
               <div className="gal-skill-fields">
-                <label>
-                  任务目标
-                  <textarea
-                    aria-label="任务目标"
-                    rows={3}
-                    value={goal}
-                    onChange={(e) => setGoal(e.target.value)}
-                    placeholder="例如：研究资料并提供有来源的结论"
-                  />
-                </label>
-                <label>
-                  处理边界（选填）
-                  <textarea
-                    aria-label="处理边界"
-                    rows={3}
-                    value={boundaries}
-                    onChange={(e) => setBoundaries(e.target.value)}
-                    placeholder="说明不得执行的操作或需要确认的情况"
-                  />
-                </label>
+                <p>写清职责、处理边界、何时回报和交付格式。</p>
                 <button
                   aria-pressed={preview}
                   onClick={() => setPreview(!preview)}
@@ -265,145 +257,144 @@ export function AgentWizard({ resource, onClose, onSave }) {
                     />
                   </label>
                 )}
-              </div>
-            )}
-            {step === 2 && (
-              <div className="gal-skill-fields">
-                <p>配置会随 Agent 保存；实际运行接入 DSH Agent 后生效。</p>
-                <label>
-                  模型（选填）
-                  <input
-                    aria-label="模型"
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    placeholder="使用运行环境默认模型"
-                  />
-                </label>
-                <div className="gal-skill-folders">
-                  {[
-                    ["references", "参考资料"],
-                    ["assets", "素材模板"],
-                  ].map(([folder, title]) => (
-                    <section
-                      className="gal-skill-folder"
-                      key={folder}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        upload(folder, e.dataTransfer.files);
-                      }}
-                    >
-                      <Glyph name="folder" size={28} />
-                      <h3>{title}</h3>
-                      <code>{folder}/</code>
-                      <label className="gal-upload">
-                        上传文件
-                        <input
-                          aria-label={`上传${title}`}
-                          type="file"
-                          multiple
-                          disabled={busy}
-                          onChange={(e) => {
-                            upload(folder, e.target.files);
-                            e.target.value = "";
-                          }}
-                        />
-                      </label>
-                      <button
-                        disabled={busy || files.length >= 98}
-                        onClick={() => {
-                          let n = 1,
-                            path;
-                          do {
-                            path = `${folder}/untitled-${n++}.md`;
-                          } while (files.some((f) => f.path === path));
-                          setFiles([
-                            ...files,
-                            { path, encoding: "utf8", content: "" },
-                          ]);
-                          setSelected(files.length);
+                <details className="gal-skill-fields">
+                  <summary>附属文件与选项 · {files.length} 个附件</summary>
+                  <label>
+                    模型（选填）
+                    <input
+                      aria-label="模型"
+                      value={model}
+                      onChange={(e) => setModel(e.target.value)}
+                      placeholder="留空则沿用父会话模型"
+                    />
+                  </label>
+                  <p>填写父会话模型提供方下的模型 ID。</p>
+                  <div className="gal-skill-folders">
+                    {[
+                      ["references", "参考资料"],
+                      ["assets", "素材模板"],
+                    ].map(([folder, title]) => (
+                      <section
+                        className="gal-skill-folder"
+                        key={folder}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          upload(folder, e.dataTransfer.files);
                         }}
                       >
-                        新建文本
-                      </button>
-                      <span>
-                        {
-                          files.filter((f) => f.path.startsWith(folder + "/"))
-                            .length
-                        }{" "}
-                        个文件
-                      </span>
-                    </section>
-                  ))}
-                </div>
-                <div className="gal-skill-attachments">
-                  <div className="gal-skill-filelist">
-                    {files.map((f, i) => (
-                      <div key={i}>
+                        <Glyph name="folder" size={28} />
+                        <h3>{title}</h3>
+                        <code>{folder}/</code>
+                        <label className="gal-upload">
+                          上传文件
+                          <input
+                            aria-label={`上传${title}`}
+                            type="file"
+                            multiple
+                            disabled={busy}
+                            onChange={(e) => {
+                              upload(folder, e.target.files);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
                         <button
-                          onClick={() => setSelected(i)}
-                          aria-pressed={selected === i}
-                        >
-                          <Glyph name="file" />
-                          {f.path}
-                        </button>
-                        <button
-                          aria-label={`删除 ${f.path}`}
+                          disabled={busy || files.length >= 98}
                           onClick={() => {
-                            setFiles(files.filter((_, j) => j !== i));
-                            setSelected(-1);
+                            let n = 1,
+                              path;
+                            do {
+                              path = `${folder}/untitled-${n++}.md`;
+                            } while (files.some((f) => f.path === path));
+                            setFiles([
+                              ...files,
+                              { path, encoding: "utf8", content: "" },
+                            ]);
+                            setSelected(files.length);
                           }}
                         >
-                          <Glyph name="close" />
+                          新建文本
                         </button>
-                      </div>
+                        <span>
+                          {
+                            files.filter((f) => f.path.startsWith(folder + "/"))
+                              .length
+                          }{" "}
+                          个文件
+                        </span>
+                      </section>
                     ))}
                   </div>
-                  {current && (
-                    <fieldset className="gal-skill-fields">
-                      <label>
-                        文件路径
-                        <input
-                          aria-label="文件路径"
-                          value={current.path}
-                          onChange={(e) =>
-                            setFiles(
-                              files.map((f, i) =>
-                                i === selected
-                                  ? { ...f, path: e.target.value }
-                                  : f,
-                              ),
-                            )
-                          }
-                        />
-                      </label>
-                      {current.encoding === "utf8" ? (
+                  <div className="gal-skill-attachments">
+                    <div className="gal-skill-filelist">
+                      {files.map((f, i) => (
+                        <div key={i}>
+                          <button
+                            onClick={() => setSelected(i)}
+                            aria-pressed={selected === i}
+                          >
+                            <Glyph name="file" />
+                            {f.path}
+                          </button>
+                          <button
+                            aria-label={`删除 ${f.path}`}
+                            onClick={() => {
+                              setFiles(files.filter((_, j) => j !== i));
+                              setSelected(-1);
+                            }}
+                          >
+                            <Glyph name="close" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {current && (
+                      <fieldset className="gal-skill-fields">
                         <label>
-                          文件内容
-                          <textarea
-                            aria-label="文件内容"
-                            rows={8}
-                            value={current.content}
+                          文件路径
+                          <input
+                            aria-label="文件路径"
+                            value={current.path}
                             onChange={(e) =>
                               setFiles(
                                 files.map((f, i) =>
                                   i === selected
-                                    ? { ...f, content: e.target.value }
+                                    ? { ...f, path: e.target.value }
                                     : f,
                                 ),
                               )
                             }
                           />
                         </label>
-                      ) : (
-                        <p>二进制附件随资源保存。</p>
-                      )}
-                    </fieldset>
-                  )}
-                </div>
+                        {current.encoding === "utf8" ? (
+                          <label>
+                            文件内容
+                            <textarea
+                              aria-label="文件内容"
+                              rows={8}
+                              value={current.content}
+                              onChange={(e) =>
+                                setFiles(
+                                  files.map((f, i) =>
+                                    i === selected
+                                      ? { ...f, content: e.target.value }
+                                      : f,
+                                  ),
+                                )
+                              }
+                            />
+                          </label>
+                        ) : (
+                          <p>二进制附件随资源保存。</p>
+                        )}
+                      </fieldset>
+                    )}
+                  </div>
+                </details>
               </div>
             )}
-            {step === 3 && (
+            {step === 2 && (
               <div className="gal-skill-fields">
                 <div className="gal-skill-summary">
                   <Glyph name="agent" size={36} />
@@ -414,7 +405,13 @@ export function AgentWizard({ resource, onClose, onSave }) {
                   </span>
                 </div>
                 <ResourceCoverPicker
-                  resource={{ type: "agent", name, description, tags: tags.split(/[,，]/), cover }}
+                  resource={{
+                    type: "agent",
+                    name,
+                    description,
+                    tags: tags.split(/[,，]/),
+                    cover,
+                  }}
                   onChange={setCover}
                 />
                 <label>
@@ -482,7 +479,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
           >
             {step ? "上一步" : "取消"}
           </button>
-          {step < 3 ? (
+          {step < 2 ? (
             <button
               className="gal-primary"
               disabled={
@@ -490,7 +487,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
               }
               onClick={() => setStep(step + 1)}
             >
-              {step === 2 ? "下一步" : "下一步"}
+              下一步
               <Glyph name="arrow" />
             </button>
           ) : (

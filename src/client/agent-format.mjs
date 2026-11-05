@@ -1,5 +1,5 @@
 import { parseDocument, stringify } from "yaml";
-export const AGENT_TEMPLATE = "## 任务目标\n\n## 工作方式\n\n## 输出要求\n";
+export const AGENT_TEMPLATE = "## 任务目标\n\n## 处理边界\n\n## 工作方式与回报时机\n\n## 输出要求\n";
 export function agentDocument(
   { slug, description, goal, boundaries, instructions },
   extra = {},
@@ -62,7 +62,6 @@ export function agentIssues({
     issues.push("请输入显示名称（最多 160 字）。");
   if (!description.trim() || description.length > 1024)
     issues.push("请输入简介（最多 1024 字）。");
-  if (!goal.trim()) issues.push("请输入任务目标。");
   if (!instructions.trim() || instructions === AGENT_TEMPLATE)
     issues.push("请填写自己的行为指引。");
   if (tags.length > 20 || tags.some((t) => t.length > 40))

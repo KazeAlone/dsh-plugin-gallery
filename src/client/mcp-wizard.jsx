@@ -34,7 +34,9 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
         .join("\n"),
     ),
     [tags, setTags] = useState((resource?.tags || []).join(", ")),
-    [testResult, setTestResult] = useState(null),
+    [testResult, setTestResult] = useState(
+      resource?.metadata?.mcpVerification ?? null,
+    ),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const heading = useRef(null);
@@ -75,7 +77,8 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
     setBusy(true);
     setError("");
     try {
-      setTestResult(await onCheck(config()));
+      const result = await onCheck(config());
+      setTestResult({ ...result, checkedAt: new Date().toISOString() });
     } catch (e) {
       setTestResult(null);
       setError(e?.rpcError?.message || e.message || String(e));
@@ -93,7 +96,13 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
         name: name.trim(),
         description: description.trim(),
         tags: parsedTags,
-        metadata: { ...withResourceCover(resource?.metadata, cover), mcp: data },
+        metadata: {
+          ...withResourceCover(resource?.metadata, cover),
+          mcp: data,
+          mcpVerification: testResult
+            ? { checkedAt: testResult.checkedAt }
+            : null,
+        },
         references: resource?.references || [],
         files: [
           {
@@ -174,7 +183,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
                     value={serverName}
                     maxLength={32}
                     placeholder="filesystem"
-                    onChange={(e) => setServerName(e.target.value)}
+                    onChange={change(setServerName)}
                   />
                 </label>
                 <p>1–32 位字母、数字、下划线或连字符；作为工具名称前缀。</p>
@@ -278,9 +287,11 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
                 {testResult && (
                   <div className="gal-mcp-result" role="status">
                     <strong>
-                      ✓ 连接成功 · {testResult.tools.length} 个工具
+                      ✓ 连接成功
+                      {testResult.tools &&
+                        ` · ${testResult.tools.length} 个工具`}
                     </strong>
-                    {testResult.tools.map((tool) => (
+                    {testResult.tools?.map((tool) => (
                       <p key={tool.name}>
                         <Glyph name="mcp" size={15} />
                         <b>{tool.name}</b>
@@ -304,7 +315,13 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
                   </span>
                 </div>
                 <ResourceCoverPicker
-                  resource={{ type: "mcp", name, description, tags: tags.split(/[,，]/), cover }}
+                  resource={{
+                    type: "mcp",
+                    name,
+                    description,
+                    tags: tags.split(/[,，]/),
+                    cover,
+                  }}
                   onChange={setCover}
                 />
                 <label>
@@ -317,7 +334,9 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
                   />
                 </label>
                 <p>
-                  {testResult ? "✓ 已通过连接测试" : "未验证连接，可以保存配置"}
+                  {testResult
+                    ? "✓ 已通过连接测试"
+                    : "未验证 · 保存后可重新检查连接"}
                 </p>
                 <details>
                   <summary>查看 mcp.json</summary>

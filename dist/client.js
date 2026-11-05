@@ -2003,6 +2003,8 @@ fieldset.gal-skill-fields {
 .gal-purpose-drawing svg { width: 70px; height: 70px; }
 .gal-cover-picker { display: grid; gap: 8px; }
 .gal-cover-picker .gal-purpose-cover { border-radius: 8px; }
+
+.gal-skill-steps.gal-three-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 `;
 
 // src/client/leaderboards.jsx
@@ -2422,7 +2424,9 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
   const saved = resource?.metadata?.mcp || {};
   const [step, setStep] = (0, import_react5.useState)(0), [name, setName] = (0, import_react5.useState)(resource?.name || ""), [description, setDescription] = (0, import_react5.useState)(resource?.description || ""), [serverName, setServerName] = (0, import_react5.useState)(saved.serverName || ""), [transport, setTransport] = (0, import_react5.useState)(saved.transport || "stdio"), [command, setCommand] = (0, import_react5.useState)(saved.command || ""), [args, setArgs] = (0, import_react5.useState)((saved.args || []).join("\n")), [cwd, setCwd] = (0, import_react5.useState)(saved.cwd || ""), [url, setUrl] = (0, import_react5.useState)(saved.url || ""), [envRefs, setEnvRefs] = (0, import_react5.useState)(
     Object.entries(saved.envRefs || {}).map(([a, b]) => `${a}=${b}`).join("\n")
-  ), [tags, setTags] = (0, import_react5.useState)((resource?.tags || []).join(", ")), [testResult, setTestResult] = (0, import_react5.useState)(null), [error, setError] = (0, import_react5.useState)(""), [busy, setBusy] = (0, import_react5.useState)(false);
+  ), [tags, setTags] = (0, import_react5.useState)((resource?.tags || []).join(", ")), [testResult, setTestResult] = (0, import_react5.useState)(
+    resource?.metadata?.mcpVerification ?? null
+  ), [error, setError] = (0, import_react5.useState)(""), [busy, setBusy] = (0, import_react5.useState)(false);
   const heading = (0, import_react5.useRef)(null);
   (0, import_react5.useEffect)(() => {
     heading.current?.focus();
@@ -2452,7 +2456,8 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
     setBusy(true);
     setError("");
     try {
-      setTestResult(await onCheck(config()));
+      const result = await onCheck(config());
+      setTestResult({ ...result, checkedAt: (/* @__PURE__ */ new Date()).toISOString() });
     } catch (e) {
       setTestResult(null);
       setError(e?.rpcError?.message || e.message || String(e));
@@ -2470,7 +2475,11 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         name: name.trim(),
         description: description.trim(),
         tags: parsedTags,
-        metadata: { ...withResourceCover(resource?.metadata, cover), mcp: data },
+        metadata: {
+          ...withResourceCover(resource?.metadata, cover),
+          mcp: data,
+          mcpVerification: testResult ? { checkedAt: testResult.checkedAt } : null
+        },
         references: resource?.references || [],
         files: [
           {
@@ -2531,7 +2540,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         value: serverName,
         maxLength: 32,
         placeholder: "filesystem",
-        onChange: (e) => setServerName(e.target.value)
+        onChange: change(setServerName)
       }
     )), /* @__PURE__ */ import_react5.default.createElement("p", null, "1\u201332 \u4F4D\u5B57\u6BCD\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u8FDE\u5B57\u7B26\uFF1B\u4F5C\u4E3A\u5DE5\u5177\u540D\u79F0\u524D\u7F00\u3002")), step === 1 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-mcp-transport" }, /* @__PURE__ */ import_react5.default.createElement(
       "button",
@@ -2598,10 +2607,16 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         onChange: change(setEnvRefs),
         placeholder: transport === "stdio" ? "API_KEY=MY_API_KEY" : "Authorization=MCP_AUTH_HEADER"
       }
-    )), /* @__PURE__ */ import_react5.default.createElement("p", null, "\u6BCF\u884C\u586B\u5199\u300C\u670D\u52A1\u5B57\u6BB5=DSH \u73AF\u5883\u53D8\u91CF\u540D\u300D\u3002\u8D44\u6E90\u4E2D\u53EA\u4FDD\u5B58\u53D8\u91CF\u540D\uFF0C\u4E0D\u4FDD\u5B58\u5BC6\u94A5\u3002")), step === 2 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("p", null, "\u8FDE\u63A5\u6D4B\u8BD5\u4F1A\u5C1D\u8BD5\u542F\u52A8\u6216\u8BBF\u95EE\u8BE5\u670D\u52A1\uFF0C\u5E76\u8BFB\u53D6\u5B83\u63D0\u4F9B\u7684\u5DE5\u5177\u3002\u5B8C\u6210\u540E\u4F1A\u65AD\u5F00\u6D4B\u8BD5\u8FDE\u63A5\u3002"), /* @__PURE__ */ import_react5.default.createElement("button", { className: "gal-primary", disabled: busy, onClick: check }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "refresh" }), busy ? "\u68C0\u67E5\u4E2D\u2026" : "\u68C0\u67E5\u8FDE\u63A5"), testResult && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-mcp-result", role: "status" }, /* @__PURE__ */ import_react5.default.createElement("strong", null, "\u2713 \u8FDE\u63A5\u6210\u529F \xB7 ", testResult.tools.length, " \u4E2A\u5DE5\u5177"), testResult.tools.map((tool) => /* @__PURE__ */ import_react5.default.createElement("p", { key: tool.name }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "mcp", size: 15 }), /* @__PURE__ */ import_react5.default.createElement("b", null, tool.name), tool.description && /* @__PURE__ */ import_react5.default.createElement("span", null, tool.description)))), /* @__PURE__ */ import_react5.default.createElement("p", null, "\u4E5F\u53EF\u4EE5\u8DF3\u8FC7\u68C0\u67E5\uFF0C\u4FDD\u5B58\u4E3A\u5F85\u9A8C\u8BC1\u914D\u7F6E\u3002")), step === 3 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "mcp", size: 36 }), /* @__PURE__ */ import_react5.default.createElement("h2", null, name), /* @__PURE__ */ import_react5.default.createElement("p", null, description), /* @__PURE__ */ import_react5.default.createElement("span", null, serverName, " \xB7", " ", transport === "stdio" ? "\u672C\u5730\u8FDB\u7A0B" : "\u8FDC\u7A0B HTTP")), /* @__PURE__ */ import_react5.default.createElement(
+    )), /* @__PURE__ */ import_react5.default.createElement("p", null, "\u6BCF\u884C\u586B\u5199\u300C\u670D\u52A1\u5B57\u6BB5=DSH \u73AF\u5883\u53D8\u91CF\u540D\u300D\u3002\u8D44\u6E90\u4E2D\u53EA\u4FDD\u5B58\u53D8\u91CF\u540D\uFF0C\u4E0D\u4FDD\u5B58\u5BC6\u94A5\u3002")), step === 2 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("p", null, "\u8FDE\u63A5\u6D4B\u8BD5\u4F1A\u5C1D\u8BD5\u542F\u52A8\u6216\u8BBF\u95EE\u8BE5\u670D\u52A1\uFF0C\u5E76\u8BFB\u53D6\u5B83\u63D0\u4F9B\u7684\u5DE5\u5177\u3002\u5B8C\u6210\u540E\u4F1A\u65AD\u5F00\u6D4B\u8BD5\u8FDE\u63A5\u3002"), /* @__PURE__ */ import_react5.default.createElement("button", { className: "gal-primary", disabled: busy, onClick: check }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "refresh" }), busy ? "\u68C0\u67E5\u4E2D\u2026" : "\u68C0\u67E5\u8FDE\u63A5"), testResult && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-mcp-result", role: "status" }, /* @__PURE__ */ import_react5.default.createElement("strong", null, "\u2713 \u8FDE\u63A5\u6210\u529F", testResult.tools && ` \xB7 ${testResult.tools.length} \u4E2A\u5DE5\u5177`), testResult.tools?.map((tool) => /* @__PURE__ */ import_react5.default.createElement("p", { key: tool.name }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "mcp", size: 15 }), /* @__PURE__ */ import_react5.default.createElement("b", null, tool.name), tool.description && /* @__PURE__ */ import_react5.default.createElement("span", null, tool.description)))), /* @__PURE__ */ import_react5.default.createElement("p", null, "\u4E5F\u53EF\u4EE5\u8DF3\u8FC7\u68C0\u67E5\uFF0C\u4FDD\u5B58\u4E3A\u5F85\u9A8C\u8BC1\u914D\u7F6E\u3002")), step === 3 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "mcp", size: 36 }), /* @__PURE__ */ import_react5.default.createElement("h2", null, name), /* @__PURE__ */ import_react5.default.createElement("p", null, description), /* @__PURE__ */ import_react5.default.createElement("span", null, serverName, " \xB7", " ", transport === "stdio" ? "\u672C\u5730\u8FDB\u7A0B" : "\u8FDC\u7A0B HTTP")), /* @__PURE__ */ import_react5.default.createElement(
       ResourceCoverPicker,
       {
-        resource: { type: "mcp", name, description, tags: tags.split(/[,，]/), cover },
+        resource: {
+          type: "mcp",
+          name,
+          description,
+          tags: tags.split(/[,，]/),
+          cover
+        },
         onChange: setCover
       }
     ), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react5.default.createElement(
@@ -2612,7 +2627,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         onChange: (e) => setTags(e.target.value),
         placeholder: "\u4F8B\u5982\uFF1A\u6587\u4EF6\uFF0C\u641C\u7D22"
       }
-    )), /* @__PURE__ */ import_react5.default.createElement("p", null, testResult ? "\u2713 \u5DF2\u901A\u8FC7\u8FDE\u63A5\u6D4B\u8BD5" : "\u672A\u9A8C\u8BC1\u8FDE\u63A5\uFF0C\u53EF\u4EE5\u4FDD\u5B58\u914D\u7F6E"), /* @__PURE__ */ import_react5.default.createElement("details", null, /* @__PURE__ */ import_react5.default.createElement("summary", null, "\u67E5\u770B mcp.json"), /* @__PURE__ */ import_react5.default.createElement("pre", { className: "gal-skill-preview" }, (() => {
+    )), /* @__PURE__ */ import_react5.default.createElement("p", null, testResult ? "\u2713 \u5DF2\u901A\u8FC7\u8FDE\u63A5\u6D4B\u8BD5" : "\u672A\u9A8C\u8BC1 \xB7 \u4FDD\u5B58\u540E\u53EF\u91CD\u65B0\u68C0\u67E5\u8FDE\u63A5"), /* @__PURE__ */ import_react5.default.createElement("details", null, /* @__PURE__ */ import_react5.default.createElement("summary", null, "\u67E5\u770B mcp.json"), /* @__PURE__ */ import_react5.default.createElement("pre", { className: "gal-skill-preview" }, (() => {
       try {
         return JSON.stringify(config(), null, 2);
       } catch {
@@ -9020,7 +9035,7 @@ function stringify3(value, replacer, options) {
 }
 
 // src/client/agent-format.mjs
-var AGENT_TEMPLATE = "## \u4EFB\u52A1\u76EE\u6807\n\n## \u5DE5\u4F5C\u65B9\u5F0F\n\n## \u8F93\u51FA\u8981\u6C42\n";
+var AGENT_TEMPLATE = "## \u4EFB\u52A1\u76EE\u6807\n\n## \u5904\u7406\u8FB9\u754C\n\n## \u5DE5\u4F5C\u65B9\u5F0F\u4E0E\u56DE\u62A5\u65F6\u673A\n\n## \u8F93\u51FA\u8981\u6C42\n";
 function agentDocument({ slug, description, goal, boundaries, instructions }, extra = {}) {
   const frontmatter = {
     ...extra,
@@ -9091,7 +9106,6 @@ function agentIssues({
     issues.push("\u8BF7\u8F93\u5165\u663E\u793A\u540D\u79F0\uFF08\u6700\u591A 160 \u5B57\uFF09\u3002");
   if (!description.trim() || description.length > 1024)
     issues.push("\u8BF7\u8F93\u5165\u7B80\u4ECB\uFF08\u6700\u591A 1024 \u5B57\uFF09\u3002");
-  if (!goal.trim()) issues.push("\u8BF7\u8F93\u5165\u4EFB\u52A1\u76EE\u6807\u3002");
   if (!instructions.trim() || instructions === AGENT_TEMPLATE)
     issues.push("\u8BF7\u586B\u5199\u81EA\u5DF1\u7684\u884C\u4E3A\u6307\u5F15\u3002");
   if (tags.length > 20 || tags.some((t) => t.length > 40))
@@ -9113,11 +9127,19 @@ function agentIssues({
 }
 
 // src/client/agent-wizard.jsx
-var steps3 = ["\u8EAB\u4EFD", "\u804C\u8D23", "\u80FD\u529B\u4E0E\u9644\u4EF6", "\u68C0\u67E5\u4FDD\u5B58"];
+var steps3 = ["\u8EAB\u4EFD\u4E0E\u804C\u8D23", "\u884C\u4E3A\u6307\u5F15\u4E0E\u9644\u4EF6", "\u68C0\u67E5\u4FDD\u5B58"];
 function AgentWizard({ resource, onClose, onSave }) {
   const [cover, setCover] = (0, import_react7.useState)(resource?.metadata?.cover ?? "");
   const [initial2] = (0, import_react7.useState)(() => readAgent(resource));
-  const [step, setStep] = (0, import_react7.useState)(0), [slug, setSlug] = (0, import_react7.useState)(initial2.slug), [name, setName] = (0, import_react7.useState)(resource?.name || ""), [description, setDescription] = (0, import_react7.useState)(initial2.description), [goal, setGoal] = (0, import_react7.useState)(initial2.goal), [boundaries, setBoundaries] = (0, import_react7.useState)(initial2.boundaries), [instructions, setInstructions] = (0, import_react7.useState)(initial2.instructions), [model, setModel] = (0, import_react7.useState)(resource?.metadata?.agent?.model || ""), [tags, setTags] = (0, import_react7.useState)((resource?.tags || []).join(", ")), [files, setFiles] = (0, import_react7.useState)(
+  const [step, setStep] = (0, import_react7.useState)(0), [slug, setSlug] = (0, import_react7.useState)(initial2.slug), [name, setName] = (0, import_react7.useState)(resource?.name || ""), [description, setDescription] = (0, import_react7.useState)(initial2.description), [instructions, setInstructions] = (0, import_react7.useState)(
+    () => [
+      initial2.goal && "## \u4EFB\u52A1\u76EE\u6807\n" + initial2.goal,
+      initial2.boundaries && "## \u5904\u7406\u8FB9\u754C\n" + initial2.boundaries,
+      initial2.instructions
+    ].filter(Boolean).join("\n\n")
+  ), [model, setModel] = (0, import_react7.useState)(
+    resource?.metadata?.agent?.model || resource?.metadata?.agent?.config?.model || ""
+  ), [tags, setTags] = (0, import_react7.useState)((resource?.tags || []).join(", ")), [files, setFiles] = (0, import_react7.useState)(
     (resource?.files || []).filter(
       (f) => !["AGENT.md", "config.json"].includes(f.path)
     )
@@ -9131,6 +9153,7 @@ function AgentWizard({ resource, onClose, onSave }) {
       tags.split(/[,，]/).map((x) => x.trim()).filter(Boolean)
     )
   ];
+  const goal = "", boundaries = "";
   const config = {
     ...resource?.metadata?.agent?.config || {},
     ...model.trim() ? { model: model.trim() } : {}
@@ -9153,7 +9176,7 @@ function AgentWizard({ resource, onClose, onSave }) {
     error: initial2.error
   });
   const identityOK = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 64 && !!name.trim() && !!description.trim();
-  const dutiesOK = !!goal.trim() && !!instructions.trim() && instructions !== AGENT_TEMPLATE;
+  const dutiesOK = !!instructions.trim() && instructions !== AGENT_TEMPLATE;
   async function upload(folder, list) {
     setBusy(true);
     setError("");
@@ -9244,7 +9267,7 @@ function AgentWizard({ resource, onClose, onSave }) {
       tabIndex: -1
     },
     /* @__PURE__ */ import_react7.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react7.default.createElement("h2", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "agent" }), " ", resource ? "\u7F16\u8F91 Agent" : "\u65B0\u5EFA Agent"), /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react7.default.createElement("nav", { className: "gal-skill-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps3.map((title, i) => /* @__PURE__ */ import_react7.default.createElement(
+    /* @__PURE__ */ import_react7.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps3.map((title, i) => /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         key: title,
@@ -9283,25 +9306,7 @@ function AgentWizard({ resource, onClose, onSave }) {
         onChange: (e) => setDescription(e.target.value),
         placeholder: "\u8BF4\u660E\u8FD9\u4E2A Agent \u8D1F\u8D23\u4EC0\u4E48\u3002"
       }
-    ))), step === 1 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("label", null, "\u4EFB\u52A1\u76EE\u6807", /* @__PURE__ */ import_react7.default.createElement(
-      "textarea",
-      {
-        "aria-label": "\u4EFB\u52A1\u76EE\u6807",
-        rows: 3,
-        value: goal,
-        onChange: (e) => setGoal(e.target.value),
-        placeholder: "\u4F8B\u5982\uFF1A\u7814\u7A76\u8D44\u6599\u5E76\u63D0\u4F9B\u6709\u6765\u6E90\u7684\u7ED3\u8BBA"
-      }
-    )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u5904\u7406\u8FB9\u754C\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react7.default.createElement(
-      "textarea",
-      {
-        "aria-label": "\u5904\u7406\u8FB9\u754C",
-        rows: 3,
-        value: boundaries,
-        onChange: (e) => setBoundaries(e.target.value),
-        placeholder: "\u8BF4\u660E\u4E0D\u5F97\u6267\u884C\u7684\u64CD\u4F5C\u6216\u9700\u8981\u786E\u8BA4\u7684\u60C5\u51B5"
-      }
-    )), /* @__PURE__ */ import_react7.default.createElement(
+    ))), step === 1 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("p", null, "\u5199\u6E05\u804C\u8D23\u3001\u5904\u7406\u8FB9\u754C\u3001\u4F55\u65F6\u56DE\u62A5\u548C\u4EA4\u4ED8\u683C\u5F0F\u3002"), /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         "aria-pressed": preview,
@@ -9317,15 +9322,15 @@ function AgentWizard({ resource, onClose, onSave }) {
         value: instructions,
         onChange: (e) => setInstructions(e.target.value)
       }
-    ))), step === 2 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("p", null, "\u914D\u7F6E\u4F1A\u968F Agent \u4FDD\u5B58\uFF1B\u5B9E\u9645\u8FD0\u884C\u63A5\u5165 DSH Agent \u540E\u751F\u6548\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6A21\u578B\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react7.default.createElement(
+    )), /* @__PURE__ */ import_react7.default.createElement("details", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("summary", null, "\u9644\u5C5E\u6587\u4EF6\u4E0E\u9009\u9879 \xB7 ", files.length, " \u4E2A\u9644\u4EF6"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6A21\u578B\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
         "aria-label": "\u6A21\u578B",
         value: model,
         onChange: (e) => setModel(e.target.value),
-        placeholder: "\u4F7F\u7528\u8FD0\u884C\u73AF\u5883\u9ED8\u8BA4\u6A21\u578B"
+        placeholder: "\u7559\u7A7A\u5219\u6CBF\u7528\u7236\u4F1A\u8BDD\u6A21\u578B"
       }
-    )), /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-folders" }, [
+    )), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u586B\u5199\u7236\u4F1A\u8BDD\u6A21\u578B\u63D0\u4F9B\u65B9\u4E0B\u7684\u6A21\u578B ID\u3002"), /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-folders" }, [
       ["references", "\u53C2\u8003\u8D44\u6599"],
       ["assets", "\u7D20\u6750\u6A21\u677F"]
     ].map(([folder, title]) => /* @__PURE__ */ import_react7.default.createElement(
@@ -9415,10 +9420,16 @@ function AgentWizard({ resource, onClose, onSave }) {
           )
         )
       }
-    )) : /* @__PURE__ */ import_react7.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u968F\u8D44\u6E90\u4FDD\u5B58\u3002")))), step === 3 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "agent", size: 36 }), /* @__PURE__ */ import_react7.default.createElement("h2", null, name), /* @__PURE__ */ import_react7.default.createElement("p", null, description), /* @__PURE__ */ import_react7.default.createElement("span", null, files.length + 1 + (hasConfig ? 1 : 0), " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react7.default.createElement(
+    )) : /* @__PURE__ */ import_react7.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u968F\u8D44\u6E90\u4FDD\u5B58\u3002"))))), step === 2 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "agent", size: 36 }), /* @__PURE__ */ import_react7.default.createElement("h2", null, name), /* @__PURE__ */ import_react7.default.createElement("p", null, description), /* @__PURE__ */ import_react7.default.createElement("span", null, files.length + 1 + (hasConfig ? 1 : 0), " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react7.default.createElement(
       ResourceCoverPicker,
       {
-        resource: { type: "agent", name, description, tags: tags.split(/[,，]/), cover },
+        resource: {
+          type: "agent",
+          name,
+          description,
+          tags: tags.split(/[,，]/),
+          cover
+        },
         onChange: setCover
       }
     ), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react7.default.createElement(
@@ -9437,14 +9448,14 @@ function AgentWizard({ resource, onClose, onSave }) {
         onClick: step ? () => setStep(step - 1) : onClose
       },
       step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"
-    ), step < 3 ? /* @__PURE__ */ import_react7.default.createElement(
+    ), step < 2 ? /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || step === 0 && !identityOK || step === 1 && !dutiesOK,
         onClick: () => setStep(step + 1)
       },
-      step === 2 ? "\u4E0B\u4E00\u6B65" : "\u4E0B\u4E00\u6B65",
+      "\u4E0B\u4E00\u6B65",
       /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "arrow" })
     ) : /* @__PURE__ */ import_react7.default.createElement(
       "button",
@@ -9591,7 +9602,7 @@ ${ATTACHMENTS_END}`;
 }
 
 // src/client/skill-wizard.jsx
-var steps4 = ["\u57FA\u672C\u4FE1\u606F", "\u7F16\u5199\u6307\u5F15", "\u9644\u5C5E\u6587\u4EF6", "\u68C0\u67E5\u4FDD\u5B58"];
+var steps4 = ["\u57FA\u672C\u4FE1\u606F", "\u7F16\u5199\u6307\u5F15", "\u68C0\u67E5\u4FDD\u5B58"];
 var folders = [
   ["references", "\u53C2\u8003\u8D44\u6599", "\u6267\u884C\u65F6\u9700\u8981\u67E5\u9605\u7684\u6587\u6863", "file"],
   ["scripts", "\u8F85\u52A9\u811A\u672C", "\u6267\u884C\u4EFB\u52A1\u9700\u8981\u8FD0\u884C\u7684\u4EE3\u7801", "settings"],
@@ -9717,7 +9728,7 @@ function SkillWizard({ resource, onClose, onSave }) {
       tabIndex: -1
     },
     /* @__PURE__ */ import_react8.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react8.default.createElement("h2", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "skill" }), " ", resource ? "\u7F16\u8F91 Skill" : "\u65B0\u5EFA Skill"), /* @__PURE__ */ import_react8.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react8.default.createElement("nav", { className: "gal-skill-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps4.map((title, i) => /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react8.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps4.map((title, i) => /* @__PURE__ */ import_react8.default.createElement(
       "button",
       {
         key: title,
@@ -9746,7 +9757,7 @@ function SkillWizard({ resource, onClose, onSave }) {
         placeholder: "\u5BA1\u67E5\u4EE3\u7801\u6539\u52A8\uFF0C\u5728\u4EE3\u7801\u8BC4\u5BA1\u6216\u63D0\u4EA4\u524D\u68C0\u67E5\u65F6\u4F7F\u7528\u3002",
         onChange: (e) => setDescription(e.target.value)
       }
-    )), /* @__PURE__ */ import_react8.default.createElement("p", null, "\u8BF4\u660E\u5B83\u80FD\u505A\u4EC0\u4E48\uFF0C\u4EE5\u53CA\u4EC0\u4E48\u65F6\u5019\u4F7F\u7528\u3002")), step === 1 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "\u5199\u6E05\u76EE\u6807\u3001\u6267\u884C\u6B65\u9AA4\u548C\u8F93\u51FA\u8981\u6C42\u3002\u540D\u79F0\u4E0E\u63CF\u8FF0\u4F1A\u81EA\u52A8\u5199\u5165\u6587\u4EF6\u9876\u90E8\u3002"), /* @__PURE__ */ import_react8.default.createElement(
+    )), /* @__PURE__ */ import_react8.default.createElement("p", null, "\u8BF4\u660E\u5B83\u80FD\u505A\u4EC0\u4E48\uFF0C\u4EE5\u53CA\u4EC0\u4E48\u65F6\u5019\u4F7F\u7528\u3002")), step === 1 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "\u5199\u6E05\u9002\u7528\u573A\u666F\u3001\u6267\u884C\u6B65\u9AA4\u548C\u4EA4\u4ED8\u7ED3\u679C\uFF0C\u53EF\u4EE5\u9644\u4E0A\u8F93\u5165\u4E0E\u8F93\u51FA\u793A\u4F8B\u3002"), /* @__PURE__ */ import_react8.default.createElement(
       "button",
       {
         "aria-pressed": preview,
@@ -9762,7 +9773,7 @@ function SkillWizard({ resource, onClose, onSave }) {
         value: body,
         onChange: (e) => setBody(e.target.value)
       }
-    ))), step === 2 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "\u6309\u9700\u6DFB\u52A0\uFF0C\u6587\u4EF6\u8DEF\u5F84\u4F1A\u81EA\u52A8\u5199\u5165\u6307\u5F15\u3002"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-folders" }, folders.map(([folder, title, hint, icon]) => /* @__PURE__ */ import_react8.default.createElement(
+    )), /* @__PURE__ */ import_react8.default.createElement("details", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("summary", null, "\u9644\u5C5E\u6587\u4EF6\u4E0E\u9009\u9879 \xB7 ", files.length, " \u4E2A\u9644\u4EF6"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-folders" }, folders.map(([folder, title, hint, icon]) => /* @__PURE__ */ import_react8.default.createElement(
       "section",
       {
         key: folder,
@@ -9840,10 +9851,16 @@ function SkillWizard({ resource, onClose, onSave }) {
           )
         )
       }
-    )) : /* @__PURE__ */ import_react8.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5C06\u539F\u6837\u4FDD\u5B58\u3002")))), step === 3 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "skill", size: 36 }), /* @__PURE__ */ import_react8.default.createElement("h2", null, name), /* @__PURE__ */ import_react8.default.createElement("p", null, description), /* @__PURE__ */ import_react8.default.createElement("span", null, files.length + 1, " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react8.default.createElement(
+    )) : /* @__PURE__ */ import_react8.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5C06\u539F\u6837\u4FDD\u5B58\u3002"))))), step === 2 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "skill", size: 36 }), /* @__PURE__ */ import_react8.default.createElement("h2", null, name), /* @__PURE__ */ import_react8.default.createElement("p", null, description), /* @__PURE__ */ import_react8.default.createElement("span", null, files.length + 1, " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react8.default.createElement(
       ResourceCoverPicker,
       {
-        resource: { type: "skill", name, description, tags: tags.split(/[,，]/), cover },
+        resource: {
+          type: "skill",
+          name,
+          description,
+          tags: tags.split(/[,，]/),
+          cover
+        },
         onChange: setCover
       }
     ), /* @__PURE__ */ import_react8.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react8.default.createElement(
@@ -9857,15 +9874,14 @@ function SkillWizard({ resource, onClose, onSave }) {
     )), /* @__PURE__ */ import_react8.default.createElement("p", null, "\u7528\u9017\u53F7\u5206\u9694\uFF0C\u6700\u591A 20 \u4E2A\u6807\u7B7E\u3002"), !!parsedTags.length && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-tags" }, parsedTags.map((tag) => /* @__PURE__ */ import_react8.default.createElement("span", { key: tag }, tag))), issues.length ? /* @__PURE__ */ import_react8.default.createElement("div", { role: "alert", className: "gal-error" }, issues.map((x) => /* @__PURE__ */ import_react8.default.createElement("p", { key: x }, x))) : /* @__PURE__ */ import_react8.default.createElement("p", { className: "gal-skill-ok" }, "\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58"), /* @__PURE__ */ import_react8.default.createElement("details", null, /* @__PURE__ */ import_react8.default.createElement("summary", null, "\u67E5\u770B SKILL.md"), /* @__PURE__ */ import_react8.default.createElement("pre", { className: "gal-skill-preview" }, document2))), error && /* @__PURE__ */ import_react8.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react8.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react8.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react8.default.createElement("strong", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "folder" }), " ", name || "my-skill", "/"), /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "file" }), " SKILL.md"), folders.map(
       ([folder]) => files.some((f) => f.path.startsWith(folder + "/")) && /* @__PURE__ */ import_react8.default.createElement("div", { key: folder }, /* @__PURE__ */ import_react8.default.createElement("strong", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "folder" }), " ", folder, "/"), files.filter((f) => f.path.startsWith(folder + "/")).map((f, i) => /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-leaf", key: i }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "file" }), f.path.slice(folder.length + 1))))
     ))),
-    /* @__PURE__ */ import_react8.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react8.default.createElement("button", { disabled: busy, onClick: step ? () => go(step - 1) : onClose }, step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"), step < 3 ? /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react8.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react8.default.createElement("button", { disabled: busy, onClick: step ? () => go(step - 1) : onClose }, step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"), step < 2 ? /* @__PURE__ */ import_react8.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || step === 0 && !basicValid || step === 1 && !bodyValid,
         onClick: () => go(step + 1)
       },
-      step === 2 && !files.length ? "\u8DF3\u8FC7\uFF0C\u68C0\u67E5\u4FDD\u5B58" : "\u4E0B\u4E00\u6B65",
-      " ",
+      "\u4E0B\u4E00\u6B65",
       /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "arrow" })
     ) : /* @__PURE__ */ import_react8.default.createElement(
       "button",
@@ -10560,7 +10576,7 @@ function Gallery({ remote }) {
       /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "trash" }),
       "\u5220\u9664\u8D44\u6E90"
     )),
-    /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-dialog-body" }, error && /* @__PURE__ */ import_react10.default.createElement("p", { role: "alert", className: "gal-error" }, error), hasResourceCover(content.type) && /* @__PURE__ */ import_react10.default.createElement("p", { className: "gal-usage-total" }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "usage" }), " \u7D2F\u8BA1\u8C03\u7528\u6B21\u6570", " ", /* @__PURE__ */ import_react10.default.createElement("strong", null, (content.usageCount ?? 0).toLocaleString()), " ", "\u6B21"), /* @__PURE__ */ import_react10.default.createElement("p", { className: "gal-description" }, content.description || "\u6682\u65E0\u63CF\u8FF0"), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-tags" }, content.tags.map((t) => /* @__PURE__ */ import_react10.default.createElement("span", { key: t }, t))), content.files.map((f) => /* @__PURE__ */ import_react10.default.createElement("details", { className: "gal-file", key: f.path }, /* @__PURE__ */ import_react10.default.createElement("summary", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file", size: 16 }), " ", f.path, /* @__PURE__ */ import_react10.default.createElement("span", null, f.bytes ?? new Blob([f.content]).size, " B")), f.encoding === "utf8" ? /* @__PURE__ */ import_react10.default.createElement("pre", null, f.content) : /* @__PURE__ */ import_react10.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u4E0B\u8F7D\u7684\u8D44\u6E90\u5305\u4E2D\u3002"))))
+    /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-dialog-body" }, error && /* @__PURE__ */ import_react10.default.createElement("p", { role: "alert", className: "gal-error" }, error), hasResourceCover(content.type) && /* @__PURE__ */ import_react10.default.createElement("p", { className: "gal-usage-total" }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "usage" }), " \u7D2F\u8BA1\u8C03\u7528\u6B21\u6570", " ", /* @__PURE__ */ import_react10.default.createElement("strong", null, (content.usageCount ?? 0).toLocaleString()), " ", "\u6B21"), content.type === "mcp" && /* @__PURE__ */ import_react10.default.createElement("p", null, content.metadata?.mcpVerification?.checkedAt ? "\u5DF2\u901A\u8FC7\u8FDE\u63A5\u68C0\u67E5" : "\u672A\u9A8C\u8BC1\u8FDE\u63A5"), /* @__PURE__ */ import_react10.default.createElement("p", { className: "gal-description" }, content.description || "\u6682\u65E0\u63CF\u8FF0"), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-tags" }, content.tags.map((t) => /* @__PURE__ */ import_react10.default.createElement("span", { key: t }, t))), content.files.map((f) => /* @__PURE__ */ import_react10.default.createElement("details", { className: "gal-file", key: f.path }, /* @__PURE__ */ import_react10.default.createElement("summary", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file", size: 16 }), " ", f.path, /* @__PURE__ */ import_react10.default.createElement("span", null, f.bytes ?? new Blob([f.content]).size, " B")), f.encoding === "utf8" ? /* @__PURE__ */ import_react10.default.createElement("pre", null, f.content) : /* @__PURE__ */ import_react10.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u4E0B\u8F7D\u7684\u8D44\u6E90\u5305\u4E2D\u3002"))))
   )), editor && /* @__PURE__ */ import_react10.default.createElement(Modal, { onClose: closeEditor }, /* @__PURE__ */ import_react10.default.createElement(
     "section",
     {

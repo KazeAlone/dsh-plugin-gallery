@@ -9,7 +9,7 @@ import {
   readSkill,
   syncSkillAttachments,
 } from "./skill-format.mjs";
-const steps = ["基本信息", "编写指引", "附属文件", "检查保存"];
+const steps = ["基本信息", "编写指引", "检查保存"];
 const folders = [
   ["references", "参考资料", "执行时需要查阅的文档", "file"],
   ["scripts", "辅助脚本", "执行任务需要运行的代码", "settings"],
@@ -165,7 +165,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
             <Glyph name="close" />
           </button>
         </header>
-        <nav className="gal-skill-steps" aria-label="创建进度">
+        <nav className="gal-skill-steps gal-three-steps" aria-label="创建进度">
           {steps.map((title, i) => (
             <button
               key={title}
@@ -212,7 +212,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
             {step === 1 && (
               <div className="gal-skill-fields">
                 <p>
-                  写清目标、执行步骤和输出要求。名称与描述会自动写入文件顶部。
+                  写清适用场景、执行步骤和交付结果，可以附上输入与输出示例。
                 </p>
                 <button
                   aria-pressed={preview}
@@ -234,125 +234,123 @@ export function SkillWizard({ resource, onClose, onSave }) {
                     />
                   </label>
                 )}
-              </div>
-            )}
-            {step === 2 && (
-              <div className="gal-skill-fields">
-                <p>按需添加，文件路径会自动写入指引。</p>
-                <div className="gal-skill-folders">
-                  {folders.map(([folder, title, hint, icon]) => (
-                    <section
-                      key={folder}
-                      className="gal-skill-folder"
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        if (!busy) upload(folder, e.dataTransfer.files);
-                      }}
-                    >
-                      <Glyph name={icon} size={28} />
-                      <h3>{title}</h3>
-                      <code>{folder}/</code>
-                      <p>{hint}</p>
-                      <label className="gal-upload">
-                        上传或拖入
-                        <input
-                          aria-label={`上传${title}`}
-                          type="file"
-                          multiple
-                          disabled={busy}
-                          onChange={(e) => {
-                            upload(folder, e.target.files);
-                            e.target.value = "";
-                          }}
-                        />
-                      </label>
-                      <button
-                        disabled={busy || files.length >= 99}
-                        onClick={() => newFile(folder)}
+                <details className="gal-skill-fields">
+                  <summary>附属文件与选项 · {files.length} 个附件</summary>
+                  <div className="gal-skill-folders">
+                    {folders.map(([folder, title, hint, icon]) => (
+                      <section
+                        key={folder}
+                        className="gal-skill-folder"
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (!busy) upload(folder, e.dataTransfer.files);
+                        }}
                       >
-                        新建文件
-                      </button>
-                      <span>
-                        {
-                          files.filter((f) => f.path.startsWith(folder + "/"))
-                            .length
-                        }{" "}
-                        个文件
-                      </span>
-                    </section>
-                  ))}
-                </div>
-                <div className="gal-skill-attachments">
-                  {files.length > 0 && (
-                    <div className="gal-skill-filelist">
-                      {files.map((f, i) => (
-                        <div key={i}>
-                          <button
-                            onClick={() => setActive(i)}
-                            aria-pressed={active === i}
-                          >
-                            <Glyph name="file" />
-                            {f.path}
-                          </button>
-                          <button
-                            aria-label={`删除 ${f.path}`}
+                        <Glyph name={icon} size={28} />
+                        <h3>{title}</h3>
+                        <code>{folder}/</code>
+                        <p>{hint}</p>
+                        <label className="gal-upload">
+                          上传或拖入
+                          <input
+                            aria-label={`上传${title}`}
+                            type="file"
+                            multiple
                             disabled={busy}
-                            onClick={() => {
-                              setFiles(files.filter((_, j) => i !== j));
-                              setActive(-1);
+                            onChange={(e) => {
+                              upload(folder, e.target.files);
+                              e.target.value = "";
                             }}
-                          >
-                            <Glyph name="close" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {current && (
-                    <fieldset disabled={busy} className="gal-skill-fields">
-                      <label>
-                        文件路径
-                        <input
-                          value={current.path}
-                          onChange={(e) =>
-                            setFiles(
-                              files.map((f, i) =>
-                                i === active
-                                  ? { ...f, path: e.target.value }
-                                  : f,
-                              ),
-                            )
-                          }
-                        />
-                      </label>
-                      {current.encoding === "utf8" ? (
+                          />
+                        </label>
+                        <button
+                          disabled={busy || files.length >= 99}
+                          onClick={() => newFile(folder)}
+                        >
+                          新建文件
+                        </button>
+                        <span>
+                          {
+                            files.filter((f) => f.path.startsWith(folder + "/"))
+                              .length
+                          }{" "}
+                          个文件
+                        </span>
+                      </section>
+                    ))}
+                  </div>
+                  <div className="gal-skill-attachments">
+                    {files.length > 0 && (
+                      <div className="gal-skill-filelist">
+                        {files.map((f, i) => (
+                          <div key={i}>
+                            <button
+                              onClick={() => setActive(i)}
+                              aria-pressed={active === i}
+                            >
+                              <Glyph name="file" />
+                              {f.path}
+                            </button>
+                            <button
+                              aria-label={`删除 ${f.path}`}
+                              disabled={busy}
+                              onClick={() => {
+                                setFiles(files.filter((_, j) => i !== j));
+                                setActive(-1);
+                              }}
+                            >
+                              <Glyph name="close" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {current && (
+                      <fieldset disabled={busy} className="gal-skill-fields">
                         <label>
-                          文件内容
-                          <textarea
-                            aria-label="文件内容"
-                            rows={8}
-                            value={current.content}
+                          文件路径
+                          <input
+                            value={current.path}
                             onChange={(e) =>
                               setFiles(
                                 files.map((f, i) =>
                                   i === active
-                                    ? { ...f, content: e.target.value }
+                                    ? { ...f, path: e.target.value }
                                     : f,
                                 ),
                               )
                             }
                           />
                         </label>
-                      ) : (
-                        <p>二进制附件将原样保存。</p>
-                      )}
-                    </fieldset>
-                  )}
-                </div>
+                        {current.encoding === "utf8" ? (
+                          <label>
+                            文件内容
+                            <textarea
+                              aria-label="文件内容"
+                              rows={8}
+                              value={current.content}
+                              onChange={(e) =>
+                                setFiles(
+                                  files.map((f, i) =>
+                                    i === active
+                                      ? { ...f, content: e.target.value }
+                                      : f,
+                                  ),
+                                )
+                              }
+                            />
+                          </label>
+                        ) : (
+                          <p>二进制附件将原样保存。</p>
+                        )}
+                      </fieldset>
+                    )}
+                  </div>
+                </details>
               </div>
             )}
-            {step === 3 && (
+            {step === 2 && (
               <div className="gal-skill-fields">
                 <div className="gal-skill-summary">
                   <Glyph name="skill" size={36} />
@@ -361,7 +359,13 @@ export function SkillWizard({ resource, onClose, onSave }) {
                   <span>{files.length + 1} 个文件 · 整体保存</span>
                 </div>
                 <ResourceCoverPicker
-                  resource={{ type: "skill", name, description, tags: tags.split(/[,，]/), cover }}
+                  resource={{
+                    type: "skill",
+                    name,
+                    description,
+                    tags: tags.split(/[,，]/),
+                    cover,
+                  }}
                   onChange={setCover}
                 />
                 <label>
@@ -434,7 +438,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
           <button disabled={busy} onClick={step ? () => go(step - 1) : onClose}>
             {step ? "上一步" : "取消"}
           </button>
-          {step < 3 ? (
+          {step < 2 ? (
             <button
               className="gal-primary"
               disabled={
@@ -444,7 +448,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
               }
               onClick={() => go(step + 1)}
             >
-              {step === 2 && !files.length ? "跳过，检查保存" : "下一步"}{" "}
+              下一步
               <Glyph name="arrow" />
             </button>
           ) : (

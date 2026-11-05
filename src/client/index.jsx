@@ -796,6 +796,9 @@ function Gallery({ remote }) {
                   次
                 </p>
               )}
+              {content.type === "mcp" && (
+                <p>{content.metadata?.mcpVerification?.checkedAt ? "已通过连接检查" : "未验证连接"}</p>
+              )}
               <p className="gal-description">
                 {content.description || "暂无描述"}
               </p>

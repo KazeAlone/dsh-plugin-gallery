@@ -1913,3 +1913,5 @@ fieldset.gal-skill-fields {
 .gal-purpose-drawing svg { width: 70px; height: 70px; }
 .gal-cover-picker { display: grid; gap: 8px; }
 .gal-cover-picker .gal-purpose-cover { border-radius: 8px; }
+
+.gal-skill-steps.gal-three-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
