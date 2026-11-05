@@ -6,7 +6,7 @@ export function BrandIcon({ size = 20 }) {
     <svg
       width={size}
       height={size}
-      viewBox="0 0 32 32"
+      viewBox="3 2.5 26 26"
       fill="none"
       aria-hidden="true"
       focusable="false"
