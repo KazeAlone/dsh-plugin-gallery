@@ -1458,3 +1458,32 @@ fieldset.gal-skill-fields {
   position: absolute;
   pointer-events: auto;
 }
+
+.gal-mcp-transport {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.gal .gal-mcp-transport button[aria-pressed="true"] {
+  border-color: var(--g-accent);
+  background: var(--g-soft);
+}
+.gal-mcp-result {
+  padding: 16px;
+  border: 1px solid var(--g-line);
+  border-radius: 8px;
+  max-height: 300px;
+  overflow: auto;
+}
+.gal-mcp-result > p {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--g-line);
+}
+.gal-mcp-result > p span {
+  color: var(--g-muted);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

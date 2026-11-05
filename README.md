@@ -73,3 +73,6 @@ npm pack
 
 
 Gallery Skill 的 `SKILL.md` 和附件一起写入运行目录。加载 Skill 时会列出 `references/`、`scripts/`、`assets/` 中的文件路径；需要读取具体附件的任务，应使用支持文件读取工具的 DSH 会话。
+
+
+MCP 分类提供专用四步向导。可保存本地 stdio 或远程 Streamable HTTP 连接配置，按需测试并查看工具列表；保存不会自动启用该服务，仍需接入 DSH MCP 客户端配置。

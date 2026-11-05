@@ -4,6 +4,7 @@ import { REMOTE } from "../descriptors.mjs";
 import styles from "./styles.css";
 import { Leaderboards } from "./leaderboards.jsx";
 import { createGalleryTrigger } from "./gallery-trigger.mjs";
+import { McpWizard } from "./mcp-wizard.jsx";
 import { AgentWizard } from "./agent-wizard.jsx";
 import { SkillWizard } from "./skill-wizard.jsx";
 import { Modal } from "./modal.jsx";
@@ -88,6 +89,7 @@ function Gallery({ remote }) {
     [editor, setEditor] = useState(null);
   const [skillWizard, setSkillWizard] = useState(false);
   const [agentWizard, setAgentWizard] = useState(false);
+  const [mcpWizard, setMcpWizard] = useState(false);
   const [storageSettings, setStorageSettings] = useState(null);
   const [connectionResult, setConnectionResult] = useState("");
   const [confirmation, setConfirmation] = useState(null);
@@ -195,6 +197,10 @@ function Gallery({ remote }) {
     }
     if ((r?.type || type) === "agent") {
       setAgentWizard({ resource: r || null });
+      return;
+    }
+    if ((r?.type || type) === "mcp") {
+      setMcpWizard({ resource: r || null });
       return;
     }
     const d = r || { ...blank(), type };
@@ -562,6 +568,31 @@ function Gallery({ remote }) {
           )}
         </>
       )}
+      {mcpWizard && (
+        <McpWizard
+          resource={mcpWizard.resource}
+          onClose={async () => {
+            if (await confirmAction("放弃尚未保存的 MCP？"))
+              setMcpWizard(false);
+          }}
+          onCheck={(config) => call(remote, "uiCheckMcp", json(config))}
+          onSave={async (resource) => {
+            const existing = mcpWizard.resource;
+            await (existing
+              ? call(
+                  remote,
+                  "uiUpdate",
+                  existing.id,
+                  json({ resource, expectedRevision: existing.revision }),
+                )
+              : call(remote, "uiCreate", json(resource)));
+            setSelected(null);
+            setMcpWizard(false);
+            setRefresh((x) => x + 1);
+            setNotice("MCP 已保存。");
+          }}
+        />
+      )}
       {agentWizard && (
         <AgentWizard
           resource={agentWizard.resource}
@@ -610,7 +641,7 @@ function Gallery({ remote }) {
           }}
         />
       )}
-      {selected && !editor && !skillWizard && !agentWizard && (
+      {selected && !editor && !skillWizard && !agentWizard && !mcpWizard && (
         <Modal onClose={() => !busy && setSelected(null)}>
           <section
             tabIndex={-1}
@@ -1005,7 +1036,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.8.0</span>
+              <span className="gal-local">v0.9.0</span>
               <button
                 disabled={busy}
                 onClick={() =>

@@ -5,6 +5,9 @@ import {
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { StorageManager } from "./storage-manager.mjs";
+import { demand } from "./model.mjs";
+import { validateMcpConfig } from "./mcp-config.mjs";
+import { checkMcpConnection } from "./mcp-check.mjs";
 import { createSkillProvider } from "./skill-provider.mjs";
 import { DESCRIPTORS } from "./descriptors.mjs";
 
@@ -81,10 +84,33 @@ export default class GalleryService extends TypertRemoteService {
   }
   uiCreate(payload) {
     return this.ownerCall(() => {
-      const r = this.store.createResource(JSON.parse(payload));
+      const input = JSON.parse(payload);
+      if (input.type === "mcp") this.validateMcpName(input);
+      const r = this.store.createResource(input);
       this.invalidateSkills();
       return r;
     });
+  }
+  validateMcpName(resource, excludeId) {
+    const config = validateMcpConfig(resource.metadata?.mcp);
+    const duplicate = this.store
+      .adapter()
+      .read()
+      .resources.some(
+        (row) =>
+          row.type === "mcp" &&
+          row.id !== excludeId &&
+          row.metadata?.mcp?.serverName === config.serverName,
+      );
+    demand(
+      !duplicate,
+      409,
+      "DUPLICATE_MCP_NAME",
+      "服务器名称已被其他 MCP 资源使用",
+    );
+  }
+  uiCheckMcp(payload) {
+    return this.ownerCall(() => checkMcpConnection(JSON.parse(payload)));
   }
   uiSkillCatalog() {
     return this.ownerCall(async () => {
@@ -103,6 +129,7 @@ export default class GalleryService extends TypertRemoteService {
   uiUpdate(id, payload) {
     return this.ownerCall(() => {
       const p = JSON.parse(payload);
+      if (p.resource?.type === "mcp") this.validateMcpName(p.resource, id);
       const r = this.store.updateResource(id, p.resource, p.expectedRevision);
       this.invalidateSkills();
       return r;
