@@ -51,6 +51,7 @@ export class LocalGalleryStore {
     scope = "all",
     limit = 100,
     offset = 0,
+    sort = "updated",
   } = {}) {
     demand(
       ["all", "mine"].includes(scope),
@@ -68,20 +69,30 @@ export class LocalGalleryStore {
       "INVALID_PAGE",
       "分页参数无效",
     );
+    demand(
+      ["updated", "usage"].includes(sort),
+      400,
+      "INVALID_SORT",
+      "无效排序方式",
+    );
     const query = String(q).toLocaleLowerCase().slice(0, 200);
     const rows = this.read()
       .resources.filter(
         (r) =>
           (!type || r.type === type) &&
           (!query ||
-            [r.name, r.description, ...r.tags]
+            [r.name, r.description, r.creator?.username || "", ...r.tags]
               .join(" ")
               .toLocaleLowerCase()
               .includes(query)),
       )
       .sort(
         (a, b) =>
-          b.updatedAt.localeCompare(a.updatedAt) || a.id.localeCompare(b.id),
+          (sort === "usage"
+            ? (b.usageCount ?? 0) - (a.usageCount ?? 0) ||
+              a.name.localeCompare(b.name)
+            : b.updatedAt.localeCompare(a.updatedAt)) ||
+          a.id.localeCompare(b.id),
       );
     const items = rows.slice(offset, offset + limit).map((row) => {
       const { files, metadata, references, ...summary } = this.detail(row);

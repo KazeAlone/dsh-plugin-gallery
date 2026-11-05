@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { REMOTE } from "../descriptors.mjs";
 import styles from "./styles.css";
+import { Leaderboards } from "./leaderboards.jsx";
 import { createGalleryTrigger } from "./gallery-trigger.mjs";
 import { SkillWizard } from "./skill-wizard.jsx";
 import { Modal } from "./modal.jsx";
@@ -42,6 +43,7 @@ function Gallery({ remote }) {
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
+  const [boards, setBoards] = useState([]);
   const [items, setItems] = useState([]),
     [total, setTotal] = useState(0),
     [type, setType] = useState(""),
@@ -99,11 +101,28 @@ function Gallery({ remote }) {
     setLoading(true);
     const timer = setTimeout(
       () =>
-        call(remote, "uiList", json({ type, scope, q, limit: 48, offset }))
+        (type
+          ? call(remote, "uiList", json({ type, scope, q, limit: 48, offset }))
+          : Promise.all(
+              Object.keys(TYPES).map(async (key) => ({
+                type: key,
+                ...(await call(
+                  remote,
+                  "uiList",
+                  json({ type: key, q, sort: "usage", limit: 10, offset: 0 }),
+                )),
+              })),
+            )
+        )
           .then((x) => {
             if (live) {
-              setItems(x.items);
-              setTotal(x.total);
+              if (type) {
+                setItems(x.items);
+                setTotal(x.total);
+              } else {
+                setBoards(x);
+                setTotal(x.reduce((sum, board) => sum + board.total, 0));
+              }
             }
           })
           .catch((e) => {
@@ -386,7 +405,7 @@ function Gallery({ remote }) {
               <input
                 aria-label="搜索资源"
                 className="gal-search"
-                placeholder="搜索名称、描述或标签…"
+                placeholder="搜索资源、用户名或标签…"
                 value={q}
                 onChange={(e) => {
                   setQ(e.target.value);
@@ -397,7 +416,7 @@ function Gallery({ remote }) {
           </div>
           <div className="gal-list-heading">
             <span>
-              {type ? TYPES[type] : "资源"} <strong>{total}</strong>
+              {type ? TYPES[type] : "调用榜"} <strong>{total}</strong>
             </span>
             <div className="gal-list-actions">
               {type && (
@@ -423,6 +442,14 @@ function Gallery({ remote }) {
           </div>
           {loading ? (
             <div className="gal-empty">正在加载资源…</div>
+          ) : !type ? (
+            <Leaderboards
+              boards={boards}
+              busy={busy}
+              filtered={!!q}
+              onOpen={(r) => run(() => load(r.id))}
+              onCategory={chooseFilter}
+            />
           ) : items.length === 0 ? (
             <div className="gal-empty">
               <Icon />
@@ -485,7 +512,7 @@ function Gallery({ remote }) {
               ))}
             </div>
           )}
-          {total > 48 && (
+          {type && total > 48 && (
             <div className="gal-pagination">
               <button
                 disabled={!offset}
@@ -925,7 +952,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.6.1</span>
+              <span className="gal-local">v0.7.0</span>
               <button
                 disabled={busy}
                 onClick={() =>

@@ -1198,3 +1198,227 @@ fieldset.gal-skill-fields {
 .gal-username-setting {
   margin: 20px 0 12px;
 }
+
+/* Four category charts, ordered by cumulative calls. */
+.gal-leaderboards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+.gal-board {
+  --rank-color: #32715a;
+  --rank-tint: #edf6f0;
+  border: 1px solid var(--g-line);
+  border-top: 3px solid var(--rank-color);
+  border-radius: 12px;
+  background: var(--g-card);
+  overflow: hidden;
+  min-width: 0;
+}
+.gal-board.agent {
+  --rank-color: #7753ac;
+  --rank-tint: #f3effa;
+}
+.gal-board.mcp {
+  --rank-color: #247d87;
+  --rank-tint: #edf7f8;
+}
+.gal-board.workflow {
+  --rank-color: #a3742b;
+  --rank-tint: #faf4e8;
+}
+.gal-board-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 16px;
+  background: var(--rank-tint);
+}
+.gal-board-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--rank-color);
+  border-radius: 12px;
+  color: var(--rank-color);
+  flex-shrink: 0;
+}
+.gal-board-head h2 {
+  font-size: 19px;
+  letter-spacing: -0.4px;
+}
+.gal-board-head div > span {
+  color: var(--g-muted);
+  font-size: 12px;
+}
+.gal-board-top {
+  margin-left: auto;
+  writing-mode: vertical-rl;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--rank-color);
+  font-weight: 700;
+}
+.gal-board-columns {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px 8px;
+  color: var(--g-muted);
+  font-size: 11px;
+}
+.gal-board-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px 12px;
+}
+.gal .gal-rank-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+  padding: 15px 8px;
+  min-height: 80px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  text-align: left;
+}
+.gal .gal-rank-row:hover {
+  background: var(--rank-tint);
+}
+.gal-rank-number {
+  width: 25px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--g-muted);
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gal .rank-1 {
+  background: var(--rank-tint);
+  margin: 4px 0;
+  min-height: 104px;
+}
+.rank-1 .gal-rank-number {
+  color: var(--rank-color);
+  font-size: 24px;
+}
+.rank-2 .gal-rank-number,
+.rank-3 .gal-rank-number {
+  color: var(--rank-color);
+}
+.gal-rank-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.gal-rank-info > strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rank-1 .gal-rank-info > strong {
+  font-size: 16px;
+}
+.gal-rank-author {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+.gal-rank-count {
+  font-size: 16px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+.rank-1 .gal-rank-count {
+  color: var(--rank-color);
+  font-size: 20px;
+}
+.gal-rank-track {
+  display: block;
+  height: 3px;
+  background: var(--g-line);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+.gal-rank-track > span {
+  display: block;
+  height: 100%;
+  background: var(--rank-color);
+  border-radius: 3px;
+}
+.gal .gal-board-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--g-line);
+  border-radius: 0;
+  padding: 14px 18px;
+  color: var(--rank-color);
+  background: transparent;
+  min-height: 48px;
+}
+.gal-board-empty {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--g-muted);
+}
+.gal-board-empty svg {
+  color: var(--rank-color);
+}
+@media (max-width: 1100px) {
+  .gal-leaderboards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .gal-leaderboards {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .gal-board-head {
+    padding: 18px;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .gal-board {
+    --rank-color: #8fc7aa;
+    --rank-tint: #20382d;
+  }
+  .gal-board.agent {
+    --rank-color: #b9a0e4;
+    --rank-tint: #30273e;
+  }
+  .gal-board.mcp {
+    --rank-color: #87c9d0;
+    --rank-tint: #20353a;
+  }
+  .gal-board.workflow {
+    --rank-color: #dfbc7d;
+    --rank-tint: #3b3121;
+  }
+}

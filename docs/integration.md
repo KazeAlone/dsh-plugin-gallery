@@ -4,7 +4,7 @@
 
 其他插件声明 `inject = ['gallery']`，然后调用：
 
-- `ctx.gallery.listResources({type?,q?,limit?,offset?})`：返回 `{items,total,limit,offset}`，limit 为 1–100。
+- `ctx.gallery.listResources({type?,q?,limit?,offset?,sort?})`：返回 `{items,total,limit,offset}`，limit 为 1–100。
 - `ctx.gallery.getResource(id)`：返回资源内容、`id`、`digest`、`revision`、时间与文件数。
 - `ctx.gallery.resolveReference({id,digest?})`：获取当前资源，摘要变化时返回 `DIGEST_MISMATCH`。
 - `ctx.gallery.getSnapshot({id,digest?})`：返回独立的 `{id,digest,resource}` 内容快照。
@@ -65,3 +65,5 @@ Gallery 宿主在 skills 服务可用时注册 `gallery` provider。uiSkillCatal
 StorageManager 在创建时写入 `creator: {username}`，取自 storage.json 的 username，缺省使用宿主 OS 用户名。该名字是单用户 Gallery 的显示署名，不是多用户登录身份。资源输入不能覆盖署名，编辑保留原署名；旧资源不补造创建者。`uiSetUsername(payload)` 仅允许 owner 修改后续署名。
 
 `uiDelete(id, JSON.stringify({expectedRevision}))` 仅允许 owner 调用，校验当前修订号后原子删除资源及累计调用去重数据，并使 Skill 目录失效。已物化的只读用途运行副本保留，以免破坏进行中的任务；删除不是运行副本擦除，也不支持恢复。
+
+列表 sort 支持 updated（默认）或 usage（累计调用降序）；同分按名称、ID 稳定排序，搜索包含创建者用户名。四类榜单共用 usageCount，未接入执行上报的资源显示 0；当前 recordSkillUse 仍仅支持 Skill。
