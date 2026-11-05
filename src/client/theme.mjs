@@ -3,6 +3,7 @@ export const THEMES = [
   { id: 'system', label: '跟随系统', hint: '当前 Gallery 外观' },
   { id: 'atelier', label: '墨绿黄铜', hint: '深色展厅' },
   { id: 'paper', label: '暖纸', hint: '柔和浅色' },
+  { id: 'neon', label: '霓虹玻璃', hint: '沉浸式资源舞台' },
 ];
 export function loadTheme(storage) {
   try {
