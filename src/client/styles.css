@@ -152,6 +152,36 @@
 .gal-header-actions .gal-primary {
   flex-shrink: 0;
 }
+.gal-theme-picker { position: relative; }
+.gal-theme-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 80;
+  width: 224px;
+  padding: 6px;
+  border: 1px solid var(--g-line);
+  border-radius: 12px;
+  background: var(--g-card);
+  box-shadow: 0 14px 38px #0000002b;
+}
+.gal .gal-theme-menu button {
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  min-height: 52px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  text-align: left;
+}
+.gal-theme-menu button > span:nth-child(2) { flex: 1; display: grid; gap: 0; }
+.gal-theme-menu strong { font-size: 13px; font-weight: 600; }
+.gal-theme-menu small { color: var(--g-muted); font-size: 11px; }
+.gal-theme-swatch { width: 30px; height: 30px; border: 1px solid var(--g-line); border-radius: 7px; flex: 0 0 auto; }
+.gal-theme-swatch.system { background: linear-gradient(135deg, #f5f6f7 50%, #25292f 50%); }
+.gal-theme-swatch.atelier { background: linear-gradient(135deg, #0d1b17 60%, #c5a773 60%); }
+.gal-theme-swatch.paper { background: linear-gradient(135deg, #f8f4e9 60%, #ad6549 60%); }
 .gal-toolbar {
   display: flex;
   align-items: center;
@@ -663,7 +693,7 @@
   margin: 16px 0 0;
 }
 @media (prefers-color-scheme: dark) {
-  .gal {
+  .gal[data-theme="system"] {
     --g-bg: #181a1e;
     --g-card: #1e2126;
     --g-soft: #25292f;
@@ -906,19 +936,19 @@
   gap: 6px;
 }
 @media (prefers-color-scheme: dark) {
-  .gal-resource-visual.skill {
+  .gal[data-theme="system"] .gal-resource-visual.skill {
     --visual-ink: #9dcbb0;
     --visual-bg: #24382e;
   }
-  .gal-resource-visual.agent {
+  .gal[data-theme="system"] .gal-resource-visual.agent {
     --visual-ink: #b6a7e0;
     --visual-bg: #302b42;
   }
-  .gal-resource-visual.mcp {
+  .gal[data-theme="system"] .gal-resource-visual.mcp {
     --visual-ink: #9bbfdd;
     --visual-bg: #253442;
   }
-  .gal-resource-visual.workflow {
+  .gal[data-theme="system"] .gal-resource-visual.workflow {
     --visual-ink: #d8bb83;
     --visual-bg: #3d3425;
   }
@@ -1425,19 +1455,19 @@ fieldset.gal-skill-fields {
   }
 }
 @media (prefers-color-scheme: dark) {
-  .gal-board {
+  .gal[data-theme="system"] .gal-board {
     --rank-color: #8fc7aa;
     --rank-tint: #20382d;
   }
-  .gal-board.agent {
+  .gal[data-theme="system"] .gal-board.agent {
     --rank-color: #b9a0e4;
     --rank-tint: #30273e;
   }
-  .gal-board.mcp {
+  .gal[data-theme="system"] .gal-board.mcp {
     --rank-color: #87c9d0;
     --rank-tint: #20353a;
   }
-  .gal-board.workflow {
+  .gal[data-theme="system"] .gal-board.workflow {
     --rank-color: #dfbc7d;
     --rank-tint: #3b3121;
   }
@@ -1490,3 +1520,68 @@ fieldset.gal-skill-fields {
 .gal-workflow-card { display: grid; gap: 10px; padding: 14px; margin: 10px 0; border: 1px solid var(--gal-border, #ddd); border-radius: 12px; }
 .gal-workflow-card > button { justify-self: end; }
 .gal-workflow-card select[multiple] { min-height: 76px; }
+
+/* Optional Gallery-only themes. Layout, content and controls remain shared. */
+.gal[data-theme="atelier"] {
+  --g-bg: #0e1b17;
+  --g-card: #172720;
+  --g-soft: #20352a;
+  --g-hover: #2a4134;
+  --g-ink: #f2eadb;
+  --g-muted: #b6c2b5;
+  --g-line: #405a4b;
+  --g-control: #809687;
+  --g-accent: #c9ac78;
+  --g-on-accent: #132019;
+  --g-ring: #e8c68a;
+  --g-error: #ffc1ae;
+  --g-error-bg: #402823;
+  --g-success: #b5dbb9;
+  --g-success-bg: #20402d;
+  --g-overlay: #050d0ab8;
+  color-scheme: dark;
+  background-image: radial-gradient(circle at 95% 0, #28423366, transparent 38%);
+}
+.gal[data-theme="paper"] {
+  --g-bg: #f8f4eb;
+  --g-card: #fffdf8;
+  --g-soft: #eee7d9;
+  --g-hover: #e8dfcf;
+  --g-ink: #292e28;
+  --g-muted: #68655e;
+  --g-line: #d6cabb;
+  --g-control: #a59783;
+  --g-accent: #77523c;
+  --g-on-accent: #fffdf8;
+  --g-ring: #9b6849;
+  --g-error: #a4382f;
+  --g-error-bg: #fbebe3;
+  --g-success: #386b49;
+  --g-success-bg: #e8f1e4;
+  --g-overlay: #2f271f7a;
+  color-scheme: light;
+  background-image: radial-gradient(circle at 100% 0, #e8dcc98a, transparent 42%);
+}
+.gal[data-theme="atelier"] .gal-header,
+.gal[data-theme="paper"] .gal-header { border-bottom: 1px solid var(--g-line); padding-bottom: 22px; }
+.gal[data-theme="atelier"] .gal-header h1 { color: #f3e4c6; letter-spacing: .02em; }
+.gal[data-theme="atelier"] .gal-board,
+.gal[data-theme="atelier"] button.gal-resource-card { box-shadow: 0 16px 36px #00000030; }
+.gal[data-theme="paper"] .gal-board,
+.gal[data-theme="paper"] button.gal-resource-card { box-shadow: 0 10px 30px #5a483012; }
+.gal[data-theme="atelier"] .gal-board { --rank-color: #d9bb82; --rank-tint: #24382a; }
+.gal[data-theme="atelier"] .gal-board.agent { --rank-color: #c7c4a6; --rank-tint: #2d392c; }
+.gal[data-theme="atelier"] .gal-board.mcp { --rank-color: #99bfad; --rank-tint: #213b35; }
+.gal[data-theme="atelier"] .gal-board.workflow { --rank-color: #c9a976; --rank-tint: #383225; }
+.gal[data-theme="paper"] .gal-board { --rank-color: #697c5f; --rank-tint: #edf1e6; }
+.gal[data-theme="paper"] .gal-board.agent { --rank-color: #946f78; --rank-tint: #f4e9e9; }
+.gal[data-theme="paper"] .gal-board.mcp { --rank-color: #527a80; --rank-tint: #e9f1f0; }
+.gal[data-theme="paper"] .gal-board.workflow { --rank-color: #a5784f; --rank-tint: #f4ecdf; }
+.gal[data-theme="atelier"] .gal-resource-visual.skill { --visual-ink: #d8bb82; --visual-bg: #27392c; }
+.gal[data-theme="atelier"] .gal-resource-visual.agent { --visual-ink: #c7c4a6; --visual-bg: #303b2e; }
+.gal[data-theme="atelier"] .gal-resource-visual.mcp { --visual-ink: #99bfad; --visual-bg: #213a34; }
+.gal[data-theme="atelier"] .gal-resource-visual.workflow { --visual-ink: #c9a976; --visual-bg: #3a3328; }
+.gal[data-theme="paper"] .gal-resource-visual.skill { --visual-ink: #697c5f; --visual-bg: #e9eee4; }
+.gal[data-theme="paper"] .gal-resource-visual.agent { --visual-ink: #946f78; --visual-bg: #f1e6e7; }
+.gal[data-theme="paper"] .gal-resource-visual.mcp { --visual-ink: #527a80; --visual-bg: #e6f0ef; }
+.gal[data-theme="paper"] .gal-resource-visual.workflow { --visual-ink: #a5784f; --visual-bg: #f2e9dd; }

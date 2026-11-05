@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { REMOTE } from "../descriptors.mjs";
 import styles from "./styles.css";
@@ -11,6 +11,7 @@ import { SkillWizard } from "./skill-wizard.jsx";
 import { Modal } from "./modal.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
 import { Glyph, ResourceVisual } from "./icons.jsx";
+import { THEMES, loadTheme, saveTheme } from "./theme.mjs";
 
 const NS = "dsh-gallery",
   TYPES = { skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" };
@@ -43,6 +44,24 @@ function Icon({ size = 20 }) {
   return <BrandIcon size={size} />;
 }
 function Gallery({ remote }) {
+  const [theme, setTheme] = useState(() => loadTheme(globalThis.localStorage));
+  const [themeMenu, setThemeMenu] = useState(false);
+  const themeMenuRef = useRef(null);
+  useEffect(() => {
+    if (!themeMenu) return;
+    const closeOutside = (event) => {
+      if (!themeMenuRef.current?.contains(event.target)) setThemeMenu(false);
+    };
+    const closeEscape = (event) => {
+      if (event.key === 'Escape') setThemeMenu(false);
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeEscape);
+    };
+  }, [themeMenu]);
   const [status, setStatus] = useState(null),
     [error, setError] = useState(""),
     [notice, updateNotice] = useState(null),
@@ -54,6 +73,7 @@ function Gallery({ remote }) {
     if (!notice) return;
     const root = document.createElement("div");
     root.className = "gal gal-toast-host";
+    root.dataset.theme = theme;
     const toast = document.createElement("div");
     toast.className = "gal-notice";
     toast.setAttribute("role", "status");
@@ -76,7 +96,7 @@ function Gallery({ remote }) {
       clearTimeout(timer);
       root.remove();
     };
-  }, [notice]);
+  }, [notice, theme]);
   const [boards, setBoards] = useState([]);
   const [items, setItems] = useState([]),
     [total, setTotal] = useState(0),
@@ -368,7 +388,7 @@ function Gallery({ remote }) {
     setOffset(0);
   };
   return (
-    <div className="gal">
+    <div className="gal" data-theme={theme}>
       <header className="gal-header">
         <div>
           <h1>
@@ -377,6 +397,12 @@ function Gallery({ remote }) {
           </h1>
         </div>
         <div className="gal-header-actions">
+          <div className="gal-theme-picker" ref={themeMenuRef}>
+            <button className="gal-icon-button" aria-label="切换主题" aria-expanded={themeMenu} title={`主题 · ${THEMES.find(item => item.id === theme)?.label}`} onClick={() => setThemeMenu(open => !open)}><Glyph name="palette" size={20} /></button>
+            {themeMenu && <div className="gal-theme-menu" role="group" aria-label="选择主题">
+              {THEMES.map(item => <button key={item.id} aria-pressed={theme === item.id} onClick={() => { saveTheme(globalThis.localStorage, item.id); setTheme(item.id); setThemeMenu(false); }}><span className={`gal-theme-swatch ${item.id}`} aria-hidden="true" /><span><strong>{item.label}</strong><small>{item.hint}</small></span>{theme === item.id && <Glyph name="check" size={16} />}</button>)}
+            </div>}
+          </div>
           <button
             className="gal-icon-button"
             aria-label="存储设置"
@@ -1048,7 +1074,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.11.1</span>
+              <span className="gal-local">v0.12.0</span>
               <button
                 disabled={busy}
                 onClick={() =>
