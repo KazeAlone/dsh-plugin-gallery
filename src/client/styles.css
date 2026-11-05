@@ -1911,15 +1911,5 @@ fieldset.gal-skill-fields {
   place-items: center;
 }
 .gal-purpose-drawing svg { width: 70px; height: 70px; }
-.gal-cover-mark {
-  display: grid;
-  place-items: center;
-  flex: 0 0 25px;
-  height: 25px;
-  border-radius: 5px;
-  background: hsl(var(--cover-hue) 45% 20%);
-  color: hsl(var(--cover-hue) 75% 82%);
-}
-.gal-cover-mark svg { width: 17px; height: 17px; }
 .gal-cover-picker { display: grid; gap: 8px; }
 .gal-cover-picker .gal-purpose-cover { border-radius: 8px; }

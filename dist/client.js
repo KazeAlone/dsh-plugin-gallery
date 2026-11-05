@@ -2001,24 +2001,11 @@ fieldset.gal-skill-fields {
   place-items: center;
 }
 .gal-purpose-drawing svg { width: 70px; height: 70px; }
-.gal-cover-mark {
-  display: grid;
-  place-items: center;
-  flex: 0 0 25px;
-  height: 25px;
-  border-radius: 5px;
-  background: hsl(var(--cover-hue) 45% 20%);
-  color: hsl(var(--cover-hue) 75% 82%);
-}
-.gal-cover-mark svg { width: 17px; height: 17px; }
 .gal-cover-picker { display: grid; gap: 8px; }
 .gal-cover-picker .gal-purpose-cover { border-radius: 8px; }
 `;
 
 // src/client/leaderboards.jsx
-var import_react3 = __toESM(require("react"), 1);
-
-// src/client/resource-cover.jsx
 var import_react2 = __toESM(require("react"), 1);
 
 // src/client/icons.jsx
@@ -2213,48 +2200,6 @@ function ResourceVisual({ type }) {
   ), /* @__PURE__ */ import_react.default.createElement("span", { className: "gal-visual-type" }, /* @__PURE__ */ import_react.default.createElement(Glyph, { name: type, size: 14 }), type === "mcp" ? "MCP" : type === "workflow" ? "Workflow" : type === "agent" ? "Agent" : "Skill"), /* @__PURE__ */ import_react.default.createElement(Glyph, { name: "arrow", className: "gal-card-arrow", size: 17 }));
 }
 
-// src/client/resource-cover.jsx
-var covers = [
-  { id: "writing", label: "\u5199\u4F5C\u4E0E\u6587\u6863", keywords: /写作|周报|文档|总结|摘要|writing|document|summary/, hue: 36, path: "M13 5h20l9 9v29H13z M33 5v10h9 M20 23h15m-15 7h15m-15 7h10" },
-  { id: "code", label: "\u5F00\u53D1\u4E0E\u5BA1\u67E5", keywords: /代码|开发|审查|编程|code|review|github|gitlab/, hue: 229, path: "M18 12 6 24l12 12m12-24 12 12-12 12M28 8l-8 32" },
-  { id: "data", label: "\u6570\u636E\u4E0E\u5206\u6790", keywords: /数据|分析|表格|数据库|data|analytics|sql|spreadsheet/, hue: 163, path: "M6 6v36h36M12 36V24h7v12m5 0V16h7v20m5 0V9h7v27" },
-  { id: "language", label: "\u8BED\u8A00\u4E0E\u7FFB\u8BD1", keywords: /翻译|语言|多语|translation|translate|language/, hue: 284, path: "M5 8h24v19H16l-7 6v-6H5z M24 32h8l7 6v-6h5V17H34M11 17h12m-6-4v9" },
-  { id: "search", label: "\u641C\u7D22\u4E0E\u7814\u7A76", keywords: /搜索|检索|研究|调研|search|research|browse/, hue: 195, path: "M34 20a14 14 0 1 1-28 0 14 14 0 1 1 28 0m-4 10 12 12M13 20h14m-7-7v14" },
-  { id: "automation", label: "\u8FDE\u63A5\u4E0E\u81EA\u52A8\u5316", keywords: /连接|自动化|集成|接口|automation|connector|integration|api/, hue: 326, path: "M7 7h12v12H7z M29 29h12v12H29z M13 19v10a6 6 0 0 0 6 6h10M35 29V19a6 6 0 0 0-6-6h-4" }
-];
-var hasResourceCover = (type) => ["skill", "agent", "mcp"].includes(type);
-function resolveCover(resource) {
-  const selected = resource.cover ?? resource.metadata?.cover;
-  const subject = [...resource.tags ?? [], resource.name, resource.description].join(" ").toLowerCase();
-  const cover = covers.find((item) => item.id === selected) ?? covers.find((item) => item.keywords.test(subject));
-  if (cover) return cover;
-  const name = resource.name?.trim() || resource.type;
-  let hash = 0;
-  for (const character of name) hash = hash * 31 + character.codePointAt(0) >>> 0;
-  return { hue: [35, 165, 197, 231, 276, 328][hash % 6], initial: [...name][0].toUpperCase() };
-}
-function CoverDrawing({ cover }) {
-  return /* @__PURE__ */ import_react2.default.createElement("svg", { viewBox: "0 0 48 48", "aria-hidden": "true" }, cover.path ? /* @__PURE__ */ import_react2.default.createElement("path", { d: cover.path, fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" }) : /* @__PURE__ */ import_react2.default.createElement("text", { x: "24", y: "25", textAnchor: "middle", dominantBaseline: "central", fill: "currentColor", fontSize: "30", fontWeight: "650" }, cover.initial));
-}
-function ResourceCover({ resource }) {
-  if (!hasResourceCover(resource.type)) return /* @__PURE__ */ import_react2.default.createElement(ResourceVisual, { type: resource.type });
-  const cover = resolveCover(resource);
-  return /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-resource-visual gal-purpose-cover", style: { "--cover-hue": cover.hue }, "aria-hidden": "true" }, /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-visual-type" }, /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: resource.type, size: 14 }), { skill: "Skill", agent: "Agent", mcp: "MCP" }[resource.type]), /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-purpose-drawing" }, /* @__PURE__ */ import_react2.default.createElement(CoverDrawing, { cover })));
-}
-function ResourceCoverMark({ resource }) {
-  if (!hasResourceCover(resource.type)) return null;
-  const cover = resolveCover(resource);
-  return /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-cover-mark", "aria-hidden": "true", style: { "--cover-hue": cover.hue } }, /* @__PURE__ */ import_react2.default.createElement(CoverDrawing, { cover }));
-}
-function ResourceCoverPicker({ resource, onChange }) {
-  const value = covers.some(({ id }) => id === resource.cover) ? resource.cover : "";
-  return /* @__PURE__ */ import_react2.default.createElement("div", { className: "gal-cover-picker" }, /* @__PURE__ */ import_react2.default.createElement("label", null, "\u5C01\u9762", /* @__PURE__ */ import_react2.default.createElement("select", { value, onChange: (event) => onChange(event.target.value) }, /* @__PURE__ */ import_react2.default.createElement("option", { value: "" }, "\u6309\u7528\u9014\u81EA\u52A8\u9009\u62E9"), covers.map(({ id, label }) => /* @__PURE__ */ import_react2.default.createElement("option", { key: id, value: id }, label)))), /* @__PURE__ */ import_react2.default.createElement(ResourceCover, { resource }));
-}
-function withResourceCover(metadata, cover) {
-  const { cover: previous, ...rest } = metadata ?? {};
-  return cover ? { ...rest, cover } : rest;
-}
-
 // src/client/leaderboards.jsx
 var names = {
   skill: "Skill",
@@ -2263,22 +2208,22 @@ var names = {
   workflow: "Workflow"
 };
 function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
-  return /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-leaderboards" }, Object.entries(names).map(([type, label]) => {
+  return /* @__PURE__ */ import_react2.default.createElement("div", { className: "gal-leaderboards" }, Object.entries(names).map(([type, label]) => {
     const board = boards.find((b) => b.type === type) || {
       items: [],
       total: 0
     };
     const maximum = board.items[0]?.usageCount || 0;
-    return /* @__PURE__ */ import_react3.default.createElement(
+    return /* @__PURE__ */ import_react2.default.createElement(
       "section",
       {
         key: type,
         className: `gal-board ${type}`,
         "aria-label": `${label} \u8C03\u7528\u699C`
       },
-      /* @__PURE__ */ import_react3.default.createElement("header", { className: "gal-board-head" }, /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-board-icon" }, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: type, size: 26 })), /* @__PURE__ */ import_react3.default.createElement("div", null, /* @__PURE__ */ import_react3.default.createElement("h2", null, label), /* @__PURE__ */ import_react3.default.createElement("span", null, board.total, " \u4E2A\u8D44\u6E90")), /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-board-top" }, "TOP 10")),
-      /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-board-columns" }, /* @__PURE__ */ import_react3.default.createElement("span", null, "\u6392\u540D / \u8D44\u6E90"), /* @__PURE__ */ import_react3.default.createElement("span", null, "\u8C03\u7528\u6B21\u6570")),
-      board.items.length ? /* @__PURE__ */ import_react3.default.createElement("ol", { className: "gal-board-list" }, board.items.map((r, i) => /* @__PURE__ */ import_react3.default.createElement("li", { key: r.id }, /* @__PURE__ */ import_react3.default.createElement(
+      /* @__PURE__ */ import_react2.default.createElement("header", { className: "gal-board-head" }, /* @__PURE__ */ import_react2.default.createElement("div", { className: "gal-board-icon" }, /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: type, size: 26 })), /* @__PURE__ */ import_react2.default.createElement("div", null, /* @__PURE__ */ import_react2.default.createElement("h2", null, label), /* @__PURE__ */ import_react2.default.createElement("span", null, board.total, " \u4E2A\u8D44\u6E90")), /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-board-top" }, "TOP 10")),
+      /* @__PURE__ */ import_react2.default.createElement("div", { className: "gal-board-columns" }, /* @__PURE__ */ import_react2.default.createElement("span", null, "\u6392\u540D / \u8D44\u6E90"), /* @__PURE__ */ import_react2.default.createElement("span", null, "\u8C03\u7528\u6B21\u6570")),
+      board.items.length ? /* @__PURE__ */ import_react2.default.createElement("ol", { className: "gal-board-list" }, board.items.map((r, i) => /* @__PURE__ */ import_react2.default.createElement("li", { key: r.id }, /* @__PURE__ */ import_react2.default.createElement(
         "button",
         {
           className: `gal-rank-row rank-${i + 1}`,
@@ -2286,9 +2231,8 @@ function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
           onClick: () => onOpen(r),
           title: `${r.name} \xB7 ${r.creator?.username || "\u672A\u8BB0\u5F55"} \xB7 \u7D2F\u8BA1\u8C03\u7528 ${r.usageCount ?? 0} \u6B21`
         },
-        /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-rank-number" }, i === 0 && /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "trophy", size: 16 }), /* @__PURE__ */ import_react3.default.createElement("span", null, String(i + 1).padStart(2, "0"))),
-        /* @__PURE__ */ import_react3.default.createElement(ResourceCoverMark, { resource: r }),
-        /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-rank-info" }, /* @__PURE__ */ import_react3.default.createElement("strong", null, r.name), /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-rank-author" }, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "user", size: 12 }), r.creator?.username || "\u672A\u8BB0\u5F55"), /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-rank-track", "aria-hidden": "true" }, /* @__PURE__ */ import_react3.default.createElement(
+        /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-rank-number" }, i === 0 && /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: "trophy", size: 16 }), /* @__PURE__ */ import_react2.default.createElement("span", null, String(i + 1).padStart(2, "0"))),
+        /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-rank-info" }, /* @__PURE__ */ import_react2.default.createElement("strong", null, r.name), /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-rank-author" }, /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: "user", size: 12 }), r.creator?.username || "\u672A\u8BB0\u5F55"), /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-rank-track", "aria-hidden": "true" }, /* @__PURE__ */ import_react2.default.createElement(
           "span",
           {
             style: {
@@ -2296,7 +2240,7 @@ function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
             }
           }
         ))),
-        /* @__PURE__ */ import_react3.default.createElement(
+        /* @__PURE__ */ import_react2.default.createElement(
           "span",
           {
             className: "gal-rank-count",
@@ -2304,8 +2248,8 @@ function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
           },
           (r.usageCount ?? 0).toLocaleString()
         )
-      )))) : /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-board-empty" }, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: type, size: 36 }), /* @__PURE__ */ import_react3.default.createElement("p", null, filtered ? "\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90" : "\u6682\u65E0\u8D44\u6E90")),
-      /* @__PURE__ */ import_react3.default.createElement("button", { className: "gal-board-more", onClick: () => onCategory(type) }, "\u67E5\u770B ", label, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "arrow", size: 16 }))
+      )))) : /* @__PURE__ */ import_react2.default.createElement("div", { className: "gal-board-empty" }, /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: type, size: 36 }), /* @__PURE__ */ import_react2.default.createElement("p", null, filtered ? "\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90" : "\u6682\u65E0\u8D44\u6E90")),
+      /* @__PURE__ */ import_react2.default.createElement("button", { className: "gal-board-more", onClick: () => onCategory(type) }, "\u67E5\u770B ", label, /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: "arrow", size: 16 }))
     );
   }));
 }
@@ -2359,6 +2303,44 @@ function createGalleryTrigger(remote, icon) {
         return { text: "/gallery/", continue: true };
     }
   };
+}
+
+// src/client/resource-cover.jsx
+var import_react3 = __toESM(require("react"), 1);
+var covers = [
+  { id: "writing", label: "\u5199\u4F5C\u4E0E\u6587\u6863", keywords: /写作|周报|文档|总结|摘要|writing|document|summary/, hue: 36, path: "M13 5h20l9 9v29H13z M33 5v10h9 M20 23h15m-15 7h15m-15 7h10" },
+  { id: "code", label: "\u5F00\u53D1\u4E0E\u5BA1\u67E5", keywords: /代码|开发|审查|编程|code|review|github|gitlab/, hue: 229, path: "M18 12 6 24l12 12m12-24 12 12-12 12M28 8l-8 32" },
+  { id: "data", label: "\u6570\u636E\u4E0E\u5206\u6790", keywords: /数据|分析|表格|数据库|data|analytics|sql|spreadsheet/, hue: 163, path: "M6 6v36h36M12 36V24h7v12m5 0V16h7v20m5 0V9h7v27" },
+  { id: "language", label: "\u8BED\u8A00\u4E0E\u7FFB\u8BD1", keywords: /翻译|语言|多语|translation|translate|language/, hue: 284, path: "M5 8h24v19H16l-7 6v-6H5z M24 32h8l7 6v-6h5V17H34M11 17h12m-6-4v9" },
+  { id: "search", label: "\u641C\u7D22\u4E0E\u7814\u7A76", keywords: /搜索|检索|研究|调研|search|research|browse/, hue: 195, path: "M34 20a14 14 0 1 1-28 0 14 14 0 1 1 28 0m-4 10 12 12M13 20h14m-7-7v14" },
+  { id: "automation", label: "\u8FDE\u63A5\u4E0E\u81EA\u52A8\u5316", keywords: /连接|自动化|集成|接口|automation|connector|integration|api/, hue: 326, path: "M7 7h12v12H7z M29 29h12v12H29z M13 19v10a6 6 0 0 0 6 6h10M35 29V19a6 6 0 0 0-6-6h-4" }
+];
+var hasResourceCover = (type) => ["skill", "agent", "mcp"].includes(type);
+function resolveCover(resource) {
+  const selected = resource.cover ?? resource.metadata?.cover;
+  const subject = [...resource.tags ?? [], resource.name, resource.description].join(" ").toLowerCase();
+  const cover = covers.find((item) => item.id === selected) ?? covers.find((item) => item.keywords.test(subject));
+  if (cover) return cover;
+  const name = resource.name?.trim() || resource.type;
+  let hash = 0;
+  for (const character of name) hash = hash * 31 + character.codePointAt(0) >>> 0;
+  return { hue: [35, 165, 197, 231, 276, 328][hash % 6], initial: [...name][0].toUpperCase() };
+}
+function CoverDrawing({ cover }) {
+  return /* @__PURE__ */ import_react3.default.createElement("svg", { viewBox: "0 0 48 48", "aria-hidden": "true" }, cover.path ? /* @__PURE__ */ import_react3.default.createElement("path", { d: cover.path, fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" }) : /* @__PURE__ */ import_react3.default.createElement("text", { x: "24", y: "25", textAnchor: "middle", dominantBaseline: "central", fill: "currentColor", fontSize: "30", fontWeight: "650" }, cover.initial));
+}
+function ResourceCover({ resource }) {
+  if (!hasResourceCover(resource.type)) return /* @__PURE__ */ import_react3.default.createElement(ResourceVisual, { type: resource.type });
+  const cover = resolveCover(resource);
+  return /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-resource-visual gal-purpose-cover", style: { "--cover-hue": cover.hue }, "aria-hidden": "true" }, /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-visual-type" }, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: resource.type, size: 14 }), { skill: "Skill", agent: "Agent", mcp: "MCP" }[resource.type]), /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-purpose-drawing" }, /* @__PURE__ */ import_react3.default.createElement(CoverDrawing, { cover })));
+}
+function ResourceCoverPicker({ resource, onChange }) {
+  const value = covers.some(({ id }) => id === resource.cover) ? resource.cover : "";
+  return /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-cover-picker" }, /* @__PURE__ */ import_react3.default.createElement("label", null, "\u5C01\u9762", /* @__PURE__ */ import_react3.default.createElement("select", { value, onChange: (event) => onChange(event.target.value) }, /* @__PURE__ */ import_react3.default.createElement("option", { value: "" }, "\u6309\u7528\u9014\u81EA\u52A8\u9009\u62E9"), covers.map(({ id, label }) => /* @__PURE__ */ import_react3.default.createElement("option", { key: id, value: id }, label)))), /* @__PURE__ */ import_react3.default.createElement(ResourceCover, { resource }));
+}
+function withResourceCover(metadata, cover) {
+  const { cover: previous, ...rest } = metadata ?? {};
+  return cover ? { ...rest, cover } : rest;
 }
 
 // src/client/mcp-wizard.jsx

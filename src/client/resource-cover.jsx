@@ -44,12 +44,6 @@ export function ResourceCover({ resource }) {
   );
 }
 
-export function ResourceCoverMark({ resource }) {
-  if (!hasResourceCover(resource.type)) return null;
-  const cover = resolveCover(resource);
-  return <span className="gal-cover-mark" aria-hidden="true" style={{ "--cover-hue": cover.hue }}><CoverDrawing cover={cover} /></span>;
-}
-
 export function ResourceCoverPicker({ resource, onChange }) {
   const value = covers.some(({ id }) => id === resource.cover) ? resource.cover : "";
   return (
