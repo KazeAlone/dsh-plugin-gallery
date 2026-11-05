@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { REMOTE } from "../descriptors.mjs";
 import styles from "./styles.css";
 import { Modal } from "./modal.jsx";
+import { Glyph, ResourceVisual } from "./icons.jsx";
 
 const NS = "dsh-gallery",
   TYPES = { skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" };
@@ -291,10 +292,21 @@ function Gallery({ remote }) {
     <div className="gal">
       <header className="gal-header">
         <div>
-          <h1>资源库</h1>
+          <h1>
+            <Glyph name="grid" size={24} />
+            资源库
+          </h1>
         </div>
         <div className="gal-header-actions">
           <button
+            className="gal-icon-button"
+            aria-label="存储设置"
+            title={
+              "存储设置 · " +
+              (status?.storage?.libraries.find(
+                (l) => l.id === status.storage.activeLibraryId,
+              )?.name || "本地资源库")
+            }
             disabled={busy || !status?.ready}
             onClick={() =>
               run(async () => {
@@ -305,16 +317,14 @@ function Gallery({ remote }) {
               })
             }
           >
-            {status?.storage?.libraries.find(
-              (l) => l.id === status.storage.activeLibraryId,
-            )?.name || "资源库存储"}{" "}
-            · 存储设置
+            <Glyph name="settings" size={20} />
           </button>
           <button
             className="gal-primary"
             disabled={!status?.ready}
             onClick={() => edit(null)}
           >
+            <Glyph name="plus" />
             新建资源
           </button>
         </div>
@@ -323,7 +333,7 @@ function Gallery({ remote }) {
         <div role="alert" className="gal-alert">
           {error}
           <button aria-label="关闭错误" onClick={() => setError("")}>
-            ×
+            <Glyph name="close" />
           </button>
         </div>
       )}
@@ -331,7 +341,7 @@ function Gallery({ remote }) {
         <div role="status" className="gal-notice">
           {notice}
           <button aria-label="关闭提示" onClick={() => setNotice("")}>
-            ×
+            <Glyph name="close" />
           </button>
         </div>
       )}
@@ -353,6 +363,7 @@ function Gallery({ remote }) {
                   chooseFilter("");
                 }}
               >
+                <Glyph name="grid" />
                 全部
               </button>
               {Object.entries(TYPES).map(([key, label]) => (
@@ -362,28 +373,38 @@ function Gallery({ remote }) {
                   aria-pressed={type === key}
                   onClick={() => chooseFilter(key)}
                 >
+                  <Glyph name={key} />
                   {label}
                 </button>
               ))}
             </nav>
-            <input
-              aria-label="搜索资源"
-              className="gal-search"
-              placeholder="搜索名称、描述或标签…"
-              value={q}
-              onChange={(e) => {
-                setQ(e.target.value);
-                setOffset(0);
-              }}
-            />
+            <div className="gal-search-wrap">
+              <Glyph name="search" />
+              <input
+                aria-label="搜索资源"
+                className="gal-search"
+                placeholder="搜索名称、描述或标签…"
+                value={q}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  setOffset(0);
+                }}
+              />
+            </div>
           </div>
           <div className="gal-list-heading">
             <span>
               {type ? TYPES[type] : "资源"} <strong>{total}</strong>
             </span>
             <div>
-              <button disabled={busy} onClick={() => setRefresh((x) => x + 1)}>
-                刷新
+              <button
+                className="gal-icon-button"
+                title="刷新资源"
+                aria-label="刷新"
+                disabled={busy}
+                onClick={() => setRefresh((x) => x + 1)}
+              >
+                <Glyph name="refresh" />
               </button>
             </div>
           </div>
@@ -414,19 +435,25 @@ function Gallery({ remote }) {
                   disabled={busy}
                   onClick={() => run(() => load(r.id))}
                 >
-                  <span className="gal-resource-type">{TYPES[r.type]}</span>
+                  <ResourceVisual type={r.type} />
                   <div className="gal-resource-content">
                     <h3>{r.name}</h3>
                     {r.description && <p>{r.description}</p>}
                   </div>
                   <div className="gal-tags">
-                    {r.tags.slice(0, 4).map((t) => (
+                    {r.tags.slice(0, 2).map((t) => (
                       <span key={t}>{t}</span>
                     ))}
                   </div>
                   <footer>
-                    <span>{r.fileCount} 个文件</span>
-                    <span>{new Date(r.updatedAt).toLocaleDateString()}</span>
+                    <span title="文件数量">
+                      <Glyph name="file" size={15} />
+                      {r.fileCount}
+                    </span>
+                    <span title="更新时间">
+                      <Glyph name="clock" size={15} />
+                      {new Date(r.updatedAt).toLocaleDateString()}
+                    </span>
                   </footer>
                 </button>
               ))}
@@ -465,18 +492,22 @@ function Gallery({ remote }) {
             <div className="gal-dialog-head">
               <div>
                 <span className={"gal-pill " + selected.type}>
+                  <Glyph name={selected.type} size={16} />
                   {TYPES[selected.type]}
                 </span>
                 <h2>{content.name}</h2>
                 <p>更新于 {when(selected.updatedAt)}</p>
               </div>
               <button aria-label="关闭详情" onClick={() => setSelected(null)}>
-                ×
+                <Glyph name="close" />
               </button>
             </div>
             <div className="gal-detail-actions">
               {selected.canEdit && (
-                <button onClick={() => edit(selected)}>编辑资源</button>
+                <button onClick={() => edit(selected)}>
+                  <Glyph name="edit" />
+                  编辑资源
+                </button>
               )}
               <button
                 onClick={() =>
@@ -507,6 +538,7 @@ function Gallery({ remote }) {
                   )
                 }
               >
+                <Glyph name="download" />
                 下载资源
               </button>
               <button
@@ -524,6 +556,7 @@ function Gallery({ remote }) {
                   )
                 }
               >
+                <Glyph name="link" />
                 获取引用
               </button>
             </div>
@@ -545,7 +578,7 @@ function Gallery({ remote }) {
               {content.files.map((f) => (
                 <details className="gal-file" key={f.path}>
                   <summary>
-                    {f.path}
+                    <Glyph name="file" size={16} /> {f.path}
                     <span>{f.bytes ?? new Blob([f.content]).size} B</span>
                   </summary>
                   {f.encoding === "utf8" ? (
@@ -590,7 +623,7 @@ function Gallery({ remote }) {
                 onClick={closeEditor}
                 disabled={busy}
               >
-                ×
+                <Glyph name="close" />
               </button>
             </div>
             <div className="gal-dialog-body">
@@ -643,6 +676,7 @@ function Gallery({ remote }) {
                 </h3>
                 <div>
                   <label className="gal-upload">
+                    <Glyph name="upload" />
                     上传文件
                     <input
                       aria-label="上传资源文件"
@@ -655,6 +689,7 @@ function Gallery({ remote }) {
                     />
                   </label>
                   <label className="gal-upload">
+                    <Glyph name="folder" />
                     上传文件夹
                     <input
                       aria-label="上传资源文件夹"
@@ -826,7 +861,7 @@ function Gallery({ remote }) {
                 disabled={busy}
                 onClick={closeStorage}
               >
-                ×
+                <Glyph name="close" />
               </button>
             </div>
             <div className="gal-dialog-body">
@@ -899,7 +934,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.4.0</span>
+              <span className="gal-local">v0.4.1</span>
               <button
                 disabled={busy}
                 onClick={() =>
