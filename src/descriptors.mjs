@@ -27,7 +27,6 @@ const methods = {
   uiUpdate: ["id", "payload"],
   uiStorageSettings: [],
   uiTestStorage: ["payload"],
-  uiAddLibrary: ["payload"],
   uiSwitchLibrary: ["payload"],
 };
 export const DESCRIPTORS = Object.entries(methods).map(([method, names]) => ({

@@ -8,7 +8,7 @@ import {
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { LocalGalleryStore } from "./local-store.mjs";
-import { demand, text } from "./model.mjs";
+import { demand } from "./model.mjs";
 
 export const STORAGE_PROVIDERS = [
   { type: "internal", name: "DSH 内部存储", available: true },
@@ -118,24 +118,6 @@ export class StorageManager {
     const library = this.library(libraryId);
     this.adapter(library.id).read();
     return { ready: true, libraryId: library.id, type: library.type };
-  }
-  addLibrary({ name, type = "internal" }) {
-    demand(
-      type === "internal",
-      400,
-      "PROVIDER_UNAVAILABLE",
-      "此存储方式尚未接入",
-    );
-    name = text(name, "资源库名称", 80);
-    return this.change((config) => {
-      demand(
-        config.libraries.length < 100,
-        400,
-        "TOO_MANY_LIBRARIES",
-        "最多添加 100 个资源库",
-      );
-      config.libraries.push({ id: randomUUID(), type, name });
-    });
   }
   switchLibrary({ libraryId }) {
     this.testConnection({ libraryId });

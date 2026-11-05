@@ -67,7 +67,6 @@ function Gallery({ remote }) {
   const [reference, setReference] = useState("");
   const [storageSettings, setStorageSettings] = useState(null);
   const [targetLibrary, setTargetLibrary] = useState("local");
-  const [libraryName, setLibraryName] = useState("");
   const [connectionResult, setConnectionResult] = useState("");
   const [confirmation, setConfirmation] = useState(null);
   const confirmAction = (message) =>
@@ -876,65 +875,33 @@ function Gallery({ remote }) {
                   </div>
                 ))}
               </div>
-              <label>
-                当前资源库
-                <select
-                  value={targetLibrary}
-                  disabled={busy}
-                  onChange={(e) => {
-                    setTargetLibrary(e.target.value);
-                    setConnectionResult("");
-                  }}
-                >
-                  {storageSettings.libraries.map((library) => (
-                    <option key={library.id} value={library.id}>
-                      {library.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <p>切换不会移动或合并已有资源。</p>
-              <label htmlFor="gal-library-name">添加本地资源库</label>
-              <div className="gal-storage-add">
-                <input
-                  id="gal-library-name"
-                  aria-label="新资源库名称"
-                  placeholder="新本地资源库名称"
-                  maxLength={80}
-                  value={libraryName}
-                  disabled={busy}
-                  onChange={(e) => setLibraryName(e.target.value)}
-                />
-                <button
-                  disabled={busy || !libraryName.trim()}
-                  onClick={() =>
-                    run(async () => {
-                      const before = new Set(
-                        storageSettings.libraries.map((l) => l.id),
-                      );
-                      const settings = await call(
-                        remote,
-                        "uiAddLibrary",
-                        json({ type: "internal", name: libraryName }),
-                      );
-                      setStorageSettings(settings);
-                      setStatus((x) => ({ ...x, storage: settings }));
-                      setTargetLibrary(
-                        settings.libraries.find((l) => !before.has(l.id)).id,
-                      );
-                      setLibraryName("");
-                      setConnectionResult("");
-                    })
-                  }
-                >
-                  添加
-                </button>
-              </div>
+              {storageSettings.libraries.length > 1 && (
+                <>
+                  <label>
+                    当前资源库
+                    <select
+                      value={targetLibrary}
+                      disabled={busy}
+                      onChange={(e) => {
+                        setTargetLibrary(e.target.value);
+                        setConnectionResult("");
+                      }}
+                    >
+                      {storageSettings.libraries.map((library) => (
+                        <option key={library.id} value={library.id}>
+                          {library.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p>切换不会移动或合并已有资源。</p>
+                </>
+              )}
               {connectionResult && <p role="status">{connectionResult}</p>}
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.4.1</span>
+              <span className="gal-local">v0.4.2</span>
               <button
                 disabled={busy}
                 onClick={() =>
@@ -955,6 +922,10 @@ function Gallery({ remote }) {
                 disabled={busy}
                 onClick={() =>
                   run(async () => {
+                    if (targetLibrary === storageSettings.activeLibraryId) {
+                      await closeStorage();
+                      return;
+                    }
                     const storage = await call(
                       remote,
                       "uiSwitchLibrary",
@@ -973,7 +944,11 @@ function Gallery({ remote }) {
                   })
                 }
               >
-                {busy ? "处理中…" : "使用此资源库"}
+                {busy
+                  ? "处理中…"
+                  : storageSettings.libraries.length > 1
+                    ? "使用此资源库"
+                    : "完成"}
               </button>
             </footer>
           </section>

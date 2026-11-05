@@ -79,9 +79,6 @@ export default class GalleryService extends TypertRemoteService {
   uiTestStorage(payload) {
     return this.ownerCall(() => this.store.testConnection(JSON.parse(payload)));
   }
-  uiAddLibrary(payload) {
-    return this.ownerCall(() => this.store.addLibrary(JSON.parse(payload)));
-  }
   uiSwitchLibrary(payload) {
     return this.ownerCall(() => this.store.switchLibrary(JSON.parse(payload)));
   }

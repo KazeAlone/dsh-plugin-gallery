@@ -12,6 +12,6 @@
 
 ## 连接配置
 
-`gallery/storage.json` 格式为 `{format:1,configured,activeLibraryId,libraries:[{id,type,name}]}`。默认库 ID 为 `local`，复用原资源文件；新内部库使用生成的 UUID 和独立文件路径。名称不参与路径拼接。配置写入有独立写锁和原子替换。
+`gallery/storage.json` 格式为 `{format:1,configured,activeLibraryId,libraries:[{id,type,name}]}`。默认库 ID 为 `local`，复用原资源文件；旧版额外内部库使用 UUID 和独立文件路径；现已移除新建能力，已有配置与资源不删除。名称不参与路径拼接。配置写入有独立写锁和原子替换。
 
 没有配置文件时仍可读取原资源，首次选择确认后才保存配置。损坏配置不会被默认值覆盖，未知库不会退回默认库。配置与资源文件分别持久化，不存储远程凭据。切换只更新 activeLibraryId，当前不提供数据迁移或自动合并。

@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { StorageManager } from "../src/storage-manager.mjs";
 import { LocalGalleryStore } from "../src/local-store.mjs";
+import { DESCRIPTORS } from "../src/descriptors.mjs";
 import { normalizeResource } from "../src/model.mjs";
 const resource = (name = "资源") => ({
   type: "skill",
@@ -22,6 +23,27 @@ function setup(t) {
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   return { directory, manager: new StorageManager(directory) };
 }
+// Compatibility fixture: an extra local library created by an earlier version.
+function legacyLibrary(manager, name) {
+  const settings = manager.read();
+  settings.configured = true;
+  settings.libraries.push({
+    id: "11111111-1111-4111-8111-111111111111",
+    type: "internal",
+    name,
+  });
+  writeFileSync(manager.path, JSON.stringify(settings));
+  return settings;
+}
+test("内部存储不再暴露创建资源库接口", (t) => {
+  const { manager } = setup(t);
+  assert.equal(manager.addLibrary, undefined);
+  assert.equal(
+    DESCRIPTORS.some((d) => d.method === "uiAddLibrary"),
+    false,
+  );
+  assert.equal(manager.settings().libraries.length, 1);
+});
 test("首次默认内部存储，保留已有本地资源，选择后持久化", (t) => {
   const { manager, directory } = setup(t);
   const old = new LocalGalleryStore(
@@ -38,10 +60,10 @@ test("首次默认内部存储，保留已有本地资源，选择后持久化",
     1,
   );
 });
-test("添加不切换，切换不迁移，跨库固定引用及快照在重启后仍可解析", (t) => {
+test("旧额外资源库保留访问，切换不迁移，固定引用及快照在重启后仍可解析", (t) => {
   const { manager, directory } = setup(t);
   const first = manager.createResource(resource("原资源"));
-  const settings = manager.addLibrary({ name: "工作资源" });
+  const settings = legacyLibrary(manager, "工作资源");
   assert.equal(settings.activeLibraryId, "local");
   const id = settings.libraries[1].id;
   manager.switchLibrary({ libraryId: id });
@@ -68,9 +90,6 @@ test("未实现后端和无效资源库不改变当前配置", (t) => {
   manager.switchLibrary({ libraryId: "local" });
   const saved = readFileSync(manager.path, "utf8");
   for (const type of ["github", "service"]) {
-    assert.throws(() => manager.addLibrary({ type, name: "远程" }), {
-      code: "PROVIDER_UNAVAILABLE",
-    });
     assert.throws(() => manager.testConnection({ type }), {
       code: "PROVIDER_UNAVAILABLE",
     });
@@ -83,7 +102,7 @@ test("未实现后端和无效资源库不改变当前配置", (t) => {
 test("目标损坏或配置加锁时切换失败，源资源与配置不变", (t) => {
   const { manager, directory } = setup(t);
   const r = manager.createResource(resource());
-  const settings = manager.addLibrary({ name: "损坏的库" });
+  const settings = legacyLibrary(manager, "损坏的库");
   const id = settings.libraries[1].id;
   const dir = join(directory, "libraries", id);
   mkdirSync(dir, { recursive: true });

@@ -634,13 +634,6 @@
   font-size: 13px;
   margin: 0 0 24px;
 }
-.gal-storage-add {
-  display: flex;
-  gap: 8px;
-}
-.gal-storage .gal-dialog-body > label[for] {
-  margin-bottom: 8px;
-}
 .gal-storage .gal-dialog-body > p[role="alert"] {
   color: var(--g-error);
   margin: 16px 0 0;
