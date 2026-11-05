@@ -23,6 +23,7 @@ const methods = {
   uiStatus: [],
   uiSkillCatalog: [],
   uiCheckMcp: ["payload"],
+  uiPublishWorkflow: ["id"],
   uiList: ["payload"],
   uiGet: ["id"],
   uiCreate: ["payload"],

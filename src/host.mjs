@@ -8,6 +8,8 @@ import { StorageManager } from "./storage-manager.mjs";
 import { demand } from "./model.mjs";
 import { validateMcpConfig } from "./mcp-config.mjs";
 import { checkMcpConnection } from "./mcp-check.mjs";
+import { workflowFromResource } from "./workflow-template.mjs";
+import { publishToTeamflow } from "./teamflow-publish.mjs";
 import { createSkillProvider } from "./skill-provider.mjs";
 import { DESCRIPTORS } from "./descriptors.mjs";
 
@@ -86,6 +88,7 @@ export default class GalleryService extends TypertRemoteService {
     return this.ownerCall(() => {
       const input = JSON.parse(payload);
       if (input.type === "mcp") this.validateMcpName(input);
+      if (input.type === "workflow") workflowFromResource(input);
       const r = this.store.createResource(input);
       this.invalidateSkills();
       return r;
@@ -112,6 +115,13 @@ export default class GalleryService extends TypertRemoteService {
   uiCheckMcp(payload) {
     return this.ownerCall(() => checkMcpConnection(JSON.parse(payload)));
   }
+  uiPublishWorkflow(id) {
+    return this.ownerCall(async () => {
+      const resource = this.store.getResource(id);
+      demand(resource.type === "workflow", 400, "INVALID_TYPE", "仅 Workflow 可以安装到 TeamFlow");
+      return publishToTeamflow(resource, process.env.DSH_TEAMFLOW_TEMPLATE_DIR);
+    });
+  }
   uiSkillCatalog() {
     return this.ownerCall(async () => {
       if (!this.ctx.get("skills"))
@@ -130,6 +140,7 @@ export default class GalleryService extends TypertRemoteService {
     return this.ownerCall(() => {
       const p = JSON.parse(payload);
       if (p.resource?.type === "mcp") this.validateMcpName(p.resource, id);
+      if (p.resource?.type === "workflow") workflowFromResource(p.resource);
       const r = this.store.updateResource(id, p.resource, p.expectedRevision);
       this.invalidateSkills();
       return r;

@@ -1,6 +1,6 @@
 # Gallery
 
-运行在 DSH 内的本地资源库，用于管理 **Skill、Agent 描述、MCP 配置和 Workflow 模板**。当前优先完善 Gallery 功能和 UI。
+运行在 DSH 内的本地资源库，用于管理 **Skill、Agent 描述、MCP 配置和 Workflow 模板**。Workflow 使用 TeamFlow 的原生模板结构，可从资源详情安装到 TeamFlow 个人模板库。
 
 打开「Gallery」即可使用，**无需填写姓名、接入码或 Gallery 身份凭证**。沿用 DSH 自身的宿主访问认证，不增加插件登录流程。
 
@@ -35,7 +35,7 @@ $DSH_HOME/gallery/resources.json
 - 每个资源最多 100 个文件，总计 5 MiB；资源类型创建后固定。
 - `metadata` 保存扩展配置，`references` 保存 `{id,digest?}` 引用。
 
-Gallery 只保存和读取资源，不执行脚本、安装 Skill、启动 MCP 或执行 Workflow。当前不提供发布版本、历史回滚和远程同步。
+Gallery 保存和读取资源。Workflow 可以安装到 TeamFlow 模板库，再从 TeamFlow 模板库应用到会话；Gallery 本身不执行 Workflow。默认模板目录为 `~/.dsh-teamflow/templates`，如 TeamFlow 配置了其他 `templateDirectory`，请给 Gallery 进程设置 `DSH_TEAMFLOW_TEMPLATE_DIR` 为相同路径。当前不提供发布版本、历史回滚和远程同步。
 
 ## 其他插件接入
 

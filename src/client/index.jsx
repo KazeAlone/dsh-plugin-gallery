@@ -5,6 +5,7 @@ import styles from "./styles.css";
 import { Leaderboards } from "./leaderboards.jsx";
 import { createGalleryTrigger } from "./gallery-trigger.mjs";
 import { McpWizard } from "./mcp-wizard.jsx";
+import { WorkflowWizard } from "./workflow-wizard.jsx";
 import { AgentWizard } from "./agent-wizard.jsx";
 import { SkillWizard } from "./skill-wizard.jsx";
 import { Modal } from "./modal.jsx";
@@ -90,6 +91,7 @@ function Gallery({ remote }) {
   const [skillWizard, setSkillWizard] = useState(false);
   const [agentWizard, setAgentWizard] = useState(false);
   const [mcpWizard, setMcpWizard] = useState(false);
+  const [workflowWizard, setWorkflowWizard] = useState(false);
   const [storageSettings, setStorageSettings] = useState(null);
   const [connectionResult, setConnectionResult] = useState("");
   const [confirmation, setConfirmation] = useState(null);
@@ -201,6 +203,10 @@ function Gallery({ remote }) {
     }
     if ((r?.type || type) === "mcp") {
       setMcpWizard({ resource: r || null });
+      return;
+    }
+    if ((r?.type || type) === "workflow") {
+      setWorkflowWizard({ resource: r || null });
       return;
     }
     const d = r || { ...blank(), type };
@@ -568,6 +574,11 @@ function Gallery({ remote }) {
           )}
         </>
       )}
+      {workflowWizard && <WorkflowWizard resource={workflowWizard.resource} onClose={async () => { if (await confirmAction("放弃尚未保存的 Workflow？")) setWorkflowWizard(false); }} onSave={async (resource) => {
+        const existing = workflowWizard.resource;
+        await (existing ? call(remote, "uiUpdate", existing.id, json({ resource, expectedRevision: existing.revision })) : call(remote, "uiCreate", json(resource)));
+        setSelected(null); setWorkflowWizard(false); setRefresh(x => x + 1); setNotice("Workflow 已保存。");
+      }} />}
       {mcpWizard && (
         <McpWizard
           resource={mcpWizard.resource}
@@ -641,7 +652,7 @@ function Gallery({ remote }) {
           }}
         />
       )}
-      {selected && !editor && !skillWizard && !agentWizard && !mcpWizard && (
+      {selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && (
         <Modal onClose={() => !busy && setSelected(null)}>
           <section
             tabIndex={-1}
@@ -669,6 +680,7 @@ function Gallery({ remote }) {
               </button>
             </div>
             <div className="gal-detail-actions">
+              {selected.type === "workflow" && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await call(remote, "uiPublishWorkflow", selected.id); setNotice(`已安装到 TeamFlow：${result.name} v${result.version}`); })}><Glyph name="workflow" />安装到 TeamFlow</button>}
               {selected.canEdit && (
                 <button disabled={busy} onClick={() => edit(selected)}>
                   <Glyph name="edit" />

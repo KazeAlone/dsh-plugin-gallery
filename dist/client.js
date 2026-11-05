@@ -34,7 +34,7 @@ __export(index_exports, {
   inject: () => inject
 });
 module.exports = __toCommonJS(index_exports);
-var import_react8 = __toESM(require("react"), 1);
+var import_react9 = __toESM(require("react"), 1);
 
 // src/descriptors.mjs
 var json = {
@@ -62,6 +62,7 @@ var methods = {
   uiStatus: [],
   uiSkillCatalog: [],
   uiCheckMcp: ["payload"],
+  uiPublishWorkflow: ["id"],
   uiList: ["payload"],
   uiGet: ["id"],
   uiCreate: ["payload"],
@@ -87,7 +88,7 @@ var REMOTE = {
 };
 
 // src/client/styles.css
-var styles_default = '.gal {\n  --g-bg: #ffffff;\n  --g-card: #ffffff;\n  --g-soft: #f5f6f7;\n  --g-hover: #f0f2f4;\n  --g-ink: #20242b;\n  --g-muted: #606873;\n  --g-line: #dfe3e8;\n  --g-control: #9da5af;\n  --g-accent: #20242b;\n  --g-on-accent: #ffffff;\n  --g-ring: #3568c5;\n  --g-error: #a12622;\n  --g-error-bg: #fff4f2;\n  --g-success: #245c3b;\n  --g-success-bg: #f0f8f2;\n  --g-overlay: #10151c66;\n  box-sizing: border-box;\n  width: 100%;\n  min-height: 100%;\n  overflow: auto;\n  background: var(--g-bg);\n  color: var(--g-ink);\n  padding: 32px clamp(16px, 4vw, 48px);\n  font:\n    14px/1.6 -apple-system,\n    BlinkMacSystemFont,\n    "Segoe UI",\n    "PingFang SC",\n    "Microsoft YaHei",\n    sans-serif;\n  color-scheme: light;\n}\n.gal *,\n.gal *::before,\n.gal *::after {\n  box-sizing: border-box;\n}\n.gal h1,\n.gal h2,\n.gal h3,\n.gal p {\n  margin: 0;\n}\n.gal h1 {\n  font-size: 24px;\n  line-height: 1.4;\n  font-weight: 600;\n}\n.gal h2 {\n  font-size: 20px;\n  line-height: 1.5;\n  font-weight: 600;\n  overflow-wrap: anywhere;\n}\n.gal h3 {\n  font-size: 15px;\n  line-height: 1.5;\n  font-weight: 600;\n}\n.gal button,\n.gal input,\n.gal textarea,\n.gal select {\n  font: inherit;\n}\n.gal button,\n.gal .gal-upload {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  min-height: 38px;\n  padding: 7px 14px;\n  border: 1px solid var(--g-control);\n  border-radius: 5px;\n  background: var(--g-card);\n  color: var(--g-ink);\n  cursor: pointer;\n  transition:\n    background-color 150ms,\n    border-color 150ms;\n  touch-action: manipulation;\n}\n.gal button:hover:not(:disabled),\n.gal .gal-upload:hover {\n  background: var(--g-hover);\n}\n.gal button:active:not(:disabled) {\n  background: var(--g-line);\n}\n.gal button:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.gal :is(button, input, textarea, select, summary):focus-visible,\n.gal .gal-upload:focus-within {\n  outline: 2px solid var(--g-ring);\n  outline-offset: 3px;\n}\n.gal button.gal-primary {\n  background: var(--g-accent);\n  color: var(--g-on-accent);\n  border-color: var(--g-accent);\n}\n.gal button.gal-primary:hover:not(:disabled) {\n  background: var(--g-muted);\n  border-color: var(--g-muted);\n}\n.gal input,\n.gal textarea,\n.gal select {\n  width: 100%;\n  min-width: 0;\n  padding: 9px 12px;\n  color: var(--g-ink);\n  background: var(--g-card);\n  border: 1px solid var(--g-control);\n  border-radius: 5px;\n}\n.gal input::placeholder,\n.gal textarea::placeholder {\n  color: var(--g-muted);\n  opacity: 1;\n}\n.gal textarea {\n  resize: vertical;\n}\n.gal label {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin: 0 0 20px;\n  font-weight: 500;\n}\n.gal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 24px;\n  margin-bottom: 28px;\n}\n.gal-header-actions {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 0;\n}\n.gal-header-actions > button:first-child {\n  color: var(--g-muted);\n}\n.gal-header-actions .gal-primary {\n  flex-shrink: 0;\n}\n.gal-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 24px;\n  border-bottom: 1px solid var(--g-line);\n  padding-bottom: 16px;\n}\n.gal-filters {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  flex-wrap: wrap;\n}\n.gal-filters button {\n  border-color: transparent;\n  color: var(--g-muted);\n  padding: 7px 12px;\n}\n.gal-filters button.active {\n  color: var(--g-ink);\n  background: var(--g-soft);\n  font-weight: 600;\n  box-shadow: inset 0 -2px var(--g-ink);\n}\n.gal input.gal-search {\n  max-width: 280px;\n}\n.gal-list-heading {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 12px 0;\n  color: var(--g-muted);\n  font-size: 13px;\n}\n.gal-list-heading strong {\n  margin-left: 6px;\n  font-weight: 500;\n  font-variant-numeric: tabular-nums;\n}\n.gal-list-heading button {\n  border-color: transparent;\n  min-height: 32px;\n  padding: 4px 10px;\n  color: var(--g-muted);\n}\n.gal-resource-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));\n  gap: 20px;\n}\n.gal button.gal-resource-card {\n  width: 100%;\n  display: flex;\n  flex-direction: column;\n  gap: 0;\n  padding: 0;\n  text-align: left;\n  border: 1px solid var(--g-line);\n  border-radius: 12px;\n  overflow: hidden;\n  align-items: stretch;\n  justify-content: flex-start;\n  min-width: 0;\n}\n.gal-resource-type {\n  font-size: 13px;\n  font-weight: 500;\n  color: var(--g-muted);\n}\n.gal-resource-content {\n  min-width: 0;\n  padding: 18px 18px 0;\n}\n.gal-resource-content h3 {\n  overflow-wrap: anywhere;\n  font-size: 16px;\n  display: -webkit-box;\n  -webkit-line-clamp: 2;\n  -webkit-box-orient: vertical;\n  overflow: hidden;\n}\n.gal-resource-content p {\n  color: var(--g-muted);\n  margin-top: 6px;\n  font-size: 13px;\n  display: -webkit-box;\n  -webkit-line-clamp: 1;\n  -webkit-box-orient: vertical;\n  overflow: hidden;\n  overflow-wrap: anywhere;\n}\n.gal-tags {\n  display: flex;\n  gap: 6px;\n  flex-wrap: wrap;\n  margin: 12px 0;\n}\n.gal-tags span {\n  font-size: 12px;\n  line-height: 1.5;\n  border: 1px solid var(--g-line);\n  border-radius: 3px;\n  padding: 2px 7px;\n  color: var(--g-muted);\n  overflow-wrap: anywhere;\n}\n.gal-resource-card .gal-tags {\n  margin: 12px 0 18px;\n  padding: 0 18px;\n  min-height: 24px;\n}\n.gal-resource-card footer {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  margin-top: auto;\n  padding: 12px 18px;\n  border-top: 1px solid var(--g-line);\n  color: var(--g-muted);\n  font-size: 12px;\n  font-variant-numeric: tabular-nums;\n}\n.gal-empty {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  gap: 12px;\n  min-height: 300px;\n  padding: 40px 16px;\n  text-align: center;\n  color: var(--g-muted);\n}\n.gal-empty h3 {\n  color: var(--g-ink);\n}\n.gal-empty .gal-primary {\n  margin-top: 8px;\n}\n.gal-pagination {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 20px;\n  padding: 24px 0;\n  color: var(--g-muted);\n}\n.gal-alert,\n.gal-notice {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 10px 14px;\n  border: 1px solid currentColor;\n  border-radius: 4px;\n  margin-bottom: 20px;\n  overflow-wrap: anywhere;\n  white-space: pre-wrap;\n  position: relative;\n  z-index: 40;\n}\n.gal-alert {\n  color: var(--g-error);\n  background: var(--g-error-bg);\n}\n.gal-notice {\n  position: fixed;\n  top: max(20px, env(safe-area-inset-top));\n  right: max(20px, env(safe-area-inset-right));\n  z-index: 100;\n  max-width: min(360px, calc(100vw - 32px));\n  margin: 0;\n  gap: 10px;\n  padding: 10px 12px;\n  border-color: var(--g-line);\n  border-radius: 10px;\n  color: var(--g-success);\n  background: var(--g-success-bg);\n  box-shadow: 0 4px 18px #00000012;\n}\n.gal-notice > span {\n  flex: 1;\n}\n@media (max-width: 600px) {\n  .gal-notice {\n    top: max(12px, env(safe-area-inset-top));\n    right: max(16px, env(safe-area-inset-right));\n  }\n}\n.gal-alert button,\n.gal-notice button {\n  min-height: 28px;\n  min-width: 28px;\n  padding: 0;\n  border-color: transparent;\n  color: inherit;\n  background: transparent;\n  flex-shrink: 0;\n}\n.gal-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 30;\n  padding: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  background: var(--g-overlay);\n}\n.gal-confirm-overlay {\n  z-index: 60;\n}\n.gal-dialog {\n  display: flex;\n  flex-direction: column;\n  width: min(880px, 100%);\n  max-height: calc(100dvh - 48px);\n  border: 1px solid var(--g-control);\n  border-radius: 6px;\n  background: var(--g-card);\n  overflow: hidden;\n}\n.gal-dialog-head {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 24px;\n  padding: 24px;\n  border-bottom: 1px solid var(--g-line);\n  flex-shrink: 0;\n}\n.gal-dialog-head > div {\n  min-width: 0;\n}\n.gal-dialog-head p {\n  font-size: 13px;\n  color: var(--g-muted);\n  margin-top: 6px;\n}\n.gal-dialog-head > button {\n  border-color: transparent;\n  min-width: 36px;\n  min-height: 36px;\n  padding: 0;\n  font-size: 24px;\n  line-height: 1;\n  flex-shrink: 0;\n}\n.gal-dialog-body {\n  padding: 24px;\n  overflow: auto;\n  min-height: 0;\n}\n.gal-dialog-footer {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  flex-wrap: wrap;\n  gap: 12px;\n  padding: 16px 24px;\n  border-top: 1px solid var(--g-line);\n  flex-shrink: 0;\n}\n.gal-dialog-footer > .gal-local {\n  margin-right: auto;\n  color: var(--g-muted);\n  font-size: 13px;\n}\n.gal-pill {\n  display: inline-block;\n  font-size: 12px;\n  color: var(--g-muted);\n  margin-bottom: 8px;\n}\n.gal-detail-actions {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  padding: 16px 24px;\n  border-bottom: 1px solid var(--g-line);\n  flex-shrink: 0;\n}\n.gal-description {\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n}\n.gal-file {\n  border: 1px solid var(--g-line);\n  border-radius: 4px;\n  margin: 16px 0 0;\n  overflow: hidden;\n}\n.gal summary {\n  cursor: pointer;\n  padding: 12px;\n  overflow-wrap: anywhere;\n}\n.gal-file summary span {\n  float: right;\n  color: var(--g-muted);\n  font-size: 12px;\n  margin-left: 12px;\n}\n.gal pre {\n  font:\n    13px/1.8 ui-monospace,\n    SFMono-Regular,\n    Consolas,\n    monospace;\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n  background: var(--g-soft);\n  padding: 16px;\n  border-top: 1px solid var(--g-line);\n  margin: 0;\n  max-height: 380px;\n  overflow: auto;\n}\n.gal-file > p {\n  padding: 16px;\n}\n.gal-form-row {\n  display: flex;\n  gap: 20px;\n}\n.gal-form-row > label {\n  flex: 1;\n  min-width: 0;\n}\n.gal-form-row > label.gal-grow {\n  flex: 3;\n}\n.gal-file-toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  flex-wrap: wrap;\n  gap: 12px;\n  margin: 24px 0 12px;\n}\n.gal-file-toolbar small {\n  font-size: 12px;\n  color: var(--g-muted);\n  margin-left: 8px;\n  font-weight: 400;\n}\n.gal-file-toolbar > div {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.gal label.gal-upload {\n  margin: 0;\n  font-weight: 400;\n  position: relative;\n}\n.gal-upload input {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  opacity: 0;\n  overflow: hidden;\n}\n.gal-add-file {\n  display: flex;\n  gap: 8px;\n  margin-bottom: 12px;\n}\n.gal-add-file button {\n  white-space: nowrap;\n}\n.gal-file-editor {\n  display: grid;\n  grid-template-columns: 200px minmax(0, 1fr);\n  min-height: 300px;\n  border: 1px solid var(--g-control);\n  border-radius: 4px;\n  overflow: hidden;\n}\n.gal-file-editor nav {\n  background: var(--g-soft);\n  border-right: 1px solid var(--g-line);\n  padding: 8px;\n  max-height: 420px;\n  overflow: auto;\n}\n.gal-file-editor nav button {\n  width: 100%;\n  justify-content: flex-start;\n  text-align: left;\n  border-color: transparent;\n  background: transparent;\n  border-radius: 3px;\n  font-size: 13px;\n  overflow-wrap: anywhere;\n}\n.gal-file-editor nav button.active {\n  color: var(--g-ink);\n  background: var(--g-line);\n  font-weight: 600;\n}\n.gal-file-editor nav p,\n.gal-code-placeholder {\n  padding: 16px;\n  color: var(--g-muted);\n  font-size: 13px;\n}\n.gal-file-editor > div {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n}\n.gal-code-head {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  border-bottom: 1px solid var(--g-line);\n}\n.gal-code-head span {\n  font:\n    13px/1.5 ui-monospace,\n    monospace;\n  overflow-wrap: anywhere;\n}\n.gal-code-head button {\n  color: var(--g-error);\n  border-color: transparent;\n  padding: 4px 8px;\n  flex-shrink: 0;\n}\n.gal-file-editor textarea {\n  flex: 1;\n  min-height: 280px;\n  font:\n    13px/1.8 ui-monospace,\n    SFMono-Regular,\n    Consolas,\n    monospace;\n  border: 0;\n  border-radius: 0;\n  tab-size: 2;\n}\n.gal-file-editor textarea:focus-visible {\n  outline-offset: -3px;\n}\n.gal-advanced {\n  margin-top: 24px;\n  border-top: 1px solid var(--g-line);\n}\n.gal-advanced summary {\n  padding: 16px 0;\n  color: var(--g-muted);\n}\n.gal-advanced textarea,\n.gal-reference textarea {\n  font:\n    13px/1.7 ui-monospace,\n    Consolas,\n    monospace;\n}\n.gal-reference textarea {\n  resize: vertical;\n}\n.gal-error {\n  color: var(--g-error);\n  margin: 12px 0;\n}\n.gal-small {\n  max-width: 440px;\n}\n.gal-storage {\n  max-width: 600px;\n}\n.gal-storage-providers {\n  margin-bottom: 24px;\n}\n.gal-storage-providers > div {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 12px 0;\n  border-bottom: 1px solid var(--g-line);\n}\n.gal-storage-providers strong {\n  font-weight: 500;\n}\n.gal-storage-providers span,\n.gal-storage-providers > div:not(.active) {\n  color: var(--g-muted);\n}\n.gal-storage .gal-dialog-body > p {\n  color: var(--g-muted);\n  font-size: 13px;\n  margin: 0 0 24px;\n}\n.gal-storage .gal-dialog-body > p[role="alert"] {\n  color: var(--g-error);\n  margin: 16px 0 0;\n}\n.gal-storage .gal-dialog-body > p[role="status"] {\n  color: var(--g-success);\n  margin: 16px 0 0;\n}\n@media (prefers-color-scheme: dark) {\n  .gal {\n    --g-bg: #181a1e;\n    --g-card: #1e2126;\n    --g-soft: #25292f;\n    --g-hover: #2c3139;\n    --g-ink: #edf0f4;\n    --g-muted: #adb5c0;\n    --g-line: #383f49;\n    --g-control: #737e8d;\n    --g-accent: #edf0f4;\n    --g-on-accent: #181a1e;\n    --g-ring: #8bb4ff;\n    --g-error: #ffb5ae;\n    --g-error-bg: #382422;\n    --g-success: #a7dbb7;\n    --g-success-bg: #203329;\n    --g-overlay: #00000099;\n    color-scheme: dark;\n  }\n}\n@media (max-width: 900px) {\n  .gal-header {\n    flex-wrap: wrap;\n  }\n  .gal-header-actions {\n    flex-wrap: wrap;\n  }\n  .gal-toolbar {\n    flex-wrap: wrap;\n    gap: 16px;\n  }\n  .gal input.gal-search {\n    max-width: none;\n  }\n}\n@media (max-width: 600px) {\n  .gal {\n    padding: 24px 16px;\n    font-size: 14px;\n  }\n  .gal-header {\n    gap: 16px;\n    margin-bottom: 24px;\n  }\n  .gal-header-actions {\n    width: auto;\n    justify-content: flex-end;\n    gap: 8px;\n  }\n  .gal-filters {\n    width: 100%;\n    gap: 0;\n  }\n  .gal-filters button {\n    flex: 1;\n    min-height: 44px;\n    padding: 7px 5px;\n  }\n  .gal input,\n  .gal textarea,\n  .gal select {\n    font-size: 16px;\n  }\n  .gal-overlay {\n    padding: 12px;\n  }\n  .gal-dialog {\n    max-height: calc(100dvh - 24px);\n  }\n  .gal-dialog-head,\n  .gal-dialog-body {\n    padding: 20px;\n  }\n  .gal-dialog-footer {\n    padding: 16px 20px;\n    gap: 8px;\n  }\n  .gal-dialog-footer > .gal-local {\n    width: 100%;\n  }\n  .gal-detail-actions {\n    padding: 12px 20px;\n  }\n  .gal-form-row {\n    flex-wrap: wrap;\n    gap: 0;\n  }\n  .gal-form-row > label,\n  .gal-form-row > label.gal-grow {\n    flex: 1 1 100%;\n    width: 100%;\n  }\n  .gal-file-editor {\n    grid-template-columns: 1fr;\n  }\n  .gal-file-editor nav {\n    max-height: 140px;\n    border-right: 0;\n    border-bottom: 1px solid var(--g-line);\n  }\n  .gal-file-editor textarea {\n    font-size: 16px;\n  }\n  .gal-file-toolbar > div {\n    width: 100%;\n  }\n  .gal-add-file {\n    flex-wrap: wrap;\n  }\n  .gal-add-file input {\n    flex: 1 1 180px;\n  }\n  .gal-code-head {\n    flex-wrap: wrap;\n  }\n}\n@media (prefers-reduced-motion: reduce) {\n  .gal *,\n  .gal *::before,\n  .gal *::after {\n    transition: none !important;\n    animation: none !important;\n    scroll-behavior: auto !important;\n  }\n}\n\n.gal svg {\n  flex-shrink: 0;\n  vertical-align: middle;\n}\n.gal h1 {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.gal button.gal-icon-button {\n  width: 38px;\n  min-width: 38px;\n  height: 38px;\n  padding: 0;\n  border-color: var(--g-line);\n  border-radius: 8px;\n}\n.gal .gal-search-wrap {\n  position: relative;\n  width: 280px;\n  max-width: 100%;\n}\n.gal-search-wrap > svg {\n  position: absolute;\n  left: 12px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: var(--g-muted);\n  pointer-events: none;\n}\n.gal input.gal-search {\n  padding-left: 38px;\n  border-color: var(--g-line);\n  border-radius: 8px;\n}\n.gal-filters button {\n  border-radius: 7px;\n}\n.gal-filters button.active {\n  box-shadow: none;\n  border-color: var(--g-line);\n}\n.gal button.gal-resource-card:hover:not(:disabled) {\n  background: var(--g-card);\n  border-color: var(--g-control);\n}\n.gal-resource-visual {\n  display: block;\n  position: relative;\n  height: 132px;\n  width: 100%;\n  background: var(--g-soft);\n  color: var(--g-muted);\n  border-bottom: 1px solid var(--g-line);\n}\n.gal-resource-visual.skill {\n  --visual-ink: #386a54;\n  --visual-bg: #eef5f0;\n}\n.gal-resource-visual.agent {\n  --visual-ink: #6552a0;\n  --visual-bg: #f2eff9;\n}\n.gal-resource-visual.mcp {\n  --visual-ink: #366c92;\n  --visual-bg: #edf4f9;\n}\n.gal-resource-visual.workflow {\n  --visual-ink: #936424;\n  --visual-bg: #faf4e9;\n}\n.gal-resource-visual {\n  color: var(--visual-ink);\n  background: var(--visual-bg);\n}\n.gal-resource-drawing {\n  position: absolute;\n  width: 240px;\n  height: 100px;\n  left: 50%;\n  top: 24px;\n  transform: translateX(-50%);\n}\n.gal-visual-type {\n  position: absolute;\n  top: 12px;\n  left: 14px;\n  display: flex;\n  align-items: center;\n  gap: 5px;\n  font-size: 12px;\n  font-weight: 500;\n}\n.gal-card-arrow {\n  position: absolute;\n  right: 14px;\n  top: 13px;\n}\n.gal-resource-card footer > span {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n.gal-tags span {\n  background: var(--g-soft);\n  border-color: transparent;\n  border-radius: 4px;\n}\n.gal-detail-actions button {\n  border-color: var(--g-line);\n}\n.gal-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n@media (prefers-color-scheme: dark) {\n  .gal-resource-visual.skill {\n    --visual-ink: #9dcbb0;\n    --visual-bg: #24382e;\n  }\n  .gal-resource-visual.agent {\n    --visual-ink: #b6a7e0;\n    --visual-bg: #302b42;\n  }\n  .gal-resource-visual.mcp {\n    --visual-ink: #9bbfdd;\n    --visual-bg: #253442;\n  }\n  .gal-resource-visual.workflow {\n    --visual-ink: #d8bb83;\n    --visual-bg: #3d3425;\n  }\n}\n@media (max-width: 900px) {\n  .gal .gal-search-wrap {\n    width: 100%;\n  }\n}\n@media (max-width: 600px) {\n  .gal-header {\n    flex-wrap: nowrap;\n    gap: 12px;\n  }\n  .gal-header-actions {\n    flex-shrink: 0;\n  }\n  .gal-header h1 {\n    font-size: 21px;\n    gap: 8px;\n  }\n  .gal-filters button {\n    flex-direction: column;\n    gap: 5px;\n    font-size: 12px;\n    padding: 8px 4px;\n  }\n  .gal-resource-grid {\n    gap: 16px;\n  }\n  .gal-resource-visual {\n    height: 140px;\n  }\n}\n.gal-empty > svg {\n  width: 56px;\n  height: 56px;\n  padding: 14px;\n  border-radius: 12px;\n  background: var(--g-soft);\n}\n.gal-list-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.gal-list-actions button.gal-primary {\n  min-height: 38px;\n  color: var(--g-on-accent);\n}\n.gal-type-field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  flex: 1;\n  margin-bottom: 20px;\n  font-weight: 500;\n}\n.gal-editor-type {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  min-height: 42px;\n}\n@media (max-width: 600px) {\n  .gal-type-field {\n    flex: 1 1 100%;\n  }\n}\n\n/* Skill folder creation */\n.gal-skill-wizard {\n  width: min(1200px, 100%);\n  height: min(860px, calc(100dvh - 48px));\n}\n.gal-skill-steps {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  padding: 16px 24px;\n  gap: 8px;\n  border-bottom: 1px solid var(--g-line);\n}\n.gal-skill-steps button {\n  border: 0;\n  background: var(--g-soft);\n  justify-content: flex-start;\n}\n.gal-skill-steps button[aria-current="step"] {\n  background: var(--g-accent);\n  color: var(--g-on-accent);\n}\n.gal-skill-steps button span {\n  border: 1px solid currentColor;\n  border-radius: 50%;\n  width: 24px;\n  height: 24px;\n  display: grid;\n  place-items: center;\n  flex-shrink: 0;\n}\n.gal-skill-layout {\n  flex: 1;\n  align-content: start;\n  scrollbar-gutter: stable;\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) 220px;\n  gap: 24px;\n}\n.gal-skill-layout main {\n  min-width: 0;\n}\n.gal-skill-fields {\n  display: grid;\n  gap: 16px;\n  margin-top: 16px;\n  min-width: 0;\n}\n.gal-skill-fields > p,\n.gal-skill-folder p {\n  color: var(--g-muted);\n}\n.gal-skill-fields fieldset,\nfieldset.gal-skill-fields {\n  border: 1px solid var(--g-line);\n  padding: 16px;\n}\n.gal-skill-code {\n  min-height: 300px;\n  font-family: monospace !important;\n}\n.gal-skill-preview {\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n  background: var(--g-soft);\n  padding: 16px;\n  max-height: 360px;\n  overflow: auto;\n}\n.gal-skill-preview h2,\n.gal-skill-preview h3 {\n  margin: 12px 0;\n}\n.gal-skill-tree {\n  align-self: start;\n  background: var(--g-soft);\n  padding: 16px;\n  border-radius: 8px;\n  overflow-wrap: anywhere;\n}\n.gal-skill-tree summary {\n  cursor: pointer;\n  margin-bottom: 16px;\n}\n.gal-skill-tree svg {\n  vertical-align: middle;\n  flex-shrink: 0;\n}\n.gal-skill-tree > div {\n  margin: 12px 0 0 10px;\n}\n.gal-skill-leaf {\n  margin: 8px 0 0 12px;\n}\n.gal-skill-folders {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n}\n.gal-skill-folder {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 10px;\n  border: 1px dashed var(--g-control);\n  padding: 14px;\n  border-radius: 8px;\n}\n.gal-skill-folder code {\n  font-size: 12px;\n}\n.gal-skill-folder p {\n  flex: 1;\n}\n.gal-skill-folder .gal-upload {\n  position: relative;\n}\n.gal-skill-filelist > div {\n  display: flex;\n  gap: 8px;\n  margin-bottom: 8px;\n}\n.gal-skill-filelist > div > button:first-child {\n  flex: 1;\n  min-width: 0;\n  overflow-wrap: anywhere;\n  text-align: left;\n}\n.gal-skill-summary {\n  display: grid;\n  justify-items: start;\n  gap: 12px;\n  padding: 20px;\n  background: var(--g-soft);\n  border-radius: 8px;\n}\n.gal-skill-ok {\n  color: var(--g-success) !important;\n}\n.gal-skill-footer {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 24px;\n  border-top: 1px solid var(--g-line);\n}\n@media (max-width: 700px) {\n  .gal-skill-layout {\n    grid-template-columns: 1fr;\n  }\n  .gal-skill-steps {\n    padding: 12px;\n    gap: 4px;\n  }\n  .gal-skill-steps button {\n    flex-direction: column;\n    padding: 8px 2px;\n    font-size: 12px;\n  }\n  .gal-skill-folders {\n    grid-template-columns: 1fr;\n  }\n  .gal-skill-folder {\n    display: grid;\n    grid-template-columns: auto 1fr;\n  }\n  .gal-skill-footer {\n    padding: 12px;\n  }\n}\n.gal .gal-skill-steps button[aria-current="step"],\n.gal .gal-skill-steps button[aria-current="step"]:hover {\n  background: var(--g-accent);\n  color: var(--g-on-accent);\n}\n.gal-skill-steps,\n.gal-skill-footer {\n  flex-shrink: 0;\n}\n\n.gal-skill-footer > .gal-primary {\n  width: 168px;\n  height: 42px;\n  flex: 0 0 168px;\n  justify-content: center;\n  white-space: nowrap;\n}\n.gal-skill-attachments {\n  display: grid;\n  grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr);\n  align-items: start;\n  gap: 16px;\n}\n.gal-skill-attachments > fieldset.gal-skill-fields {\n  margin: 0;\n}\n.gal-skill-attachments textarea {\n  min-height: 240px;\n  font-family: monospace;\n}\n@media (max-width: 900px) {\n  .gal-skill-attachments {\n    grid-template-columns: 1fr;\n  }\n}\n\n.gal-usage-total {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-bottom: 16px !important;\n}\n.gal-resource-card footer {\n  flex-wrap: wrap;\n}\n\n.gal-card-creator {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--g-muted);\n  padding: 0 18px;\n  overflow-wrap: anywhere;\n}\n.gal button.gal-delete {\n  color: var(--g-error);\n}\n.gal-username-setting {\n  margin: 20px 0 12px;\n}\n\n/* Four category charts, ordered by cumulative calls. */\n.gal-leaderboards {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 18px;\n  align-items: start;\n}\n.gal-board {\n  --rank-color: #32715a;\n  --rank-tint: #edf6f0;\n  border: 1px solid var(--g-line);\n  border-top: 3px solid var(--rank-color);\n  border-radius: 12px;\n  background: var(--g-card);\n  overflow: hidden;\n  min-width: 0;\n}\n.gal-board.agent {\n  --rank-color: #7753ac;\n  --rank-tint: #f3effa;\n}\n.gal-board.mcp {\n  --rank-color: #247d87;\n  --rank-tint: #edf7f8;\n}\n.gal-board.workflow {\n  --rank-color: #a3742b;\n  --rank-tint: #faf4e8;\n}\n.gal-board-head {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 22px 16px;\n  background: var(--rank-tint);\n}\n.gal-board-icon {\n  display: grid;\n  place-items: center;\n  width: 44px;\n  height: 44px;\n  border: 1px solid var(--rank-color);\n  border-radius: 12px;\n  color: var(--rank-color);\n  flex-shrink: 0;\n}\n.gal-board-head h2 {\n  font-size: 19px;\n  letter-spacing: -0.4px;\n}\n.gal-board-head div > span {\n  color: var(--g-muted);\n  font-size: 12px;\n}\n.gal-board-top {\n  margin-left: auto;\n  writing-mode: vertical-rl;\n  font-size: 10px;\n  letter-spacing: 2px;\n  color: var(--rank-color);\n  font-weight: 700;\n}\n.gal-board-columns {\n  display: flex;\n  justify-content: space-between;\n  padding: 14px 16px 8px;\n  color: var(--g-muted);\n  font-size: 11px;\n}\n.gal-board-list {\n  list-style: none;\n  margin: 0;\n  padding: 0 8px 12px;\n}\n.gal .gal-rank-row {\n  display: flex;\n  align-items: center;\n  width: 100%;\n  gap: 10px;\n  padding: 15px 8px;\n  min-height: 80px;\n  border: 0;\n  border-radius: 7px;\n  background: transparent;\n  text-align: left;\n}\n.gal .gal-rank-row:hover {\n  background: var(--rank-tint);\n}\n.gal-rank-number {\n  width: 25px;\n  flex-shrink: 0;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  color: var(--g-muted);\n  font-size: 17px;\n  font-weight: 600;\n  font-variant-numeric: tabular-nums;\n}\n.gal .rank-1 {\n  background: var(--rank-tint);\n  margin: 4px 0;\n  min-height: 104px;\n}\n.rank-1 .gal-rank-number {\n  color: var(--rank-color);\n  font-size: 24px;\n}\n.rank-2 .gal-rank-number,\n.rank-3 .gal-rank-number {\n  color: var(--rank-color);\n}\n.gal-rank-info {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 5px;\n}\n.gal-rank-info > strong {\n  font-size: 14px;\n  font-weight: 600;\n  line-height: 1.45;\n  overflow-wrap: anywhere;\n  display: -webkit-box;\n  -webkit-line-clamp: 2;\n  -webkit-box-orient: vertical;\n  overflow: hidden;\n}\n.rank-1 .gal-rank-info > strong {\n  font-size: 16px;\n}\n.gal-rank-author {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 12px;\n  color: var(--g-muted);\n  overflow-wrap: anywhere;\n}\n.gal-rank-count {\n  font-size: 16px;\n  font-weight: 650;\n  font-variant-numeric: tabular-nums;\n  letter-spacing: -0.5px;\n  flex-shrink: 0;\n}\n.rank-1 .gal-rank-count {\n  color: var(--rank-color);\n  font-size: 20px;\n}\n.gal-rank-track {\n  display: block;\n  height: 3px;\n  background: var(--g-line);\n  border-radius: 3px;\n  overflow: hidden;\n  margin-top: 3px;\n}\n.gal-rank-track > span {\n  display: block;\n  height: 100%;\n  background: var(--rank-color);\n  border-radius: 3px;\n}\n.gal .gal-board-more {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  width: 100%;\n  border: 0;\n  border-top: 1px solid var(--g-line);\n  border-radius: 0;\n  padding: 14px 18px;\n  color: var(--rank-color);\n  background: transparent;\n  min-height: 48px;\n}\n.gal-board-empty {\n  min-height: 220px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  gap: 16px;\n  color: var(--g-muted);\n}\n.gal-board-empty svg {\n  color: var(--rank-color);\n}\n@media (max-width: 1100px) {\n  .gal-leaderboards {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 560px) {\n  .gal-leaderboards {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 20px;\n  }\n  .gal-board-head {\n    padding: 18px;\n  }\n}\n@media (prefers-color-scheme: dark) {\n  .gal-board {\n    --rank-color: #8fc7aa;\n    --rank-tint: #20382d;\n  }\n  .gal-board.agent {\n    --rank-color: #b9a0e4;\n    --rank-tint: #30273e;\n  }\n  .gal-board.mcp {\n    --rank-color: #87c9d0;\n    --rank-tint: #20353a;\n  }\n  .gal-board.workflow {\n    --rank-color: #dfbc7d;\n    --rank-tint: #3b3121;\n  }\n}\n\n.gal.gal-toast-host {\n  position: fixed;\n  inset: 0;\n  z-index: 2147483647;\n  pointer-events: none;\n  width: auto;\n  min-height: 0;\n  overflow: visible;\n  padding: 0;\n  background: transparent;\n}\n.gal-toast-host .gal-notice {\n  position: absolute;\n  pointer-events: auto;\n}\n\n.gal-mcp-transport {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 12px;\n}\n.gal .gal-mcp-transport button[aria-pressed="true"] {\n  border-color: var(--g-accent);\n  background: var(--g-soft);\n}\n.gal-mcp-result {\n  padding: 16px;\n  border: 1px solid var(--g-line);\n  border-radius: 8px;\n  max-height: 300px;\n  overflow: auto;\n}\n.gal-mcp-result > p {\n  display: flex;\n  gap: 8px;\n  align-items: baseline;\n  padding: 8px 0;\n  border-bottom: 1px solid var(--g-line);\n}\n.gal-mcp-result > p span {\n  color: var(--g-muted);\n  min-width: 0;\n  overflow-wrap: anywhere;\n}\n';
+var styles_default = '.gal {\n  --g-bg: #ffffff;\n  --g-card: #ffffff;\n  --g-soft: #f5f6f7;\n  --g-hover: #f0f2f4;\n  --g-ink: #20242b;\n  --g-muted: #606873;\n  --g-line: #dfe3e8;\n  --g-control: #9da5af;\n  --g-accent: #20242b;\n  --g-on-accent: #ffffff;\n  --g-ring: #3568c5;\n  --g-error: #a12622;\n  --g-error-bg: #fff4f2;\n  --g-success: #245c3b;\n  --g-success-bg: #f0f8f2;\n  --g-overlay: #10151c66;\n  box-sizing: border-box;\n  width: 100%;\n  min-height: 100%;\n  overflow: auto;\n  background: var(--g-bg);\n  color: var(--g-ink);\n  padding: 32px clamp(16px, 4vw, 48px);\n  font:\n    14px/1.6 -apple-system,\n    BlinkMacSystemFont,\n    "Segoe UI",\n    "PingFang SC",\n    "Microsoft YaHei",\n    sans-serif;\n  color-scheme: light;\n}\n.gal *,\n.gal *::before,\n.gal *::after {\n  box-sizing: border-box;\n}\n.gal h1,\n.gal h2,\n.gal h3,\n.gal p {\n  margin: 0;\n}\n.gal h1 {\n  font-size: 24px;\n  line-height: 1.4;\n  font-weight: 600;\n}\n.gal h2 {\n  font-size: 20px;\n  line-height: 1.5;\n  font-weight: 600;\n  overflow-wrap: anywhere;\n}\n.gal h3 {\n  font-size: 15px;\n  line-height: 1.5;\n  font-weight: 600;\n}\n.gal button,\n.gal input,\n.gal textarea,\n.gal select {\n  font: inherit;\n}\n.gal button,\n.gal .gal-upload {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  min-height: 38px;\n  padding: 7px 14px;\n  border: 1px solid var(--g-control);\n  border-radius: 5px;\n  background: var(--g-card);\n  color: var(--g-ink);\n  cursor: pointer;\n  transition:\n    background-color 150ms,\n    border-color 150ms;\n  touch-action: manipulation;\n}\n.gal button:hover:not(:disabled),\n.gal .gal-upload:hover {\n  background: var(--g-hover);\n}\n.gal button:active:not(:disabled) {\n  background: var(--g-line);\n}\n.gal button:disabled {\n  opacity: 0.45;\n  cursor: not-allowed;\n}\n.gal :is(button, input, textarea, select, summary):focus-visible,\n.gal .gal-upload:focus-within {\n  outline: 2px solid var(--g-ring);\n  outline-offset: 3px;\n}\n.gal button.gal-primary {\n  background: var(--g-accent);\n  color: var(--g-on-accent);\n  border-color: var(--g-accent);\n}\n.gal button.gal-primary:hover:not(:disabled) {\n  background: var(--g-muted);\n  border-color: var(--g-muted);\n}\n.gal input,\n.gal textarea,\n.gal select {\n  width: 100%;\n  min-width: 0;\n  padding: 9px 12px;\n  color: var(--g-ink);\n  background: var(--g-card);\n  border: 1px solid var(--g-control);\n  border-radius: 5px;\n}\n.gal input::placeholder,\n.gal textarea::placeholder {\n  color: var(--g-muted);\n  opacity: 1;\n}\n.gal textarea {\n  resize: vertical;\n}\n.gal label {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  margin: 0 0 20px;\n  font-weight: 500;\n}\n.gal-header {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 24px;\n  margin-bottom: 28px;\n}\n.gal-header-actions {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  min-width: 0;\n}\n.gal-header-actions > button:first-child {\n  color: var(--g-muted);\n}\n.gal-header-actions .gal-primary {\n  flex-shrink: 0;\n}\n.gal-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 24px;\n  border-bottom: 1px solid var(--g-line);\n  padding-bottom: 16px;\n}\n.gal-filters {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  flex-wrap: wrap;\n}\n.gal-filters button {\n  border-color: transparent;\n  color: var(--g-muted);\n  padding: 7px 12px;\n}\n.gal-filters button.active {\n  color: var(--g-ink);\n  background: var(--g-soft);\n  font-weight: 600;\n  box-shadow: inset 0 -2px var(--g-ink);\n}\n.gal input.gal-search {\n  max-width: 280px;\n}\n.gal-list-heading {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 12px 0;\n  color: var(--g-muted);\n  font-size: 13px;\n}\n.gal-list-heading strong {\n  margin-left: 6px;\n  font-weight: 500;\n  font-variant-numeric: tabular-nums;\n}\n.gal-list-heading button {\n  border-color: transparent;\n  min-height: 32px;\n  padding: 4px 10px;\n  color: var(--g-muted);\n}\n.gal-resource-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));\n  gap: 20px;\n}\n.gal button.gal-resource-card {\n  width: 100%;\n  display: flex;\n  flex-direction: column;\n  gap: 0;\n  padding: 0;\n  text-align: left;\n  border: 1px solid var(--g-line);\n  border-radius: 12px;\n  overflow: hidden;\n  align-items: stretch;\n  justify-content: flex-start;\n  min-width: 0;\n}\n.gal-resource-type {\n  font-size: 13px;\n  font-weight: 500;\n  color: var(--g-muted);\n}\n.gal-resource-content {\n  min-width: 0;\n  padding: 18px 18px 0;\n}\n.gal-resource-content h3 {\n  overflow-wrap: anywhere;\n  font-size: 16px;\n  display: -webkit-box;\n  -webkit-line-clamp: 2;\n  -webkit-box-orient: vertical;\n  overflow: hidden;\n}\n.gal-resource-content p {\n  color: var(--g-muted);\n  margin-top: 6px;\n  font-size: 13px;\n  display: -webkit-box;\n  -webkit-line-clamp: 1;\n  -webkit-box-orient: vertical;\n  overflow: hidden;\n  overflow-wrap: anywhere;\n}\n.gal-tags {\n  display: flex;\n  gap: 6px;\n  flex-wrap: wrap;\n  margin: 12px 0;\n}\n.gal-tags span {\n  font-size: 12px;\n  line-height: 1.5;\n  border: 1px solid var(--g-line);\n  border-radius: 3px;\n  padding: 2px 7px;\n  color: var(--g-muted);\n  overflow-wrap: anywhere;\n}\n.gal-resource-card .gal-tags {\n  margin: 12px 0 18px;\n  padding: 0 18px;\n  min-height: 24px;\n}\n.gal-resource-card footer {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  margin-top: auto;\n  padding: 12px 18px;\n  border-top: 1px solid var(--g-line);\n  color: var(--g-muted);\n  font-size: 12px;\n  font-variant-numeric: tabular-nums;\n}\n.gal-empty {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  gap: 12px;\n  min-height: 300px;\n  padding: 40px 16px;\n  text-align: center;\n  color: var(--g-muted);\n}\n.gal-empty h3 {\n  color: var(--g-ink);\n}\n.gal-empty .gal-primary {\n  margin-top: 8px;\n}\n.gal-pagination {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 20px;\n  padding: 24px 0;\n  color: var(--g-muted);\n}\n.gal-alert,\n.gal-notice {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 10px 14px;\n  border: 1px solid currentColor;\n  border-radius: 4px;\n  margin-bottom: 20px;\n  overflow-wrap: anywhere;\n  white-space: pre-wrap;\n  position: relative;\n  z-index: 40;\n}\n.gal-alert {\n  color: var(--g-error);\n  background: var(--g-error-bg);\n}\n.gal-notice {\n  position: fixed;\n  top: max(20px, env(safe-area-inset-top));\n  right: max(20px, env(safe-area-inset-right));\n  z-index: 100;\n  max-width: min(360px, calc(100vw - 32px));\n  margin: 0;\n  gap: 10px;\n  padding: 10px 12px;\n  border-color: var(--g-line);\n  border-radius: 10px;\n  color: var(--g-success);\n  background: var(--g-success-bg);\n  box-shadow: 0 4px 18px #00000012;\n}\n.gal-notice > span {\n  flex: 1;\n}\n@media (max-width: 600px) {\n  .gal-notice {\n    top: max(12px, env(safe-area-inset-top));\n    right: max(16px, env(safe-area-inset-right));\n  }\n}\n.gal-alert button,\n.gal-notice button {\n  min-height: 28px;\n  min-width: 28px;\n  padding: 0;\n  border-color: transparent;\n  color: inherit;\n  background: transparent;\n  flex-shrink: 0;\n}\n.gal-overlay {\n  position: fixed;\n  inset: 0;\n  z-index: 30;\n  padding: 24px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  background: var(--g-overlay);\n}\n.gal-confirm-overlay {\n  z-index: 60;\n}\n.gal-dialog {\n  display: flex;\n  flex-direction: column;\n  width: min(880px, 100%);\n  max-height: calc(100dvh - 48px);\n  border: 1px solid var(--g-control);\n  border-radius: 6px;\n  background: var(--g-card);\n  overflow: hidden;\n}\n.gal-dialog-head {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 24px;\n  padding: 24px;\n  border-bottom: 1px solid var(--g-line);\n  flex-shrink: 0;\n}\n.gal-dialog-head > div {\n  min-width: 0;\n}\n.gal-dialog-head p {\n  font-size: 13px;\n  color: var(--g-muted);\n  margin-top: 6px;\n}\n.gal-dialog-head > button {\n  border-color: transparent;\n  min-width: 36px;\n  min-height: 36px;\n  padding: 0;\n  font-size: 24px;\n  line-height: 1;\n  flex-shrink: 0;\n}\n.gal-dialog-body {\n  padding: 24px;\n  overflow: auto;\n  min-height: 0;\n}\n.gal-dialog-footer {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  flex-wrap: wrap;\n  gap: 12px;\n  padding: 16px 24px;\n  border-top: 1px solid var(--g-line);\n  flex-shrink: 0;\n}\n.gal-dialog-footer > .gal-local {\n  margin-right: auto;\n  color: var(--g-muted);\n  font-size: 13px;\n}\n.gal-pill {\n  display: inline-block;\n  font-size: 12px;\n  color: var(--g-muted);\n  margin-bottom: 8px;\n}\n.gal-detail-actions {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n  padding: 16px 24px;\n  border-bottom: 1px solid var(--g-line);\n  flex-shrink: 0;\n}\n.gal-description {\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n}\n.gal-file {\n  border: 1px solid var(--g-line);\n  border-radius: 4px;\n  margin: 16px 0 0;\n  overflow: hidden;\n}\n.gal summary {\n  cursor: pointer;\n  padding: 12px;\n  overflow-wrap: anywhere;\n}\n.gal-file summary span {\n  float: right;\n  color: var(--g-muted);\n  font-size: 12px;\n  margin-left: 12px;\n}\n.gal pre {\n  font:\n    13px/1.8 ui-monospace,\n    SFMono-Regular,\n    Consolas,\n    monospace;\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n  background: var(--g-soft);\n  padding: 16px;\n  border-top: 1px solid var(--g-line);\n  margin: 0;\n  max-height: 380px;\n  overflow: auto;\n}\n.gal-file > p {\n  padding: 16px;\n}\n.gal-form-row {\n  display: flex;\n  gap: 20px;\n}\n.gal-form-row > label {\n  flex: 1;\n  min-width: 0;\n}\n.gal-form-row > label.gal-grow {\n  flex: 3;\n}\n.gal-file-toolbar {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  flex-wrap: wrap;\n  gap: 12px;\n  margin: 24px 0 12px;\n}\n.gal-file-toolbar small {\n  font-size: 12px;\n  color: var(--g-muted);\n  margin-left: 8px;\n  font-weight: 400;\n}\n.gal-file-toolbar > div {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.gal label.gal-upload {\n  margin: 0;\n  font-weight: 400;\n  position: relative;\n}\n.gal-upload input {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  opacity: 0;\n  overflow: hidden;\n}\n.gal-add-file {\n  display: flex;\n  gap: 8px;\n  margin-bottom: 12px;\n}\n.gal-add-file button {\n  white-space: nowrap;\n}\n.gal-file-editor {\n  display: grid;\n  grid-template-columns: 200px minmax(0, 1fr);\n  min-height: 300px;\n  border: 1px solid var(--g-control);\n  border-radius: 4px;\n  overflow: hidden;\n}\n.gal-file-editor nav {\n  background: var(--g-soft);\n  border-right: 1px solid var(--g-line);\n  padding: 8px;\n  max-height: 420px;\n  overflow: auto;\n}\n.gal-file-editor nav button {\n  width: 100%;\n  justify-content: flex-start;\n  text-align: left;\n  border-color: transparent;\n  background: transparent;\n  border-radius: 3px;\n  font-size: 13px;\n  overflow-wrap: anywhere;\n}\n.gal-file-editor nav button.active {\n  color: var(--g-ink);\n  background: var(--g-line);\n  font-weight: 600;\n}\n.gal-file-editor nav p,\n.gal-code-placeholder {\n  padding: 16px;\n  color: var(--g-muted);\n  font-size: 13px;\n}\n.gal-file-editor > div {\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n}\n.gal-code-head {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 12px;\n  padding: 8px 12px;\n  border-bottom: 1px solid var(--g-line);\n}\n.gal-code-head span {\n  font:\n    13px/1.5 ui-monospace,\n    monospace;\n  overflow-wrap: anywhere;\n}\n.gal-code-head button {\n  color: var(--g-error);\n  border-color: transparent;\n  padding: 4px 8px;\n  flex-shrink: 0;\n}\n.gal-file-editor textarea {\n  flex: 1;\n  min-height: 280px;\n  font:\n    13px/1.8 ui-monospace,\n    SFMono-Regular,\n    Consolas,\n    monospace;\n  border: 0;\n  border-radius: 0;\n  tab-size: 2;\n}\n.gal-file-editor textarea:focus-visible {\n  outline-offset: -3px;\n}\n.gal-advanced {\n  margin-top: 24px;\n  border-top: 1px solid var(--g-line);\n}\n.gal-advanced summary {\n  padding: 16px 0;\n  color: var(--g-muted);\n}\n.gal-advanced textarea,\n.gal-reference textarea {\n  font:\n    13px/1.7 ui-monospace,\n    Consolas,\n    monospace;\n}\n.gal-reference textarea {\n  resize: vertical;\n}\n.gal-error {\n  color: var(--g-error);\n  margin: 12px 0;\n}\n.gal-small {\n  max-width: 440px;\n}\n.gal-storage {\n  max-width: 600px;\n}\n.gal-storage-providers {\n  margin-bottom: 24px;\n}\n.gal-storage-providers > div {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 16px;\n  padding: 12px 0;\n  border-bottom: 1px solid var(--g-line);\n}\n.gal-storage-providers strong {\n  font-weight: 500;\n}\n.gal-storage-providers span,\n.gal-storage-providers > div:not(.active) {\n  color: var(--g-muted);\n}\n.gal-storage .gal-dialog-body > p {\n  color: var(--g-muted);\n  font-size: 13px;\n  margin: 0 0 24px;\n}\n.gal-storage .gal-dialog-body > p[role="alert"] {\n  color: var(--g-error);\n  margin: 16px 0 0;\n}\n.gal-storage .gal-dialog-body > p[role="status"] {\n  color: var(--g-success);\n  margin: 16px 0 0;\n}\n@media (prefers-color-scheme: dark) {\n  .gal {\n    --g-bg: #181a1e;\n    --g-card: #1e2126;\n    --g-soft: #25292f;\n    --g-hover: #2c3139;\n    --g-ink: #edf0f4;\n    --g-muted: #adb5c0;\n    --g-line: #383f49;\n    --g-control: #737e8d;\n    --g-accent: #edf0f4;\n    --g-on-accent: #181a1e;\n    --g-ring: #8bb4ff;\n    --g-error: #ffb5ae;\n    --g-error-bg: #382422;\n    --g-success: #a7dbb7;\n    --g-success-bg: #203329;\n    --g-overlay: #00000099;\n    color-scheme: dark;\n  }\n}\n@media (max-width: 900px) {\n  .gal-header {\n    flex-wrap: wrap;\n  }\n  .gal-header-actions {\n    flex-wrap: wrap;\n  }\n  .gal-toolbar {\n    flex-wrap: wrap;\n    gap: 16px;\n  }\n  .gal input.gal-search {\n    max-width: none;\n  }\n}\n@media (max-width: 600px) {\n  .gal {\n    padding: 24px 16px;\n    font-size: 14px;\n  }\n  .gal-header {\n    gap: 16px;\n    margin-bottom: 24px;\n  }\n  .gal-header-actions {\n    width: auto;\n    justify-content: flex-end;\n    gap: 8px;\n  }\n  .gal-filters {\n    width: 100%;\n    gap: 0;\n  }\n  .gal-filters button {\n    flex: 1;\n    min-height: 44px;\n    padding: 7px 5px;\n  }\n  .gal input,\n  .gal textarea,\n  .gal select {\n    font-size: 16px;\n  }\n  .gal-overlay {\n    padding: 12px;\n  }\n  .gal-dialog {\n    max-height: calc(100dvh - 24px);\n  }\n  .gal-dialog-head,\n  .gal-dialog-body {\n    padding: 20px;\n  }\n  .gal-dialog-footer {\n    padding: 16px 20px;\n    gap: 8px;\n  }\n  .gal-dialog-footer > .gal-local {\n    width: 100%;\n  }\n  .gal-detail-actions {\n    padding: 12px 20px;\n  }\n  .gal-form-row {\n    flex-wrap: wrap;\n    gap: 0;\n  }\n  .gal-form-row > label,\n  .gal-form-row > label.gal-grow {\n    flex: 1 1 100%;\n    width: 100%;\n  }\n  .gal-file-editor {\n    grid-template-columns: 1fr;\n  }\n  .gal-file-editor nav {\n    max-height: 140px;\n    border-right: 0;\n    border-bottom: 1px solid var(--g-line);\n  }\n  .gal-file-editor textarea {\n    font-size: 16px;\n  }\n  .gal-file-toolbar > div {\n    width: 100%;\n  }\n  .gal-add-file {\n    flex-wrap: wrap;\n  }\n  .gal-add-file input {\n    flex: 1 1 180px;\n  }\n  .gal-code-head {\n    flex-wrap: wrap;\n  }\n}\n@media (prefers-reduced-motion: reduce) {\n  .gal *,\n  .gal *::before,\n  .gal *::after {\n    transition: none !important;\n    animation: none !important;\n    scroll-behavior: auto !important;\n  }\n}\n\n.gal svg {\n  flex-shrink: 0;\n  vertical-align: middle;\n}\n.gal h1 {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n}\n.gal button.gal-icon-button {\n  width: 38px;\n  min-width: 38px;\n  height: 38px;\n  padding: 0;\n  border-color: var(--g-line);\n  border-radius: 8px;\n}\n.gal .gal-search-wrap {\n  position: relative;\n  width: 280px;\n  max-width: 100%;\n}\n.gal-search-wrap > svg {\n  position: absolute;\n  left: 12px;\n  top: 50%;\n  transform: translateY(-50%);\n  color: var(--g-muted);\n  pointer-events: none;\n}\n.gal input.gal-search {\n  padding-left: 38px;\n  border-color: var(--g-line);\n  border-radius: 8px;\n}\n.gal-filters button {\n  border-radius: 7px;\n}\n.gal-filters button.active {\n  box-shadow: none;\n  border-color: var(--g-line);\n}\n.gal button.gal-resource-card:hover:not(:disabled) {\n  background: var(--g-card);\n  border-color: var(--g-control);\n}\n.gal-resource-visual {\n  display: block;\n  position: relative;\n  height: 132px;\n  width: 100%;\n  background: var(--g-soft);\n  color: var(--g-muted);\n  border-bottom: 1px solid var(--g-line);\n}\n.gal-resource-visual.skill {\n  --visual-ink: #386a54;\n  --visual-bg: #eef5f0;\n}\n.gal-resource-visual.agent {\n  --visual-ink: #6552a0;\n  --visual-bg: #f2eff9;\n}\n.gal-resource-visual.mcp {\n  --visual-ink: #366c92;\n  --visual-bg: #edf4f9;\n}\n.gal-resource-visual.workflow {\n  --visual-ink: #936424;\n  --visual-bg: #faf4e9;\n}\n.gal-resource-visual {\n  color: var(--visual-ink);\n  background: var(--visual-bg);\n}\n.gal-resource-drawing {\n  position: absolute;\n  width: 240px;\n  height: 100px;\n  left: 50%;\n  top: 24px;\n  transform: translateX(-50%);\n}\n.gal-visual-type {\n  position: absolute;\n  top: 12px;\n  left: 14px;\n  display: flex;\n  align-items: center;\n  gap: 5px;\n  font-size: 12px;\n  font-weight: 500;\n}\n.gal-card-arrow {\n  position: absolute;\n  right: 14px;\n  top: 13px;\n}\n.gal-resource-card footer > span {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n.gal-tags span {\n  background: var(--g-soft);\n  border-color: transparent;\n  border-radius: 4px;\n}\n.gal-detail-actions button {\n  border-color: var(--g-line);\n}\n.gal-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n}\n@media (prefers-color-scheme: dark) {\n  .gal-resource-visual.skill {\n    --visual-ink: #9dcbb0;\n    --visual-bg: #24382e;\n  }\n  .gal-resource-visual.agent {\n    --visual-ink: #b6a7e0;\n    --visual-bg: #302b42;\n  }\n  .gal-resource-visual.mcp {\n    --visual-ink: #9bbfdd;\n    --visual-bg: #253442;\n  }\n  .gal-resource-visual.workflow {\n    --visual-ink: #d8bb83;\n    --visual-bg: #3d3425;\n  }\n}\n@media (max-width: 900px) {\n  .gal .gal-search-wrap {\n    width: 100%;\n  }\n}\n@media (max-width: 600px) {\n  .gal-header {\n    flex-wrap: nowrap;\n    gap: 12px;\n  }\n  .gal-header-actions {\n    flex-shrink: 0;\n  }\n  .gal-header h1 {\n    font-size: 21px;\n    gap: 8px;\n  }\n  .gal-filters button {\n    flex-direction: column;\n    gap: 5px;\n    font-size: 12px;\n    padding: 8px 4px;\n  }\n  .gal-resource-grid {\n    gap: 16px;\n  }\n  .gal-resource-visual {\n    height: 140px;\n  }\n}\n.gal-empty > svg {\n  width: 56px;\n  height: 56px;\n  padding: 14px;\n  border-radius: 12px;\n  background: var(--g-soft);\n}\n.gal-list-actions {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n}\n.gal-list-actions button.gal-primary {\n  min-height: 38px;\n  color: var(--g-on-accent);\n}\n.gal-type-field {\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  flex: 1;\n  margin-bottom: 20px;\n  font-weight: 500;\n}\n.gal-editor-type {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  min-height: 42px;\n}\n@media (max-width: 600px) {\n  .gal-type-field {\n    flex: 1 1 100%;\n  }\n}\n\n/* Skill folder creation */\n.gal-skill-wizard {\n  width: min(1200px, 100%);\n  height: min(860px, calc(100dvh - 48px));\n}\n.gal-skill-steps {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  padding: 16px 24px;\n  gap: 8px;\n  border-bottom: 1px solid var(--g-line);\n}\n.gal-skill-steps button {\n  border: 0;\n  background: var(--g-soft);\n  justify-content: flex-start;\n}\n.gal-skill-steps button[aria-current="step"] {\n  background: var(--g-accent);\n  color: var(--g-on-accent);\n}\n.gal-skill-steps button span {\n  border: 1px solid currentColor;\n  border-radius: 50%;\n  width: 24px;\n  height: 24px;\n  display: grid;\n  place-items: center;\n  flex-shrink: 0;\n}\n.gal-skill-layout {\n  flex: 1;\n  align-content: start;\n  scrollbar-gutter: stable;\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) 220px;\n  gap: 24px;\n}\n.gal-skill-layout main {\n  min-width: 0;\n}\n.gal-skill-fields {\n  display: grid;\n  gap: 16px;\n  margin-top: 16px;\n  min-width: 0;\n}\n.gal-skill-fields > p,\n.gal-skill-folder p {\n  color: var(--g-muted);\n}\n.gal-skill-fields fieldset,\nfieldset.gal-skill-fields {\n  border: 1px solid var(--g-line);\n  padding: 16px;\n}\n.gal-skill-code {\n  min-height: 300px;\n  font-family: monospace !important;\n}\n.gal-skill-preview {\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n  background: var(--g-soft);\n  padding: 16px;\n  max-height: 360px;\n  overflow: auto;\n}\n.gal-skill-preview h2,\n.gal-skill-preview h3 {\n  margin: 12px 0;\n}\n.gal-skill-tree {\n  align-self: start;\n  background: var(--g-soft);\n  padding: 16px;\n  border-radius: 8px;\n  overflow-wrap: anywhere;\n}\n.gal-skill-tree summary {\n  cursor: pointer;\n  margin-bottom: 16px;\n}\n.gal-skill-tree svg {\n  vertical-align: middle;\n  flex-shrink: 0;\n}\n.gal-skill-tree > div {\n  margin: 12px 0 0 10px;\n}\n.gal-skill-leaf {\n  margin: 8px 0 0 12px;\n}\n.gal-skill-folders {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 10px;\n}\n.gal-skill-folder {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-start;\n  gap: 10px;\n  border: 1px dashed var(--g-control);\n  padding: 14px;\n  border-radius: 8px;\n}\n.gal-skill-folder code {\n  font-size: 12px;\n}\n.gal-skill-folder p {\n  flex: 1;\n}\n.gal-skill-folder .gal-upload {\n  position: relative;\n}\n.gal-skill-filelist > div {\n  display: flex;\n  gap: 8px;\n  margin-bottom: 8px;\n}\n.gal-skill-filelist > div > button:first-child {\n  flex: 1;\n  min-width: 0;\n  overflow-wrap: anywhere;\n  text-align: left;\n}\n.gal-skill-summary {\n  display: grid;\n  justify-items: start;\n  gap: 12px;\n  padding: 20px;\n  background: var(--g-soft);\n  border-radius: 8px;\n}\n.gal-skill-ok {\n  color: var(--g-success) !important;\n}\n.gal-skill-footer {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 16px 24px;\n  border-top: 1px solid var(--g-line);\n}\n@media (max-width: 700px) {\n  .gal-skill-layout {\n    grid-template-columns: 1fr;\n  }\n  .gal-skill-steps {\n    padding: 12px;\n    gap: 4px;\n  }\n  .gal-skill-steps button {\n    flex-direction: column;\n    padding: 8px 2px;\n    font-size: 12px;\n  }\n  .gal-skill-folders {\n    grid-template-columns: 1fr;\n  }\n  .gal-skill-folder {\n    display: grid;\n    grid-template-columns: auto 1fr;\n  }\n  .gal-skill-footer {\n    padding: 12px;\n  }\n}\n.gal .gal-skill-steps button[aria-current="step"],\n.gal .gal-skill-steps button[aria-current="step"]:hover {\n  background: var(--g-accent);\n  color: var(--g-on-accent);\n}\n.gal-skill-steps,\n.gal-skill-footer {\n  flex-shrink: 0;\n}\n\n.gal-skill-footer > .gal-primary {\n  width: 168px;\n  height: 42px;\n  flex: 0 0 168px;\n  justify-content: center;\n  white-space: nowrap;\n}\n.gal-skill-attachments {\n  display: grid;\n  grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr);\n  align-items: start;\n  gap: 16px;\n}\n.gal-skill-attachments > fieldset.gal-skill-fields {\n  margin: 0;\n}\n.gal-skill-attachments textarea {\n  min-height: 240px;\n  font-family: monospace;\n}\n@media (max-width: 900px) {\n  .gal-skill-attachments {\n    grid-template-columns: 1fr;\n  }\n}\n\n.gal-usage-total {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-bottom: 16px !important;\n}\n.gal-resource-card footer {\n  flex-wrap: wrap;\n}\n\n.gal-card-creator {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--g-muted);\n  padding: 0 18px;\n  overflow-wrap: anywhere;\n}\n.gal button.gal-delete {\n  color: var(--g-error);\n}\n.gal-username-setting {\n  margin: 20px 0 12px;\n}\n\n/* Four category charts, ordered by cumulative calls. */\n.gal-leaderboards {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 18px;\n  align-items: start;\n}\n.gal-board {\n  --rank-color: #32715a;\n  --rank-tint: #edf6f0;\n  border: 1px solid var(--g-line);\n  border-top: 3px solid var(--rank-color);\n  border-radius: 12px;\n  background: var(--g-card);\n  overflow: hidden;\n  min-width: 0;\n}\n.gal-board.agent {\n  --rank-color: #7753ac;\n  --rank-tint: #f3effa;\n}\n.gal-board.mcp {\n  --rank-color: #247d87;\n  --rank-tint: #edf7f8;\n}\n.gal-board.workflow {\n  --rank-color: #a3742b;\n  --rank-tint: #faf4e8;\n}\n.gal-board-head {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 22px 16px;\n  background: var(--rank-tint);\n}\n.gal-board-icon {\n  display: grid;\n  place-items: center;\n  width: 44px;\n  height: 44px;\n  border: 1px solid var(--rank-color);\n  border-radius: 12px;\n  color: var(--rank-color);\n  flex-shrink: 0;\n}\n.gal-board-head h2 {\n  font-size: 19px;\n  letter-spacing: -0.4px;\n}\n.gal-board-head div > span {\n  color: var(--g-muted);\n  font-size: 12px;\n}\n.gal-board-top {\n  margin-left: auto;\n  writing-mode: vertical-rl;\n  font-size: 10px;\n  letter-spacing: 2px;\n  color: var(--rank-color);\n  font-weight: 700;\n}\n.gal-board-columns {\n  display: flex;\n  justify-content: space-between;\n  padding: 14px 16px 8px;\n  color: var(--g-muted);\n  font-size: 11px;\n}\n.gal-board-list {\n  list-style: none;\n  margin: 0;\n  padding: 0 8px 12px;\n}\n.gal .gal-rank-row {\n  display: flex;\n  align-items: center;\n  width: 100%;\n  gap: 10px;\n  padding: 15px 8px;\n  min-height: 80px;\n  border: 0;\n  border-radius: 7px;\n  background: transparent;\n  text-align: left;\n}\n.gal .gal-rank-row:hover {\n  background: var(--rank-tint);\n}\n.gal-rank-number {\n  width: 25px;\n  flex-shrink: 0;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  color: var(--g-muted);\n  font-size: 17px;\n  font-weight: 600;\n  font-variant-numeric: tabular-nums;\n}\n.gal .rank-1 {\n  background: var(--rank-tint);\n  margin: 4px 0;\n  min-height: 104px;\n}\n.rank-1 .gal-rank-number {\n  color: var(--rank-color);\n  font-size: 24px;\n}\n.rank-2 .gal-rank-number,\n.rank-3 .gal-rank-number {\n  color: var(--rank-color);\n}\n.gal-rank-info {\n  flex: 1;\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n  gap: 5px;\n}\n.gal-rank-info > strong {\n  font-size: 14px;\n  font-weight: 600;\n  line-height: 1.45;\n  overflow-wrap: anywhere;\n  display: -webkit-box;\n  -webkit-line-clamp: 2;\n  -webkit-box-orient: vertical;\n  overflow: hidden;\n}\n.rank-1 .gal-rank-info > strong {\n  font-size: 16px;\n}\n.gal-rank-author {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  font-size: 12px;\n  color: var(--g-muted);\n  overflow-wrap: anywhere;\n}\n.gal-rank-count {\n  font-size: 16px;\n  font-weight: 650;\n  font-variant-numeric: tabular-nums;\n  letter-spacing: -0.5px;\n  flex-shrink: 0;\n}\n.rank-1 .gal-rank-count {\n  color: var(--rank-color);\n  font-size: 20px;\n}\n.gal-rank-track {\n  display: block;\n  height: 3px;\n  background: var(--g-line);\n  border-radius: 3px;\n  overflow: hidden;\n  margin-top: 3px;\n}\n.gal-rank-track > span {\n  display: block;\n  height: 100%;\n  background: var(--rank-color);\n  border-radius: 3px;\n}\n.gal .gal-board-more {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  width: 100%;\n  border: 0;\n  border-top: 1px solid var(--g-line);\n  border-radius: 0;\n  padding: 14px 18px;\n  color: var(--rank-color);\n  background: transparent;\n  min-height: 48px;\n}\n.gal-board-empty {\n  min-height: 220px;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  gap: 16px;\n  color: var(--g-muted);\n}\n.gal-board-empty svg {\n  color: var(--rank-color);\n}\n@media (max-width: 1100px) {\n  .gal-leaderboards {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 560px) {\n  .gal-leaderboards {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 20px;\n  }\n  .gal-board-head {\n    padding: 18px;\n  }\n}\n@media (prefers-color-scheme: dark) {\n  .gal-board {\n    --rank-color: #8fc7aa;\n    --rank-tint: #20382d;\n  }\n  .gal-board.agent {\n    --rank-color: #b9a0e4;\n    --rank-tint: #30273e;\n  }\n  .gal-board.mcp {\n    --rank-color: #87c9d0;\n    --rank-tint: #20353a;\n  }\n  .gal-board.workflow {\n    --rank-color: #dfbc7d;\n    --rank-tint: #3b3121;\n  }\n}\n\n.gal.gal-toast-host {\n  position: fixed;\n  inset: 0;\n  z-index: 2147483647;\n  pointer-events: none;\n  width: auto;\n  min-height: 0;\n  overflow: visible;\n  padding: 0;\n  background: transparent;\n}\n.gal-toast-host .gal-notice {\n  position: absolute;\n  pointer-events: auto;\n}\n\n.gal-mcp-transport {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 12px;\n}\n.gal .gal-mcp-transport button[aria-pressed="true"] {\n  border-color: var(--g-accent);\n  background: var(--g-soft);\n}\n.gal-mcp-result {\n  padding: 16px;\n  border: 1px solid var(--g-line);\n  border-radius: 8px;\n  max-height: 300px;\n  overflow: auto;\n}\n.gal-mcp-result > p {\n  display: flex;\n  gap: 8px;\n  align-items: baseline;\n  padding: 8px 0;\n  border-bottom: 1px solid var(--g-line);\n}\n.gal-mcp-result > p span {\n  color: var(--g-muted);\n  min-width: 0;\n  overflow-wrap: anywhere;\n}\n.gal-workflow-card { display: grid; gap: 10px; padding: 14px; margin: 10px 0; border: 1px solid var(--gal-border, #ddd); border-radius: 12px; }\n.gal-workflow-card > button { justify-self: end; }\n.gal-workflow-card select[multiple] { min-height: 76px; }\n';
 
 // src/client/leaderboards.jsx
 var import_react2 = __toESM(require("react"), 1);
@@ -408,10 +409,10 @@ function Modal({ children, onClose, confirmation = false }) {
         'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), summary, [tabindex="0"]'
       )
     ].filter((el) => el.getClientRects().length && el.type !== "file");
-    const initial = dialog.querySelector(
+    const initial2 = dialog.querySelector(
       '[autofocus], input:not([type="file"]):not(:disabled)'
     ) || focusable()[0] || dialog;
-    initial.focus();
+    initial2.focus();
     function handleKey(event) {
       const overlays = document.querySelectorAll("[data-gallery-modal]");
       if (overlays[overlays.length - 1] !== overlay) return;
@@ -685,8 +686,104 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
   ));
 }
 
-// src/client/agent-wizard.jsx
+// src/client/workflow-wizard.jsx
 var import_react5 = __toESM(require("react"), 1);
+
+// src/workflow-template.mjs
+function demand(ok, status, code, message) {
+  if (!ok) throw Object.assign(new Error(message), { status, code });
+}
+var object = (v, label) => {
+  demand(v && typeof v === "object" && !Array.isArray(v), 400, "INVALID_WORKFLOW", `${label} \u683C\u5F0F\u65E0\u6548`);
+  return v;
+};
+var text = (v, label, max, required = false) => {
+  demand(typeof v === "string" && v.length <= max && (!required || v.trim()), 400, "INVALID_WORKFLOW", `${label} \u4E0D\u80FD\u4E3A\u7A7A\u6216\u8D85\u8FC7 ${max} \u5B57\u7B26`);
+  return v.trim();
+};
+var array = (v, label, max) => {
+  demand(Array.isArray(v) && v.length <= max, 400, "INVALID_WORKFLOW", `${label} \u683C\u5F0F\u65E0\u6548\u6216\u8FC7\u957F`);
+  return v;
+};
+function validateWorkflowTemplate(input) {
+  const v = object(input, "\u6A21\u677F");
+  const members = array(v.members, "\u6210\u5458", 32).map((raw) => {
+    const m = object(raw, "\u6210\u5458");
+    return { name: text(m.name, "\u6210\u5458\u540D\u79F0", 80, true), summary: text(m.summary, "\u7B80\u4ECB", 16e3), role: text(m.role, "\u89D2\u8272", 16e3), executionPrompt: text(m.executionPrompt, "\u6267\u884C\u6307\u4EE4", 16e3) };
+  });
+  demand(members.every((m) => /^[\p{L}\p{N}_-]+$/u.test(m.name) && m.name.toLowerCase() !== "captain") && new Set(members.map((m) => m.name.toLowerCase())).size === members.length, 400, "INVALID_WORKFLOW", "\u6210\u5458\u540D\u79F0\u91CD\u590D\u6216\u65E0\u6548");
+  const tasks = array(v.tasks, "\u8282\u70B9", 32).map((raw) => {
+    const t = object(raw, "\u8282\u70B9"), g = object(t.general, "\u4EFB\u52A1\u8981\u6C42");
+    const id = text(t.id, "\u8282\u70B9 ID", 80, true);
+    demand(/^[a-zA-Z0-9_-]+$/.test(id) && typeof t.checkpoint === "boolean", 400, "INVALID_WORKFLOW", "\u8282\u70B9 ID \u6216\u7C7B\u578B\u65E0\u6548");
+    demand(!/^t\d+$/.test(id) || Number.isSafeInteger(Number(id.slice(1))) && Number(id.slice(1)) < Number.MAX_SAFE_INTEGER, 400, "INVALID_WORKFLOW", "\u8282\u70B9\u5E8F\u53F7\u8D85\u51FA\u8303\u56F4");
+    return { id, subject: text(t.subject, "\u8282\u70B9\u540D\u79F0", 200, true), assignee: text(t.assignee, "\u8D1F\u8D23\u4EBA", 80), dependencies: array(t.dependencies, "\u4F9D\u8D56", 32).map((d) => text(d, "\u4F9D\u8D56 ID", 80, true)), checkpoint: t.checkpoint, general: { requirements: text(g.requirements, "\u4EFB\u52A1\u8981\u6C42", 16e3), deliverables: text(g.deliverables, "\u4EA4\u4ED8\u7269", 16e3), acceptance: text(g.acceptance, "\u9A8C\u6536\u6807\u51C6", 16e3) } };
+  });
+  demand(tasks.length > 0 && new Set(tasks.map((t) => t.id)).size === tasks.length, 400, "INVALID_WORKFLOW", "\u9700\u8981 1\u201332 \u4E2A\u4E0D\u540C\u7684\u8282\u70B9");
+  const ids = new Set(tasks.map((t) => t.id)), names2 = new Set(members.map((m) => m.name));
+  for (const t of tasks) {
+    demand(!(t.checkpoint && t.assignee) && (!t.assignee || t.assignee === "captain" || names2.has(t.assignee)), 400, "INVALID_WORKFLOW", "\u8282\u70B9\u8D1F\u8D23\u4EBA\u4E0D\u5B58\u5728\u6216\u4EBA\u5DE5\u8282\u70B9\u5206\u914D\u4E86\u8D1F\u8D23\u4EBA");
+    demand(t.dependencies.every((id) => ids.has(id)) && new Set(t.dependencies).size === t.dependencies.length, 400, "INVALID_WORKFLOW", "\u8282\u70B9\u4F9D\u8D56\u7F3A\u5931\u6216\u91CD\u590D");
+  }
+  const done = /* @__PURE__ */ new Set(), visiting = /* @__PURE__ */ new Set();
+  function visit3(id) {
+    demand(!visiting.has(id), 400, "INVALID_WORKFLOW", "\u8282\u70B9\u4F9D\u8D56\u4EA7\u751F\u5FAA\u73AF");
+    if (done.has(id)) return;
+    visiting.add(id);
+    tasks.find((t) => t.id === id).dependencies.forEach(visit3);
+    visiting.delete(id);
+    done.add(id);
+  }
+  tasks.forEach((t) => visit3(t.id));
+  const positions = {};
+  for (const [key, raw] of Object.entries(object(v.positions ?? {}, "\u753B\u5E03\u4F4D\u7F6E"))) {
+    const p = object(raw, "\u4F4D\u7F6E");
+    demand(key.startsWith("task:") && ids.has(key.slice(5)) && ["x", "y"].every((k) => typeof p[k] === "number" && Number.isFinite(p[k]) && p[k] >= 0 && p[k] <= 1e4), 400, "INVALID_WORKFLOW", "\u753B\u5E03\u4F4D\u7F6E\u65E0\u6548");
+    positions[key] = { x: p.x, y: p.y };
+  }
+  return { name: text(v.name, "\u540D\u79F0", 120, true), description: text(v.description, "\u63CF\u8FF0", 2e3), inputs: text(v.inputs, "\u8F93\u5165", 4e3), tags: [...new Set(array(v.tags, "\u6807\u7B7E", 12).map((t) => text(t, "\u6807\u7B7E", 40, true)))], members, tasks, positions };
+}
+
+// src/client/workflow-wizard.jsx
+var steps2 = ["\u57FA\u672C\u4FE1\u606F", "\u56E2\u961F\u6210\u5458", "\u4EFB\u52A1\u8282\u70B9", "\u68C0\u67E5\u4FDD\u5B58"];
+var member = () => ({ name: "", summary: "", role: "", executionPrompt: "" });
+var task = (n) => ({ id: `t${n}`, subject: "", assignee: "", dependencies: [], checkpoint: false, general: { requirements: "", deliverables: "", acceptance: "" } });
+function initial(resource) {
+  try {
+    return JSON.parse(resource.files.find((f) => f.path === "workflow.json").content);
+  } catch {
+    return { name: resource?.name || "", description: resource?.description || "", tags: resource?.tags || [], inputs: "", members: [], tasks: [], positions: {} };
+  }
+}
+function WorkflowWizard({ resource, onClose, onSave }) {
+  const [draft, setDraft] = (0, import_react5.useState)(() => initial(resource));
+  const [step, setStep] = (0, import_react5.useState)(0), [error, setError] = (0, import_react5.useState)(""), [busy, setBusy] = (0, import_react5.useState)(false);
+  const update = (patch) => setDraft((d) => ({ ...d, ...patch }));
+  const changeMember = (i, key, value) => update({ members: draft.members.map((m, index) => index === i ? { ...m, [key]: value } : m) });
+  const changeTask = (i, patch) => update({ tasks: draft.tasks.map((t, index) => index === i ? { ...t, ...patch } : t) });
+  let issue = "";
+  try {
+    validateWorkflowTemplate(draft);
+  } catch (e) {
+    issue = e.message;
+  }
+  async function save() {
+    setBusy(true);
+    setError("");
+    try {
+      const value = validateWorkflowTemplate(draft);
+      if (value.tasks.some((t) => !t.general.requirements)) throw Error("\u6BCF\u4E2A\u4EFB\u52A1\u8282\u70B9\u90FD\u9700\u8981\u586B\u5199\u901A\u7528\u4EFB\u52A1\u8981\u6C42");
+      await onSave({ type: "workflow", name: value.name, description: value.description, tags: value.tags, files: [{ path: "workflow.json", encoding: "utf8", content: JSON.stringify(value, null, 2) + "\n" }], metadata: { ...resource?.metadata || {}, format: "dsh-teamflow-template-v1" }, references: resource?.references || [] });
+    } catch (e) {
+      setError(e?.rpcError?.message || e.message || String(e));
+      setBusy(false);
+    }
+  }
+  return /* @__PURE__ */ import_react5.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react5.default.createElement("section", { className: "gal-dialog gal-skill-wizard", role: "dialog", "aria-modal": "true", "aria-label": resource ? "\u7F16\u8F91 Workflow" : "\u65B0\u5EFA Workflow" }, /* @__PURE__ */ import_react5.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react5.default.createElement("h2", null, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "workflow" }), " ", resource ? "\u7F16\u8F91" : "\u65B0\u5EFA", " Workflow"), /* @__PURE__ */ import_react5.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "close" }))), /* @__PURE__ */ import_react5.default.createElement("nav", { className: "gal-skill-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps2.map((label, i) => /* @__PURE__ */ import_react5.default.createElement("button", { key: label, "aria-current": step === i ? "step" : void 0, disabled: busy, onClick: () => setStep(i) }, /* @__PURE__ */ import_react5.default.createElement("span", null, i < step ? "\u2713" : i + 1), label))), /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react5.default.createElement("main", null, /* @__PURE__ */ import_react5.default.createElement("h3", null, steps2[step]), step === 0 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react5.default.createElement("input", { "aria-label": "\u540D\u79F0", value: draft.name, onChange: (e) => update({ name: e.target.value }) })), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react5.default.createElement("textarea", { "aria-label": "\u63CF\u8FF0", value: draft.description, onChange: (e) => update({ description: e.target.value }) })), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u9002\u7528\u8F93\u5165", /* @__PURE__ */ import_react5.default.createElement("textarea", { "aria-label": "\u9002\u7528\u8F93\u5165", value: draft.inputs, onChange: (e) => update({ inputs: e.target.value }) })), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u6807\u7B7E", /* @__PURE__ */ import_react5.default.createElement("input", { "aria-label": "\u6807\u7B7E", value: draft.tags.join(", "), onChange: (e) => update({ tags: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean) }) }))), step === 1 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("p", null, "\u6210\u5458\u540D\u79F0\u7528\u4E8E\u6307\u5B9A\u4EFB\u52A1\u8D1F\u8D23\u4EBA\uFF1B\u961F\u957F\u4F7F\u7528 captain\u3002"), draft.members.map((m, i) => /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-workflow-card", key: i }, /* @__PURE__ */ import_react5.default.createElement("button", { onClick: () => update({ members: draft.members.filter((_, n) => n !== i) }) }, "\u5220\u9664\u6210\u5458"), [["name", "\u540D\u79F0"], ["summary", "\u7B80\u4ECB"], ["role", "\u89D2\u8272"], ["executionPrompt", "\u6267\u884C\u6307\u4EE4"]].map(([key, label]) => /* @__PURE__ */ import_react5.default.createElement("label", { key }, label, /* @__PURE__ */ import_react5.default.createElement("input", { "aria-label": `\u6210\u5458${i + 1}${label}`, value: m[key], onChange: (e) => changeMember(i, key, e.target.value) }))))), /* @__PURE__ */ import_react5.default.createElement("button", { onClick: () => update({ members: [...draft.members, member()] }) }, "\u6DFB\u52A0\u6210\u5458")), step === 2 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, draft.tasks.map((t, i) => /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-workflow-card", key: i }, /* @__PURE__ */ import_react5.default.createElement("button", { onClick: () => update({ tasks: draft.tasks.filter((_, n) => n !== i) }) }, "\u5220\u9664\u8282\u70B9"), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u8282\u70B9 ID", /* @__PURE__ */ import_react5.default.createElement("input", { "aria-label": `\u8282\u70B9${i + 1} ID`, value: t.id, onChange: (e) => changeTask(i, { id: e.target.value }) })), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react5.default.createElement("input", { "aria-label": `\u8282\u70B9${i + 1}\u540D\u79F0`, value: t.subject, onChange: (e) => changeTask(i, { subject: e.target.value }) })), /* @__PURE__ */ import_react5.default.createElement("label", null, /* @__PURE__ */ import_react5.default.createElement("input", { type: "checkbox", checked: t.checkpoint, onChange: (e) => changeTask(i, { checkpoint: e.target.checked, assignee: e.target.checked ? "" : t.assignee }) }), "\u4EBA\u5DE5\u9A8C\u6536\u70B9"), !t.checkpoint && /* @__PURE__ */ import_react5.default.createElement("label", null, "\u8D1F\u8D23\u4EBA", /* @__PURE__ */ import_react5.default.createElement("select", { "aria-label": `\u8282\u70B9${i + 1}\u8D1F\u8D23\u4EBA`, value: t.assignee, onChange: (e) => changeTask(i, { assignee: e.target.value }) }, /* @__PURE__ */ import_react5.default.createElement("option", { value: "" }, "\u672A\u6307\u5B9A"), /* @__PURE__ */ import_react5.default.createElement("option", { value: "captain" }, "\u961F\u957F"), draft.members.map((m) => /* @__PURE__ */ import_react5.default.createElement("option", { key: m.name, value: m.name }, m.name)))), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u4F9D\u8D56\u8282\u70B9", /* @__PURE__ */ import_react5.default.createElement("select", { "aria-label": `\u8282\u70B9${i + 1}\u4F9D\u8D56`, multiple: true, value: t.dependencies, onChange: (e) => changeTask(i, { dependencies: [...e.target.selectedOptions].map((o) => o.value) }) }, draft.tasks.filter((x) => x.id !== t.id).map((x) => /* @__PURE__ */ import_react5.default.createElement("option", { key: x.id, value: x.id }, x.subject || x.id)))), [["requirements", "\u901A\u7528\u4EFB\u52A1\u8981\u6C42"], ["deliverables", "\u4EA4\u4ED8\u7269"], ["acceptance", "\u9A8C\u6536\u6807\u51C6"]].map(([key, label]) => /* @__PURE__ */ import_react5.default.createElement("label", { key }, label, /* @__PURE__ */ import_react5.default.createElement("textarea", { "aria-label": `\u8282\u70B9${i + 1}${label}`, value: t.general[key], onChange: (e) => changeTask(i, { general: { ...t.general, [key]: e.target.value } }) }))))), /* @__PURE__ */ import_react5.default.createElement("button", { onClick: () => update({ tasks: [...draft.tasks, task(Math.max(0, ...draft.tasks.map((t) => Number(/^t(\d+)$/.exec(t.id)?.[1]) || 0)) + 1)] }) }, "\u6DFB\u52A0\u8282\u70B9")), step === 3 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("p", null, draft.members.length, " \u4F4D\u6210\u5458 \xB7 ", draft.tasks.length, " \u4E2A\u8282\u70B9 \xB7 ", draft.tasks.filter((t) => t.checkpoint).length, " \u4E2A\u9A8C\u6536\u70B9"), draft.tasks.map((t) => /* @__PURE__ */ import_react5.default.createElement("p", { key: t.id }, t.subject || t.id, " \u2190 ", t.dependencies.join("\u3001") || "\u8D77\u70B9")), /* @__PURE__ */ import_react5.default.createElement("p", null, "\u4FDD\u5B58\u5230 Gallery \u540E\uFF0C\u53EF\u4EE5\u4ECE\u8D44\u6E90\u8BE6\u60C5\u5B89\u88C5\u5230 TeamFlow \u6A21\u677F\u5E93\u3002"), issue && /* @__PURE__ */ import_react5.default.createElement("p", { role: "alert", className: "gal-error" }, issue)), error && /* @__PURE__ */ import_react5.default.createElement("p", { role: "alert", className: "gal-error" }, error))), /* @__PURE__ */ import_react5.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react5.default.createElement("button", { disabled: busy, onClick: () => step ? setStep(step - 1) : onClose() }, step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"), step < 3 ? /* @__PURE__ */ import_react5.default.createElement("button", { className: "gal-primary", disabled: busy, onClick: () => setStep(step + 1) }, "\u4E0B\u4E00\u6B65") : /* @__PURE__ */ import_react5.default.createElement("button", { className: "gal-primary", disabled: busy || !!issue || draft.tasks.some((t) => !t.general.requirements.trim()), onClick: save }, "\u4FDD\u5B58 Workflow"))));
+}
+
+// src/client/agent-wizard.jsx
+var import_react6 = __toESM(require("react"), 1);
 
 // node_modules/yaml/browser/dist/nodes/identity.js
 var ALIAS = Symbol.for("yaml.alias");
@@ -1533,14 +1630,14 @@ var lineComment = (str, indent, comment) => str.endsWith("\n") ? indentComment(c
 var FOLD_FLOW = "flow";
 var FOLD_BLOCK = "block";
 var FOLD_QUOTED = "quoted";
-function foldFlowLines(text, indent, mode = "flow", { indentAtStart, lineWidth = 80, minContentWidth = 20, onFold, onOverflow } = {}) {
+function foldFlowLines(text2, indent, mode = "flow", { indentAtStart, lineWidth = 80, minContentWidth = 20, onFold, onOverflow } = {}) {
   if (!lineWidth || lineWidth < 0)
-    return text;
+    return text2;
   if (lineWidth < minContentWidth)
     minContentWidth = 0;
   const endStep = Math.max(1 + minContentWidth, 1 + lineWidth - indent.length);
-  if (text.length <= endStep)
-    return text;
+  if (text2.length <= endStep)
+    return text2;
   const folds = [];
   const escapedFolds = {};
   let end = lineWidth - indent.length;
@@ -1557,14 +1654,14 @@ function foldFlowLines(text, indent, mode = "flow", { indentAtStart, lineWidth =
   let escStart = -1;
   let escEnd = -1;
   if (mode === FOLD_BLOCK) {
-    i = consumeMoreIndentedLines(text, i, indent.length);
+    i = consumeMoreIndentedLines(text2, i, indent.length);
     if (i !== -1)
       end = i + endStep;
   }
-  for (let ch; ch = text[i += 1]; ) {
+  for (let ch; ch = text2[i += 1]; ) {
     if (mode === FOLD_QUOTED && ch === "\\") {
       escStart = i;
-      switch (text[i + 1]) {
+      switch (text2[i + 1]) {
         case "x":
           i += 3;
           break;
@@ -1581,12 +1678,12 @@ function foldFlowLines(text, indent, mode = "flow", { indentAtStart, lineWidth =
     }
     if (ch === "\n") {
       if (mode === FOLD_BLOCK)
-        i = consumeMoreIndentedLines(text, i, indent.length);
+        i = consumeMoreIndentedLines(text2, i, indent.length);
       end = i + indent.length + endStep;
       split = void 0;
     } else {
       if (ch === " " && prev && prev !== " " && prev !== "\n" && prev !== "	") {
-        const next = text[i + 1];
+        const next = text2[i + 1];
         if (next && next !== " " && next !== "\n" && next !== "	")
           split = i;
       }
@@ -1598,12 +1695,12 @@ function foldFlowLines(text, indent, mode = "flow", { indentAtStart, lineWidth =
         } else if (mode === FOLD_QUOTED) {
           while (prev === " " || prev === "	") {
             prev = ch;
-            ch = text[i += 1];
+            ch = text2[i += 1];
             overflow = true;
           }
           const j = i > escEnd + 1 ? i - 2 : escStart - 1;
           if (escapedFolds[j])
-            return text;
+            return text2;
           folds.push(j);
           escapedFolds[j] = true;
           end = j + endStep;
@@ -1618,39 +1715,39 @@ function foldFlowLines(text, indent, mode = "flow", { indentAtStart, lineWidth =
   if (overflow && onOverflow)
     onOverflow();
   if (folds.length === 0)
-    return text;
+    return text2;
   if (onFold)
     onFold();
-  let res = text.slice(0, folds[0]);
+  let res = text2.slice(0, folds[0]);
   for (let i2 = 0; i2 < folds.length; ++i2) {
     const fold = folds[i2];
-    const end2 = folds[i2 + 1] || text.length;
+    const end2 = folds[i2 + 1] || text2.length;
     if (fold === 0)
       res = `
-${indent}${text.slice(0, end2)}`;
+${indent}${text2.slice(0, end2)}`;
     else {
       if (mode === FOLD_QUOTED && escapedFolds[fold])
-        res += `${text[fold]}\\`;
+        res += `${text2[fold]}\\`;
       res += `
-${indent}${text.slice(fold + 1, end2)}`;
+${indent}${text2.slice(fold + 1, end2)}`;
     }
   }
   return res;
 }
-function consumeMoreIndentedLines(text, i, indent) {
+function consumeMoreIndentedLines(text2, i, indent) {
   let end = i;
   let start = i + 1;
-  let ch = text[start];
+  let ch = text2[start];
   while (ch === " " || ch === "	") {
     if (i < start + indent) {
-      ch = text[++i];
+      ch = text2[++i];
     } else {
       do {
-        ch = text[++i];
+        ch = text2[++i];
       } while (ch && ch !== "\n");
       end = i;
       start = i + 1;
-      ch = text[start];
+      ch = text2[start];
     }
   }
   return end;
@@ -7055,16 +7152,16 @@ function agentIssues({
 }
 
 // src/client/agent-wizard.jsx
-var steps2 = ["\u8EAB\u4EFD", "\u804C\u8D23", "\u80FD\u529B\u4E0E\u9644\u4EF6", "\u68C0\u67E5\u4FDD\u5B58"];
+var steps3 = ["\u8EAB\u4EFD", "\u804C\u8D23", "\u80FD\u529B\u4E0E\u9644\u4EF6", "\u68C0\u67E5\u4FDD\u5B58"];
 function AgentWizard({ resource, onClose, onSave }) {
-  const [initial] = (0, import_react5.useState)(() => readAgent(resource));
-  const [step, setStep] = (0, import_react5.useState)(0), [slug, setSlug] = (0, import_react5.useState)(initial.slug), [name, setName] = (0, import_react5.useState)(resource?.name || ""), [description, setDescription] = (0, import_react5.useState)(initial.description), [goal, setGoal] = (0, import_react5.useState)(initial.goal), [boundaries, setBoundaries] = (0, import_react5.useState)(initial.boundaries), [instructions, setInstructions] = (0, import_react5.useState)(initial.instructions), [model, setModel] = (0, import_react5.useState)(resource?.metadata?.agent?.model || ""), [tags, setTags] = (0, import_react5.useState)((resource?.tags || []).join(", ")), [files, setFiles] = (0, import_react5.useState)(
+  const [initial2] = (0, import_react6.useState)(() => readAgent(resource));
+  const [step, setStep] = (0, import_react6.useState)(0), [slug, setSlug] = (0, import_react6.useState)(initial2.slug), [name, setName] = (0, import_react6.useState)(resource?.name || ""), [description, setDescription] = (0, import_react6.useState)(initial2.description), [goal, setGoal] = (0, import_react6.useState)(initial2.goal), [boundaries, setBoundaries] = (0, import_react6.useState)(initial2.boundaries), [instructions, setInstructions] = (0, import_react6.useState)(initial2.instructions), [model, setModel] = (0, import_react6.useState)(resource?.metadata?.agent?.model || ""), [tags, setTags] = (0, import_react6.useState)((resource?.tags || []).join(", ")), [files, setFiles] = (0, import_react6.useState)(
     (resource?.files || []).filter(
       (f) => !["AGENT.md", "config.json"].includes(f.path)
     )
-  ), [selected, setSelected] = (0, import_react5.useState)(-1), [error, setError] = (0, import_react5.useState)(""), [busy, setBusy] = (0, import_react5.useState)(false), [preview, setPreview] = (0, import_react5.useState)(false);
-  const heading = (0, import_react5.useRef)(null);
-  (0, import_react5.useEffect)(() => {
+  ), [selected, setSelected] = (0, import_react6.useState)(-1), [error, setError] = (0, import_react6.useState)(""), [busy, setBusy] = (0, import_react6.useState)(false), [preview, setPreview] = (0, import_react6.useState)(false);
+  const heading = (0, import_react6.useRef)(null);
+  (0, import_react6.useEffect)(() => {
     heading.current?.focus();
   }, [step]);
   const parsedTags = [
@@ -7080,7 +7177,7 @@ function AgentWizard({ resource, onClose, onSave }) {
   const hasConfig = Object.keys(config).length > 0;
   const document2 = agentDocument(
     { slug, description, goal, boundaries, instructions },
-    initial.extra
+    initial2.extra
   );
   const issues = agentIssues({
     slug,
@@ -7091,7 +7188,7 @@ function AgentWizard({ resource, onClose, onSave }) {
     files,
     config,
     tags: parsedTags,
-    error: initial.error
+    error: initial2.error
   });
   const identityOK = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 64 && !!name.trim() && !!description.trim();
   const dutiesOK = !!goal.trim() && !!instructions.trim() && instructions !== AGENT_TEMPLATE;
@@ -7175,7 +7272,7 @@ function AgentWizard({ resource, onClose, onSave }) {
     }
   }
   const current = files[selected];
-  return /* @__PURE__ */ import_react5.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react5.default.createElement(
+  return /* @__PURE__ */ import_react6.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react6.default.createElement(
     "section",
     {
       className: "gal-dialog gal-skill-wizard gal-agent-wizard",
@@ -7184,8 +7281,8 @@ function AgentWizard({ resource, onClose, onSave }) {
       "aria-label": resource ? "\u7F16\u8F91 Agent" : "\u65B0\u5EFA Agent",
       tabIndex: -1
     },
-    /* @__PURE__ */ import_react5.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react5.default.createElement("h2", null, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "agent" }), " ", resource ? "\u7F16\u8F91 Agent" : "\u65B0\u5EFA Agent"), /* @__PURE__ */ import_react5.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react5.default.createElement("nav", { className: "gal-skill-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps2.map((title, i) => /* @__PURE__ */ import_react5.default.createElement(
+    /* @__PURE__ */ import_react6.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react6.default.createElement("h2", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "agent" }), " ", resource ? "\u7F16\u8F91 Agent" : "\u65B0\u5EFA Agent"), /* @__PURE__ */ import_react6.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "close" }))),
+    /* @__PURE__ */ import_react6.default.createElement("nav", { className: "gal-skill-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps3.map((title, i) => /* @__PURE__ */ import_react6.default.createElement(
       "button",
       {
         key: title,
@@ -7193,10 +7290,10 @@ function AgentWizard({ resource, onClose, onSave }) {
         disabled: busy || i > 0 && !identityOK || i > 1 && !dutiesOK,
         onClick: () => setStep(i)
       },
-      /* @__PURE__ */ import_react5.default.createElement("span", null, i < step ? "\u2713" : i + 1),
+      /* @__PURE__ */ import_react6.default.createElement("span", null, i < step ? "\u2713" : i + 1),
       title
     ))),
-    /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react5.default.createElement("main", null, /* @__PURE__ */ import_react5.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps2[step]), step === 0 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("label", null, "\u82F1\u6587\u6807\u8BC6", /* @__PURE__ */ import_react5.default.createElement(
+    /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react6.default.createElement("main", null, /* @__PURE__ */ import_react6.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps3[step]), step === 0 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("label", null, "\u82F1\u6587\u6807\u8BC6", /* @__PURE__ */ import_react6.default.createElement(
       "input",
       {
         "aria-label": "\u82F1\u6587\u6807\u8BC6",
@@ -7205,7 +7302,7 @@ function AgentWizard({ resource, onClose, onSave }) {
         placeholder: "research-agent",
         onChange: (e) => setSlug(e.target.value)
       }
-    )), /* @__PURE__ */ import_react5.default.createElement("p", null, "\u4F5C\u4E3A Agent \u6587\u4EF6\u5939\u540D\u79F0\uFF0C\u4F7F\u7528\u5C0F\u5199\u82F1\u6587\u3001\u6570\u5B57\u548C\u8FDE\u5B57\u7B26\u3002"), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u663E\u793A\u540D\u79F0", /* @__PURE__ */ import_react5.default.createElement(
+    )), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u4F5C\u4E3A Agent \u6587\u4EF6\u5939\u540D\u79F0\uFF0C\u4F7F\u7528\u5C0F\u5199\u82F1\u6587\u3001\u6570\u5B57\u548C\u8FDE\u5B57\u7B26\u3002"), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u663E\u793A\u540D\u79F0", /* @__PURE__ */ import_react6.default.createElement(
       "input",
       {
         "aria-label": "\u663E\u793A\u540D\u79F0",
@@ -7214,7 +7311,7 @@ function AgentWizard({ resource, onClose, onSave }) {
         placeholder: "\u7814\u7A76\u52A9\u624B",
         onChange: (e) => setName(e.target.value)
       }
-    )), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u7B80\u4ECB", /* @__PURE__ */ import_react5.default.createElement(
+    )), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u7B80\u4ECB", /* @__PURE__ */ import_react6.default.createElement(
       "textarea",
       {
         "aria-label": "\u7B80\u4ECB",
@@ -7224,7 +7321,7 @@ function AgentWizard({ resource, onClose, onSave }) {
         onChange: (e) => setDescription(e.target.value),
         placeholder: "\u8BF4\u660E\u8FD9\u4E2A Agent \u8D1F\u8D23\u4EC0\u4E48\u3002"
       }
-    ))), step === 1 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("label", null, "\u4EFB\u52A1\u76EE\u6807", /* @__PURE__ */ import_react5.default.createElement(
+    ))), step === 1 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("label", null, "\u4EFB\u52A1\u76EE\u6807", /* @__PURE__ */ import_react6.default.createElement(
       "textarea",
       {
         "aria-label": "\u4EFB\u52A1\u76EE\u6807",
@@ -7233,7 +7330,7 @@ function AgentWizard({ resource, onClose, onSave }) {
         onChange: (e) => setGoal(e.target.value),
         placeholder: "\u4F8B\u5982\uFF1A\u7814\u7A76\u8D44\u6599\u5E76\u63D0\u4F9B\u6709\u6765\u6E90\u7684\u7ED3\u8BBA"
       }
-    )), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u5904\u7406\u8FB9\u754C\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react5.default.createElement(
+    )), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u5904\u7406\u8FB9\u754C\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react6.default.createElement(
       "textarea",
       {
         "aria-label": "\u5904\u7406\u8FB9\u754C",
@@ -7242,14 +7339,14 @@ function AgentWizard({ resource, onClose, onSave }) {
         onChange: (e) => setBoundaries(e.target.value),
         placeholder: "\u8BF4\u660E\u4E0D\u5F97\u6267\u884C\u7684\u64CD\u4F5C\u6216\u9700\u8981\u786E\u8BA4\u7684\u60C5\u51B5"
       }
-    )), /* @__PURE__ */ import_react5.default.createElement(
+    )), /* @__PURE__ */ import_react6.default.createElement(
       "button",
       {
         "aria-pressed": preview,
         onClick: () => setPreview(!preview)
       },
       preview ? "\u7EE7\u7EED\u7F16\u8F91" : "\u9884\u89C8\u6307\u5F15"
-    ), preview ? /* @__PURE__ */ import_react5.default.createElement("pre", { className: "gal-skill-preview" }, document2) : /* @__PURE__ */ import_react5.default.createElement("label", null, "\u884C\u4E3A\u6307\u5F15", /* @__PURE__ */ import_react5.default.createElement(
+    ), preview ? /* @__PURE__ */ import_react6.default.createElement("pre", { className: "gal-skill-preview" }, document2) : /* @__PURE__ */ import_react6.default.createElement("label", null, "\u884C\u4E3A\u6307\u5F15", /* @__PURE__ */ import_react6.default.createElement(
       "textarea",
       {
         "aria-label": "\u884C\u4E3A\u6307\u5F15",
@@ -7258,7 +7355,7 @@ function AgentWizard({ resource, onClose, onSave }) {
         value: instructions,
         onChange: (e) => setInstructions(e.target.value)
       }
-    ))), step === 2 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("p", null, "\u914D\u7F6E\u4F1A\u968F Agent \u4FDD\u5B58\uFF1B\u5B9E\u9645\u8FD0\u884C\u63A5\u5165 DSH Agent \u540E\u751F\u6548\u3002"), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u6A21\u578B\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react5.default.createElement(
+    ))), step === 2 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("p", null, "\u914D\u7F6E\u4F1A\u968F Agent \u4FDD\u5B58\uFF1B\u5B9E\u9645\u8FD0\u884C\u63A5\u5165 DSH Agent \u540E\u751F\u6548\u3002"), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u6A21\u578B\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react6.default.createElement(
       "input",
       {
         "aria-label": "\u6A21\u578B",
@@ -7266,10 +7363,10 @@ function AgentWizard({ resource, onClose, onSave }) {
         onChange: (e) => setModel(e.target.value),
         placeholder: "\u4F7F\u7528\u8FD0\u884C\u73AF\u5883\u9ED8\u8BA4\u6A21\u578B"
       }
-    )), /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-folders" }, [
+    )), /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-folders" }, [
       ["references", "\u53C2\u8003\u8D44\u6599"],
       ["assets", "\u7D20\u6750\u6A21\u677F"]
-    ].map(([folder, title]) => /* @__PURE__ */ import_react5.default.createElement(
+    ].map(([folder, title]) => /* @__PURE__ */ import_react6.default.createElement(
       "section",
       {
         className: "gal-skill-folder",
@@ -7280,10 +7377,10 @@ function AgentWizard({ resource, onClose, onSave }) {
           upload(folder, e.dataTransfer.files);
         }
       },
-      /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "folder", size: 28 }),
-      /* @__PURE__ */ import_react5.default.createElement("h3", null, title),
-      /* @__PURE__ */ import_react5.default.createElement("code", null, folder, "/"),
-      /* @__PURE__ */ import_react5.default.createElement("label", { className: "gal-upload" }, "\u4E0A\u4F20\u6587\u4EF6", /* @__PURE__ */ import_react5.default.createElement(
+      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "folder", size: 28 }),
+      /* @__PURE__ */ import_react6.default.createElement("h3", null, title),
+      /* @__PURE__ */ import_react6.default.createElement("code", null, folder, "/"),
+      /* @__PURE__ */ import_react6.default.createElement("label", { className: "gal-upload" }, "\u4E0A\u4F20\u6587\u4EF6", /* @__PURE__ */ import_react6.default.createElement(
         "input",
         {
           "aria-label": `\u4E0A\u4F20${title}`,
@@ -7296,7 +7393,7 @@ function AgentWizard({ resource, onClose, onSave }) {
           }
         }
       )),
-      /* @__PURE__ */ import_react5.default.createElement(
+      /* @__PURE__ */ import_react6.default.createElement(
         "button",
         {
           disabled: busy || files.length >= 98,
@@ -7314,16 +7411,16 @@ function AgentWizard({ resource, onClose, onSave }) {
         },
         "\u65B0\u5EFA\u6587\u672C"
       ),
-      /* @__PURE__ */ import_react5.default.createElement("span", null, files.filter((f) => f.path.startsWith(folder + "/")).length, " ", "\u4E2A\u6587\u4EF6")
-    ))), /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-attachments" }, /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-filelist" }, files.map((f, i) => /* @__PURE__ */ import_react5.default.createElement("div", { key: i }, /* @__PURE__ */ import_react5.default.createElement(
+      /* @__PURE__ */ import_react6.default.createElement("span", null, files.filter((f) => f.path.startsWith(folder + "/")).length, " ", "\u4E2A\u6587\u4EF6")
+    ))), /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-attachments" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-filelist" }, files.map((f, i) => /* @__PURE__ */ import_react6.default.createElement("div", { key: i }, /* @__PURE__ */ import_react6.default.createElement(
       "button",
       {
         onClick: () => setSelected(i),
         "aria-pressed": selected === i
       },
-      /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "file" }),
+      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "file" }),
       f.path
-    ), /* @__PURE__ */ import_react5.default.createElement(
+    ), /* @__PURE__ */ import_react6.default.createElement(
       "button",
       {
         "aria-label": `\u5220\u9664 ${f.path}`,
@@ -7332,8 +7429,8 @@ function AgentWizard({ resource, onClose, onSave }) {
           setSelected(-1);
         }
       },
-      /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "close" })
-    )))), current && /* @__PURE__ */ import_react5.default.createElement("fieldset", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("label", null, "\u6587\u4EF6\u8DEF\u5F84", /* @__PURE__ */ import_react5.default.createElement(
+      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "close" })
+    )))), current && /* @__PURE__ */ import_react6.default.createElement("fieldset", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("label", null, "\u6587\u4EF6\u8DEF\u5F84", /* @__PURE__ */ import_react6.default.createElement(
       "input",
       {
         "aria-label": "\u6587\u4EF6\u8DEF\u5F84",
@@ -7344,7 +7441,7 @@ function AgentWizard({ resource, onClose, onSave }) {
           )
         )
       }
-    )), current.encoding === "utf8" ? /* @__PURE__ */ import_react5.default.createElement("label", null, "\u6587\u4EF6\u5185\u5BB9", /* @__PURE__ */ import_react5.default.createElement(
+    )), current.encoding === "utf8" ? /* @__PURE__ */ import_react6.default.createElement("label", null, "\u6587\u4EF6\u5185\u5BB9", /* @__PURE__ */ import_react6.default.createElement(
       "textarea",
       {
         "aria-label": "\u6587\u4EF6\u5185\u5BB9",
@@ -7356,7 +7453,7 @@ function AgentWizard({ resource, onClose, onSave }) {
           )
         )
       }
-    )) : /* @__PURE__ */ import_react5.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u968F\u8D44\u6E90\u4FDD\u5B58\u3002")))), step === 3 && /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "agent", size: 36 }), /* @__PURE__ */ import_react5.default.createElement("h2", null, name), /* @__PURE__ */ import_react5.default.createElement("p", null, description), /* @__PURE__ */ import_react5.default.createElement("span", null, files.length + 1 + (hasConfig ? 1 : 0), " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react5.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react5.default.createElement(
+    )) : /* @__PURE__ */ import_react6.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u968F\u8D44\u6E90\u4FDD\u5B58\u3002")))), step === 3 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "agent", size: 36 }), /* @__PURE__ */ import_react6.default.createElement("h2", null, name), /* @__PURE__ */ import_react6.default.createElement("p", null, description), /* @__PURE__ */ import_react6.default.createElement("span", null, files.length + 1 + (hasConfig ? 1 : 0), " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react6.default.createElement(
       "input",
       {
         "aria-label": "\u6807\u7B7E",
@@ -7364,15 +7461,15 @@ function AgentWizard({ resource, onClose, onSave }) {
         onChange: (e) => setTags(e.target.value),
         placeholder: "\u4F8B\u5982\uFF1A\u7814\u7A76\uFF0C\u5206\u6790"
       }
-    )), issues.length ? /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-error", role: "alert" }, issues.map((x) => /* @__PURE__ */ import_react5.default.createElement("p", { key: x }, x))) : /* @__PURE__ */ import_react5.default.createElement("p", { className: "gal-skill-ok" }, "\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58"), /* @__PURE__ */ import_react5.default.createElement("details", null, /* @__PURE__ */ import_react5.default.createElement("summary", null, "\u67E5\u770B AGENT.md"), /* @__PURE__ */ import_react5.default.createElement("pre", { className: "gal-skill-preview" }, document2)), hasConfig && /* @__PURE__ */ import_react5.default.createElement("details", null, /* @__PURE__ */ import_react5.default.createElement("summary", null, "\u67E5\u770B config.json"), /* @__PURE__ */ import_react5.default.createElement("pre", { className: "gal-skill-preview" }, JSON.stringify(config, null, 2)))), error && /* @__PURE__ */ import_react5.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react5.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react5.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react5.default.createElement("strong", null, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "folder" }), " ", slug || "my-agent", "/"), /* @__PURE__ */ import_react5.default.createElement("div", null, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "file" }), " AGENT.md"), hasConfig && /* @__PURE__ */ import_react5.default.createElement("div", null, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "file" }), " config.json"), files.map((f, i) => /* @__PURE__ */ import_react5.default.createElement("div", { key: i }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "file" }), " ", f.path)))),
-    /* @__PURE__ */ import_react5.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react5.default.createElement(
+    )), issues.length ? /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-error", role: "alert" }, issues.map((x) => /* @__PURE__ */ import_react6.default.createElement("p", { key: x }, x))) : /* @__PURE__ */ import_react6.default.createElement("p", { className: "gal-skill-ok" }, "\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58"), /* @__PURE__ */ import_react6.default.createElement("details", null, /* @__PURE__ */ import_react6.default.createElement("summary", null, "\u67E5\u770B AGENT.md"), /* @__PURE__ */ import_react6.default.createElement("pre", { className: "gal-skill-preview" }, document2)), hasConfig && /* @__PURE__ */ import_react6.default.createElement("details", null, /* @__PURE__ */ import_react6.default.createElement("summary", null, "\u67E5\u770B config.json"), /* @__PURE__ */ import_react6.default.createElement("pre", { className: "gal-skill-preview" }, JSON.stringify(config, null, 2)))), error && /* @__PURE__ */ import_react6.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react6.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react6.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react6.default.createElement("strong", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "folder" }), " ", slug || "my-agent", "/"), /* @__PURE__ */ import_react6.default.createElement("div", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "file" }), " AGENT.md"), hasConfig && /* @__PURE__ */ import_react6.default.createElement("div", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "file" }), " config.json"), files.map((f, i) => /* @__PURE__ */ import_react6.default.createElement("div", { key: i }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "file" }), " ", f.path)))),
+    /* @__PURE__ */ import_react6.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react6.default.createElement(
       "button",
       {
         disabled: busy,
         onClick: step ? () => setStep(step - 1) : onClose
       },
       step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"
-    ), step < 3 ? /* @__PURE__ */ import_react5.default.createElement(
+    ), step < 3 ? /* @__PURE__ */ import_react6.default.createElement(
       "button",
       {
         className: "gal-primary",
@@ -7380,8 +7477,8 @@ function AgentWizard({ resource, onClose, onSave }) {
         onClick: () => setStep(step + 1)
       },
       step === 2 ? "\u4E0B\u4E00\u6B65" : "\u4E0B\u4E00\u6B65",
-      /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "arrow" })
-    ) : /* @__PURE__ */ import_react5.default.createElement(
+      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "arrow" })
+    ) : /* @__PURE__ */ import_react6.default.createElement(
       "button",
       {
         className: "gal-primary",
@@ -7394,7 +7491,7 @@ function AgentWizard({ resource, onClose, onSave }) {
 }
 
 // src/client/skill-wizard.jsx
-var import_react6 = __toESM(require("react"), 1);
+var import_react7 = __toESM(require("react"), 1);
 
 // src/client/skill-format.mjs
 var SKILL_TEMPLATE = `# \u6267\u884C\u6307\u5F15
@@ -7426,9 +7523,9 @@ function readSkill(resource) {
       frontmatter: {}
     };
   const file = resource.files.find((f) => f.path === "SKILL.md");
-  let text = file?.content || "";
+  let text2 = file?.content || "";
   let frontmatter = {}, error = "";
-  const legacy = text.match(
+  const legacy = text2.match(
     /^---\\nname: ("(?:\\.|[^"\\])*")\\ndescription: ("(?:\\.|[^"\\])*")\\n---\\n\\n/
   );
   if (legacy) {
@@ -7436,9 +7533,9 @@ function readSkill(resource) {
       name: JSON.parse(legacy[1]),
       description: JSON.parse(legacy[2])
     };
-    text = text.slice(legacy[0].length).replace(/\\n$/, "");
+    text2 = text2.slice(legacy[0].length).replace(/\\n$/, "");
   } else {
-    const header = text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+    const header = text2.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
     if (header) {
       try {
         const doc = parseDocument(header[1]);
@@ -7446,7 +7543,7 @@ function readSkill(resource) {
         frontmatter = doc.toJS();
         if (!frontmatter || typeof frontmatter !== "object" || Array.isArray(frontmatter))
           throw new Error("\u6587\u4EF6\u5934\u5FC5\u987B\u662F YAML \u5BF9\u8C61");
-        text = text.slice(header[0].length).replace(/^\r?\n/, "");
+        text2 = text2.slice(header[0].length).replace(/^\r?\n/, "");
       } catch (e) {
         error = `SKILL.md \u6587\u4EF6\u5934\u65E0\u6CD5\u89E3\u6790\uFF1A${e.message}`;
         frontmatter = {};
@@ -7457,7 +7554,7 @@ function readSkill(resource) {
   return {
     name: typeof frontmatter.name === "string" ? frontmatter.name : resource.name,
     description: typeof frontmatter.description === "string" ? frontmatter.description : resource.description,
-    body: text,
+    body: text2,
     files: resource.files.filter((f) => f.path !== "SKILL.md"),
     frontmatter,
     error
@@ -7526,25 +7623,25 @@ ${ATTACHMENTS_END}`;
 }
 
 // src/client/skill-wizard.jsx
-var steps3 = ["\u57FA\u672C\u4FE1\u606F", "\u7F16\u5199\u6307\u5F15", "\u9644\u5C5E\u6587\u4EF6", "\u68C0\u67E5\u4FDD\u5B58"];
+var steps4 = ["\u57FA\u672C\u4FE1\u606F", "\u7F16\u5199\u6307\u5F15", "\u9644\u5C5E\u6587\u4EF6", "\u68C0\u67E5\u4FDD\u5B58"];
 var folders = [
   ["references", "\u53C2\u8003\u8D44\u6599", "\u6267\u884C\u65F6\u9700\u8981\u67E5\u9605\u7684\u6587\u6863", "file"],
   ["scripts", "\u8F85\u52A9\u811A\u672C", "\u6267\u884C\u4EFB\u52A1\u9700\u8981\u8FD0\u884C\u7684\u4EE3\u7801", "settings"],
   ["assets", "\u7D20\u6750\u6A21\u677F", "\u6A21\u677F\u3001\u56FE\u7247\u53CA\u5176\u4ED6\u7D20\u6750", "folder"]
 ];
-function Preview({ text }) {
-  return /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-preview" }, text.split("\n").map((line, i) => {
-    if (/^### /.test(line)) return /* @__PURE__ */ import_react6.default.createElement("h4", { key: i }, line.slice(4));
-    if (/^## /.test(line)) return /* @__PURE__ */ import_react6.default.createElement("h3", { key: i }, line.slice(3));
-    if (/^# /.test(line)) return /* @__PURE__ */ import_react6.default.createElement("h2", { key: i }, line.slice(2));
-    return /* @__PURE__ */ import_react6.default.createElement("p", { key: i }, line || "\xA0");
+function Preview({ text: text2 }) {
+  return /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-preview" }, text2.split("\n").map((line, i) => {
+    if (/^### /.test(line)) return /* @__PURE__ */ import_react7.default.createElement("h4", { key: i }, line.slice(4));
+    if (/^## /.test(line)) return /* @__PURE__ */ import_react7.default.createElement("h3", { key: i }, line.slice(3));
+    if (/^# /.test(line)) return /* @__PURE__ */ import_react7.default.createElement("h2", { key: i }, line.slice(2));
+    return /* @__PURE__ */ import_react7.default.createElement("p", { key: i }, line || "\xA0");
   }));
 }
 function SkillWizard({ resource, onClose, onSave }) {
-  const [initial] = (0, import_react6.useState)(() => readSkill(resource));
-  const [step, setStep] = (0, import_react6.useState)(0), [name, setName] = (0, import_react6.useState)(initial.name), [description, setDescription] = (0, import_react6.useState)(initial.description), [body, setBody] = (0, import_react6.useState)(initial.body), [files, setFiles] = (0, import_react6.useState)(initial.files), [tags, setTags] = (0, import_react6.useState)((resource?.tags || []).join(", ")), [active, setActive] = (0, import_react6.useState)(-1), [preview, setPreview] = (0, import_react6.useState)(false), [error, setError] = (0, import_react6.useState)(""), [busy, setBusy] = (0, import_react6.useState)(false);
-  const heading = (0, import_react6.useRef)(null);
-  (0, import_react6.useEffect)(() => {
+  const [initial2] = (0, import_react7.useState)(() => readSkill(resource));
+  const [step, setStep] = (0, import_react7.useState)(0), [name, setName] = (0, import_react7.useState)(initial2.name), [description, setDescription] = (0, import_react7.useState)(initial2.description), [body, setBody] = (0, import_react7.useState)(initial2.body), [files, setFiles] = (0, import_react7.useState)(initial2.files), [tags, setTags] = (0, import_react7.useState)((resource?.tags || []).join(", ")), [active, setActive] = (0, import_react7.useState)(-1), [preview, setPreview] = (0, import_react7.useState)(false), [error, setError] = (0, import_react7.useState)(""), [busy, setBusy] = (0, import_react7.useState)(false);
+  const heading = (0, import_react7.useRef)(null);
+  (0, import_react7.useEffect)(() => {
     heading.current?.focus();
   }, [step]);
   const linkedBody = syncSkillAttachments(body, files);
@@ -7552,9 +7649,9 @@ function SkillWizard({ resource, onClose, onSave }) {
     name,
     description,
     linkedBody,
-    initial.frontmatter
+    initial2.frontmatter
   );
-  (0, import_react6.useEffect)(() => {
+  (0, import_react7.useEffect)(() => {
     setBody((value) => syncSkillAttachments(value, files));
   }, [files]);
   const parsedTags = [
@@ -7565,7 +7662,7 @@ function SkillWizard({ resource, onClose, onSave }) {
   const issues = [
     ...parsedTags.length > 20 ? ["\u6700\u591A\u6DFB\u52A0 20 \u4E2A\u6807\u7B7E\u3002"] : [],
     ...parsedTags.some((tag) => tag.length > 40) ? ["\u6BCF\u4E2A\u6807\u7B7E\u6700\u591A 40 \u4E2A\u5B57\u7B26\u3002"] : [],
-    ...initial.error ? [initial.error] : [],
+    ...initial2.error ? [initial2.error] : [],
     ...skillIssues(name, description, linkedBody, files)
   ];
   const basicValid = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) && name.length <= 64 && !!description.trim() && description.length <= 1024;
@@ -7641,7 +7738,7 @@ function SkillWizard({ resource, onClose, onSave }) {
     }
   }
   const current = files[active];
-  return /* @__PURE__ */ import_react6.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react6.default.createElement(
+  return /* @__PURE__ */ import_react7.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react7.default.createElement(
     "section",
     {
       className: "gal-dialog gal-skill-wizard",
@@ -7650,8 +7747,8 @@ function SkillWizard({ resource, onClose, onSave }) {
       "aria-label": resource ? "\u7F16\u8F91 Skill" : "\u65B0\u5EFA Skill",
       tabIndex: -1
     },
-    /* @__PURE__ */ import_react6.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react6.default.createElement("h2", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "skill" }), " ", resource ? "\u7F16\u8F91 Skill" : "\u65B0\u5EFA Skill"), /* @__PURE__ */ import_react6.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react6.default.createElement("nav", { className: "gal-skill-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps3.map((title, i) => /* @__PURE__ */ import_react6.default.createElement(
+    /* @__PURE__ */ import_react7.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react7.default.createElement("h2", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "skill" }), " ", resource ? "\u7F16\u8F91 Skill" : "\u65B0\u5EFA Skill"), /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))),
+    /* @__PURE__ */ import_react7.default.createElement("nav", { className: "gal-skill-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps4.map((title, i) => /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         key: title,
@@ -7659,10 +7756,10 @@ function SkillWizard({ resource, onClose, onSave }) {
         "aria-current": step === i ? "step" : void 0,
         onClick: () => go(i)
       },
-      /* @__PURE__ */ import_react6.default.createElement("span", null, i < step ? "\u2713" : i + 1),
+      /* @__PURE__ */ import_react7.default.createElement("span", null, i < step ? "\u2713" : i + 1),
       title
     ))),
-    /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react6.default.createElement("main", null, /* @__PURE__ */ import_react6.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps3[step]), step === 0 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("label", null, "Skill \u540D\u79F0", /* @__PURE__ */ import_react6.default.createElement(
+    /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react7.default.createElement("main", null, /* @__PURE__ */ import_react7.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps4[step]), step === 0 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("label", null, "Skill \u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
         value: name,
@@ -7670,7 +7767,7 @@ function SkillWizard({ resource, onClose, onSave }) {
         placeholder: "code-review",
         onChange: (e) => setName(e.target.value)
       }
-    )), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u4F7F\u7528\u5C0F\u5199\u82F1\u6587\u3001\u6570\u5B57\u548C\u8FDE\u5B57\u7B26\uFF0C\u4E5F\u4F5C\u4E3A\u6587\u4EF6\u5939\u540D\u79F0\u3002"), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react6.default.createElement(
+    )), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u4F7F\u7528\u5C0F\u5199\u82F1\u6587\u3001\u6570\u5B57\u548C\u8FDE\u5B57\u7B26\uFF0C\u4E5F\u4F5C\u4E3A\u6587\u4EF6\u5939\u540D\u79F0\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react7.default.createElement(
       "textarea",
       {
         "aria-label": "\u63CF\u8FF0",
@@ -7680,14 +7777,14 @@ function SkillWizard({ resource, onClose, onSave }) {
         placeholder: "\u5BA1\u67E5\u4EE3\u7801\u6539\u52A8\uFF0C\u5728\u4EE3\u7801\u8BC4\u5BA1\u6216\u63D0\u4EA4\u524D\u68C0\u67E5\u65F6\u4F7F\u7528\u3002",
         onChange: (e) => setDescription(e.target.value)
       }
-    )), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u8BF4\u660E\u5B83\u80FD\u505A\u4EC0\u4E48\uFF0C\u4EE5\u53CA\u4EC0\u4E48\u65F6\u5019\u4F7F\u7528\u3002")), step === 1 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("p", null, "\u5199\u6E05\u76EE\u6807\u3001\u6267\u884C\u6B65\u9AA4\u548C\u8F93\u51FA\u8981\u6C42\u3002\u540D\u79F0\u4E0E\u63CF\u8FF0\u4F1A\u81EA\u52A8\u5199\u5165\u6587\u4EF6\u9876\u90E8\u3002"), /* @__PURE__ */ import_react6.default.createElement(
+    )), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u8BF4\u660E\u5B83\u80FD\u505A\u4EC0\u4E48\uFF0C\u4EE5\u53CA\u4EC0\u4E48\u65F6\u5019\u4F7F\u7528\u3002")), step === 1 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("p", null, "\u5199\u6E05\u76EE\u6807\u3001\u6267\u884C\u6B65\u9AA4\u548C\u8F93\u51FA\u8981\u6C42\u3002\u540D\u79F0\u4E0E\u63CF\u8FF0\u4F1A\u81EA\u52A8\u5199\u5165\u6587\u4EF6\u9876\u90E8\u3002"), /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         "aria-pressed": preview,
         onClick: () => setPreview(!preview)
       },
       preview ? "\u7EE7\u7EED\u7F16\u8F91" : "\u9884\u89C8\u6B63\u6587"
-    ), preview ? /* @__PURE__ */ import_react6.default.createElement(Preview, { text: body }) : /* @__PURE__ */ import_react6.default.createElement("label", null, "\u6267\u884C\u6307\u5F15", /* @__PURE__ */ import_react6.default.createElement(
+    ), preview ? /* @__PURE__ */ import_react7.default.createElement(Preview, { text: body }) : /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6267\u884C\u6307\u5F15", /* @__PURE__ */ import_react7.default.createElement(
       "textarea",
       {
         "aria-label": "\u6267\u884C\u6307\u5F15",
@@ -7696,7 +7793,7 @@ function SkillWizard({ resource, onClose, onSave }) {
         value: body,
         onChange: (e) => setBody(e.target.value)
       }
-    ))), step === 2 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("p", null, "\u6309\u9700\u6DFB\u52A0\uFF0C\u6587\u4EF6\u8DEF\u5F84\u4F1A\u81EA\u52A8\u5199\u5165\u6307\u5F15\u3002"), /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-folders" }, folders.map(([folder, title, hint, icon]) => /* @__PURE__ */ import_react6.default.createElement(
+    ))), step === 2 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("p", null, "\u6309\u9700\u6DFB\u52A0\uFF0C\u6587\u4EF6\u8DEF\u5F84\u4F1A\u81EA\u52A8\u5199\u5165\u6307\u5F15\u3002"), /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-folders" }, folders.map(([folder, title, hint, icon]) => /* @__PURE__ */ import_react7.default.createElement(
       "section",
       {
         key: folder,
@@ -7707,11 +7804,11 @@ function SkillWizard({ resource, onClose, onSave }) {
           if (!busy) upload(folder, e.dataTransfer.files);
         }
       },
-      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: icon, size: 28 }),
-      /* @__PURE__ */ import_react6.default.createElement("h3", null, title),
-      /* @__PURE__ */ import_react6.default.createElement("code", null, folder, "/"),
-      /* @__PURE__ */ import_react6.default.createElement("p", null, hint),
-      /* @__PURE__ */ import_react6.default.createElement("label", { className: "gal-upload" }, "\u4E0A\u4F20\u6216\u62D6\u5165", /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: icon, size: 28 }),
+      /* @__PURE__ */ import_react7.default.createElement("h3", null, title),
+      /* @__PURE__ */ import_react7.default.createElement("code", null, folder, "/"),
+      /* @__PURE__ */ import_react7.default.createElement("p", null, hint),
+      /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-upload" }, "\u4E0A\u4F20\u6216\u62D6\u5165", /* @__PURE__ */ import_react7.default.createElement(
         "input",
         {
           "aria-label": `\u4E0A\u4F20${title}`,
@@ -7724,7 +7821,7 @@ function SkillWizard({ resource, onClose, onSave }) {
           }
         }
       )),
-      /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement(
         "button",
         {
           disabled: busy || files.length >= 99,
@@ -7732,16 +7829,16 @@ function SkillWizard({ resource, onClose, onSave }) {
         },
         "\u65B0\u5EFA\u6587\u4EF6"
       ),
-      /* @__PURE__ */ import_react6.default.createElement("span", null, files.filter((f) => f.path.startsWith(folder + "/")).length, " ", "\u4E2A\u6587\u4EF6")
-    ))), /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-attachments" }, files.length > 0 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-filelist" }, files.map((f, i) => /* @__PURE__ */ import_react6.default.createElement("div", { key: i }, /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement("span", null, files.filter((f) => f.path.startsWith(folder + "/")).length, " ", "\u4E2A\u6587\u4EF6")
+    ))), /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-attachments" }, files.length > 0 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-filelist" }, files.map((f, i) => /* @__PURE__ */ import_react7.default.createElement("div", { key: i }, /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         onClick: () => setActive(i),
         "aria-pressed": active === i
       },
-      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "file" }),
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "file" }),
       f.path
-    ), /* @__PURE__ */ import_react6.default.createElement(
+    ), /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         "aria-label": `\u5220\u9664 ${f.path}`,
@@ -7751,8 +7848,8 @@ function SkillWizard({ resource, onClose, onSave }) {
           setActive(-1);
         }
       },
-      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "close" })
-    )))), current && /* @__PURE__ */ import_react6.default.createElement("fieldset", { disabled: busy, className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("label", null, "\u6587\u4EF6\u8DEF\u5F84", /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" })
+    )))), current && /* @__PURE__ */ import_react7.default.createElement("fieldset", { disabled: busy, className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6587\u4EF6\u8DEF\u5F84", /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
         value: current.path,
@@ -7762,7 +7859,7 @@ function SkillWizard({ resource, onClose, onSave }) {
           )
         )
       }
-    )), current.encoding === "utf8" ? /* @__PURE__ */ import_react6.default.createElement("label", null, "\u6587\u4EF6\u5185\u5BB9", /* @__PURE__ */ import_react6.default.createElement(
+    )), current.encoding === "utf8" ? /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6587\u4EF6\u5185\u5BB9", /* @__PURE__ */ import_react7.default.createElement(
       "textarea",
       {
         "aria-label": "\u6587\u4EF6\u5185\u5BB9",
@@ -7774,7 +7871,7 @@ function SkillWizard({ resource, onClose, onSave }) {
           )
         )
       }
-    )) : /* @__PURE__ */ import_react6.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5C06\u539F\u6837\u4FDD\u5B58\u3002")))), step === 3 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "skill", size: 36 }), /* @__PURE__ */ import_react6.default.createElement("h2", null, name), /* @__PURE__ */ import_react6.default.createElement("p", null, description), /* @__PURE__ */ import_react6.default.createElement("span", null, files.length + 1, " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react6.default.createElement(
+    )) : /* @__PURE__ */ import_react7.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5C06\u539F\u6837\u4FDD\u5B58\u3002")))), step === 3 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "skill", size: 36 }), /* @__PURE__ */ import_react7.default.createElement("h2", null, name), /* @__PURE__ */ import_react7.default.createElement("p", null, description), /* @__PURE__ */ import_react7.default.createElement("span", null, files.length + 1, " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
         "aria-label": "\u6807\u7B7E",
@@ -7782,10 +7879,10 @@ function SkillWizard({ resource, onClose, onSave }) {
         onChange: (e) => setTags(e.target.value),
         placeholder: "\u4F8B\u5982\uFF1A\u5F00\u53D1\uFF0C\u4EE3\u7801\u5BA1\u67E5"
       }
-    )), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u7528\u9017\u53F7\u5206\u9694\uFF0C\u6700\u591A 20 \u4E2A\u6807\u7B7E\u3002"), !!parsedTags.length && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-tags" }, parsedTags.map((tag) => /* @__PURE__ */ import_react6.default.createElement("span", { key: tag }, tag))), issues.length ? /* @__PURE__ */ import_react6.default.createElement("div", { role: "alert", className: "gal-error" }, issues.map((x) => /* @__PURE__ */ import_react6.default.createElement("p", { key: x }, x))) : /* @__PURE__ */ import_react6.default.createElement("p", { className: "gal-skill-ok" }, "\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58"), /* @__PURE__ */ import_react6.default.createElement("details", null, /* @__PURE__ */ import_react6.default.createElement("summary", null, "\u67E5\u770B SKILL.md"), /* @__PURE__ */ import_react6.default.createElement("pre", { className: "gal-skill-preview" }, document2))), error && /* @__PURE__ */ import_react6.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react6.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react6.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react6.default.createElement("strong", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "folder" }), " ", name || "my-skill", "/"), /* @__PURE__ */ import_react6.default.createElement("div", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "file" }), " SKILL.md"), folders.map(
-      ([folder]) => files.some((f) => f.path.startsWith(folder + "/")) && /* @__PURE__ */ import_react6.default.createElement("div", { key: folder }, /* @__PURE__ */ import_react6.default.createElement("strong", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "folder" }), " ", folder, "/"), files.filter((f) => f.path.startsWith(folder + "/")).map((f, i) => /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-leaf", key: i }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "file" }), f.path.slice(folder.length + 1))))
+    )), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u7528\u9017\u53F7\u5206\u9694\uFF0C\u6700\u591A 20 \u4E2A\u6807\u7B7E\u3002"), !!parsedTags.length && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-tags" }, parsedTags.map((tag) => /* @__PURE__ */ import_react7.default.createElement("span", { key: tag }, tag))), issues.length ? /* @__PURE__ */ import_react7.default.createElement("div", { role: "alert", className: "gal-error" }, issues.map((x) => /* @__PURE__ */ import_react7.default.createElement("p", { key: x }, x))) : /* @__PURE__ */ import_react7.default.createElement("p", { className: "gal-skill-ok" }, "\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58"), /* @__PURE__ */ import_react7.default.createElement("details", null, /* @__PURE__ */ import_react7.default.createElement("summary", null, "\u67E5\u770B SKILL.md"), /* @__PURE__ */ import_react7.default.createElement("pre", { className: "gal-skill-preview" }, document2))), error && /* @__PURE__ */ import_react7.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react7.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react7.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react7.default.createElement("strong", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "folder" }), " ", name || "my-skill", "/"), /* @__PURE__ */ import_react7.default.createElement("div", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "file" }), " SKILL.md"), folders.map(
+      ([folder]) => files.some((f) => f.path.startsWith(folder + "/")) && /* @__PURE__ */ import_react7.default.createElement("div", { key: folder }, /* @__PURE__ */ import_react7.default.createElement("strong", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "folder" }), " ", folder, "/"), files.filter((f) => f.path.startsWith(folder + "/")).map((f, i) => /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-leaf", key: i }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "file" }), f.path.slice(folder.length + 1))))
     ))),
-    /* @__PURE__ */ import_react6.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react6.default.createElement("button", { disabled: busy, onClick: step ? () => go(step - 1) : onClose }, step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"), step < 3 ? /* @__PURE__ */ import_react6.default.createElement(
+    /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react7.default.createElement("button", { disabled: busy, onClick: step ? () => go(step - 1) : onClose }, step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"), step < 3 ? /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         className: "gal-primary",
@@ -7794,8 +7891,8 @@ function SkillWizard({ resource, onClose, onSave }) {
       },
       step === 2 && !files.length ? "\u8DF3\u8FC7\uFF0C\u68C0\u67E5\u4FDD\u5B58" : "\u4E0B\u4E00\u6B65",
       " ",
-      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "arrow" })
-    ) : /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "arrow" })
+    ) : /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         className: "gal-primary",
@@ -7808,9 +7905,9 @@ function SkillWizard({ resource, onClose, onSave }) {
 }
 
 // src/client/brand-icon.jsx
-var import_react7 = __toESM(require("react"), 1);
+var import_react8 = __toESM(require("react"), 1);
 function BrandIcon({ size = 20 }) {
-  return /* @__PURE__ */ import_react7.default.createElement(
+  return /* @__PURE__ */ import_react8.default.createElement(
     "svg",
     {
       width: size,
@@ -7820,7 +7917,7 @@ function BrandIcon({ size = 20 }) {
       "aria-hidden": "true",
       focusable: "false"
     },
-    /* @__PURE__ */ import_react7.default.createElement(
+    /* @__PURE__ */ import_react8.default.createElement(
       "path",
       {
         d: "M8 12h16l1 14H7l1-14Z",
@@ -7829,7 +7926,7 @@ function BrandIcon({ size = 20 }) {
         strokeLinejoin: "round"
       }
     ),
-    /* @__PURE__ */ import_react7.default.createElement(
+    /* @__PURE__ */ import_react8.default.createElement(
       "path",
       {
         d: "M12 12V9a4 4 0 0 1 8 0v3",
@@ -7838,10 +7935,10 @@ function BrandIcon({ size = 20 }) {
         strokeLinecap: "round"
       }
     ),
-    /* @__PURE__ */ import_react7.default.createElement("rect", { x: "11", y: "16", width: "4", height: "3", rx: ".8", fill: "currentColor" }),
-    /* @__PURE__ */ import_react7.default.createElement("rect", { x: "17", y: "16", width: "4", height: "3", rx: ".8", fill: "currentColor" }),
-    /* @__PURE__ */ import_react7.default.createElement("rect", { x: "11", y: "21", width: "4", height: "3", rx: ".8", fill: "currentColor" }),
-    /* @__PURE__ */ import_react7.default.createElement("rect", { x: "17", y: "21", width: "4", height: "3", rx: ".8", fill: "currentColor" })
+    /* @__PURE__ */ import_react8.default.createElement("rect", { x: "11", y: "16", width: "4", height: "3", rx: ".8", fill: "currentColor" }),
+    /* @__PURE__ */ import_react8.default.createElement("rect", { x: "17", y: "16", width: "4", height: "3", rx: ".8", fill: "currentColor" }),
+    /* @__PURE__ */ import_react8.default.createElement("rect", { x: "11", y: "21", width: "4", height: "3", rx: ".8", fill: "currentColor" }),
+    /* @__PURE__ */ import_react8.default.createElement("rect", { x: "17", y: "21", width: "4", height: "3", rx: ".8", fill: "currentColor" })
   );
 }
 
@@ -7873,14 +7970,14 @@ function download(name, value, type = "application/json") {
   setTimeout(() => URL.revokeObjectURL(url), 1e3);
 }
 function Icon({ size = 20 }) {
-  return /* @__PURE__ */ import_react8.default.createElement(BrandIcon, { size });
+  return /* @__PURE__ */ import_react9.default.createElement(BrandIcon, { size });
 }
 function Gallery({ remote }) {
-  const [status, setStatus] = (0, import_react8.useState)(null), [error, setError] = (0, import_react8.useState)(""), [notice, updateNotice] = (0, import_react8.useState)(null), [busy, setBusy] = (0, import_react8.useState)(false);
+  const [status, setStatus] = (0, import_react9.useState)(null), [error, setError] = (0, import_react9.useState)(""), [notice, updateNotice] = (0, import_react9.useState)(null), [busy, setBusy] = (0, import_react9.useState)(false);
   function setNotice(message) {
     updateNotice(message ? { message } : null);
   }
-  (0, import_react8.useEffect)(() => {
+  (0, import_react9.useEffect)(() => {
     if (!notice) return;
     const root = document.createElement("div");
     root.className = "gal gal-toast-host";
@@ -7907,15 +8004,16 @@ function Gallery({ remote }) {
       root.remove();
     };
   }, [notice]);
-  const [boards, setBoards] = (0, import_react8.useState)([]);
-  const [items, setItems] = (0, import_react8.useState)([]), [total, setTotal] = (0, import_react8.useState)(0), [type, setType] = (0, import_react8.useState)(""), [scope, setScope] = (0, import_react8.useState)("all"), [q, setQ] = (0, import_react8.useState)(""), [refresh, setRefresh] = (0, import_react8.useState)(0), [offset, setOffset] = (0, import_react8.useState)(0), [loading, setLoading] = (0, import_react8.useState)(false);
-  const [selected, setSelected] = (0, import_react8.useState)(null), [editor, setEditor] = (0, import_react8.useState)(null);
-  const [skillWizard, setSkillWizard] = (0, import_react8.useState)(false);
-  const [agentWizard, setAgentWizard] = (0, import_react8.useState)(false);
-  const [mcpWizard, setMcpWizard] = (0, import_react8.useState)(false);
-  const [storageSettings, setStorageSettings] = (0, import_react8.useState)(null);
-  const [connectionResult, setConnectionResult] = (0, import_react8.useState)("");
-  const [confirmation, setConfirmation] = (0, import_react8.useState)(null);
+  const [boards, setBoards] = (0, import_react9.useState)([]);
+  const [items, setItems] = (0, import_react9.useState)([]), [total, setTotal] = (0, import_react9.useState)(0), [type, setType] = (0, import_react9.useState)(""), [scope, setScope] = (0, import_react9.useState)("all"), [q, setQ] = (0, import_react9.useState)(""), [refresh, setRefresh] = (0, import_react9.useState)(0), [offset, setOffset] = (0, import_react9.useState)(0), [loading, setLoading] = (0, import_react9.useState)(false);
+  const [selected, setSelected] = (0, import_react9.useState)(null), [editor, setEditor] = (0, import_react9.useState)(null);
+  const [skillWizard, setSkillWizard] = (0, import_react9.useState)(false);
+  const [agentWizard, setAgentWizard] = (0, import_react9.useState)(false);
+  const [mcpWizard, setMcpWizard] = (0, import_react9.useState)(false);
+  const [workflowWizard, setWorkflowWizard] = (0, import_react9.useState)(false);
+  const [storageSettings, setStorageSettings] = (0, import_react9.useState)(null);
+  const [connectionResult, setConnectionResult] = (0, import_react9.useState)("");
+  const [confirmation, setConfirmation] = (0, import_react9.useState)(null);
   const confirmAction = (message) => new Promise((resolve) => setConfirmation({ message, resolve }));
   function answerConfirmation(value) {
     const current = confirmation;
@@ -7934,7 +8032,7 @@ function Gallery({ remote }) {
       setBusy(false);
     }
   }
-  (0, import_react8.useEffect)(() => {
+  (0, import_react9.useEffect)(() => {
     let live = true;
     call(remote, "uiStatus").then((x) => {
       if (live) {
@@ -7950,7 +8048,7 @@ function Gallery({ remote }) {
       live = false;
     };
   }, []);
-  (0, import_react8.useEffect)(() => {
+  (0, import_react9.useEffect)(() => {
     if (!status?.ready) return;
     let live = true;
     setLoading(true);
@@ -8014,6 +8112,10 @@ function Gallery({ remote }) {
     }
     if ((r?.type || type) === "mcp") {
       setMcpWizard({ resource: r || null });
+      return;
+    }
+    if ((r?.type || type) === "workflow") {
+      setWorkflowWizard({ resource: r || null });
       return;
     }
     const d = r || { ...blank(), type };
@@ -8162,7 +8264,7 @@ function Gallery({ remote }) {
     setType(t);
     setOffset(0);
   };
-  return /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal" }, /* @__PURE__ */ import_react8.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement("h1", null, /* @__PURE__ */ import_react8.default.createElement(BrandIcon, { size: 32 }), "Gallery")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-header-actions" }, /* @__PURE__ */ import_react8.default.createElement(
+  return /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal" }, /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h1", null, /* @__PURE__ */ import_react9.default.createElement(BrandIcon, { size: 32 }), "Gallery")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-header-actions" }, /* @__PURE__ */ import_react9.default.createElement(
     "button",
     {
       className: "gal-icon-button",
@@ -8177,8 +8279,8 @@ function Gallery({ remote }) {
         setConnectionResult("");
       })
     },
-    /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "settings", size: 20 })
-  ))), error && /* @__PURE__ */ import_react8.default.createElement("div", { role: "alert", className: "gal-alert" }, error, /* @__PURE__ */ import_react8.default.createElement("button", { "aria-label": "\u5173\u95ED\u9519\u8BEF", onClick: () => setError("") }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "close" }))), !status?.ready ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-empty" }, error ? "\u8D44\u6E90\u5E93\u6682\u65F6\u4E0D\u53EF\u7528\uFF0C\u8BF7\u68C0\u67E5\u63D0\u793A\u540E\u5237\u65B0\u3002" : "\u6B63\u5728\u6253\u5F00\u672C\u5730\u8D44\u6E90\u5E93\u2026") : /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-toolbar" }, /* @__PURE__ */ import_react8.default.createElement("nav", { className: "gal-filters", "aria-label": "\u8D44\u6E90\u7C7B\u578B" }, /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "settings", size: 20 })
+  ))), error && /* @__PURE__ */ import_react9.default.createElement("div", { role: "alert", className: "gal-alert" }, error, /* @__PURE__ */ import_react9.default.createElement("button", { "aria-label": "\u5173\u95ED\u9519\u8BEF", onClick: () => setError("") }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "close" }))), !status?.ready ? /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-empty" }, error ? "\u8D44\u6E90\u5E93\u6682\u65F6\u4E0D\u53EF\u7528\uFF0C\u8BF7\u68C0\u67E5\u63D0\u793A\u540E\u5237\u65B0\u3002" : "\u6B63\u5728\u6253\u5F00\u672C\u5730\u8D44\u6E90\u5E93\u2026") : /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-toolbar" }, /* @__PURE__ */ import_react9.default.createElement("nav", { className: "gal-filters", "aria-label": "\u8D44\u6E90\u7C7B\u578B" }, /* @__PURE__ */ import_react9.default.createElement(
     "button",
     {
       className: !type ? "active" : "",
@@ -8188,9 +8290,9 @@ function Gallery({ remote }) {
         chooseFilter("");
       }
     },
-    /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "grid" }),
+    /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "grid" }),
     "\u5168\u90E8"
-  ), Object.entries(TYPES).map(([key, label]) => /* @__PURE__ */ import_react8.default.createElement(
+  ), Object.entries(TYPES).map(([key, label]) => /* @__PURE__ */ import_react9.default.createElement(
     "button",
     {
       key,
@@ -8198,9 +8300,9 @@ function Gallery({ remote }) {
       "aria-pressed": type === key,
       onClick: () => chooseFilter(key)
     },
-    /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: key }),
+    /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: key }),
     label
-  ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-search-wrap" }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "search" }), /* @__PURE__ */ import_react8.default.createElement(
+  ))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-search-wrap" }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "search" }), /* @__PURE__ */ import_react9.default.createElement(
     "input",
     {
       "aria-label": "\u641C\u7D22\u8D44\u6E90",
@@ -8212,17 +8314,17 @@ function Gallery({ remote }) {
         setOffset(0);
       }
     }
-  ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-list-heading" }, /* @__PURE__ */ import_react8.default.createElement("span", null, type ? TYPES[type] : "\u8C03\u7528\u699C", " ", /* @__PURE__ */ import_react8.default.createElement("strong", null, total)), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-list-actions" }, type && /* @__PURE__ */ import_react8.default.createElement(
+  ))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-list-heading" }, /* @__PURE__ */ import_react9.default.createElement("span", null, type ? TYPES[type] : "\u8C03\u7528\u699C", " ", /* @__PURE__ */ import_react9.default.createElement("strong", null, total)), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-list-actions" }, type && /* @__PURE__ */ import_react9.default.createElement(
     "button",
     {
       className: "gal-primary",
       disabled: busy,
       onClick: () => edit(null)
     },
-    /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "plus" }),
+    /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "plus" }),
     "\u65B0\u5EFA ",
     TYPES[type]
-  ), /* @__PURE__ */ import_react8.default.createElement(
+  ), /* @__PURE__ */ import_react9.default.createElement(
     "button",
     {
       className: "gal-icon-button",
@@ -8231,8 +8333,8 @@ function Gallery({ remote }) {
       disabled: busy,
       onClick: () => setRefresh((x) => x + 1)
     },
-    /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "refresh" })
-  ))), loading ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-empty" }, "\u6B63\u5728\u52A0\u8F7D\u8D44\u6E90\u2026") : !type ? /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "refresh" })
+  ))), loading ? /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-empty" }, "\u6B63\u5728\u52A0\u8F7D\u8D44\u6E90\u2026") : !type ? /* @__PURE__ */ import_react9.default.createElement(
     Leaderboards,
     {
       boards,
@@ -8241,7 +8343,7 @@ function Gallery({ remote }) {
       onOpen: (r) => run(() => load(r.id)),
       onCategory: chooseFilter
     }
-  ) : items.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-empty" }, /* @__PURE__ */ import_react8.default.createElement(Icon, null), /* @__PURE__ */ import_react8.default.createElement("h3", null, q || type || scope !== "all" ? "\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90" : "\u6682\u65E0\u8D44\u6E90"), /* @__PURE__ */ import_react8.default.createElement("p", null, q || type || scope !== "all" ? "\u8BD5\u8BD5\u5176\u4ED6\u5173\u952E\u8BCD\u6216\u5206\u7C7B\u3002" : "\u9009\u62E9\u5206\u7C7B\u540E\u65B0\u5EFA\u8D44\u6E90\u3002")) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-resource-grid" }, items.map((r) => /* @__PURE__ */ import_react8.default.createElement(
+  ) : items.length === 0 ? /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-empty" }, /* @__PURE__ */ import_react9.default.createElement(Icon, null), /* @__PURE__ */ import_react9.default.createElement("h3", null, q || type || scope !== "all" ? "\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90" : "\u6682\u65E0\u8D44\u6E90"), /* @__PURE__ */ import_react9.default.createElement("p", null, q || type || scope !== "all" ? "\u8BD5\u8BD5\u5176\u4ED6\u5173\u952E\u8BCD\u6216\u5206\u7C7B\u3002" : "\u9009\u62E9\u5206\u7C7B\u540E\u65B0\u5EFA\u8D44\u6E90\u3002")) : /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-resource-grid" }, items.map((r) => /* @__PURE__ */ import_react9.default.createElement(
     "button",
     {
       key: r.id,
@@ -8250,43 +8352,52 @@ function Gallery({ remote }) {
       disabled: busy,
       onClick: () => run(() => load(r.id))
     },
-    /* @__PURE__ */ import_react8.default.createElement(ResourceVisual, { type: r.type }),
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-resource-content" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, r.name), r.description && /* @__PURE__ */ import_react8.default.createElement("p", null, r.description)),
-    /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement(ResourceVisual, { type: r.type }),
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-resource-content" }, /* @__PURE__ */ import_react9.default.createElement("h3", null, r.name), r.description && /* @__PURE__ */ import_react9.default.createElement("p", null, r.description)),
+    /* @__PURE__ */ import_react9.default.createElement(
       "p",
       {
         className: "gal-card-creator",
         title: `\u521B\u5EFA\u8005\uFF1A${r.creator?.username || "\u672A\u8BB0\u5F55"}`
       },
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "user", size: 15 }),
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "user", size: 15 }),
       r.creator?.username || "\u672A\u8BB0\u5F55"
     ),
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-tags" }, r.tags.slice(0, 2).map((t) => /* @__PURE__ */ import_react8.default.createElement("span", { key: t }, t))),
-    /* @__PURE__ */ import_react8.default.createElement("footer", null, r.type === "skill" && /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-tags" }, r.tags.slice(0, 2).map((t) => /* @__PURE__ */ import_react9.default.createElement("span", { key: t }, t))),
+    /* @__PURE__ */ import_react9.default.createElement("footer", null, r.type === "skill" && /* @__PURE__ */ import_react9.default.createElement(
       "span",
       {
         title: "\u7D2F\u8BA1\u8C03\u7528\u6B21\u6570",
         "aria-label": `\u7D2F\u8BA1\u8C03\u7528 ${r.usageCount ?? 0} \u6B21`
       },
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "usage", size: 15 }),
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "usage", size: 15 }),
       (r.usageCount ?? 0).toLocaleString(),
       " \u6B21"
-    ), /* @__PURE__ */ import_react8.default.createElement("span", { title: "\u6587\u4EF6\u6570\u91CF" }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "file", size: 15 }), r.fileCount), /* @__PURE__ */ import_react8.default.createElement("span", { title: "\u66F4\u65B0\u65F6\u95F4" }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "clock", size: 15 }), new Date(r.updatedAt).toLocaleDateString()))
-  ))), type && total > 48 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-pagination" }, /* @__PURE__ */ import_react8.default.createElement(
+    ), /* @__PURE__ */ import_react9.default.createElement("span", { title: "\u6587\u4EF6\u6570\u91CF" }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file", size: 15 }), r.fileCount), /* @__PURE__ */ import_react9.default.createElement("span", { title: "\u66F4\u65B0\u65F6\u95F4" }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "clock", size: 15 }), new Date(r.updatedAt).toLocaleDateString()))
+  ))), type && total > 48 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-pagination" }, /* @__PURE__ */ import_react9.default.createElement(
     "button",
     {
       disabled: !offset,
       onClick: () => setOffset((x) => Math.max(0, x - 48))
     },
     "\u4E0A\u4E00\u9875"
-  ), /* @__PURE__ */ import_react8.default.createElement("span", null, Math.floor(offset / 48) + 1, " / ", Math.ceil(total / 48)), /* @__PURE__ */ import_react8.default.createElement(
+  ), /* @__PURE__ */ import_react9.default.createElement("span", null, Math.floor(offset / 48) + 1, " / ", Math.ceil(total / 48)), /* @__PURE__ */ import_react9.default.createElement(
     "button",
     {
       disabled: offset + 48 >= total,
       onClick: () => setOffset((x) => x + 48)
     },
     "\u4E0B\u4E00\u9875"
-  ))), mcpWizard && /* @__PURE__ */ import_react8.default.createElement(
+  ))), workflowWizard && /* @__PURE__ */ import_react9.default.createElement(WorkflowWizard, { resource: workflowWizard.resource, onClose: async () => {
+    if (await confirmAction("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Workflow\uFF1F")) setWorkflowWizard(false);
+  }, onSave: async (resource) => {
+    const existing = workflowWizard.resource;
+    await (existing ? call(remote, "uiUpdate", existing.id, json2({ resource, expectedRevision: existing.revision })) : call(remote, "uiCreate", json2(resource)));
+    setSelected(null);
+    setWorkflowWizard(false);
+    setRefresh((x) => x + 1);
+    setNotice("Workflow \u5DF2\u4FDD\u5B58\u3002");
+  } }), mcpWizard && /* @__PURE__ */ import_react9.default.createElement(
     McpWizard,
     {
       resource: mcpWizard.resource,
@@ -8309,7 +8420,7 @@ function Gallery({ remote }) {
         setNotice("MCP \u5DF2\u4FDD\u5B58\u3002");
       }
     }
-  ), agentWizard && /* @__PURE__ */ import_react8.default.createElement(
+  ), agentWizard && /* @__PURE__ */ import_react9.default.createElement(
     AgentWizard,
     {
       resource: agentWizard.resource,
@@ -8331,7 +8442,7 @@ function Gallery({ remote }) {
         setNotice("Agent \u5DF2\u4FDD\u5B58\u3002");
       }
     }
-  ), skillWizard && /* @__PURE__ */ import_react8.default.createElement(
+  ), skillWizard && /* @__PURE__ */ import_react9.default.createElement(
     SkillWizard,
     {
       resource: skillWizard.resource,
@@ -8353,7 +8464,7 @@ function Gallery({ remote }) {
         setNotice("Skill \u5DF2\u4FDD\u5B58\u3002");
       }
     }
-  ), selected && !editor && !skillWizard && !agentWizard && !mcpWizard && /* @__PURE__ */ import_react8.default.createElement(Modal, { onClose: () => !busy && setSelected(null) }, /* @__PURE__ */ import_react8.default.createElement(
+  ), selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && /* @__PURE__ */ import_react9.default.createElement(Modal, { onClose: () => !busy && setSelected(null) }, /* @__PURE__ */ import_react9.default.createElement(
     "section",
     {
       tabIndex: -1,
@@ -8362,16 +8473,19 @@ function Gallery({ remote }) {
       "aria-modal": "true",
       "aria-label": "\u8D44\u6E90\u8BE6\u60C5"
     },
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-pill " + selected.type }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: selected.type, size: 16 }), TYPES[selected.type]), /* @__PURE__ */ import_react8.default.createElement("h2", null, content.name), /* @__PURE__ */ import_react8.default.createElement("p", null, "\u521B\u5EFA\u8005\uFF1A", content.creator?.username || "\u672A\u8BB0\u5F55"), /* @__PURE__ */ import_react8.default.createElement("p", null, "\u66F4\u65B0\u4E8E ", when(selected.updatedAt))), /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-pill " + selected.type }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: selected.type, size: 16 }), TYPES[selected.type]), /* @__PURE__ */ import_react9.default.createElement("h2", null, content.name), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u521B\u5EFA\u8005\uFF1A", content.creator?.username || "\u672A\u8BB0\u5F55"), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u66F4\u65B0\u4E8E ", when(selected.updatedAt))), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         disabled: busy,
         "aria-label": "\u5173\u95ED\u8BE6\u60C5",
         onClick: () => setSelected(null)
       },
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "close" })
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "close" })
     )),
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-detail-actions" }, selected.canEdit && /* @__PURE__ */ import_react8.default.createElement("button", { disabled: busy, onClick: () => edit(selected) }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "edit" }), "\u7F16\u8F91\u8D44\u6E90"), /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-detail-actions" }, selected.type === "workflow" && selected.files.some((f) => f.path === "workflow.json") && /* @__PURE__ */ import_react9.default.createElement("button", { disabled: busy, onClick: () => run(async () => {
+      const result = await call(remote, "uiPublishWorkflow", selected.id);
+      setNotice(`\u5DF2\u5B89\u88C5\u5230 TeamFlow\uFF1A${result.name} v${result.version}`);
+    }) }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "workflow" }), "\u5B89\u88C5\u5230 TeamFlow"), selected.canEdit && /* @__PURE__ */ import_react9.default.createElement("button", { disabled: busy, onClick: () => edit(selected) }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "edit" }), "\u7F16\u8F91\u8D44\u6E90"), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         onClick: () => download(
@@ -8400,20 +8514,20 @@ function Gallery({ remote }) {
           )
         )
       },
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "download" }),
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "download" }),
       "\u4E0B\u8F7D\u8D44\u6E90"
-    ), selected.canDelete && /* @__PURE__ */ import_react8.default.createElement(
+    ), selected.canDelete && /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "gal-delete",
         disabled: busy,
         onClick: () => removeResource(selected)
       },
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "trash" }),
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "trash" }),
       "\u5220\u9664\u8D44\u6E90"
     )),
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-body" }, error && /* @__PURE__ */ import_react8.default.createElement("p", { role: "alert", className: "gal-error" }, error), content.type === "skill" && /* @__PURE__ */ import_react8.default.createElement("p", { className: "gal-usage-total" }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "usage" }), " \u7D2F\u8BA1\u8C03\u7528\u6B21\u6570", " ", /* @__PURE__ */ import_react8.default.createElement("strong", null, (content.usageCount ?? 0).toLocaleString()), " ", "\u6B21"), /* @__PURE__ */ import_react8.default.createElement("p", { className: "gal-description" }, content.description || "\u6682\u65E0\u63CF\u8FF0"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-tags" }, content.tags.map((t) => /* @__PURE__ */ import_react8.default.createElement("span", { key: t }, t))), content.files.map((f) => /* @__PURE__ */ import_react8.default.createElement("details", { className: "gal-file", key: f.path }, /* @__PURE__ */ import_react8.default.createElement("summary", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "file", size: 16 }), " ", f.path, /* @__PURE__ */ import_react8.default.createElement("span", null, f.bytes ?? new Blob([f.content]).size, " B")), f.encoding === "utf8" ? /* @__PURE__ */ import_react8.default.createElement("pre", null, f.content) : /* @__PURE__ */ import_react8.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u4E0B\u8F7D\u7684\u8D44\u6E90\u5305\u4E2D\u3002"))))
-  )), editor && /* @__PURE__ */ import_react8.default.createElement(Modal, { onClose: closeEditor }, /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-body" }, error && /* @__PURE__ */ import_react9.default.createElement("p", { role: "alert", className: "gal-error" }, error), content.type === "skill" && /* @__PURE__ */ import_react9.default.createElement("p", { className: "gal-usage-total" }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "usage" }), " \u7D2F\u8BA1\u8C03\u7528\u6B21\u6570", " ", /* @__PURE__ */ import_react9.default.createElement("strong", null, (content.usageCount ?? 0).toLocaleString()), " ", "\u6B21"), /* @__PURE__ */ import_react9.default.createElement("p", { className: "gal-description" }, content.description || "\u6682\u65E0\u63CF\u8FF0"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-tags" }, content.tags.map((t) => /* @__PURE__ */ import_react9.default.createElement("span", { key: t }, t))), content.files.map((f) => /* @__PURE__ */ import_react9.default.createElement("details", { className: "gal-file", key: f.path }, /* @__PURE__ */ import_react9.default.createElement("summary", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file", size: 16 }), " ", f.path, /* @__PURE__ */ import_react9.default.createElement("span", null, f.bytes ?? new Blob([f.content]).size, " B")), f.encoding === "utf8" ? /* @__PURE__ */ import_react9.default.createElement("pre", null, f.content) : /* @__PURE__ */ import_react9.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u4E0B\u8F7D\u7684\u8D44\u6E90\u5305\u4E2D\u3002"))))
+  )), editor && /* @__PURE__ */ import_react9.default.createElement(Modal, { onClose: closeEditor }, /* @__PURE__ */ import_react9.default.createElement(
     "section",
     {
       tabIndex: -1,
@@ -8422,16 +8536,16 @@ function Gallery({ remote }) {
       "aria-modal": "true",
       "aria-label": editor.id ? "\u7F16\u8F91\u8D44\u6E90" : "\u65B0\u5EFA\u8D44\u6E90"
     },
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement("h2", null, editor.id ? "\u7F16\u8F91" : "\u65B0\u5EFA", " ", TYPES[editor.resource.type])), /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h2", null, editor.id ? "\u7F16\u8F91" : "\u65B0\u5EFA", " ", TYPES[editor.resource.type])), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         "aria-label": "\u5173\u95ED\u7F16\u8F91",
         onClick: closeEditor,
         disabled: busy
       },
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "close" })
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "close" })
     )),
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-form-row" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-type-field" }, /* @__PURE__ */ import_react8.default.createElement("span", null, "\u7C7B\u578B"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-editor-type" }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: editor.resource.type }), TYPES[editor.resource.type])), /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-grow" }, "\u8D44\u6E90\u540D\u79F0", /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-form-row" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-type-field" }, /* @__PURE__ */ import_react9.default.createElement("span", null, "\u7C7B\u578B"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-editor-type" }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: editor.resource.type }), TYPES[editor.resource.type])), /* @__PURE__ */ import_react9.default.createElement("label", { className: "gal-grow" }, "\u8D44\u6E90\u540D\u79F0", /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         value: editor.resource.name,
@@ -8439,7 +8553,7 @@ function Gallery({ remote }) {
         onChange: (e) => field("name", e.target.value),
         placeholder: "\u8F93\u5165\u8D44\u6E90\u540D\u79F0"
       }
-    ))), /* @__PURE__ */ import_react8.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react8.default.createElement(
+    ))), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react9.default.createElement(
       "textarea",
       {
         rows: 3,
@@ -8448,14 +8562,14 @@ function Gallery({ remote }) {
         placeholder: "\u8D44\u6E90\u63CF\u8FF0\uFF08\u9009\u586B\uFF09",
         maxLength: 1e4
       }
-    )), /* @__PURE__ */ import_react8.default.createElement("label", null, "\u6807\u7B7E", /* @__PURE__ */ import_react8.default.createElement(
+    )), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u6807\u7B7E", /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         value: editor.tags,
         onChange: (e) => change("tags", e.target.value),
         placeholder: "\u6807\u7B7E\uFF0C\u7528\u9017\u53F7\u5206\u9694"
       }
-    )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-file-toolbar" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u8D44\u6E90\u6587\u4EF6 ", /* @__PURE__ */ import_react8.default.createElement("small", null, editor.resource.files.length, " / 100")), /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "upload" }), "\u4E0A\u4F20\u6587\u4EF6", /* @__PURE__ */ import_react8.default.createElement(
+    )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-file-toolbar" }, /* @__PURE__ */ import_react9.default.createElement("h3", null, "\u8D44\u6E90\u6587\u4EF6 ", /* @__PURE__ */ import_react9.default.createElement("small", null, editor.resource.files.length, " / 100")), /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "upload" }), "\u4E0A\u4F20\u6587\u4EF6", /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         "aria-label": "\u4E0A\u4F20\u8D44\u6E90\u6587\u4EF6",
@@ -8466,7 +8580,7 @@ function Gallery({ remote }) {
           e.target.value = "";
         }
       }
-    )), /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "folder" }), "\u4E0A\u4F20\u6587\u4EF6\u5939", /* @__PURE__ */ import_react8.default.createElement(
+    )), /* @__PURE__ */ import_react9.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "folder" }), "\u4E0A\u4F20\u6587\u4EF6\u5939", /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         "aria-label": "\u4E0A\u4F20\u8D44\u6E90\u6587\u4EF6\u5939",
@@ -8478,7 +8592,7 @@ function Gallery({ remote }) {
           e.target.value = "";
         }
       }
-    )))), editor.importError && /* @__PURE__ */ import_react8.default.createElement("p", { className: "gal-error" }, editor.importError), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-add-file" }, /* @__PURE__ */ import_react8.default.createElement(
+    )))), editor.importError && /* @__PURE__ */ import_react9.default.createElement("p", { className: "gal-error" }, editor.importError), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-add-file" }, /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         "aria-label": "\u65B0\u6587\u4EF6\u8DEF\u5F84",
@@ -8486,7 +8600,7 @@ function Gallery({ remote }) {
         value: editor.newPath,
         onChange: (e) => change("newPath", e.target.value)
       }
-    ), /* @__PURE__ */ import_react8.default.createElement(
+    ), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         disabled: !editor.newPath.trim(),
@@ -8511,7 +8625,7 @@ function Gallery({ remote }) {
         }
       },
       "\u6DFB\u52A0\u6587\u672C\u6587\u4EF6"
-    )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-file-editor" }, /* @__PURE__ */ import_react8.default.createElement("nav", null, editor.resource.files.map((f, i) => /* @__PURE__ */ import_react8.default.createElement(
+    )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-file-editor" }, /* @__PURE__ */ import_react9.default.createElement("nav", null, editor.resource.files.map((f, i) => /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: i === editor.fileIndex ? "active" : "",
@@ -8519,7 +8633,7 @@ function Gallery({ remote }) {
         onClick: () => change("fileIndex", i)
       },
       f.path
-    )), !editor.resource.files.length && /* @__PURE__ */ import_react8.default.createElement("p", null, "\u53EF\u4E0A\u4F20\u5DF2\u6709\u6587\u4EF6\uFF0C\u4E5F\u53EF\u76F4\u63A5\u521B\u5EFA\u6587\u672C\u6587\u4EF6\u3002")), /* @__PURE__ */ import_react8.default.createElement("div", null, activeFile ? /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-code-head" }, /* @__PURE__ */ import_react8.default.createElement("span", null, activeFile.path), /* @__PURE__ */ import_react8.default.createElement(
+    )), !editor.resource.files.length && /* @__PURE__ */ import_react9.default.createElement("p", null, "\u53EF\u4E0A\u4F20\u5DF2\u6709\u6587\u4EF6\uFF0C\u4E5F\u53EF\u76F4\u63A5\u521B\u5EFA\u6587\u672C\u6587\u4EF6\u3002")), /* @__PURE__ */ import_react9.default.createElement("div", null, activeFile ? /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-code-head" }, /* @__PURE__ */ import_react9.default.createElement("span", null, activeFile.path), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         onClick: () => setEditor((x) => ({
@@ -8534,7 +8648,7 @@ function Gallery({ remote }) {
         }))
       },
       "\u79FB\u9664\u6587\u4EF6"
-    )), activeFile.encoding === "utf8" ? /* @__PURE__ */ import_react8.default.createElement(
+    )), activeFile.encoding === "utf8" ? /* @__PURE__ */ import_react9.default.createElement(
       "textarea",
       {
         "aria-label": "\u6587\u4EF6\u5185\u5BB9",
@@ -8550,8 +8664,8 @@ function Gallery({ remote }) {
           }
         }))
       }
-    ) : /* @__PURE__ */ import_react8.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u6587\u4EF6\u5DF2\u4E0A\u4F20\uFF0C\u53EF\u79FB\u9664\u540E\u91CD\u65B0\u4E0A\u4F20\u66FF\u6362\u3002")) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-code-placeholder" }, "\u9009\u62E9\u6587\u4EF6\u4EE5\u67E5\u770B\u6216\u7F16\u8F91")))),
-    /* @__PURE__ */ import_react8.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react8.default.createElement("button", { disabled: busy, onClick: closeEditor }, "\u53D6\u6D88"), /* @__PURE__ */ import_react8.default.createElement(
+    ) : /* @__PURE__ */ import_react9.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u6587\u4EF6\u5DF2\u4E0A\u4F20\uFF0C\u53EF\u79FB\u9664\u540E\u91CD\u65B0\u4E0A\u4F20\u66FF\u6362\u3002")) : /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-code-placeholder" }, "\u9009\u62E9\u6587\u4EF6\u4EE5\u67E5\u770B\u6216\u7F16\u8F91")))),
+    /* @__PURE__ */ import_react9.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react9.default.createElement("button", { disabled: busy, onClick: closeEditor }, "\u53D6\u6D88"), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "gal-primary",
@@ -8560,7 +8674,7 @@ function Gallery({ remote }) {
       },
       busy ? "\u4FDD\u5B58\u4E2D\u2026" : "\u4FDD\u5B58\u8D44\u6E90"
     ))
-  )), storageSettings && /* @__PURE__ */ import_react8.default.createElement(Modal, { onClose: closeStorage }, /* @__PURE__ */ import_react8.default.createElement(
+  )), storageSettings && /* @__PURE__ */ import_react9.default.createElement(Modal, { onClose: closeStorage }, /* @__PURE__ */ import_react9.default.createElement(
     "section",
     {
       tabIndex: -1,
@@ -8569,24 +8683,24 @@ function Gallery({ remote }) {
       "aria-modal": "true",
       "aria-labelledby": "gal-storage-title"
     },
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react8.default.createElement("h2", { id: "gal-storage-title" }, storageSettings.configured ? "\u8D44\u6E90\u5E93\u5B58\u50A8" : "\u9009\u62E9\u8D44\u6E90\u5E93\u5B58\u50A8"), /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react9.default.createElement("h2", { id: "gal-storage-title" }, storageSettings.configured ? "\u8D44\u6E90\u5E93\u5B58\u50A8" : "\u9009\u62E9\u8D44\u6E90\u5E93\u5B58\u50A8"), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         "aria-label": "\u5173\u95ED\u5B58\u50A8\u8BBE\u7F6E",
         disabled: busy,
         onClick: closeStorage
       },
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "close" })
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "close" })
     )),
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-storage-providers" }, storageSettings.providers.map((provider) => /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-storage-providers" }, storageSettings.providers.map((provider) => /* @__PURE__ */ import_react9.default.createElement(
       "div",
       {
         key: provider.type,
         className: provider.available ? "active" : ""
       },
-      /* @__PURE__ */ import_react8.default.createElement("strong", null, provider.name),
-      /* @__PURE__ */ import_react8.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
-    ))), /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-username-setting" }, "\u7528\u6237\u540D", /* @__PURE__ */ import_react8.default.createElement(
+      /* @__PURE__ */ import_react9.default.createElement("strong", null, provider.name),
+      /* @__PURE__ */ import_react9.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
+    ))), /* @__PURE__ */ import_react9.default.createElement("label", { className: "gal-username-setting" }, "\u7528\u6237\u540D", /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         value: storageSettings.username || "",
@@ -8597,7 +8711,7 @@ function Gallery({ remote }) {
           username: e.target.value
         }))
       }
-    )), /* @__PURE__ */ import_react8.default.createElement(
+    )), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         disabled: busy || !storageSettings.username?.trim(),
@@ -8613,8 +8727,8 @@ function Gallery({ remote }) {
         })
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
-    ), connectionResult && /* @__PURE__ */ import_react8.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react8.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react8.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-local" }, "v0.9.0"), /* @__PURE__ */ import_react8.default.createElement(
+    ), connectionResult && /* @__PURE__ */ import_react9.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react9.default.createElement("p", { role: "alert" }, error)),
+    /* @__PURE__ */ import_react9.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-local" }, "v0.9.0"), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         disabled: busy,
@@ -8628,7 +8742,7 @@ function Gallery({ remote }) {
         })
       },
       "\u68C0\u67E5\u5B58\u50A8"
-    ), /* @__PURE__ */ import_react8.default.createElement(
+    ), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "gal-primary",
@@ -8637,7 +8751,7 @@ function Gallery({ remote }) {
       },
       busy ? "\u5904\u7406\u4E2D\u2026" : "\u5B8C\u6210"
     ))
-  )), confirmation && /* @__PURE__ */ import_react8.default.createElement(Modal, { confirmation: true, onClose: () => answerConfirmation(false) }, /* @__PURE__ */ import_react8.default.createElement(
+  )), confirmation && /* @__PURE__ */ import_react9.default.createElement(Modal, { confirmation: true, onClose: () => answerConfirmation(false) }, /* @__PURE__ */ import_react9.default.createElement(
     "section",
     {
       tabIndex: -1,
@@ -8646,9 +8760,9 @@ function Gallery({ remote }) {
       "aria-modal": "true",
       "aria-label": "\u786E\u8BA4\u64CD\u4F5C"
     },
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react8.default.createElement("h2", null, "\u786E\u8BA4\u64CD\u4F5C")),
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react8.default.createElement("p", null, confirmation.message)),
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react8.default.createElement("button", { autoFocus: true, onClick: () => answerConfirmation(false) }, "\u53D6\u6D88"), /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react9.default.createElement("h2", null, "\u786E\u8BA4\u64CD\u4F5C")),
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react9.default.createElement("p", null, confirmation.message)),
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react9.default.createElement("button", { autoFocus: true, onClick: () => answerConfirmation(false) }, "\u53D6\u6D88"), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "gal-primary",

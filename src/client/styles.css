@@ -1487,3 +1487,6 @@ fieldset.gal-skill-fields {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+.gal-workflow-card { display: grid; gap: 10px; padding: 14px; margin: 10px 0; border: 1px solid var(--gal-border, #ddd); border-radius: 12px; }
+.gal-workflow-card > button { justify-self: end; }
+.gal-workflow-card select[multiple] { min-height: 76px; }
