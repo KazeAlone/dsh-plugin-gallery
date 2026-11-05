@@ -392,6 +392,17 @@ function Gallery({ remote }) {
     <div className="gal" data-theme={theme} data-motion-paused={motionPaused}>
       {theme === "astral" && (
         <div className="gal-astral-sky" aria-hidden="true">
+          <svg className="gal-astral-chart" viewBox="0 0 540 240" fill="none">
+            <g stroke="currentColor" strokeWidth="0.7">
+              <circle cx="270" cy="68" r="144" />
+              <circle cx="270" cy="68" r="126" strokeDasharray="2 5" />
+              <circle cx="270" cy="68" r="106" />
+              <ellipse cx="270" cy="68" rx="248" ry="72" transform="rotate(-16 270 68)" />
+              <ellipse cx="270" cy="68" rx="248" ry="72" transform="rotate(16 270 68)" />
+              <path d="M24 68h492M270 0v224M133 0l274 136M407 0L133 136" opacity=".45" />
+            </g>
+            <path d="M270 43l5 20 20 5-20 5-5 20-5-20-20-5 20-5z" fill="#fff1c9" />
+          </svg>
           <span className="gal-astral-orbit" />
           <span className="gal-astral-meteor" />
           <span className="gal-astral-meteor" />
@@ -403,6 +414,7 @@ function Gallery({ remote }) {
           <h1>
             <BrandIcon size={32} />
             Gallery
+            {theme === "astral" && <span className="gal-astral-title">鎏金星穹</span>}
           </h1>
         </div>
         <div className="gal-header-actions">

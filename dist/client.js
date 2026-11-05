@@ -1919,6 +1919,92 @@ fieldset.gal-skill-fields {
   .gal[data-theme="astral"] :is(.gal-astral-orbit, .gal-astral-meteor, .gal-board) { animation: none; }
   .gal-astral-motion { display: none; }
 }
+
+.gal-astral-chart {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  width: min(56%, 700px);
+  transform: translateX(-50%);
+  color: #e5bd78;
+  opacity: .67;
+}
+.gal[data-theme="astral"] .gal-header {
+  min-height: 112px;
+  border-image: linear-gradient(90deg, #7c5736, #ffe1a5, #7c5736) 1;
+}
+.gal[data-theme="astral"] .gal-header h1 { font-size: clamp(28px, 4vw, 54px); }
+.gal-astral-title {
+  border-left: 1px solid #bb9563;
+  padding-left: 14px;
+  font: 500 clamp(12px, 1.4vw, 19px) Georgia, serif;
+  letter-spacing: .18em;
+}
+.gal[data-theme="astral"] .gal-leaderboards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+.gal[data-theme="astral"] .gal-board {
+  --frame-cut: 13px;
+  --frame-shape: polygon(var(--frame-cut) 0, calc(100% - var(--frame-cut)) 0, 100% var(--frame-cut), 100% calc(100% - var(--frame-cut)), calc(100% - var(--frame-cut)) 100%, var(--frame-cut) 100%, 0 calc(100% - var(--frame-cut)), 0 var(--frame-cut));
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+  padding: 5px;
+  background: transparent;
+  overflow: visible;
+}
+.gal[data-theme="astral"] .gal-board::before,
+.gal[data-theme="astral"] .gal-board::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  clip-path: var(--frame-shape);
+  z-index: -1;
+}
+.gal[data-theme="astral"] .gal-board::before {
+  inset: 0;
+  background: linear-gradient(135deg, #fff0bd, #885a32 23%, #f6d28c 49%, #9c6940 75%, #ffe5aa);
+}
+.gal[data-theme="astral"] .gal-board::after {
+  inset: 3px;
+  background: radial-gradient(ellipse at 50% 0, var(--rank-tint), var(--g-bg) 80%);
+}
+.gal[data-theme="astral"] .gal-board-head {
+  position: relative;
+  justify-content: center;
+  min-height: 90px;
+  border-bottom: 1px solid #b9905c77;
+  background: transparent;
+  padding-inline: 44px;
+}
+.gal[data-theme="astral"] .gal-board-head::before,
+.gal[data-theme="astral"] .gal-board-head::after {
+  content: "";
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  top: 12px;
+  border: 1px solid #ffe5ad;
+  transform: rotate(45deg);
+  background: conic-gradient(var(--rank-color), #1b1a30, var(--rank-color), #fff4dc, var(--rank-color));
+  box-shadow: 0 0 10px var(--rank-color);
+  pointer-events: none;
+}
+.gal[data-theme="astral"] .gal-board-head::before { left: 13px; }
+.gal[data-theme="astral"] .gal-board-head::after { right: 13px; }
+.gal[data-theme="astral"] .gal-board-head h2 { font: 600 28px Georgia, serif; color: var(--g-accent); }
+.gal[data-theme="astral"] .gal-board-top { position: absolute; right: 15px; bottom: 9px; writing-mode: horizontal-tb; }
+.gal[data-theme="astral"] .gal-board-empty { min-height: 115px; }
+.gal[data-theme="astral"] .gal-board-more { margin-top: auto; }
+@media (max-width: 700px) {
+  .gal[data-theme="astral"] .gal-leaderboards { grid-template-columns: minmax(0, 1fr); }
+  .gal-astral-title { display: none; }
+}
 `;
 
 // src/client/leaderboards.jsx
@@ -10142,7 +10228,7 @@ function Gallery({ remote }) {
     setType(t);
     setOffset(0);
   };
-  return /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal", "data-theme": theme, "data-motion-paused": motionPaused }, theme === "astral" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-astral-sky", "aria-hidden": "true" }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-orbit" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" })), /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h1", null, /* @__PURE__ */ import_react9.default.createElement(BrandIcon, { size: 32 }), "Gallery")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-header-actions" }, theme === "astral" && /* @__PURE__ */ import_react9.default.createElement(
+  return /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal", "data-theme": theme, "data-motion-paused": motionPaused }, theme === "astral" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-astral-sky", "aria-hidden": "true" }, /* @__PURE__ */ import_react9.default.createElement("svg", { className: "gal-astral-chart", viewBox: "0 0 540 240", fill: "none" }, /* @__PURE__ */ import_react9.default.createElement("g", { stroke: "currentColor", strokeWidth: "0.7" }, /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "270", cy: "68", r: "144" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "270", cy: "68", r: "126", strokeDasharray: "2 5" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "270", cy: "68", r: "106" }), /* @__PURE__ */ import_react9.default.createElement("ellipse", { cx: "270", cy: "68", rx: "248", ry: "72", transform: "rotate(-16 270 68)" }), /* @__PURE__ */ import_react9.default.createElement("ellipse", { cx: "270", cy: "68", rx: "248", ry: "72", transform: "rotate(16 270 68)" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M24 68h492M270 0v224M133 0l274 136M407 0L133 136", opacity: ".45" })), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M270 43l5 20 20 5-20 5-5 20-5-20-20-5 20-5z", fill: "#fff1c9" })), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-orbit" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" })), /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h1", null, /* @__PURE__ */ import_react9.default.createElement(BrandIcon, { size: 32 }), "Gallery", theme === "astral" && /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-title" }, "\u938F\u91D1\u661F\u7A79"))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-header-actions" }, theme === "astral" && /* @__PURE__ */ import_react9.default.createElement(
     "button",
     {
       className: "gal-astral-motion",
