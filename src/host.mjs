@@ -108,6 +108,21 @@ export default class GalleryService extends TypertRemoteService {
       return r;
     });
   }
+  uiDelete(id, payload) {
+    return this.ownerCall(() => {
+      const result = this.store.deleteResource(
+        id,
+        JSON.parse(payload).expectedRevision,
+      );
+      this.invalidateSkills();
+      return result;
+    });
+  }
+  uiSetUsername(payload) {
+    return this.ownerCall(() =>
+      this.store.setUsername(JSON.parse(payload).username),
+    );
+  }
   uiStorageSettings() {
     return this.ownerCall(() => this.store.settings());
   }

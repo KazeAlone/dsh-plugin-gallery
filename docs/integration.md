@@ -58,3 +58,10 @@ Gallery 宿主在 skills 服务可用时注册 `gallery` provider。uiSkillCatal
 实际加载时将完整文件集合物化到 `$DSH_HOME/gallery/skill-runtime/<资源摘要>/<内容摘要>/`，并返回原生 directory resourceBase。旧副本保留，以免正在进行的任务引用失效；脚本只写入，不自动执行，执行方式与权限仍由 DSH 决定。Gallery 编辑仍以 resources.json 为准，不同步运行副本上的修改。
 
 已验证真实 Cordis 与 DSH 0.2.1-rc.5 SkillRegistry 的注册、目录更新、加载和附件路径。需要启用原生技能加载工具的预设（如 standard）；minimal 不提供此能力。没有运行完整 DSH 会话与模型端到端测试。提供方 get 不等于确认执行，因此此接入仍不会自动增加累计调用次数；准确计数仍需在执行消费方调用 recordSkillUse。
+
+
+## 创建者与删除（0.6.1）
+
+StorageManager 在创建时写入 `creator: {username}`，取自 storage.json 的 username，缺省使用宿主 OS 用户名。该名字是单用户 Gallery 的显示署名，不是多用户登录身份。资源输入不能覆盖署名，编辑保留原署名；旧资源不补造创建者。`uiSetUsername(payload)` 仅允许 owner 修改后续署名。
+
+`uiDelete(id, JSON.stringify({expectedRevision}))` 仅允许 owner 调用，校验当前修订号后原子删除资源及累计调用去重数据，并使 Skill 目录失效。已物化的只读用途运行副本保留，以免破坏进行中的任务；删除不是运行副本擦除，也不支持恢复。

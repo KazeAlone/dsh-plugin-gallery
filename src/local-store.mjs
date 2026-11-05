@@ -36,6 +36,7 @@ export class LocalGalleryStore {
       ...resource,
       usageCount: usageCount ?? 0,
       canEdit: true,
+      canDelete: true,
       fileCount: row.files.length,
     });
   }
@@ -113,12 +114,13 @@ export class LocalGalleryStore {
       rmSync(lock, { recursive: true, force: true });
     }
   }
-  createResource(input) {
+  createResource(input, creator) {
     const resource = normalizeResource(input);
     return this.write((rows) => {
       const now = new Date().toISOString();
       const row = {
         ...resource,
+        ...(creator ? { creator: { username: creator.username } } : {}),
         id: randomUUID(),
         digest: digest(JSON.stringify(resource)),
         revision: 1,
@@ -156,6 +158,21 @@ export class LocalGalleryStore {
         updatedAt: new Date().toISOString(),
       });
     });
+  }
+  deleteResource(id, expectedRevision) {
+    revision(expectedRevision);
+    const removed = this.write((rows) => {
+      const index = rows.findIndex((r) => r.id === id);
+      demand(index >= 0, 404, "NOT_FOUND", "资源不存在");
+      demand(
+        rows[index].revision === expectedRevision,
+        409,
+        "CONFLICT",
+        "资源已更新，请刷新后再删除",
+      );
+      return rows.splice(index, 1)[0];
+    });
+    return { id: removed.id };
   }
   recordSkillUse({ id, usageId } = {}) {
     demand(

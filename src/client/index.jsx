@@ -272,6 +272,27 @@ function Gallery({ remote }) {
       setStorageSettings(null);
     });
   }
+  async function removeResource(resource) {
+    if (
+      busy ||
+      !(await confirmAction(
+        `删除「${resource.name}」？资源和累计调用记录将被删除，无法恢复。`,
+      ))
+    )
+      return;
+    await run(async () => {
+      await call(
+        remote,
+        "uiDelete",
+        resource.id,
+        json({ expectedRevision: resource.revision }),
+      );
+      setSelected(null);
+      setOffset(0);
+      setRefresh((x) => x + 1);
+      setNotice("资源已删除。");
+    });
+  }
   const content = selected;
   const activeFile = editor?.resource.files[editor.fileIndex];
   const chooseFilter = (t) => {
@@ -429,6 +450,13 @@ function Gallery({ remote }) {
                     <h3>{r.name}</h3>
                     {r.description && <p>{r.description}</p>}
                   </div>
+                  <p
+                    className="gal-card-creator"
+                    title={`创建者：${r.creator?.username || "未记录"}`}
+                  >
+                    <Glyph name="user" size={15} />
+                    {r.creator?.username || "未记录"}
+                  </p>
                   <div className="gal-tags">
                     {r.tags.slice(0, 2).map((t) => (
                       <span key={t}>{t}</span>
@@ -518,15 +546,20 @@ function Gallery({ remote }) {
                   {TYPES[selected.type]}
                 </span>
                 <h2>{content.name}</h2>
+                <p>创建者：{content.creator?.username || "未记录"}</p>
                 <p>更新于 {when(selected.updatedAt)}</p>
               </div>
-              <button aria-label="关闭详情" onClick={() => setSelected(null)}>
+              <button
+                disabled={busy}
+                aria-label="关闭详情"
+                onClick={() => setSelected(null)}
+              >
                 <Glyph name="close" />
               </button>
             </div>
             <div className="gal-detail-actions">
               {selected.canEdit && (
-                <button onClick={() => edit(selected)}>
+                <button disabled={busy} onClick={() => edit(selected)}>
                   <Glyph name="edit" />
                   编辑资源
                 </button>
@@ -563,8 +596,23 @@ function Gallery({ remote }) {
                 <Glyph name="download" />
                 下载资源
               </button>
+              {selected.canDelete && (
+                <button
+                  className="gal-delete"
+                  disabled={busy}
+                  onClick={() => removeResource(selected)}
+                >
+                  <Glyph name="trash" />
+                  删除资源
+                </button>
+              )}
             </div>
             <div className="gal-dialog-body">
+              {error && (
+                <p role="alert" className="gal-error">
+                  {error}
+                </p>
+              )}
               {content.type === "skill" && (
                 <p className="gal-usage-total">
                   <Glyph name="usage" /> 累计调用次数{" "}
@@ -842,11 +890,42 @@ function Gallery({ remote }) {
                   </div>
                 ))}
               </div>
+              <label className="gal-username-setting">
+                用户名
+                <input
+                  value={storageSettings.username || ""}
+                  maxLength={80}
+                  placeholder="新资源的创建者名称"
+                  onChange={(e) =>
+                    setStorageSettings((x) => ({
+                      ...x,
+                      username: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <button
+                disabled={busy || !storageSettings.username?.trim()}
+                onClick={() =>
+                  run(async () => {
+                    const storage = await call(
+                      remote,
+                      "uiSetUsername",
+                      json({ username: storageSettings.username }),
+                    );
+                    setStorageSettings(storage);
+                    setStatus((x) => ({ ...x, storage }));
+                    setConnectionResult("用户名已保存，用于之后创建的资源。");
+                  })
+                }
+              >
+                保存用户名
+              </button>
               {connectionResult && <p role="status">{connectionResult}</p>}
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.6.0</span>
+              <span className="gal-local">v0.6.1</span>
               <button
                 disabled={busy}
                 onClick={() =>

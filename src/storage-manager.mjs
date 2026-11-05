@@ -6,6 +6,7 @@ import {
   rmSync,
 } from "node:fs";
 import { join } from "node:path";
+import { userInfo } from "node:os";
 import { randomUUID } from "node:crypto";
 import { LocalGalleryStore } from "./local-store.mjs";
 import { demand } from "./model.mjs";
@@ -44,6 +45,9 @@ export class StorageManager {
     return {
       format: 1,
       configured: config.configured,
+      ...(typeof config.username === "string" && config.username.trim()
+        ? { username: config.username }
+        : {}),
       activeLibraryId: "local",
       libraries: [{ id: "local", type: "internal", name: "本地资源库" }],
     };
@@ -52,17 +56,42 @@ export class StorageManager {
   settings() {
     return {
       ...this.read(),
+      username: this.username(),
       providers: STORAGE_PROVIDERS,
       capabilities: {
         list: true,
         read: true,
         create: true,
         update: true,
+        delete: true,
         history: false,
         sharing: false,
         migration: false,
       },
     };
+  }
+  username() {
+    const configured = this.read().username;
+    if (configured) return configured;
+    try {
+      return userInfo().username || "owner";
+    } catch {
+      return "owner";
+    }
+  }
+  setUsername(value) {
+    demand(
+      typeof value === "string" &&
+        value.trim().length > 0 &&
+        value.trim().length <= 80 &&
+        !/[\x00-\x1f]/.test(value),
+      400,
+      "INVALID_USERNAME",
+      "用户名须为 1–80 个字符",
+    );
+    return this.change((config) => {
+      config.username = value.trim();
+    });
   }
   library(id = this.read().activeLibraryId) {
     const library = this.read().libraries.find((l) => l.id === id);
@@ -133,7 +162,12 @@ export class StorageManager {
   }
   createResource(input) {
     const libraryId = this.read().activeLibraryId;
-    return { ...this.adapter(libraryId).createResource(input), libraryId };
+    return {
+      ...this.adapter(libraryId).createResource(input, {
+        username: this.username(),
+      }),
+      libraryId,
+    };
   }
   updateResource(id, input, expectedRevision) {
     const libraryId = this.read().activeLibraryId;
@@ -141,6 +175,9 @@ export class StorageManager {
       ...this.adapter(libraryId).updateResource(id, input, expectedRevision),
       libraryId,
     };
+  }
+  deleteResource(id, expectedRevision) {
+    return this.adapter().deleteResource(id, expectedRevision);
   }
   recordSkillUse({ libraryId, ...input } = {}) {
     const library = this.library(libraryId);

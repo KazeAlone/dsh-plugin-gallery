@@ -1183,3 +1183,18 @@ fieldset.gal-skill-fields {
 .gal-resource-card footer {
   flex-wrap: wrap;
 }
+
+.gal-card-creator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--g-muted);
+  padding: 0 18px;
+  overflow-wrap: anywhere;
+}
+.gal button.gal-delete {
+  color: var(--g-error);
+}
+.gal-username-setting {
+  margin: 20px 0 12px;
+}

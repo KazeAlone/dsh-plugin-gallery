@@ -20,6 +20,8 @@ const paths = {
   settings: ["M4 7h16M4 17h16", "M8 4v6M16 14v6"],
   file: ["M5 3h10l4 4v14H5z", "M14 3v5h5"],
   folder: ["M3 6h7l2 2h9v12H3z"],
+  user: ["M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0", "M4 21v-2a8 8 0 0 1 16 0v2"],
+  trash: ["M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"],
   usage: ["M4 20h16M7 16v-5M12 16V4M17 16V8"],
   clock: ["M12 8v5l3 2", "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0"],
   arrow: ["M6 18L18 6M6 6h12v12"],

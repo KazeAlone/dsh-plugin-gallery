@@ -26,6 +26,8 @@ const methods = {
   uiGet: ["id"],
   uiCreate: ["payload"],
   uiUpdate: ["id", "payload"],
+  uiDelete: ["id", "payload"],
+  uiSetUsername: ["payload"],
   uiStorageSettings: [],
   uiTestStorage: ["payload"],
   uiConfigureStorage: [],
