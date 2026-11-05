@@ -28,3 +28,22 @@
 - `uiConfigureStorage()`：确认使用默认内部存储，并保存单库配置。
 
 当前支持读取、新建、编辑，不支持历史、共享和自动迁移。后续后端必须遵循同一资源数据结构及 revision 冲突语义；中心服务凭据不得返回浏览器或写入普通连接配置。
+
+## Skill 实际使用计数
+
+宿主消费插件在**已确认将 Skill 用于当前任务的一次实际执行**时调用：
+
+```js
+await ctx.gallery.recordSkillUse({
+  id: skillResourceId,
+  libraryId: 'local', // 可省略
+  usageId: `${consumerId}:${executionId}:${skillInvocationId}`,
+});
+// => { id, libraryId, usageCount }
+```
+
+usageId 是每次实际使用的稳定唯一 ID（最多 200 字符），不能在重试时重新生成。不同消费插件需要自己的前缀。同一个 Skill 同一 usageId 永久去重；一次任务内实际使用多次必须提供不同 invocation ID。执行结果成功与否不改变“已使用”的计数。预加载、读取、查看、下载、编辑均不调用此方法；命中缓存后实际使用仍应上报。失败时使用同一 ID 重试，不能用新的 ID 补报。
+
+接口仅为宿主服务方法，不注册浏览器 RPC。列表与详情返回 usageCount（旧资源默认 0），内部去重记录不返回客户端。统计与内容分离：不改变 digest、revision、updatedAt；编辑保留计数，导出文件包不带统计，新建或重新导入从 0 开始。计数与去重 ID 摘要使用现有 resources.json 原子写入和锁存储，不需要数据库；去重记录随实际使用数量增长。
+
+**当前仓库不包含 DSH 的 Skill 执行器，也没有执行事件订阅。此版本只提供统计存储、展示和上述接入接口，执行端需要在真实使用处接入后才会增长，不能据此声称已自动统计 DSH 使用。**

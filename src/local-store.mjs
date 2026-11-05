@@ -31,8 +31,10 @@ export class LocalGalleryStore {
     return data;
   }
   detail(row) {
+    const { usageEventIds, usageCount, ...resource } = row;
     return structuredClone({
-      ...row,
+      ...resource,
+      usageCount: usageCount ?? 0,
       canEdit: true,
       fileCount: row.files.length,
     });
@@ -154,6 +156,53 @@ export class LocalGalleryStore {
         updatedAt: new Date().toISOString(),
       });
     });
+  }
+  recordSkillUse({ id, usageId } = {}) {
+    demand(
+      typeof usageId === "string" &&
+        usageId.trim().length > 0 &&
+        usageId.length <= 200,
+      400,
+      "INVALID_USAGE_ID",
+      "需要唯一的实际使用标识 usageId（1–200 字符）",
+    );
+    demand(
+      typeof id === "string" && id.length > 0,
+      400,
+      "INVALID_RESOURCE_ID",
+      "需要资源 ID",
+    );
+    const eventId = digest(usageId);
+    const result = this.write((rows) => {
+      const row = rows.find((r) => r.id === id);
+      demand(row, 404, "NOT_FOUND", "资源不存在");
+      demand(
+        row.type === "skill",
+        400,
+        "INVALID_TYPE",
+        "仅统计 Skill 的实际使用次数",
+      );
+      const events = row.usageEventIds ?? [];
+      const count = row.usageCount ?? 0;
+      demand(
+        Array.isArray(events) && Number.isSafeInteger(count) && count >= 0,
+        500,
+        "INVALID_USAGE_DATA",
+        "使用统计数据无效",
+      );
+      if (!events.includes(eventId)) {
+        demand(
+          count < Number.MAX_SAFE_INTEGER,
+          409,
+          "USAGE_LIMIT",
+          "使用次数已达上限",
+        );
+        row.usageEventIds = [...events, eventId];
+        row.usageCount = count + 1;
+      }
+      return row;
+    });
+    return { id: result.id, usageCount: result.usageCount };
   }
   resolveReference(ref) {
     const row = this.getResource(ref.id);

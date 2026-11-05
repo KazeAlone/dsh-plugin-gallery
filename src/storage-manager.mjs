@@ -142,6 +142,13 @@ export class StorageManager {
       libraryId,
     };
   }
+  recordSkillUse({ libraryId, ...input } = {}) {
+    const library = this.library(libraryId);
+    return {
+      ...this.adapter(library.id).recordSkillUse(input),
+      libraryId: library.id,
+    };
+  }
   resolveReference(ref) {
     const library = this.library(ref.libraryId);
     return {

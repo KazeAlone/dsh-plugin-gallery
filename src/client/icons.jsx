@@ -20,6 +20,7 @@ const paths = {
   settings: ["M4 7h16M4 17h16", "M8 4v6M16 14v6"],
   file: ["M5 3h10l4 4v14H5z", "M14 3v5h5"],
   folder: ["M3 6h7l2 2h9v12H3z"],
+  usage: ["M4 20h16M7 16v-5M12 16V4M17 16V8"],
   clock: ["M12 8v5l3 2", "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0"],
   arrow: ["M6 18L18 6M6 6h12v12"],
   edit: ["M14 5l5 5M4 20l5-1L21 7l-5-5L4 14z"],

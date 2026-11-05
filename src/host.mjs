@@ -33,6 +33,10 @@ export default class GalleryService extends TypertRemoteService {
   async resolveReference(ref) {
     return this.store.resolveReference(ref);
   }
+  // Host consumer reports actual activation; never called from read or UI paths.
+  async recordSkillUse(input) {
+    return this.store.recordSkillUse(input);
+  }
   async getSnapshot(ref) {
     return this.store.getSnapshot(ref);
   }

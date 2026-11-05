@@ -434,6 +434,15 @@ function Gallery({ remote }) {
                     ))}
                   </div>
                   <footer>
+                    {r.type === "skill" && (
+                      <span
+                        title="累计实际使用次数"
+                        aria-label={`累计实际使用 ${r.usageCount ?? 0} 次`}
+                      >
+                        <Glyph name="usage" size={15} />
+                        {(r.usageCount ?? 0).toLocaleString()} 次
+                      </span>
+                    )}
                     <span title="文件数量">
                       <Glyph name="file" size={15} />
                       {r.fileCount}
@@ -555,6 +564,13 @@ function Gallery({ remote }) {
               </button>
             </div>
             <div className="gal-dialog-body">
+              {content.type === "skill" && (
+                <p className="gal-usage-total">
+                  <Glyph name="usage" /> 累计实际使用{" "}
+                  <strong>{(content.usageCount ?? 0).toLocaleString()}</strong>{" "}
+                  次
+                </p>
+              )}
               <p className="gal-description">
                 {content.description || "暂无描述"}
               </p>
@@ -829,7 +845,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.5.6</span>
+              <span className="gal-local">v0.5.7</span>
               <button
                 disabled={busy}
                 onClick={() =>
