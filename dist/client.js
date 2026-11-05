@@ -1845,26 +1845,9 @@ fieldset.gal-skill-fields {
   background-position: 29px 13px, 63px 41px;
 }
 .gal-astral-orbit {
-  position: absolute;
-  top: -240px;
-  left: 37%;
-  width: 440px;
-  height: 440px;
-  border: 1px solid #e7c58a60;
-  border-radius: 50%;
-  box-shadow: 0 0 0 24px #e7c58a18, 0 0 0 58px #e7c58a12;
+  transform-origin: 270px 68px;
+  filter: drop-shadow(0 0 5px #ffcc74);
   animation: gal-astral-orbit 42s linear infinite;
-}
-.gal-astral-orbit::after {
-  content: "";
-  position: absolute;
-  top: 49%;
-  left: -3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #fff4c9;
-  box-shadow: 0 0 16px 4px #ffcc74;
 }
 .gal-astral-meteor {
   position: absolute;
@@ -10228,7 +10211,7 @@ function Gallery({ remote }) {
     setType(t);
     setOffset(0);
   };
-  return /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal", "data-theme": theme, "data-motion-paused": motionPaused }, theme === "astral" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-astral-sky", "aria-hidden": "true" }, /* @__PURE__ */ import_react9.default.createElement("svg", { className: "gal-astral-chart", viewBox: "0 0 540 240", fill: "none" }, /* @__PURE__ */ import_react9.default.createElement("g", { stroke: "currentColor", strokeWidth: "0.7" }, /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "270", cy: "68", r: "144" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "270", cy: "68", r: "126", strokeDasharray: "2 5" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "270", cy: "68", r: "106" }), /* @__PURE__ */ import_react9.default.createElement("ellipse", { cx: "270", cy: "68", rx: "248", ry: "72", transform: "rotate(-16 270 68)" }), /* @__PURE__ */ import_react9.default.createElement("ellipse", { cx: "270", cy: "68", rx: "248", ry: "72", transform: "rotate(16 270 68)" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M24 68h492M270 0v224M133 0l274 136M407 0L133 136", opacity: ".45" })), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M270 43l5 20 20 5-20 5-5 20-5-20-20-5 20-5z", fill: "#fff1c9" })), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-orbit" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" })), /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h1", null, /* @__PURE__ */ import_react9.default.createElement(BrandIcon, { size: 32 }), "Gallery", theme === "astral" && /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-title" }, "\u938F\u91D1\u661F\u7A79"))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-header-actions" }, theme === "astral" && /* @__PURE__ */ import_react9.default.createElement(
+  return /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal", "data-theme": theme, "data-motion-paused": motionPaused }, theme === "astral" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-astral-sky", "aria-hidden": "true" }, /* @__PURE__ */ import_react9.default.createElement("svg", { className: "gal-astral-chart", viewBox: "0 0 540 240", fill: "none" }, /* @__PURE__ */ import_react9.default.createElement("g", { stroke: "currentColor", strokeWidth: "0.7" }, /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "270", cy: "68", r: "144" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "270", cy: "68", r: "126", strokeDasharray: "2 5" }), /* @__PURE__ */ import_react9.default.createElement("circle", { cx: "270", cy: "68", r: "106" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M24 68h492M270 0v224M133 0l274 136M407 0L133 136", opacity: ".45" })), /* @__PURE__ */ import_react9.default.createElement("circle", { className: "gal-astral-orbit", cx: "376", cy: "68", r: "3.5", fill: "#fff4c9" }), /* @__PURE__ */ import_react9.default.createElement("path", { d: "M270 43l5 20 20 5-20 5-5 20-5-20-20-5 20-5z", fill: "#fff1c9" })), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" })), /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h1", null, /* @__PURE__ */ import_react9.default.createElement(BrandIcon, { size: 32 }), "Gallery", theme === "astral" && /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-title" }, "\u938F\u91D1\u661F\u7A79"))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-header-actions" }, theme === "astral" && /* @__PURE__ */ import_react9.default.createElement(
     "button",
     {
       className: "gal-astral-motion",

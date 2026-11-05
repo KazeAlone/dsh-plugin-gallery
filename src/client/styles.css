@@ -1755,26 +1755,9 @@ fieldset.gal-skill-fields {
   background-position: 29px 13px, 63px 41px;
 }
 .gal-astral-orbit {
-  position: absolute;
-  top: -240px;
-  left: 37%;
-  width: 440px;
-  height: 440px;
-  border: 1px solid #e7c58a60;
-  border-radius: 50%;
-  box-shadow: 0 0 0 24px #e7c58a18, 0 0 0 58px #e7c58a12;
+  transform-origin: 270px 68px;
+  filter: drop-shadow(0 0 5px #ffcc74);
   animation: gal-astral-orbit 42s linear infinite;
-}
-.gal-astral-orbit::after {
-  content: "";
-  position: absolute;
-  top: 49%;
-  left: -3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #fff4c9;
-  box-shadow: 0 0 16px 4px #ffcc74;
 }
 .gal-astral-meteor {
   position: absolute;

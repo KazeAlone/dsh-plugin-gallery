@@ -397,13 +397,11 @@ function Gallery({ remote }) {
               <circle cx="270" cy="68" r="144" />
               <circle cx="270" cy="68" r="126" strokeDasharray="2 5" />
               <circle cx="270" cy="68" r="106" />
-              <ellipse cx="270" cy="68" rx="248" ry="72" transform="rotate(-16 270 68)" />
-              <ellipse cx="270" cy="68" rx="248" ry="72" transform="rotate(16 270 68)" />
               <path d="M24 68h492M270 0v224M133 0l274 136M407 0L133 136" opacity=".45" />
             </g>
+            <circle className="gal-astral-orbit" cx="376" cy="68" r="3.5" fill="#fff4c9" />
             <path d="M270 43l5 20 20 5-20 5-5 20-5-20-20-5 20-5z" fill="#fff1c9" />
           </svg>
-          <span className="gal-astral-orbit" />
           <span className="gal-astral-meteor" />
           <span className="gal-astral-meteor" />
           <span className="gal-astral-meteor" />
