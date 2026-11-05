@@ -272,11 +272,7 @@ function Gallery({ remote }) {
     <div className="gal">
       <header className="gal-header">
         <div>
-          <div className="gal-eyebrow">
-            RESOURCE LIBRARY <span>PREVIEW · 0.3.1</span>
-          </div>
-          <h1>资源 Gallery</h1>
-          <p>收集可复用资源，让每次编排都有积累。</p>
+          <h1>资源库</h1>
         </div>
         <div className="gal-header-actions">
           <button
@@ -337,17 +333,6 @@ function Gallery({ remote }) {
               >
                 <span className={"gal-type-icon " + key}>{ICONS[key]}</span>
                 <strong>{label}</strong>
-                <small>
-                  {
-                    {
-                      skill: "技能与参考资料",
-                      agent: "角色与能力定义",
-                      mcp: "工具服务与连接",
-                      workflow: "任务编排模板",
-                    }[key]
-                  }
-                </small>
-                <b>↗</b>
               </button>
             ))}
           </div>
@@ -393,17 +378,15 @@ function Gallery({ remote }) {
             <div className="gal-empty">
               <Icon />
               <h3>
-                {q || type || scope !== "all"
-                  ? "没有匹配的资源"
-                  : "资源，从第一份积累开始"}
+                {q || type || scope !== "all" ? "没有匹配的资源" : "暂无资源"}
               </h3>
               <p>
                 {q || type || scope !== "all"
                   ? "试试其他关键词或分类。"
-                  : "上传已有的 Skill、Agent 描述、MCP 配置或 Workflow 模板。"}
+                  : "新建资源或上传文件。"}
               </p>
               <button className="gal-primary" onClick={() => edit(null)}>
-                创建 / 上传资源
+                新建资源
               </button>
             </div>
           ) : (
@@ -418,7 +401,6 @@ function Gallery({ remote }) {
                     <span className={"gal-pill " + r.type}>
                       {TYPES[r.type]}
                     </span>
-                    <span className="gal-version">{"本地资源"}</span>
                   </div>
                   <h3>{r.name}</h3>
                   <p>{r.description || "暂无描述"}</p>
@@ -454,10 +436,6 @@ function Gallery({ remote }) {
               </button>
             </div>
           )}
-          <footer className="gal-bottom">
-            <span>本地存储 · 保存后即可使用</span>
-            <span>Skill · Agent · MCP · Workflow</span>
-          </footer>
         </>
       )}
       {selected && !editor && (
@@ -474,9 +452,7 @@ function Gallery({ remote }) {
                   {TYPES[selected.type]}
                 </span>
                 <h2>{content.name}</h2>
-                <p>
-                  {"本地资源"} · 更新于 {when(selected.updatedAt)}
-                </p>
+                <p>更新于 {when(selected.updatedAt)}</p>
               </div>
               <button aria-label="关闭详情" onClick={() => setSelected(null)}>
                 ×
@@ -537,9 +513,8 @@ function Gallery({ remote }) {
             </div>
             {reference && (
               <label className="gal-reference">
-                供编排插件使用的资源引用
+                资源引用
                 <textarea readOnly rows={4} value={reference} />
-                <small>摘要用于检测内容变化。编排运行时可保存内容快照。</small>
               </label>
             )}
             <div className="gal-dialog-body">
@@ -591,9 +566,7 @@ function Gallery({ remote }) {
           >
             <div className="gal-dialog-head">
               <div>
-                <div className="gal-eyebrow">RESOURCE EDITOR</div>
                 <h2>{editor.id ? "编辑资源" : "创建资源"}</h2>
-                <p>支持上传文件、文件夹或 Gallery 导出的 JSON 资源包。</p>
               </div>
               <button
                 aria-label="关闭编辑"
@@ -637,7 +610,7 @@ function Gallery({ remote }) {
                   rows={3}
                   value={editor.resource.description}
                   onChange={(e) => field("description", e.target.value)}
-                  placeholder="说明用途、适用场景和使用方法"
+                  placeholder="资源描述（选填）"
                   maxLength={10000}
                 />
               </label>
@@ -646,7 +619,7 @@ function Gallery({ remote }) {
                 <input
                   value={editor.tags}
                   onChange={(e) => change("tags", e.target.value)}
-                  placeholder="使用逗号分隔，例如：研发, 审查, Python"
+                  placeholder="标签，用逗号分隔"
                 />
               </label>
               <div className="gal-file-toolbar">
@@ -795,8 +768,7 @@ function Gallery({ remote }) {
                   />
                 </label>
                 <label>
-                  资源依赖（JSON 数组，例如{" "}
-                  {'[{"id":"资源ID","digest":"SHA-256"}]'}）
+                  资源依赖（JSON）
                   <textarea
                     rows={5}
                     value={editor.references}
@@ -804,13 +776,9 @@ function Gallery({ remote }) {
                     spellCheck="false"
                   />
                 </label>
-                <p className="gal-hint">
-                  MCP 文件保存环境变量名称与配置模板；运行凭据由使用方配置。
-                </p>
               </details>
             </div>
             <footer className="gal-dialog-footer">
-              <span>保存在当前 DSH 中，重启后仍可使用</span>
               <button
                 className="gal-primary"
                 disabled={busy}
@@ -862,9 +830,7 @@ function Gallery({ remote }) {
                     className={provider.available ? "active" : ""}
                   >
                     <strong>{provider.name}</strong>
-                    <span>
-                      {provider.available ? "已可用 · 无需配置" : "后续接入"}
-                    </span>
+                    <span>{provider.available ? "可用" : "后续接入"}</span>
                   </div>
                 ))}
               </div>
@@ -885,7 +851,7 @@ function Gallery({ remote }) {
                   ))}
                 </select>
               </label>
-              <p>切换只改变当前显示的资源库，原有资源保留，不会复制或合并。</p>
+              <p>切换不会移动或合并已有资源。</p>
               <div className="gal-storage-add">
                 <input
                   aria-label="新资源库名称"
@@ -924,6 +890,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
+              <span className="gal-local">v0.3.1</span>
               <button
                 disabled={busy}
                 onClick={() =>
@@ -958,7 +925,7 @@ function Gallery({ remote }) {
                     setTotal(0);
                     setOffset(0);
                     setRefresh((x) => x + 1);
-                    setNotice("已切换资源库，原有资源保留。");
+                    setNotice("已切换资源库。");
                   })
                 }
               >
@@ -984,13 +951,13 @@ function Gallery({ remote }) {
             </div>
             <div className="gal-dialog-footer">
               <button autoFocus onClick={() => answerConfirmation(false)}>
-                取消操作
+                取消
               </button>
               <button
                 className="gal-primary"
                 onClick={() => answerConfirmation(true)}
               >
-                确认操作
+                确认
               </button>
             </div>
           </section>

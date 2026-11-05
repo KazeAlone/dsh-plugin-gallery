@@ -325,7 +325,7 @@ function Gallery({ remote }) {
     setType(t);
     setOffset(0);
   };
-  return /* @__PURE__ */ import_react.default.createElement("div", { className: "gal" }, /* @__PURE__ */ import_react.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-eyebrow" }, "RESOURCE LIBRARY ", /* @__PURE__ */ import_react.default.createElement("span", null, "PREVIEW \xB7 0.3.1")), /* @__PURE__ */ import_react.default.createElement("h1", null, "\u8D44\u6E90 Gallery"), /* @__PURE__ */ import_react.default.createElement("p", null, "\u6536\u96C6\u53EF\u590D\u7528\u8D44\u6E90\uFF0C\u8BA9\u6BCF\u6B21\u7F16\u6392\u90FD\u6709\u79EF\u7D2F\u3002")), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-header-actions" }, /* @__PURE__ */ import_react.default.createElement(
+  return /* @__PURE__ */ import_react.default.createElement("div", { className: "gal" }, /* @__PURE__ */ import_react.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("h1", null, "\u8D44\u6E90\u5E93")), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-header-actions" }, /* @__PURE__ */ import_react.default.createElement(
     "button",
     {
       disabled: busy || !status?.ready,
@@ -357,14 +357,7 @@ function Gallery({ remote }) {
       onClick: () => chooseFilter(type === key ? "" : key)
     },
     /* @__PURE__ */ import_react.default.createElement("span", { className: "gal-type-icon " + key }, ICONS[key]),
-    /* @__PURE__ */ import_react.default.createElement("strong", null, label),
-    /* @__PURE__ */ import_react.default.createElement("small", null, {
-      skill: "\u6280\u80FD\u4E0E\u53C2\u8003\u8D44\u6599",
-      agent: "\u89D2\u8272\u4E0E\u80FD\u529B\u5B9A\u4E49",
-      mcp: "\u5DE5\u5177\u670D\u52A1\u4E0E\u8FDE\u63A5",
-      workflow: "\u4EFB\u52A1\u7F16\u6392\u6A21\u677F"
-    }[key]),
-    /* @__PURE__ */ import_react.default.createElement("b", null, "\u2197")
+    /* @__PURE__ */ import_react.default.createElement("strong", null, label)
   ))), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-toolbar" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-scopes" }, /* @__PURE__ */ import_react.default.createElement(
     "button",
     {
@@ -387,14 +380,14 @@ function Gallery({ remote }) {
         setOffset(0);
       }
     }
-  )), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-list-heading" }, /* @__PURE__ */ import_react.default.createElement("span", null, type ? TYPES[type] : "\u8D44\u6E90", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, total)), /* @__PURE__ */ import_react.default.createElement("div", null, type && /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => chooseFilter("") }, "\u6E05\u9664\u5206\u7C7B \xD7"), /* @__PURE__ */ import_react.default.createElement("button", { disabled: busy, onClick: () => setRefresh((x) => x + 1) }, "\u5237\u65B0 \u21BB"))), loading ? /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-empty" }, "\u6B63\u5728\u52A0\u8F7D\u8D44\u6E90\u2026") : items.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-empty" }, /* @__PURE__ */ import_react.default.createElement(Icon, null), /* @__PURE__ */ import_react.default.createElement("h3", null, q || type || scope !== "all" ? "\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90" : "\u8D44\u6E90\uFF0C\u4ECE\u7B2C\u4E00\u4EFD\u79EF\u7D2F\u5F00\u59CB"), /* @__PURE__ */ import_react.default.createElement("p", null, q || type || scope !== "all" ? "\u8BD5\u8BD5\u5176\u4ED6\u5173\u952E\u8BCD\u6216\u5206\u7C7B\u3002" : "\u4E0A\u4F20\u5DF2\u6709\u7684 Skill\u3001Agent \u63CF\u8FF0\u3001MCP \u914D\u7F6E\u6216 Workflow \u6A21\u677F\u3002"), /* @__PURE__ */ import_react.default.createElement("button", { className: "gal-primary", onClick: () => edit(null) }, "\u521B\u5EFA / \u4E0A\u4F20\u8D44\u6E90")) : /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-resource-grid" }, items.map((r) => /* @__PURE__ */ import_react.default.createElement(
+  )), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-list-heading" }, /* @__PURE__ */ import_react.default.createElement("span", null, type ? TYPES[type] : "\u8D44\u6E90", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, total)), /* @__PURE__ */ import_react.default.createElement("div", null, type && /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => chooseFilter("") }, "\u6E05\u9664\u5206\u7C7B \xD7"), /* @__PURE__ */ import_react.default.createElement("button", { disabled: busy, onClick: () => setRefresh((x) => x + 1) }, "\u5237\u65B0 \u21BB"))), loading ? /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-empty" }, "\u6B63\u5728\u52A0\u8F7D\u8D44\u6E90\u2026") : items.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-empty" }, /* @__PURE__ */ import_react.default.createElement(Icon, null), /* @__PURE__ */ import_react.default.createElement("h3", null, q || type || scope !== "all" ? "\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90" : "\u6682\u65E0\u8D44\u6E90"), /* @__PURE__ */ import_react.default.createElement("p", null, q || type || scope !== "all" ? "\u8BD5\u8BD5\u5176\u4ED6\u5173\u952E\u8BCD\u6216\u5206\u7C7B\u3002" : "\u65B0\u5EFA\u8D44\u6E90\u6216\u4E0A\u4F20\u6587\u4EF6\u3002"), /* @__PURE__ */ import_react.default.createElement("button", { className: "gal-primary", onClick: () => edit(null) }, "\u65B0\u5EFA\u8D44\u6E90")) : /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-resource-grid" }, items.map((r) => /* @__PURE__ */ import_react.default.createElement(
     "button",
     {
       key: r.id,
       className: "gal-resource-card",
       onClick: () => run(() => load(r.id))
     },
-    /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-card-top" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "gal-pill " + r.type }, TYPES[r.type]), /* @__PURE__ */ import_react.default.createElement("span", { className: "gal-version" }, "\u672C\u5730\u8D44\u6E90")),
+    /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-card-top" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "gal-pill " + r.type }, TYPES[r.type])),
     /* @__PURE__ */ import_react.default.createElement("h3", null, r.name),
     /* @__PURE__ */ import_react.default.createElement("p", null, r.description || "\u6682\u65E0\u63CF\u8FF0"),
     /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-tags" }, r.tags.slice(0, 4).map((t) => /* @__PURE__ */ import_react.default.createElement("span", { key: t }, t))),
@@ -413,7 +406,7 @@ function Gallery({ remote }) {
       onClick: () => setOffset((x) => x + 48)
     },
     "\u4E0B\u4E00\u9875"
-  )), /* @__PURE__ */ import_react.default.createElement("footer", { className: "gal-bottom" }, /* @__PURE__ */ import_react.default.createElement("span", null, "\u672C\u5730\u5B58\u50A8 \xB7 \u4FDD\u5B58\u540E\u5373\u53EF\u4F7F\u7528"), /* @__PURE__ */ import_react.default.createElement("span", null, "Skill \xB7 Agent \xB7 MCP \xB7 Workflow"))), selected && !editor && /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-overlay" }, /* @__PURE__ */ import_react.default.createElement(
+  ))), selected && !editor && /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-overlay" }, /* @__PURE__ */ import_react.default.createElement(
     "section",
     {
       className: "gal-dialog gal-detail",
@@ -421,7 +414,7 @@ function Gallery({ remote }) {
       "aria-modal": "true",
       "aria-label": "\u8D44\u6E90\u8BE6\u60C5"
     },
-    /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("span", { className: "gal-pill " + selected.type }, TYPES[selected.type]), /* @__PURE__ */ import_react.default.createElement("h2", null, content.name), /* @__PURE__ */ import_react.default.createElement("p", null, "\u672C\u5730\u8D44\u6E90", " \xB7 \u66F4\u65B0\u4E8E ", when(selected.updatedAt))), /* @__PURE__ */ import_react.default.createElement("button", { "aria-label": "\u5173\u95ED\u8BE6\u60C5", onClick: () => setSelected(null) }, "\xD7")),
+    /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("span", { className: "gal-pill " + selected.type }, TYPES[selected.type]), /* @__PURE__ */ import_react.default.createElement("h2", null, content.name), /* @__PURE__ */ import_react.default.createElement("p", null, "\u66F4\u65B0\u4E8E ", when(selected.updatedAt))), /* @__PURE__ */ import_react.default.createElement("button", { "aria-label": "\u5173\u95ED\u8BE6\u60C5", onClick: () => setSelected(null) }, "\xD7")),
     /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-detail-actions" }, selected.canEdit && /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => edit(selected) }, "\u7F16\u8F91\u8D44\u6E90"), /* @__PURE__ */ import_react.default.createElement(
       "button",
       {
@@ -469,7 +462,7 @@ function Gallery({ remote }) {
       },
       "\u83B7\u53D6\u5F15\u7528"
     )),
-    reference && /* @__PURE__ */ import_react.default.createElement("label", { className: "gal-reference" }, "\u4F9B\u7F16\u6392\u63D2\u4EF6\u4F7F\u7528\u7684\u8D44\u6E90\u5F15\u7528", /* @__PURE__ */ import_react.default.createElement("textarea", { readOnly: true, rows: 4, value: reference }), /* @__PURE__ */ import_react.default.createElement("small", null, "\u6458\u8981\u7528\u4E8E\u68C0\u6D4B\u5185\u5BB9\u53D8\u5316\u3002\u7F16\u6392\u8FD0\u884C\u65F6\u53EF\u4FDD\u5B58\u5185\u5BB9\u5FEB\u7167\u3002")),
+    reference && /* @__PURE__ */ import_react.default.createElement("label", { className: "gal-reference" }, "\u8D44\u6E90\u5F15\u7528", /* @__PURE__ */ import_react.default.createElement("textarea", { readOnly: true, rows: 4, value: reference })),
     /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react.default.createElement("p", { className: "gal-description" }, content.description || "\u6682\u65E0\u63CF\u8FF0"), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-tags" }, content.tags.map((t) => /* @__PURE__ */ import_react.default.createElement("span", { key: t }, t))), content.files.map((f) => /* @__PURE__ */ import_react.default.createElement("details", { className: "gal-file", key: f.path }, /* @__PURE__ */ import_react.default.createElement("summary", null, f.path, /* @__PURE__ */ import_react.default.createElement("span", null, f.bytes ?? new Blob([f.content]).size, " B")), f.encoding === "utf8" ? /* @__PURE__ */ import_react.default.createElement("pre", null, f.content) : /* @__PURE__ */ import_react.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u4E0B\u8F7D\u7684\u8D44\u6E90\u5305\u4E2D\u3002"))), /* @__PURE__ */ import_react.default.createElement("details", { className: "gal-file" }, /* @__PURE__ */ import_react.default.createElement("summary", null, "\u5143\u6570\u636E\u4E0E\u4F9D\u8D56"), /* @__PURE__ */ import_react.default.createElement("pre", null, json2(
       {
         metadata: content.metadata,
@@ -486,7 +479,7 @@ function Gallery({ remote }) {
       "aria-modal": "true",
       "aria-label": editor.id ? "\u7F16\u8F91\u8D44\u6E90" : "\u65B0\u5EFA\u8D44\u6E90"
     },
-    /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-eyebrow" }, "RESOURCE EDITOR"), /* @__PURE__ */ import_react.default.createElement("h2", null, editor.id ? "\u7F16\u8F91\u8D44\u6E90" : "\u521B\u5EFA\u8D44\u6E90"), /* @__PURE__ */ import_react.default.createElement("p", null, "\u652F\u6301\u4E0A\u4F20\u6587\u4EF6\u3001\u6587\u4EF6\u5939\u6216 Gallery \u5BFC\u51FA\u7684 JSON \u8D44\u6E90\u5305\u3002")), /* @__PURE__ */ import_react.default.createElement(
+    /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("h2", null, editor.id ? "\u7F16\u8F91\u8D44\u6E90" : "\u521B\u5EFA\u8D44\u6E90")), /* @__PURE__ */ import_react.default.createElement(
       "button",
       {
         "aria-label": "\u5173\u95ED\u7F16\u8F91",
@@ -519,7 +512,7 @@ function Gallery({ remote }) {
         rows: 3,
         value: editor.resource.description,
         onChange: (e) => field("description", e.target.value),
-        placeholder: "\u8BF4\u660E\u7528\u9014\u3001\u9002\u7528\u573A\u666F\u548C\u4F7F\u7528\u65B9\u6CD5",
+        placeholder: "\u8D44\u6E90\u63CF\u8FF0\uFF08\u9009\u586B\uFF09",
         maxLength: 1e4
       }
     )), /* @__PURE__ */ import_react.default.createElement("label", null, "\u6807\u7B7E", /* @__PURE__ */ import_react.default.createElement(
@@ -527,7 +520,7 @@ function Gallery({ remote }) {
       {
         value: editor.tags,
         onChange: (e) => change("tags", e.target.value),
-        placeholder: "\u4F7F\u7528\u9017\u53F7\u5206\u9694\uFF0C\u4F8B\u5982\uFF1A\u7814\u53D1, \u5BA1\u67E5, Python"
+        placeholder: "\u6807\u7B7E\uFF0C\u7528\u9017\u53F7\u5206\u9694"
       }
     )), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-file-toolbar" }, /* @__PURE__ */ import_react.default.createElement("h3", null, "\u8D44\u6E90\u6587\u4EF6 ", /* @__PURE__ */ import_react.default.createElement("small", null, editor.resource.files.length, " / 100")), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("label", { className: "gal-upload" }, "\u4E0A\u4F20\u6587\u4EF6", /* @__PURE__ */ import_react.default.createElement(
       "input",
@@ -632,7 +625,7 @@ function Gallery({ remote }) {
         onChange: (e) => change("metadata", e.target.value),
         spellCheck: "false"
       }
-    )), /* @__PURE__ */ import_react.default.createElement("label", null, "\u8D44\u6E90\u4F9D\u8D56\uFF08JSON \u6570\u7EC4\uFF0C\u4F8B\u5982", " ", '[{"id":"\u8D44\u6E90ID","digest":"SHA-256"}]', "\uFF09", /* @__PURE__ */ import_react.default.createElement(
+    )), /* @__PURE__ */ import_react.default.createElement("label", null, "\u8D44\u6E90\u4F9D\u8D56\uFF08JSON\uFF09", /* @__PURE__ */ import_react.default.createElement(
       "textarea",
       {
         rows: 5,
@@ -640,8 +633,8 @@ function Gallery({ remote }) {
         onChange: (e) => change("references", e.target.value),
         spellCheck: "false"
       }
-    )), /* @__PURE__ */ import_react.default.createElement("p", { className: "gal-hint" }, "MCP \u6587\u4EF6\u4FDD\u5B58\u73AF\u5883\u53D8\u91CF\u540D\u79F0\u4E0E\u914D\u7F6E\u6A21\u677F\uFF1B\u8FD0\u884C\u51ED\u636E\u7531\u4F7F\u7528\u65B9\u914D\u7F6E\u3002"))),
-    /* @__PURE__ */ import_react.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react.default.createElement("span", null, "\u4FDD\u5B58\u5728\u5F53\u524D DSH \u4E2D\uFF0C\u91CD\u542F\u540E\u4ECD\u53EF\u4F7F\u7528"), /* @__PURE__ */ import_react.default.createElement(
+    )))),
+    /* @__PURE__ */ import_react.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react.default.createElement(
       "button",
       {
         className: "gal-primary",
@@ -684,7 +677,7 @@ function Gallery({ remote }) {
         className: provider.available ? "active" : ""
       },
       /* @__PURE__ */ import_react.default.createElement("strong", null, provider.name),
-      /* @__PURE__ */ import_react.default.createElement("span", null, provider.available ? "\u5DF2\u53EF\u7528 \xB7 \u65E0\u9700\u914D\u7F6E" : "\u540E\u7EED\u63A5\u5165")
+      /* @__PURE__ */ import_react.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
     ))), /* @__PURE__ */ import_react.default.createElement("label", null, "\u5F53\u524D\u8D44\u6E90\u5E93", /* @__PURE__ */ import_react.default.createElement(
       "select",
       {
@@ -696,7 +689,7 @@ function Gallery({ remote }) {
         }
       },
       storageSettings.libraries.map((library) => /* @__PURE__ */ import_react.default.createElement("option", { key: library.id, value: library.id }, library.name))
-    )), /* @__PURE__ */ import_react.default.createElement("p", null, "\u5207\u6362\u53EA\u6539\u53D8\u5F53\u524D\u663E\u793A\u7684\u8D44\u6E90\u5E93\uFF0C\u539F\u6709\u8D44\u6E90\u4FDD\u7559\uFF0C\u4E0D\u4F1A\u590D\u5236\u6216\u5408\u5E76\u3002"), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-storage-add" }, /* @__PURE__ */ import_react.default.createElement(
+    )), /* @__PURE__ */ import_react.default.createElement("p", null, "\u5207\u6362\u4E0D\u4F1A\u79FB\u52A8\u6216\u5408\u5E76\u5DF2\u6709\u8D44\u6E90\u3002"), /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-storage-add" }, /* @__PURE__ */ import_react.default.createElement(
       "input",
       {
         "aria-label": "\u65B0\u8D44\u6E90\u5E93\u540D\u79F0",
@@ -730,7 +723,7 @@ function Gallery({ remote }) {
       },
       "\u6DFB\u52A0"
     )), connectionResult && /* @__PURE__ */ import_react.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react.default.createElement(
+    /* @__PURE__ */ import_react.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "gal-local" }, "v0.3.1"), /* @__PURE__ */ import_react.default.createElement(
       "button",
       {
         disabled: busy,
@@ -764,7 +757,7 @@ function Gallery({ remote }) {
           setTotal(0);
           setOffset(0);
           setRefresh((x) => x + 1);
-          setNotice("\u5DF2\u5207\u6362\u8D44\u6E90\u5E93\uFF0C\u539F\u6709\u8D44\u6E90\u4FDD\u7559\u3002");
+          setNotice("\u5DF2\u5207\u6362\u8D44\u6E90\u5E93\u3002");
         })
       },
       busy ? "\u5904\u7406\u4E2D\u2026" : "\u4F7F\u7528\u6B64\u8D44\u6E90\u5E93"
@@ -779,13 +772,13 @@ function Gallery({ remote }) {
     },
     /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react.default.createElement("h2", null, "\u786E\u8BA4\u64CD\u4F5C")),
     /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react.default.createElement("p", null, confirmation.message)),
-    /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react.default.createElement("button", { autoFocus: true, onClick: () => answerConfirmation(false) }, "\u53D6\u6D88\u64CD\u4F5C"), /* @__PURE__ */ import_react.default.createElement(
+    /* @__PURE__ */ import_react.default.createElement("div", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react.default.createElement("button", { autoFocus: true, onClick: () => answerConfirmation(false) }, "\u53D6\u6D88"), /* @__PURE__ */ import_react.default.createElement(
       "button",
       {
         className: "gal-primary",
         onClick: () => answerConfirmation(true)
       },
-      "\u786E\u8BA4\u64CD\u4F5C"
+      "\u786E\u8BA4"
     ))
   )));
 }
