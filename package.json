@@ -45,7 +45,9 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.0.5",
     "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.5",
-    "react": ">=18 <20"
+    "react": ">=18 <20",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-mcp-client": "0.2.1-rc.5"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {
@@ -56,13 +58,21 @@
     },
     "react": {
       "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-mcp-client": {
+      "optional": true
     }
   },
   "devDependencies": {
     "@modelcontextprotocol/server": "^2.2.0",
     "esbuild": "0.25.12",
     "prettier": "3.6.2",
-    "react": "18.3.1"
+    "react": "18.3.1",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-mcp-client": "0.2.1-rc.5"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -84,8 +94,6 @@
     "dsh-gallery": "./scripts/gallery.mjs"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-mcp-client": "^0.2.1-rc.5",
-    "@deepseek-ai/dsh-tools": "^0.2.1-rc.5",
     "@modelcontextprotocol/client": "^2.2.0",
     "yaml": "^2.9.1"
   }
