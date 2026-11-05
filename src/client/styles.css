@@ -940,3 +940,31 @@
   border-radius: 12px;
   background: var(--g-soft);
 }
+.gal-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gal-list-actions button.gal-primary {
+  min-height: 38px;
+  color: var(--g-on-accent);
+}
+.gal-type-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+.gal-editor-type {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+}
+@media (max-width: 600px) {
+  .gal-type-field {
+    flex: 1 1 100%;
+  }
+}

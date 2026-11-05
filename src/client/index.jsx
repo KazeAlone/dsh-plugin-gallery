@@ -134,7 +134,8 @@ function Gallery({ remote }) {
   function edit(r) {
     setNotice("");
     setError("");
-    const d = r || blank();
+    if (!r && !type) return;
+    const d = r || { ...blank(), type };
     setEditor({
       id: r?.id,
       revision: r?.revision,
@@ -169,6 +170,10 @@ function Gallery({ remote }) {
           bundle.resource
         ) {
           const r = bundle.resource;
+          if (r.type !== editor.resource.type)
+            throw new Error(
+              `资源包类型不匹配，请在 ${TYPES[r.type] || r.type} 分类中导入。`,
+            );
           setEditor((x) => ({
             ...x,
             resource: { ...blank(), ...r },
@@ -298,14 +303,6 @@ function Gallery({ remote }) {
           >
             <Glyph name="settings" size={20} />
           </button>
-          <button
-            className="gal-primary"
-            disabled={!status?.ready}
-            onClick={() => edit(null)}
-          >
-            <Glyph name="plus" />
-            新建资源
-          </button>
         </div>
       </header>
       {error && (
@@ -375,7 +372,17 @@ function Gallery({ remote }) {
             <span>
               {type ? TYPES[type] : "资源"} <strong>{total}</strong>
             </span>
-            <div>
+            <div className="gal-list-actions">
+              {type && (
+                <button
+                  className="gal-primary"
+                  disabled={busy}
+                  onClick={() => edit(null)}
+                >
+                  <Glyph name="plus" />
+                  新建 {TYPES[type]}
+                </button>
+              )}
               <button
                 className="gal-icon-button"
                 title="刷新资源"
@@ -398,11 +405,8 @@ function Gallery({ remote }) {
               <p>
                 {q || type || scope !== "all"
                   ? "试试其他关键词或分类。"
-                  : "新建资源或上传文件。"}
+                  : "选择分类后新建资源。"}
               </p>
-              <button className="gal-primary" onClick={() => edit(null)}>
-                新建资源
-              </button>
             </div>
           ) : (
             <div className="gal-resource-grid">
@@ -595,7 +599,9 @@ function Gallery({ remote }) {
           >
             <div className="gal-dialog-head">
               <div>
-                <h2>{editor.id ? "编辑资源" : "创建资源"}</h2>
+                <h2>
+                  {editor.id ? "编辑" : "新建"} {TYPES[editor.resource.type]}
+                </h2>
               </div>
               <button
                 aria-label="关闭编辑"
@@ -607,27 +613,20 @@ function Gallery({ remote }) {
             </div>
             <div className="gal-dialog-body">
               <div className="gal-form-row">
-                <label>
-                  类型
-                  <select
-                    disabled={Boolean(editor.id)}
-                    value={editor.resource.type}
-                    onChange={(e) => field("type", e.target.value)}
-                  >
-                    {Object.entries(TYPES).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <div className="gal-type-field">
+                  <span>类型</span>
+                  <span className="gal-editor-type">
+                    <Glyph name={editor.resource.type} />
+                    {TYPES[editor.resource.type]}
+                  </span>
+                </div>
                 <label className="gal-grow">
                   资源名称
                   <input
                     value={editor.resource.name}
                     maxLength={160}
                     onChange={(e) => field("name", e.target.value)}
-                    placeholder="例如：代码审查 Skill"
+                    placeholder="输入资源名称"
                   />
                 </label>
               </div>
@@ -859,7 +858,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.4.4</span>
+              <span className="gal-local">v0.4.5</span>
               <button
                 disabled={busy}
                 onClick={() =>
