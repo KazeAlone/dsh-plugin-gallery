@@ -37,6 +37,7 @@ const paths = {
     "M14 9l2-2a4 4 0 0 1 5 5l-4 4",
   ],
   upload: ["M12 16V3M7 8l5-5 5 5", "M4 16v5h16v-5"],
+  check: ["M5 12l4 4L19 6"],
   close: ["M6 6l12 12M6 18L18 6"],
 };
 export function Glyph({ name, size = 18, className = "" }) {

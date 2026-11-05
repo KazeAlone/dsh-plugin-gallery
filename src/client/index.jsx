@@ -41,8 +41,16 @@ function Icon({ size = 20 }) {
 function Gallery({ remote }) {
   const [status, setStatus] = useState(null),
     [error, setError] = useState(""),
-    [notice, setNotice] = useState(""),
+    [notice, updateNotice] = useState(null),
     [busy, setBusy] = useState(false);
+  function setNotice(message) {
+    updateNotice(message ? { message } : null);
+  }
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => updateNotice(null), 3500);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const [boards, setBoards] = useState([]);
   const [items, setItems] = useState([]),
     [total, setTotal] = useState(0),
@@ -360,8 +368,14 @@ function Gallery({ remote }) {
         </div>
       )}
       {notice && (
-        <div role="status" className="gal-notice">
-          {notice}
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="gal-notice"
+        >
+          <Glyph name="check" size={18} />
+          <span>{notice.message}</span>
           <button aria-label="关闭提示" onClick={() => setNotice("")}>
             <Glyph name="close" />
           </button>
@@ -952,7 +966,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.7.0</span>
+              <span className="gal-local">v0.7.1</span>
               <button
                 disabled={busy}
                 onClick={() =>

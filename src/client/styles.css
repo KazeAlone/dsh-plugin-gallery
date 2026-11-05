@@ -321,8 +321,28 @@
   background: var(--g-error-bg);
 }
 .gal-notice {
+  position: fixed;
+  top: max(20px, env(safe-area-inset-top));
+  right: max(20px, env(safe-area-inset-right));
+  z-index: 100;
+  max-width: min(360px, calc(100vw - 32px));
+  margin: 0;
+  gap: 10px;
+  padding: 10px 12px;
+  border-color: var(--g-line);
+  border-radius: 10px;
   color: var(--g-success);
   background: var(--g-success-bg);
+  box-shadow: 0 4px 18px #00000012;
+}
+.gal-notice > span {
+  flex: 1;
+}
+@media (max-width: 600px) {
+  .gal-notice {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+  }
 }
 .gal-alert button,
 .gal-notice button {
