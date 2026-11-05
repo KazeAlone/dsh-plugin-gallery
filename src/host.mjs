@@ -5,6 +5,7 @@ import {
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { StorageManager } from "./storage-manager.mjs";
+import { createSkillProvider } from "./skill-provider.mjs";
 import { DESCRIPTORS } from "./descriptors.mjs";
 
 export default class GalleryService extends TypertRemoteService {
@@ -14,6 +15,16 @@ export default class GalleryService extends TypertRemoteService {
     this.store = new StorageManager(
       join(process.env.DSH_HOME ?? join(homedir(), ".dsh"), "gallery"),
     );
+    this.skillProvider = createSkillProvider(this.store);
+    this.invalidateSkills = () => {};
+    ctx.inject(["skills"], (scope) => {
+      scope.effect(() =>
+        scope.skills.registerProvider((control) => {
+          this.invalidateSkills = control.invalidate;
+          return this.skillProvider;
+        }),
+      );
+    });
     ctx.effect(() =>
       ctx.get("typert").register({
         package: "dsh-plugin-gallery",
@@ -69,12 +80,32 @@ export default class GalleryService extends TypertRemoteService {
     return this.ownerCall(() => this.store.getResource(id));
   }
   uiCreate(payload) {
-    return this.ownerCall(() => this.store.createResource(JSON.parse(payload)));
+    return this.ownerCall(() => {
+      const r = this.store.createResource(JSON.parse(payload));
+      this.invalidateSkills();
+      return r;
+    });
+  }
+  uiSkillCatalog() {
+    return this.ownerCall(async () => {
+      if (!this.ctx.get("skills"))
+        throw new Error("DSH Skill 服务未启用，请使用支持 Skill 的预设。");
+      const candidates = await this.skillProvider.list();
+      return candidates
+        .filter((c) => c.invocation.userInvocable)
+        .map((c) => ({
+          name: c.name,
+          label: this.store.getResource(c.locator).name,
+          description: c.description,
+        }));
+    });
   }
   uiUpdate(id, payload) {
     return this.ownerCall(() => {
       const p = JSON.parse(payload);
-      return this.store.updateResource(id, p.resource, p.expectedRevision);
+      const r = this.store.updateResource(id, p.resource, p.expectedRevision);
+      this.invalidateSkills();
+      return r;
     });
   }
   uiStorageSettings() {

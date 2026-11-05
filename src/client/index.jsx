@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { REMOTE } from "../descriptors.mjs";
 import styles from "./styles.css";
+import { createGalleryTrigger } from "./gallery-trigger.mjs";
 import { SkillWizard } from "./skill-wizard.jsx";
 import { Modal } from "./modal.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
@@ -845,7 +846,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.5.8</span>
+              <span className="gal-local">v0.6.0</span>
               <button
                 disabled={busy}
                 onClick={() =>
@@ -904,10 +905,13 @@ function Gallery({ remote }) {
     </div>
   );
 }
-export const inject = ["remote", "slots", "locale"];
+export const inject = ["remote", "slots", "locale", "inputTriggers"];
 export async function apply(ctx) {
   await ctx.remote.$mount(REMOTE);
   const remote = ctx.get("remote.gallery");
+  ctx.effect(() =>
+    ctx.inputTriggers.registerSource(createGalleryTrigger(remote, Icon)),
+  );
   ctx.effect(() =>
     ctx.locale.register(NS, {
       zh: { title: "Gallery" },

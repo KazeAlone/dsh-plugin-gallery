@@ -21,6 +21,7 @@ const string = (name) => ({
 });
 const methods = {
   uiStatus: [],
+  uiSkillCatalog: [],
   uiList: ["payload"],
   uiGet: ["id"],
   uiCreate: ["payload"],

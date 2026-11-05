@@ -47,3 +47,14 @@ usageId 是每次实际使用的稳定唯一 ID（最多 200 字符），不能�
 接口仅为宿主服务方法，不注册浏览器 RPC。列表与详情返回 usageCount（旧资源默认 0），内部去重记录不返回客户端。统计与内容分离：不改变 digest、revision、updatedAt；编辑保留计数，导出文件包不带统计，新建或重新导入从 0 开始。计数与去重 ID 摘要使用现有 resources.json 原子写入和锁存储，不需要数据库；去重记录随实际使用数量增长。
 
 **当前仓库不包含 DSH 的 Skill 执行器，也没有执行事件订阅。此版本只提供统计存储、展示和上述接入接口，执行端需要在真实使用处接入后才会增长，不能据此声称已自动统计 DSH 使用。**
+
+
+## /gallery 会话入口（0.6.0）
+
+浏览器依赖原生 ui-input-trigger，注册 Gallery 斜杠建议来源。输入 `/gallery` 展示列表，或从 `/` 菜单选择 Gallery 进入 `/gallery/`；继续输入关键词过滤名称和描述。选中项插入稳定的 `/gskill-<资源 ID 摘要>`，用户补充任务后发送，原生 dsh-tool-skill 注入指引。不会自动发送、清空整份草稿或在选择时计数。此入口是 Web 会话输入建议，不是终端命令。
+
+Gallery 宿主在 skills 服务可用时注册 `gallery` provider。uiSkillCatalog 只向 owner 返回有效且 userInvocable 的本地 Skill；新建与更新会使注册目录失效。支持标准 user-invocable 和 disable-model-invocation 布尔字段。不合格或没有 SKILL.md 的资源不出现在目录。稳定别名避免同名 Skill 互相覆盖，重命名也保持调用身份。
+
+实际加载时将完整文件集合物化到 `$DSH_HOME/gallery/skill-runtime/<资源摘要>/<内容摘要>/`，并返回原生 directory resourceBase。旧副本保留，以免正在进行的任务引用失效；脚本只写入，不自动执行，执行方式与权限仍由 DSH 决定。Gallery 编辑仍以 resources.json 为准，不同步运行副本上的修改。
+
+已验证真实 Cordis 与 DSH 0.2.1-rc.5 SkillRegistry 的注册、目录更新、加载和附件路径。需要启用原生技能加载工具的预设（如 standard）；minimal 不提供此能力。没有运行完整 DSH 会话与模型端到端测试。提供方 get 不等于确认执行，因此此接入仍不会自动增加累计调用次数；准确计数仍需在执行消费方调用 recordSkillUse。

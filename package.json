@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-gallery",
-  "version": "0.5.8",
+  "version": "0.6.0",
   "description": "Local DSH resource gallery for skills, agents, MCP and workflows",
   "type": "module",
   "main": "./src/host.mjs",
@@ -36,7 +36,8 @@
         "@deepseek-ai/dsh-client-modules",
         "@deepseek-ai/dsh-client-locale",
         "@deepseek-ai/dsh-client-ui-layout",
-        "@deepseek-ai/dsh-client-ui-sidebar"
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-input-trigger"
       ],
       "immediately": false
     }
