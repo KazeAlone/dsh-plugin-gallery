@@ -91,3 +91,17 @@ test("usage validates target and id, lock protects data, browser cannot incremen
     false,
   );
 });
+
+test("Agent and MCP rankings use independent, deduplicated resource counts", (t) => {
+  const { store } = setup(t);
+  for (const type of ["agent", "mcp"]) {
+    const unused = store.createResource({ ...resource, type, name: "A unused" });
+    const used = store.createResource({ ...resource, type, name: "Z used" });
+    const event = { id: used.id, type, usageId: "session:call:1" };
+    assert.equal(store.adapter().recordResourceUse(event).usageCount, 1);
+    assert.equal(store.adapter().recordResourceUse(event).usageCount, 1);
+    const page = store.listResources({ type, sort: "usage" });
+    assert.deepEqual(page.items.map(({ id, usageCount }) => [id, usageCount]),
+      [[used.id, 1], [unused.id, 0]]);
+  }
+});

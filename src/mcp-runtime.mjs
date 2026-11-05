@@ -31,11 +31,17 @@ export class GalleryMcpRuntime {
           ? { transport: safe.transport, serverName: safe.serverName, command: safe.command, args: safe.args, cwd: safe.cwd, env: safe.env }
           : { transport: safe.transport, serverName: safe.serverName, url: safe.url, headers: safe.headers };
         const fiber = await this.ctx.plugin(mcpClient, config);
-        this.active.set(resource.id, { serialized, fiber });
+        this.active.set(resource.id, { serialized, fiber, serverName: safe.serverName });
       } catch (error) {
         this.ctx.logger?.warn?.(`gallery: MCP ${resource.id} could not activate: ${error.message}`);
       }
     }
+  }
+  resourceForTool(name) {
+    const matches = [...this.active].filter(([, entry]) =>
+      name.startsWith(`mcp__${entry.serverName}__`),
+    );
+    return matches.length === 1 ? matches[0][0] : undefined;
   }
   async dispose() {
     await this.pending.catch(() => {});

@@ -13,6 +13,7 @@ import { registerGalleryAgentListTool, registerGalleryAgentRunTool } from "./age
 import { workflowFromResource } from "./workflow-template.mjs";
 import { publishToTeamflow } from "./teamflow-publish.mjs";
 import { createSkillProvider } from "./skill-provider.mjs";
+import { registerUsageTracking } from "./usage-runtime.mjs";
 import { DESCRIPTORS } from "./descriptors.mjs";
 
 export default class GalleryService extends TypertRemoteService {
@@ -33,6 +34,7 @@ export default class GalleryService extends TypertRemoteService {
         }),
       );
     });
+    registerUsageTracking(ctx, this.store, () => this.mcpRuntime);
     ctx.inject(["tools"], (scope) => {
       const runtime = new GalleryMcpRuntime(scope, this.store);
       this.mcpRuntime = runtime;

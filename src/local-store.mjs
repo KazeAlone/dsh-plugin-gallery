@@ -185,7 +185,10 @@ export class LocalGalleryStore {
     });
     return { id: removed.id };
   }
-  recordSkillUse({ id, usageId } = {}) {
+  recordSkillUse(input) {
+    return this.recordResourceUse({ ...input, type: "skill" });
+  }
+  recordResourceUse({ id, usageId, type } = {}) {
     demand(
       typeof usageId === "string" &&
         usageId.trim().length > 0 &&
@@ -205,10 +208,10 @@ export class LocalGalleryStore {
       const row = rows.find((r) => r.id === id);
       demand(row, 404, "NOT_FOUND", "资源不存在");
       demand(
-        row.type === "skill",
+        ["skill", "agent", "mcp"].includes(type) && row.type === type,
         400,
         "INVALID_TYPE",
-        "仅统计 Skill 的实际使用次数",
+        "调用统计的资源类型不匹配",
       );
       const events = row.usageEventIds ?? [];
       const count = row.usageCount ?? 0;

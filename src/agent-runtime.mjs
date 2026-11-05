@@ -1,5 +1,6 @@
 import { defineTool } from '@deepseek-ai/dsh-tools';
 import { readAgent, agentIssues } from './client/agent-format.mjs';
+import { countUsage } from './usage-runtime.mjs';
 import { materializeSkill } from './skill-provider.mjs';
 
 export function galleryAgents(store) {
@@ -37,6 +38,7 @@ export function registerGalleryAgentRunTool(ctx, store) {
       const instructions = entry.resource.files.find(f => f.path === 'AGENT.md')?.content || '';
       const prompt = `请按照以下 Gallery Agent 定义执行任务。定义文件：${directory}/AGENT.md。附件位于同一目录，按需读取。\n\n${instructions}\n\n本次任务：\n${args.task.trim()}`;
       const activation = await ctx.subagents.startActivation({ provider: 'spawn', label: entry.resource.name, request: { parent: exec.agent, prompt: [{ type: 'text', text: prompt }] }, signal: exec.signal, delivery: 'parent' });
+      countUsage(ctx, store, entry.resource.id, "agent", [exec.agent.id, exec.callId ?? activation.childId]);
       return { child_id: activation.childId, agent: entry.resource.name };
     },
   });

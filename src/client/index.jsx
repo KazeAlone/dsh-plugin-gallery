@@ -583,7 +583,7 @@ function Gallery({ remote }) {
                     ))}
                   </div>
                   <footer>
-                    {r.type === "skill" && (
+                    {hasResourceCover(r.type) && (
                       <span
                         title="累计调用次数"
                         aria-label={`累计调用 ${r.usageCount ?? 0} 次`}
@@ -789,7 +789,7 @@ function Gallery({ remote }) {
                   {error}
                 </p>
               )}
-              {content.type === "skill" && (
+              {hasResourceCover(content.type) && (
                 <p className="gal-usage-total">
                   <Glyph name="usage" /> 累计调用次数{" "}
                   <strong>{(content.usageCount ?? 0).toLocaleString()}</strong>{" "}
