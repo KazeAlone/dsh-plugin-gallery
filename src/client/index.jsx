@@ -476,18 +476,18 @@ function Gallery({ remote }) {
           }}
           onSave={async (resource) => {
             const existing = skillWizard.resource;
-            const r = existing
-              ? await call(
+            await (existing
+              ? call(
                   remote,
                   "uiUpdate",
                   existing.id,
                   json({ resource, expectedRevision: existing.revision }),
                 )
-              : await call(remote, "uiCreate", json(resource));
+              : call(remote, "uiCreate", json(resource)));
+            setSelected(null);
             setSkillWizard(false);
             setRefresh((x) => x + 1);
             setNotice("Skill 已保存。");
-            await run(() => load(r.id));
           }}
         />
       )}
@@ -828,7 +828,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.5.1</span>
+              <span className="gal-local">v0.5.2</span>
               <button
                 disabled={busy}
                 onClick={() =>

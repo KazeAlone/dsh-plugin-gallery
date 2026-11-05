@@ -32,6 +32,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
     [description, setDescription] = useState(initial.description),
     [body, setBody] = useState(initial.body),
     [files, setFiles] = useState(initial.files),
+    [tags, setTags] = useState((resource?.tags || []).join(", ")),
     [active, setActive] = useState(-1),
     [preview, setPreview] = useState(false),
     [error, setError] = useState(""),
@@ -41,7 +42,19 @@ export function SkillWizard({ resource, onClose, onSave }) {
     heading.current?.focus();
   }, [step]);
   const document = skillDocument(name, description, body, initial.frontmatter);
+  const parsedTags = [
+    ...new Set(
+      tags
+        .split(/[,，]/)
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    ),
+  ];
   const issues = [
+    ...(parsedTags.length > 20 ? ["最多添加 20 个标签。"] : []),
+    ...(parsedTags.some((tag) => tag.length > 40)
+      ? ["每个标签最多 40 个字符。"]
+      : []),
     ...(initial.error ? [initial.error] : []),
     ...skillIssues(name, description, body, files),
   ];
@@ -109,7 +122,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
         type: "skill",
         name: name.trim(),
         description: description.trim(),
-        tags: resource?.tags || [],
+        tags: parsedTags,
         metadata: resource?.metadata || {},
         references: resource?.references || [],
         files: [
@@ -345,6 +358,23 @@ export function SkillWizard({ resource, onClose, onSave }) {
                   <p>{description}</p>
                   <span>{files.length + 1} 个文件 · 整体保存</span>
                 </div>
+                <label>
+                  标签（选填）
+                  <input
+                    aria-label="标签"
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                    placeholder="例如：开发，代码审查"
+                  />
+                </label>
+                <p>用逗号分隔，最多 20 个标签。</p>
+                {!!parsedTags.length && (
+                  <div className="gal-tags">
+                    {parsedTags.map((tag) => (
+                      <span key={tag}>{tag}</span>
+                    ))}
+                  </div>
+                )}
                 {issues.length ? (
                   <div role="alert" className="gal-error">
                     {issues.map((x) => (

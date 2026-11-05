@@ -6720,13 +6720,20 @@ function Preview({ text }) {
 }
 function SkillWizard({ resource, onClose, onSave }) {
   const [initial] = (0, import_react3.useState)(() => readSkill(resource));
-  const [step, setStep] = (0, import_react3.useState)(0), [name, setName] = (0, import_react3.useState)(initial.name), [description, setDescription] = (0, import_react3.useState)(initial.description), [body, setBody] = (0, import_react3.useState)(initial.body), [files, setFiles] = (0, import_react3.useState)(initial.files), [active, setActive] = (0, import_react3.useState)(-1), [preview, setPreview] = (0, import_react3.useState)(false), [error, setError] = (0, import_react3.useState)(""), [busy, setBusy] = (0, import_react3.useState)(false);
+  const [step, setStep] = (0, import_react3.useState)(0), [name, setName] = (0, import_react3.useState)(initial.name), [description, setDescription] = (0, import_react3.useState)(initial.description), [body, setBody] = (0, import_react3.useState)(initial.body), [files, setFiles] = (0, import_react3.useState)(initial.files), [tags, setTags] = (0, import_react3.useState)((resource?.tags || []).join(", ")), [active, setActive] = (0, import_react3.useState)(-1), [preview, setPreview] = (0, import_react3.useState)(false), [error, setError] = (0, import_react3.useState)(""), [busy, setBusy] = (0, import_react3.useState)(false);
   const heading = (0, import_react3.useRef)(null);
   (0, import_react3.useEffect)(() => {
     heading.current?.focus();
   }, [step]);
   const document2 = skillDocument(name, description, body, initial.frontmatter);
+  const parsedTags = [
+    ...new Set(
+      tags.split(/[,，]/).map((tag) => tag.trim()).filter(Boolean)
+    )
+  ];
   const issues = [
+    ...parsedTags.length > 20 ? ["\u6700\u591A\u6DFB\u52A0 20 \u4E2A\u6807\u7B7E\u3002"] : [],
+    ...parsedTags.some((tag) => tag.length > 40) ? ["\u6BCF\u4E2A\u6807\u7B7E\u6700\u591A 40 \u4E2A\u5B57\u7B26\u3002"] : [],
     ...initial.error ? [initial.error] : [],
     ...skillIssues(name, description, body, files)
   ];
@@ -6789,7 +6796,7 @@ function SkillWizard({ resource, onClose, onSave }) {
         type: "skill",
         name: name.trim(),
         description: description.trim(),
-        tags: resource?.tags || [],
+        tags: parsedTags,
         metadata: resource?.metadata || {},
         references: resource?.references || [],
         files: [
@@ -6949,7 +6956,15 @@ function SkillWizard({ resource, onClose, onSave }) {
         }
       },
       "\u63D2\u5165\u5230\u6307\u5F15"
-    ))), step === 3 && /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "skill", size: 36 }), /* @__PURE__ */ import_react3.default.createElement("h2", null, name), /* @__PURE__ */ import_react3.default.createElement("p", null, description), /* @__PURE__ */ import_react3.default.createElement("span", null, files.length + 1, " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), issues.length ? /* @__PURE__ */ import_react3.default.createElement("div", { role: "alert", className: "gal-error" }, issues.map((x) => /* @__PURE__ */ import_react3.default.createElement("p", { key: x }, x))) : /* @__PURE__ */ import_react3.default.createElement("p", { className: "gal-skill-ok" }, "\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58"), /* @__PURE__ */ import_react3.default.createElement("details", null, /* @__PURE__ */ import_react3.default.createElement("summary", null, "\u67E5\u770B SKILL.md"), /* @__PURE__ */ import_react3.default.createElement("pre", { className: "gal-skill-preview" }, document2))), error && /* @__PURE__ */ import_react3.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react3.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react3.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react3.default.createElement("strong", null, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "folder" }), " ", name || "my-skill", "/"), /* @__PURE__ */ import_react3.default.createElement("div", null, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "file" }), " SKILL.md"), folders.map(
+    ))), step === 3 && /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "skill", size: 36 }), /* @__PURE__ */ import_react3.default.createElement("h2", null, name), /* @__PURE__ */ import_react3.default.createElement("p", null, description), /* @__PURE__ */ import_react3.default.createElement("span", null, files.length + 1, " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react3.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react3.default.createElement(
+      "input",
+      {
+        "aria-label": "\u6807\u7B7E",
+        value: tags,
+        onChange: (e) => setTags(e.target.value),
+        placeholder: "\u4F8B\u5982\uFF1A\u5F00\u53D1\uFF0C\u4EE3\u7801\u5BA1\u67E5"
+      }
+    )), /* @__PURE__ */ import_react3.default.createElement("p", null, "\u7528\u9017\u53F7\u5206\u9694\uFF0C\u6700\u591A 20 \u4E2A\u6807\u7B7E\u3002"), !!parsedTags.length && /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-tags" }, parsedTags.map((tag) => /* @__PURE__ */ import_react3.default.createElement("span", { key: tag }, tag))), issues.length ? /* @__PURE__ */ import_react3.default.createElement("div", { role: "alert", className: "gal-error" }, issues.map((x) => /* @__PURE__ */ import_react3.default.createElement("p", { key: x }, x))) : /* @__PURE__ */ import_react3.default.createElement("p", { className: "gal-skill-ok" }, "\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58"), /* @__PURE__ */ import_react3.default.createElement("details", null, /* @__PURE__ */ import_react3.default.createElement("summary", null, "\u67E5\u770B SKILL.md"), /* @__PURE__ */ import_react3.default.createElement("pre", { className: "gal-skill-preview" }, document2))), error && /* @__PURE__ */ import_react3.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react3.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react3.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react3.default.createElement("strong", null, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "folder" }), " ", name || "my-skill", "/"), /* @__PURE__ */ import_react3.default.createElement("div", null, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "file" }), " SKILL.md"), folders.map(
       ([folder]) => files.some((f) => f.path.startsWith(folder + "/")) && /* @__PURE__ */ import_react3.default.createElement("div", { key: folder }, /* @__PURE__ */ import_react3.default.createElement("strong", null, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "folder" }), " ", folder, "/"), files.filter((f) => f.path.startsWith(folder + "/")).map((f, i) => /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-skill-leaf", key: i }, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "file" }), f.path.slice(folder.length + 1))))
     ))),
     /* @__PURE__ */ import_react3.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react3.default.createElement("button", { disabled: busy, onClick: step ? () => go(step - 1) : onClose }, step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"), /* @__PURE__ */ import_react3.default.createElement("span", null, step + 1, " / 4"), step < 3 ? /* @__PURE__ */ import_react3.default.createElement(
@@ -7362,16 +7377,16 @@ function Gallery({ remote }) {
       },
       onSave: async (resource) => {
         const existing = skillWizard.resource;
-        const r = existing ? await call(
+        await (existing ? call(
           remote,
           "uiUpdate",
           existing.id,
           json2({ resource, expectedRevision: existing.revision })
-        ) : await call(remote, "uiCreate", json2(resource));
+        ) : call(remote, "uiCreate", json2(resource)));
+        setSelected(null);
         setSkillWizard(false);
         setRefresh((x) => x + 1);
         setNotice("Skill \u5DF2\u4FDD\u5B58\u3002");
-        await run(() => load(r.id));
       }
     }
   ), selected && !editor && !skillWizard && /* @__PURE__ */ import_react5.default.createElement(Modal, { onClose: () => !busy && setSelected(null) }, /* @__PURE__ */ import_react5.default.createElement(
@@ -7591,7 +7606,7 @@ function Gallery({ remote }) {
       /* @__PURE__ */ import_react5.default.createElement("strong", null, provider.name),
       /* @__PURE__ */ import_react5.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
     ))), connectionResult && /* @__PURE__ */ import_react5.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react5.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react5.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react5.default.createElement("span", { className: "gal-local" }, "v0.5.1"), /* @__PURE__ */ import_react5.default.createElement(
+    /* @__PURE__ */ import_react5.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react5.default.createElement("span", { className: "gal-local" }, "v0.5.2"), /* @__PURE__ */ import_react5.default.createElement(
       "button",
       {
         disabled: busy,
