@@ -1,8 +1,8 @@
-# DSH Resource Gallery
+# Gallery
 
 运行在 DSH 内的本地资源库，用于管理 **Skill、Agent 描述、MCP 配置和 Workflow 模板**。当前优先完善 Gallery 功能和 UI。
 
-打开「资源 Gallery」即可使用，**无需填写姓名、接入码或 Gallery 身份凭证**。沿用 DSH 自身的宿主访问认证，不增加插件登录流程。
+打开「Gallery」即可使用，**无需填写姓名、接入码或 Gallery 身份凭证**。沿用 DSH 自身的宿主访问认证，不增加插件登录流程。
 
 ## 安装
 

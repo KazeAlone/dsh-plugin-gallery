@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { REMOTE } from "../descriptors.mjs";
 import styles from "./styles.css";
 import { Modal } from "./modal.jsx";
+import { BrandIcon } from "./brand-icon.jsx";
 import { Glyph, ResourceVisual } from "./icons.jsx";
 
 const NS = "dsh-gallery",
@@ -32,22 +33,7 @@ function download(name, value, type = "application/json") {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 function Icon() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-    >
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
-    </svg>
-  );
+  return <BrandIcon />;
 }
 function Gallery({ remote }) {
   const [status, setStatus] = useState(null),
@@ -286,8 +272,8 @@ function Gallery({ remote }) {
       <header className="gal-header">
         <div>
           <h1>
-            <Glyph name="grid" size={24} />
-            资源库
+            <BrandIcon size={32} />
+            Gallery
           </h1>
         </div>
         <div className="gal-header-actions">
@@ -873,7 +859,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.4.3</span>
+              <span className="gal-local">v0.4.4</span>
               <button
                 disabled={busy}
                 onClick={() =>
@@ -938,8 +924,8 @@ export async function apply(ctx) {
   const remote = ctx.get("remote.gallery");
   ctx.effect(() =>
     ctx.locale.register(NS, {
-      zh: { title: "资源 Gallery" },
-      en: { title: "Resource Gallery" },
+      zh: { title: "Gallery" },
+      en: { title: "Gallery" },
     }),
   );
   ctx.effect(() => {
@@ -956,7 +942,7 @@ export async function apply(ctx) {
         id: "gallery",
         order: 62,
         locale: NS,
-        label: () => "资源 Gallery",
+        label: () => "Gallery",
       },
       Icon,
     ),
