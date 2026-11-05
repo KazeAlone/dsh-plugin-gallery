@@ -45,6 +45,7 @@ function Icon({ size = 20 }) {
 }
 function Gallery({ remote }) {
   const [theme, setTheme] = useState(() => loadTheme(globalThis.localStorage));
+  const [motionPaused, setMotionPaused] = useState(false);
   const [themeMenu, setThemeMenu] = useState(false);
   const themeMenuRef = useRef(null);
   useEffect(() => {
@@ -388,7 +389,15 @@ function Gallery({ remote }) {
     setOffset(0);
   };
   return (
-    <div className="gal" data-theme={theme}>
+    <div className="gal" data-theme={theme} data-motion-paused={motionPaused}>
+      {theme === "astral" && (
+        <div className="gal-astral-sky" aria-hidden="true">
+          <span className="gal-astral-orbit" />
+          <span className="gal-astral-meteor" />
+          <span className="gal-astral-meteor" />
+          <span className="gal-astral-meteor" />
+        </div>
+      )}
       <header className="gal-header">
         <div>
           <h1>
@@ -397,6 +406,12 @@ function Gallery({ remote }) {
           </h1>
         </div>
         <div className="gal-header-actions">
+          {theme === "astral" && (
+            <button className="gal-astral-motion" type="button"
+              onClick={() => setMotionPaused((paused) => !paused)}>
+              {motionPaused ? "继续动效" : "暂停动效"}
+            </button>
+          )}
           <div className="gal-theme-picker" ref={themeMenuRef}>
             <button className="gal-icon-button" aria-label="切换主题" aria-expanded={themeMenu} title={`主题 · ${THEMES.find(item => item.id === theme)?.label}`} onClick={() => setThemeMenu(open => !open)}><Glyph name="palette" size={20} /></button>
             {themeMenu && <div className="gal-theme-menu" role="group" aria-label="选择主题">

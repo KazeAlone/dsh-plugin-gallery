@@ -1809,6 +1809,116 @@ fieldset.gal-skill-fields {
   .gal[data-theme="neon"] .gal-filters button:hover:not(:disabled),
   .gal[data-theme="neon"] button.gal-resource-card:hover:not(:disabled) { transform: translateY(-2px); }
 }
+
+/* Astral Gold keeps moving decoration separate from the resource content. */
+.gal[data-theme="astral"] {
+  --g-bg: #0b0d1c;
+  --g-card: #15182c;
+  --g-soft: #1e2138;
+  --g-hover: #2b2b43;
+  --g-ink: #fff0d6;
+  --g-muted: #c3b9ab;
+  --g-line: #6d583d;
+  --g-control: #a88a59;
+  --g-accent: #efca87;
+  --g-on-accent: #161222;
+  --g-ring: #ffdb96;
+  --g-error: #ffc0be;
+  --g-error-bg: #432433;
+  --g-success: #b4ebca;
+  --g-success-bg: #163931;
+  --g-overlay: #070816d9;
+  position: relative;
+  isolation: isolate;
+  color-scheme: dark;
+  background: radial-gradient(ellipse at 55% 0, #29264b, transparent 55%), var(--g-bg);
+}
+.gal-theme-swatch.astral { background: linear-gradient(135deg, #181830 35%, #e8bd73 52%, #41385d 70%); }
+.gal-astral-sky {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #f8d9a377 1px, transparent 1.6px), radial-gradient(circle, #b9bfff55 1px, transparent 1.5px);
+  background-size: 127px 103px, 193px 157px;
+  background-position: 29px 13px, 63px 41px;
+}
+.gal-astral-orbit {
+  position: absolute;
+  top: -240px;
+  left: 37%;
+  width: 440px;
+  height: 440px;
+  border: 1px solid #e7c58a60;
+  border-radius: 50%;
+  box-shadow: 0 0 0 24px #e7c58a18, 0 0 0 58px #e7c58a12;
+  animation: gal-astral-orbit 42s linear infinite;
+}
+.gal-astral-orbit::after {
+  content: "";
+  position: absolute;
+  top: 49%;
+  left: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff4c9;
+  box-shadow: 0 0 16px 4px #ffcc74;
+}
+.gal-astral-meteor {
+  position: absolute;
+  top: 9%;
+  left: 12%;
+  width: clamp(70px, 15vw, 210px);
+  height: 2px;
+  transform: rotate(24deg);
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, #ecc27b, #fff6d6);
+  animation: gal-astral-fall 9s linear infinite;
+}
+.gal-astral-meteor:nth-child(3) { top: 38%; left: 43%; animation-delay: -3s; }
+.gal-astral-meteor:nth-child(4) { top: 64%; left: 7%; animation-delay: -6s; }
+@keyframes gal-astral-orbit { to { transform: rotate(360deg); } }
+@keyframes gal-astral-fall {
+  0% { transform: rotate(24deg) translateX(-50%); opacity: 0; }
+  8% { opacity: .85; }
+  32%, 100% { transform: rotate(24deg) translateX(230%); opacity: 0; }
+}
+.gal[data-theme="astral"] .gal-header {
+  border-bottom: 1px solid var(--g-control);
+  padding-bottom: 20px;
+}
+.gal[data-theme="astral"] .gal-header h1 { font-family: Georgia, serif; color: var(--g-accent); }
+.gal-astral-motion {
+  align-self: center;
+  padding: 6px 10px;
+  border: 1px solid var(--g-line);
+  border-radius: 8px;
+  background: var(--g-soft);
+  color: var(--g-ink);
+  cursor: pointer;
+}
+.gal[data-theme="astral"] .gal-board {
+  --rank-color: #85e6b7;
+  --rank-tint: #173830;
+  --astral-delay: 0s;
+  border-color: var(--g-control);
+  background: linear-gradient(150deg, var(--rank-tint), var(--g-card) 65%);
+  animation: gal-astral-halo 8s ease-in-out infinite var(--astral-delay);
+}
+.gal[data-theme="astral"] .gal-board.agent { --rank-color: #91caff; --rank-tint: #1a3054; --astral-delay: 2s; }
+.gal[data-theme="astral"] .gal-board.mcp { --rank-color: #d0a2ff; --rank-tint: #342149; --astral-delay: 4s; }
+.gal[data-theme="astral"] .gal-board.workflow { --rank-color: #ffd28c; --rank-tint: #3c2c1d; --astral-delay: 6s; }
+@keyframes gal-astral-halo {
+  0%, 35%, 100% { box-shadow: 0 0 0 transparent; }
+  20% { box-shadow: 0 0 18px color-mix(in srgb, var(--rank-color), transparent 65%); }
+}
+.gal[data-motion-paused="true"] :is(.gal-astral-orbit, .gal-astral-meteor, .gal-board) { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .gal[data-theme="astral"] :is(.gal-astral-orbit, .gal-astral-meteor, .gal-board) { animation: none; }
+  .gal-astral-motion { display: none; }
+}
 `;
 
 // src/client/leaderboards.jsx
@@ -9670,6 +9780,7 @@ var THEMES = [
   { id: "system", label: "\u8DDF\u968F\u7CFB\u7EDF", hint: "\u5F53\u524D Gallery \u5916\u89C2" },
   { id: "atelier", label: "\u58A8\u7EFF\u9EC4\u94DC", hint: "\u6DF1\u8272\u5C55\u5385" },
   { id: "paper", label: "\u6696\u7EB8", hint: "\u67D4\u548C\u6D45\u8272" },
+  { id: "astral", label: "\u938F\u91D1\u661F\u7A79", hint: "\u661F\u8F68\u3001\u6D41\u661F\u4E0E\u5B9D\u77F3\u699C\u5355" },
   { id: "neon", label: "\u9713\u8679\u73BB\u7483", hint: "\u6C89\u6D78\u5F0F\u8D44\u6E90\u821E\u53F0" }
 ];
 function loadTheme(storage) {
@@ -9721,6 +9832,7 @@ function Icon({ size = 20 }) {
 }
 function Gallery({ remote }) {
   const [theme, setTheme] = (0, import_react9.useState)(() => loadTheme(globalThis.localStorage));
+  const [motionPaused, setMotionPaused] = (0, import_react9.useState)(false);
   const [themeMenu, setThemeMenu] = (0, import_react9.useState)(false);
   const themeMenuRef = (0, import_react9.useRef)(null);
   (0, import_react9.useEffect)(() => {
@@ -10030,7 +10142,15 @@ function Gallery({ remote }) {
     setType(t);
     setOffset(0);
   };
-  return /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal", "data-theme": theme }, /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h1", null, /* @__PURE__ */ import_react9.default.createElement(BrandIcon, { size: 32 }), "Gallery")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-header-actions" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-theme-picker", ref: themeMenuRef }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "gal-icon-button", "aria-label": "\u5207\u6362\u4E3B\u9898", "aria-expanded": themeMenu, title: `\u4E3B\u9898 \xB7 ${THEMES.find((item) => item.id === theme)?.label}`, onClick: () => setThemeMenu((open) => !open) }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "palette", size: 20 })), themeMenu && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-theme-menu", role: "group", "aria-label": "\u9009\u62E9\u4E3B\u9898" }, THEMES.map((item) => /* @__PURE__ */ import_react9.default.createElement("button", { key: item.id, "aria-pressed": theme === item.id, onClick: () => {
+  return /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal", "data-theme": theme, "data-motion-paused": motionPaused }, theme === "astral" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-astral-sky", "aria-hidden": "true" }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-orbit" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-astral-meteor" })), /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h1", null, /* @__PURE__ */ import_react9.default.createElement(BrandIcon, { size: 32 }), "Gallery")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-header-actions" }, theme === "astral" && /* @__PURE__ */ import_react9.default.createElement(
+    "button",
+    {
+      className: "gal-astral-motion",
+      type: "button",
+      onClick: () => setMotionPaused((paused) => !paused)
+    },
+    motionPaused ? "\u7EE7\u7EED\u52A8\u6548" : "\u6682\u505C\u52A8\u6548"
+  ), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-theme-picker", ref: themeMenuRef }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "gal-icon-button", "aria-label": "\u5207\u6362\u4E3B\u9898", "aria-expanded": themeMenu, title: `\u4E3B\u9898 \xB7 ${THEMES.find((item) => item.id === theme)?.label}`, onClick: () => setThemeMenu((open) => !open) }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "palette", size: 20 })), themeMenu && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-theme-menu", role: "group", "aria-label": "\u9009\u62E9\u4E3B\u9898" }, THEMES.map((item) => /* @__PURE__ */ import_react9.default.createElement("button", { key: item.id, "aria-pressed": theme === item.id, onClick: () => {
     saveTheme(globalThis.localStorage, item.id);
     setTheme(item.id);
     setThemeMenu(false);
