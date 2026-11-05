@@ -273,7 +273,7 @@ function Gallery({ remote }) {
       <header className="gal-header">
         <div>
           <div className="gal-eyebrow">
-            RESOURCE LIBRARY <span>PREVIEW · 0.3</span>
+            RESOURCE LIBRARY <span>PREVIEW · 0.3.1</span>
           </div>
           <h1>资源 Gallery</h1>
           <p>收集可复用资源，让每次编排都有积累。</p>
