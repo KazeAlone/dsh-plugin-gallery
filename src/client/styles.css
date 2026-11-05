@@ -968,3 +968,178 @@
     flex: 1 1 100%;
   }
 }
+
+/* Skill folder creation */
+.gal-skill-wizard {
+  width: min(1000px, 96vw);
+}
+.gal-skill-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 16px 24px;
+  gap: 8px;
+  border-bottom: 1px solid var(--g-line);
+}
+.gal-skill-steps button {
+  border: 0;
+  background: var(--g-soft);
+  justify-content: flex-start;
+}
+.gal-skill-steps button[aria-current="step"] {
+  background: var(--g-accent);
+  color: var(--g-on-accent);
+}
+.gal-skill-steps button span {
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.gal-skill-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 24px;
+}
+.gal-skill-layout main {
+  min-width: 0;
+}
+.gal-skill-fields {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+  min-width: 0;
+}
+.gal-skill-fields > p,
+.gal-skill-folder p {
+  color: var(--g-muted);
+}
+.gal-skill-fields fieldset,
+fieldset.gal-skill-fields {
+  border: 1px solid var(--g-line);
+  padding: 16px;
+}
+.gal-skill-code {
+  min-height: 300px;
+  font-family: monospace !important;
+}
+.gal-skill-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--g-soft);
+  padding: 16px;
+  max-height: 360px;
+  overflow: auto;
+}
+.gal-skill-preview h2,
+.gal-skill-preview h3 {
+  margin: 12px 0;
+}
+.gal-skill-tree {
+  align-self: start;
+  background: var(--g-soft);
+  padding: 16px;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.gal-skill-tree summary {
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+.gal-skill-tree svg {
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.gal-skill-tree > div {
+  margin: 12px 0 0 10px;
+}
+.gal-skill-leaf {
+  margin: 8px 0 0 12px;
+}
+.gal-skill-folders {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.gal-skill-folder {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px dashed var(--g-control);
+  padding: 14px;
+  border-radius: 8px;
+}
+.gal-skill-folder code {
+  font-size: 12px;
+}
+.gal-skill-folder p {
+  flex: 1;
+}
+.gal-skill-folder .gal-upload {
+  position: relative;
+}
+.gal-skill-filelist > div {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.gal-skill-filelist > div > button:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.gal-skill-summary {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 20px;
+  background: var(--g-soft);
+  border-radius: 8px;
+}
+.gal-skill-ok {
+  color: var(--g-success) !important;
+}
+.gal-skill-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid var(--g-line);
+}
+@media (max-width: 700px) {
+  .gal-skill-layout {
+    grid-template-columns: 1fr;
+  }
+  .gal-skill-steps {
+    padding: 12px;
+    gap: 4px;
+  }
+  .gal-skill-steps button {
+    flex-direction: column;
+    padding: 8px 2px;
+    font-size: 12px;
+  }
+  .gal-skill-folders {
+    grid-template-columns: 1fr;
+  }
+  .gal-skill-folder {
+    display: grid;
+    grid-template-columns: auto 1fr;
+  }
+  .gal-skill-footer {
+    padding: 12px;
+  }
+}
+.gal .gal-skill-steps button[aria-current="step"],
+.gal .gal-skill-steps button[aria-current="step"]:hover {
+  background: var(--g-accent);
+  color: var(--g-on-accent);
+}
+.gal-skill-steps,
+.gal-skill-footer {
+  flex-shrink: 0;
+}

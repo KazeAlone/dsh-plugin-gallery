@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { REMOTE } from "../descriptors.mjs";
 import styles from "./styles.css";
+import { SkillWizard } from "./skill-wizard.jsx";
 import { Modal } from "./modal.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
 import { Glyph, ResourceVisual } from "./icons.jsx";
@@ -50,6 +51,7 @@ function Gallery({ remote }) {
     [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null),
     [editor, setEditor] = useState(null);
+  const [skillWizard, setSkillWizard] = useState(false);
   const [reference, setReference] = useState("");
   const [storageSettings, setStorageSettings] = useState(null);
   const [connectionResult, setConnectionResult] = useState("");
@@ -135,6 +137,10 @@ function Gallery({ remote }) {
     setNotice("");
     setError("");
     if (!r && !type) return;
+    if (!r && type === "skill") {
+      setSkillWizard(true);
+      return;
+    }
     const d = r || { ...blank(), type };
     setEditor({
       id: r?.id,
@@ -463,7 +469,22 @@ function Gallery({ remote }) {
           )}
         </>
       )}
-      {selected && !editor && (
+      {skillWizard && (
+        <SkillWizard
+          onClose={async () => {
+            if (await confirmAction("放弃尚未保存的 Skill？"))
+              setSkillWizard(false);
+          }}
+          onSave={async (resource) => {
+            const r = await call(remote, "uiCreate", json(resource));
+            setSkillWizard(false);
+            setRefresh((x) => x + 1);
+            setNotice("Skill 已保存。");
+            await run(() => load(r.id));
+          }}
+        />
+      )}
+      {selected && !editor && !skillWizard && (
         <Modal onClose={() => !busy && setSelected(null)}>
           <section
             tabIndex={-1}
@@ -858,7 +879,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.4.9</span>
+              <span className="gal-local">v0.5.0</span>
               <button
                 disabled={busy}
                 onClick={() =>
