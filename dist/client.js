@@ -2005,6 +2005,67 @@ fieldset.gal-skill-fields {
 .gal-cover-picker .gal-purpose-cover { border-radius: 8px; }
 
 .gal-skill-steps.gal-three-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.gal[data-theme="comic"] {
+  --g-bg: #f9efd8;
+  --g-card: #fffaf0;
+  --g-soft: #f4e4be;
+  --g-hover: #ffedb3;
+  --g-ink: #211c20;
+  --g-muted: #584950;
+  --g-line: #352b31;
+  --g-control: #352b31;
+  --g-accent: #ffce53;
+  --g-on-accent: #211c20;
+  --g-ring: #155aaa;
+  --g-error: #851c36;
+  --g-error-bg: #ffe0e7;
+  --g-success: #154f43;
+  --g-success-bg: #cdf1e4;
+  --g-overlay: #241c25b3;
+  color-scheme: light;
+  background-color: var(--g-bg);
+  background-image: radial-gradient(#4c32472b 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+.gal-theme-swatch.comic { background: linear-gradient(135deg, #ffe06c 45%, #211c20 45% 55%, #fba2b7 55%); }
+.gal[data-theme="comic"] :is(.gal-header, .gal-board, button.gal-resource-card, .gal-dialog) {
+  border: 2px solid var(--g-ink);
+  border-radius: 4px;
+  box-shadow: 5px 5px 0 var(--g-ink);
+}
+.gal[data-theme="comic"] .gal-header {
+  padding: clamp(12px, 3vw, 28px);
+  background: repeating-conic-gradient(from 72deg at 35% 100%, #ffdc72 0deg 12deg, #ffe8a0 12deg 23deg);
+}
+.gal[data-theme="comic"] .gal-header h1 {
+  font-weight: 950;
+  font-style: italic;
+  text-shadow: 2px 2px 0 #fffaf0;
+}
+.gal[data-theme="comic"] .gal-filters button.active {
+  background: #ffce53;
+  color: var(--g-ink);
+  border-color: var(--g-ink);
+  box-shadow: 2px 2px 0 var(--g-ink);
+}
+.gal[data-theme="comic"] .gal-board { --rank-color: #175744; --rank-tint: #a4e2be; }
+.gal[data-theme="comic"] .gal-board.agent { --rank-color: #58377b; --rank-tint: #dac0f8; }
+.gal[data-theme="comic"] .gal-board.mcp { --rank-color: #174e7d; --rank-tint: #a5d9ff; }
+.gal[data-theme="comic"] .gal-board.workflow { --rank-color: #802f45; --rank-tint: #f9aec4; }
+.gal[data-theme="comic"] .gal-board-head {
+  border-bottom: 2px solid var(--g-ink);
+  background-image: radial-gradient(#211c2040 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+.gal[data-theme="comic"] .gal-board-head h2 { font-weight: 900; }
+.gal[data-theme="comic"] .gal-board-icon { background: var(--g-card); border-color: var(--g-ink); }
+.gal[data-theme="comic"] .gal-purpose-cover {
+  --visual-ink: hsl(var(--cover-hue) 55% 24%);
+  --visual-bg: hsl(var(--cover-hue) 76% 82%);
+  background: radial-gradient(#211c2030 1px, transparent 1px) 0 0 / 7px 7px, var(--visual-bg);
+  border-bottom: 2px solid var(--g-ink);
+}
 `;
 
 // src/client/leaderboards.jsx
@@ -9939,6 +10000,7 @@ var THEMES = [
   { id: "system", label: "\u8DDF\u968F\u7CFB\u7EDF", hint: "\u5F53\u524D Gallery \u5916\u89C2" },
   { id: "atelier", label: "\u58A8\u7EFF\u9EC4\u94DC", hint: "\u6DF1\u8272\u5C55\u5385" },
   { id: "paper", label: "\u6696\u7EB8", hint: "\u67D4\u548C\u6D45\u8272" },
+  { id: "comic", label: "\u6F2B\u753B\u5370\u5237", hint: "\u7C97\u58A8\u5206\u955C\u4E0E\u5F69\u8272\u7F51\u70B9" },
   { id: "astral", label: "\u938F\u91D1\u661F\u7A79", hint: "\u661F\u8F68\u3001\u6D41\u661F\u4E0E\u5B9D\u77F3\u699C\u5355" },
   { id: "neon", label: "\u9713\u8679\u73BB\u7483", hint: "\u6C89\u6D78\u5F0F\u8D44\u6E90\u821E\u53F0" }
 ];
