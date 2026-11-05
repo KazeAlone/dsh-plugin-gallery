@@ -7384,8 +7384,8 @@ function Gallery({ remote }) {
     /* @__PURE__ */ import_react5.default.createElement("footer", null, r.type === "skill" && /* @__PURE__ */ import_react5.default.createElement(
       "span",
       {
-        title: "\u7D2F\u8BA1\u5B9E\u9645\u4F7F\u7528\u6B21\u6570",
-        "aria-label": `\u7D2F\u8BA1\u5B9E\u9645\u4F7F\u7528 ${r.usageCount ?? 0} \u6B21`
+        title: "\u7D2F\u8BA1\u8C03\u7528\u6B21\u6570",
+        "aria-label": `\u7D2F\u8BA1\u8C03\u7528 ${r.usageCount ?? 0} \u6B21`
       },
       /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "usage", size: 15 }),
       (r.usageCount ?? 0).toLocaleString(),
@@ -7469,7 +7469,7 @@ function Gallery({ remote }) {
       /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "download" }),
       "\u4E0B\u8F7D\u8D44\u6E90"
     )),
-    /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-dialog-body" }, content.type === "skill" && /* @__PURE__ */ import_react5.default.createElement("p", { className: "gal-usage-total" }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "usage" }), " \u7D2F\u8BA1\u5B9E\u9645\u4F7F\u7528", " ", /* @__PURE__ */ import_react5.default.createElement("strong", null, (content.usageCount ?? 0).toLocaleString()), " ", "\u6B21"), /* @__PURE__ */ import_react5.default.createElement("p", { className: "gal-description" }, content.description || "\u6682\u65E0\u63CF\u8FF0"), /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-tags" }, content.tags.map((t) => /* @__PURE__ */ import_react5.default.createElement("span", { key: t }, t))), content.files.map((f) => /* @__PURE__ */ import_react5.default.createElement("details", { className: "gal-file", key: f.path }, /* @__PURE__ */ import_react5.default.createElement("summary", null, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "file", size: 16 }), " ", f.path, /* @__PURE__ */ import_react5.default.createElement("span", null, f.bytes ?? new Blob([f.content]).size, " B")), f.encoding === "utf8" ? /* @__PURE__ */ import_react5.default.createElement("pre", null, f.content) : /* @__PURE__ */ import_react5.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u4E0B\u8F7D\u7684\u8D44\u6E90\u5305\u4E2D\u3002"))))
+    /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-dialog-body" }, content.type === "skill" && /* @__PURE__ */ import_react5.default.createElement("p", { className: "gal-usage-total" }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "usage" }), " \u7D2F\u8BA1\u8C03\u7528\u6B21\u6570", " ", /* @__PURE__ */ import_react5.default.createElement("strong", null, (content.usageCount ?? 0).toLocaleString()), " ", "\u6B21"), /* @__PURE__ */ import_react5.default.createElement("p", { className: "gal-description" }, content.description || "\u6682\u65E0\u63CF\u8FF0"), /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-tags" }, content.tags.map((t) => /* @__PURE__ */ import_react5.default.createElement("span", { key: t }, t))), content.files.map((f) => /* @__PURE__ */ import_react5.default.createElement("details", { className: "gal-file", key: f.path }, /* @__PURE__ */ import_react5.default.createElement("summary", null, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: "file", size: 16 }), " ", f.path, /* @__PURE__ */ import_react5.default.createElement("span", null, f.bytes ?? new Blob([f.content]).size, " B")), f.encoding === "utf8" ? /* @__PURE__ */ import_react5.default.createElement("pre", null, f.content) : /* @__PURE__ */ import_react5.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u4E0B\u8F7D\u7684\u8D44\u6E90\u5305\u4E2D\u3002"))))
   )), editor && /* @__PURE__ */ import_react5.default.createElement(Modal, { onClose: closeEditor }, /* @__PURE__ */ import_react5.default.createElement(
     "section",
     {
@@ -7644,7 +7644,7 @@ function Gallery({ remote }) {
       /* @__PURE__ */ import_react5.default.createElement("strong", null, provider.name),
       /* @__PURE__ */ import_react5.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
     ))), connectionResult && /* @__PURE__ */ import_react5.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react5.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react5.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react5.default.createElement("span", { className: "gal-local" }, "v0.5.7"), /* @__PURE__ */ import_react5.default.createElement(
+    /* @__PURE__ */ import_react5.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react5.default.createElement("span", { className: "gal-local" }, "v0.5.8"), /* @__PURE__ */ import_react5.default.createElement(
       "button",
       {
         disabled: busy,
