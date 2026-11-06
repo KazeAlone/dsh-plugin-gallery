@@ -91,3 +91,11 @@ Gallery MCP 资源保存 `mcp.json` 和 metadata.mcp，字段 transport 仅允�
 在启用 tools 的 DSH 预设中，Gallery 注册只读的 `gallery_agent_list`；启用 subagents 后另注册 `gallery_agent_run`，并要求 spawn 提供方可用。后者把 `AGENT.md` 指令、本次任务和按需读取的附件目录交给 `spawn` 子 Agent，完成通知返回当前会话。资源内容作为子 Agent 的任务输入，尚不是独立的 DSH Agent preset；其 `config.json` 模型配置当前不作为子 Agent 模型覆盖。
 
 0.19.0 画布通过视图变换自由平移，Task 位置保存到 workflowCanvas.taskPositions；workflow.json 的 positions 暂留空，避免将画布负坐标误交给尚未适配的 TeamFlow。
+
+## Workflow 字段与提取（0.20.0）
+
+核对 yogurtss/dsh-teamflow 的 src/templates.ts、template-brief.ts、workflow-native.ts 和 builtin-templates.ts 后，成员模板字段对应 name、summary、role、executionPrompt。specificPrompt 属于运行实例，单独保存在画布 Agent 元数据中；Skill/MCP 也保存在节点元数据中，尚无执行适配。模板 members.name 使用可编辑的成员名称，保存时将画布内部节点 ID 的负责人引用转换为该名称；重新打开时反向还原，避免改名断开任务负责人。
+
+任务与人工节点使用 subject、assignee、dependencies、checkpoint、general.requirements/deliverables/acceptance；人工节点 checkpoint=true 且 assignee 为空。实例的 description、人工验收历史及决定不混入可复用模板。
+
+uiWorkflowModels 仅向 owner 列出当前已加载且配置了模型的 DSH 会话。uiExtractWorkflowAgent 复用指定会话的 agent.ctx.llm 与 options.provider/model，发送单个 Agent 的名称、描述及 AGENT.md，不读取会话历史、不配置独立密钥、不传工具。调用限时90秒，结果经字段类型、长度和名称格式校验后返回前端，供用户编辑。未进行真实模型网络端到端验证，已通过 mock stream 的路由与解析测试和浏览器交互测试。

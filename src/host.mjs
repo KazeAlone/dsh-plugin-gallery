@@ -1,3 +1,4 @@
+import { extractWorkflowAgent } from "./workflow-extraction.mjs";
 import {
   TypertRemoteService,
   RemoteError,
@@ -139,6 +140,15 @@ export default class GalleryService extends TypertRemoteService {
   }
   uiCheckMcp(payload) {
     return this.ownerCall(() => checkMcpConnection(JSON.parse(payload)));
+  }
+  uiWorkflowModels() {
+    return this.ownerCall(() => (this.ctx.get('agents')?.list() || []).filter(a => a.options?.provider && a.options?.model).map(a => ({ id: a.id, label: `${a.options.provider} / ${a.options.model} · ${String(a.id).slice(-8)}` })));
+  }
+  uiExtractWorkflowAgent(payload) {
+    return this.ownerCall(() => {
+      const { resourceId, sessionId } = JSON.parse(payload);
+      return extractWorkflowAgent(this.ctx, this.store.getResource(resourceId), sessionId);
+    });
   }
   uiPublishWorkflow(id) {
     return this.ownerCall(async () => {

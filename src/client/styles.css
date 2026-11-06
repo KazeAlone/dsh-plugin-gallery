@@ -2171,3 +2171,5 @@ fieldset.gal-skill-fields {
 .gal .gal-flow-ports .gal-flow-port-out { right: -8px; }
 .gal .gal-flow-ports button:hover { box-shadow: 0 0 0 5px color-mix(in srgb, var(--g-ring) 25%, transparent); }
 .gal-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.gal-flow-wire-preview { stroke-dasharray: 5 4; opacity: .8; }
+.gal .gal-flow-ports button { touch-action: none; }

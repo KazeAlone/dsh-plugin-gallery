@@ -60,6 +60,8 @@ var string = (name) => ({
 });
 var methods = {
   uiStatus: [],
+  uiWorkflowModels: [],
+  uiExtractWorkflowAgent: ["payload"],
   uiSkillCatalog: [],
   uiCheckMcp: ["payload"],
   uiPublishWorkflow: ["id"],
@@ -2261,6 +2263,8 @@ fieldset.gal-skill-fields {
 .gal .gal-flow-ports .gal-flow-port-out { right: -8px; }
 .gal .gal-flow-ports button:hover { box-shadow: 0 0 0 5px color-mix(in srgb, var(--g-ring) 25%, transparent); }
 .gal-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.gal-flow-wire-preview { stroke-dasharray: 5 4; opacity: .8; }
+.gal .gal-flow-ports button { touch-action: none; }
 `;
 
 // src/client/leaderboards.jsx
@@ -2987,7 +2991,9 @@ function initial(resource) {
   const saved = resource?.metadata?.workflowCanvas;
   const agents = saved?.agents?.map((a) => ({
     ...a,
-    snapshot: definition.members.find((m) => m.name === a.id)
+    snapshot: definition.members.find(
+      (m) => m.name === (a.memberName || a.id)
+    )
   })) || definition.members.map((m, i) => ({
     id: m.name,
     label: m.name,
@@ -2998,7 +3004,13 @@ function initial(resource) {
     position: { x: 40, y: 70 + i * 155 }
   }));
   return {
-    definition,
+    definition: {
+      ...definition,
+      tasks: definition.tasks.map((t) => ({
+        ...t,
+        assignee: saved ? agents.find((a) => (a.memberName || a.id) === t.assignee)?.id || t.assignee : t.assignee
+      }))
+    },
     agents,
     positions: saved?.taskPositions || Object.fromEntries(
       definition.tasks.map((t, i) => [
@@ -3011,7 +3023,15 @@ function initial(resource) {
     )
   };
 }
-function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
+function WorkflowWizard({
+  resource,
+  onClose,
+  onSave,
+  onList,
+  onGet,
+  onModels,
+  onExtract
+}) {
   const [fullscreen, setFullscreen] = (0, import_react7.useState)(false);
   const editor = (0, import_react7.useRef)(null), pan = (0, import_react7.useRef)(null), zoomValue = (0, import_react7.useRef)(1), cameraRef = (0, import_react7.useRef)({ x: 0, y: 0 }), boxDrag = (0, import_react7.useRef)(null);
   const [camera, setCamera] = (0, import_react7.useState)({ x: 0, y: 0 });
@@ -3023,6 +3043,9 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
   const arrow = (0, import_react7.useId)();
   const [start] = (0, import_react7.useState)(() => initial(resource));
   const [draft, setDraft] = (0, import_react7.useState)(start.definition), [agents, setAgents] = (0, import_react7.useState)(start.agents), [positions, setPositions] = (0, import_react7.useState)(start.positions);
+  const [models, setModels] = (0, import_react7.useState)([]), [modelSession, setModelSession] = (0, import_react7.useState)("");
+  const connection = (0, import_react7.useRef)(null);
+  const [wire, setWire] = (0, import_react7.useState)(null);
   const [catalog, setCatalog] = (0, import_react7.useState)({ agent: [], skill: [], mcp: [] });
   const [selected, setSelected] = (0, import_react7.useState)(null), [linkFrom, setLinkFrom] = (0, import_react7.useState)(null), [zoom, setZoom] = (0, import_react7.useState)(1);
   const [error, setError] = (0, import_react7.useState)(""), [loading, setLoading] = (0, import_react7.useState)(true), [busy, setBusy] = (0, import_react7.useState)(false);
@@ -3239,12 +3262,12 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
     setMarquee(null);
     event.currentTarget.classList.remove("gal-flow-panning");
   }
-  function connect(to) {
-    if (!linkFrom)
+  function connect(to, from = linkFrom) {
+    if (!from)
       return setError("\u5148\u70B9\u51FB\u524D\u7F6E\u8282\u70B9\u53F3\u4FA7\u5706\u70B9\uFF0C\u518D\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u5DE6\u4FA7\u5706\u70B9");
     try {
       const tasks = draft.tasks.map(
-        (t) => t.id === to ? { ...t, dependencies: [.../* @__PURE__ */ new Set([...t.dependencies, linkFrom])] } : t
+        (t) => t.id === to ? { ...t, dependencies: [.../* @__PURE__ */ new Set([...t.dependencies, from])] } : t
       );
       validateWorkflowTemplate({
         ...draft,
@@ -3265,6 +3288,60 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       setError(e.message);
     }
   }
+  function startWire(event, id, side) {
+    if (event.button !== 0 || busy) return;
+    event.preventDefault();
+    event.stopPropagation();
+    connection.current = { id, side };
+    setLinkFrom(id);
+    setWire(worldPoint(event));
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  function finishWire(event) {
+    const start2 = connection.current;
+    const port = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-flow-port]");
+    if (start2 && port && port.dataset.flowPort !== start2.side && port.dataset.node !== start2.id) {
+      connect(
+        start2.side === "out" ? port.dataset.node : start2.id,
+        start2.side === "out" ? start2.id : port.dataset.node
+      );
+    }
+    connection.current = null;
+    setWire(null);
+    setLinkFrom(null);
+  }
+  async function refreshModels() {
+    setBusy(true);
+    setError("");
+    try {
+      const rows = await onModels();
+      setModels(rows);
+      setModelSession(
+        (current) => rows.some((r) => r.id === current) ? current : rows[0]?.id || ""
+      );
+      if (!rows.length) setError("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u5DF2\u914D\u7F6E\u6A21\u578B\u7684 DSH \u4F1A\u8BDD\uFF0C\u518D\u5237\u65B0");
+    } catch (e) {
+      setError(e.message || String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function extractMember() {
+    const id = agent.id;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await onExtract(agent.resourceId, modelSession);
+      const { specificPrompt, ...snapshot } = result;
+      setAgents(
+        (rows) => rows.map((a) => a.id === id ? { ...a, snapshot, specificPrompt } : a)
+      );
+    } catch (e) {
+      setError(e?.rpcError?.message || e.message || String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
   async function chooseAgent(id) {
     const ticket = ++pendingAgent.current, nodeId = selected.id;
     if (!id) {
@@ -3281,9 +3358,10 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           (a) => a.id === nodeId ? {
             ...a,
             resourceId: id,
+            specificPrompt: "",
             label: row.name,
             snapshot: {
-              name: nodeId,
+              name: row.metadata?.agent?.slug || row.name.replace(/[^\p{L}\p{N}_-]/gu, "-").slice(0, 80) || nodeId,
               summary: row.description,
               role: row.name,
               executionPrompt: row.files.find((f) => f.path === "AGENT.md")?.content || ""
@@ -3334,7 +3412,11 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
         throw Error("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u4EFB\u52A1\u8981\u6C42\u6216\u4EBA\u5DE5\u786E\u8BA4\u4E8B\u9879");
       const value = validateWorkflowTemplate({
         ...draft,
-        members: agents.map((a) => ({ ...a.snapshot, name: a.id })),
+        members: agents.map((a) => ({ ...a.snapshot })),
+        tasks: draft.tasks.map((t) => ({
+          ...t,
+          assignee: t.assignee ? agents.find((a) => a.id === t.assignee)?.snapshot?.name || t.assignee : ""
+        })),
         positions: {}
       });
       setBusy(true);
@@ -3356,7 +3438,10 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           workflowCanvas: {
             version: 1,
             taskPositions: positions,
-            agents: agents.map(({ snapshot, ...node }) => node)
+            agents: agents.map(({ snapshot, ...node }) => ({
+              ...node,
+              memberName: snapshot?.name
+            }))
           }
         },
         references: resource?.references || []
@@ -3577,6 +3662,18 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                 }
               )
             )),
+            wire && connection.current && (() => {
+              const start2 = positions[connection.current.id];
+              const from = connection.current.side === "out" ? { x: start2.x + 220, y: start2.y + 55 } : wire;
+              const to = connection.current.side === "out" ? wire : { x: start2.x, y: start2.y + 55 };
+              return /* @__PURE__ */ import_react7.default.createElement(
+                "path",
+                {
+                  className: "gal-flow-wire-preview",
+                  d: `M${from.x},${from.y} C${from.x + 70},${from.y} ${to.x - 70},${to.y} ${to.x},${to.y}`
+                }
+              );
+            })(),
             draft.tasks.flatMap((t) => [
               ...t.dependencies.map(
                 (id) => edge(positions[id], positions[t.id], id + ":" + t.id)
@@ -3669,9 +3766,17 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                 "aria-label": "\u8FDE\u5165",
                 title: "\u8F93\u5165\uFF1A\u8FDE\u63A5\u524D\u7F6E\u8282\u70B9",
                 className: "gal-flow-port-in",
-                onClick: (e) => {
-                  e.stopPropagation();
-                  connect(n.id);
+                "data-flow-port": "in",
+                "data-node": n.id,
+                onPointerDown: (e) => startWire(e, n.id, "in"),
+                onPointerMove: (e) => {
+                  if (connection.current) setWire(worldPoint(e));
+                },
+                onPointerUp: finishWire,
+                onPointerCancel: () => {
+                  connection.current = null;
+                  setWire(null);
+                  setLinkFrom(null);
                 }
               },
               /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-sr-only" }, "\u8FDE\u5165")
@@ -3682,10 +3787,17 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                 title: "\u8F93\u51FA\uFF1A\u8FDE\u63A5\u540E\u7EED\u8282\u70B9",
                 className: "gal-flow-port-out",
                 "aria-pressed": linkFrom === n.id,
-                onClick: (e) => {
-                  e.stopPropagation();
-                  setLinkFrom(linkFrom === n.id ? null : n.id);
-                  setError("");
+                "data-flow-port": "out",
+                "data-node": n.id,
+                onPointerDown: (e) => startWire(e, n.id, "out"),
+                onPointerMove: (e) => {
+                  if (connection.current) setWire(worldPoint(e));
+                },
+                onPointerUp: finishWire,
+                onPointerCancel: () => {
+                  connection.current = null;
+                  setWire(null);
+                  setLinkFrom(null);
                 }
               },
               /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-sr-only" }, "\u8FDE\u51FA")
@@ -3734,7 +3846,68 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
         /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9 Agent"),
         agent.resourceId && !catalog.agent.some((r) => r.id === agent.resourceId) && /* @__PURE__ */ import_react7.default.createElement("option", { value: agent.resourceId }, agent.label, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09"),
         catalog.agent.map((r) => /* @__PURE__ */ import_react7.default.createElement("option", { key: r.id, value: r.id }, r.name))
-      )), !catalog.agent.length && !loading && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u8D44\u6E90\u5E93\u6682\u65E0 Agent\uFF0C\u8BF7\u5148\u5728 Agent \u5206\u7C7B\u521B\u5EFA\u3002"), [
+      )), !catalog.agent.length && !loading && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u8D44\u6E90\u5E93\u6682\u65E0 Agent\uFF0C\u8BF7\u5148\u5728 Agent \u5206\u7C7B\u521B\u5EFA\u3002"), /* @__PURE__ */ import_react7.default.createElement("fieldset", null, /* @__PURE__ */ import_react7.default.createElement("legend", null, "\u4ECE Agent \u6307\u5F15\u63D0\u53D6\u5B57\u6BB5"), /* @__PURE__ */ import_react7.default.createElement("button", { disabled: busy, onClick: refreshModels }, "\u5237\u65B0\u5BBF\u4E3B\u4F1A\u8BDD\u6A21\u578B"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u4F7F\u7528\u4F1A\u8BDD\u6A21\u578B", /* @__PURE__ */ import_react7.default.createElement(
+        "select",
+        {
+          "aria-label": "\u4F7F\u7528\u4F1A\u8BDD\u6A21\u578B",
+          disabled: busy,
+          value: modelSession,
+          onChange: (e) => setModelSession(e.target.value)
+        },
+        /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9\u5DF2\u6253\u5F00\u7684\u4F1A\u8BDD"),
+        models.map((m) => /* @__PURE__ */ import_react7.default.createElement("option", { key: m.id, value: m.id }, m.label))
+      )), /* @__PURE__ */ import_react7.default.createElement(
+        "button",
+        {
+          disabled: busy || !agent.resourceId || !modelSession,
+          onClick: extractMember
+        },
+        busy ? "\u5904\u7406\u4E2D\u2026" : "\u7528\u5BBF\u4E3B\u6A21\u578B\u63D0\u53D6"
+      ), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u53EA\u8BFB\u53D6\u6240\u9009 Agent \u5B9A\u4E49\uFF0C\u4E0D\u8BFB\u53D6\u4F1A\u8BDD\u5386\u53F2\u3002\u63D0\u53D6\u7ED3\u679C\u53EF\u7F16\u8F91\u3002")), [
+        ["name", "\u540D\u79F0"],
+        ["summary", "\u529F\u80FD\u6982\u8FF0"],
+        ["role", "\u957F\u671F\u804C\u8D23"],
+        ["executionPrompt", "\u901A\u7528\u6267\u884C\u6307\u4EE4 PE"]
+      ].map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { key }, label, key === "name" ? /* @__PURE__ */ import_react7.default.createElement(
+        "input",
+        {
+          "aria-label": `Agent ${label}`,
+          disabled: busy,
+          maxLength: 80,
+          value: agent.snapshot?.[key] || "",
+          onChange: (e) => updateAgent({
+            snapshot: {
+              ...agent.snapshot,
+              [key]: e.target.value
+            }
+          })
+        }
+      ) : /* @__PURE__ */ import_react7.default.createElement(
+        "textarea",
+        {
+          "aria-label": `Agent ${label}`,
+          disabled: busy,
+          rows: 3,
+          maxLength: 16e3,
+          value: agent.snapshot?.[key] || "",
+          onChange: (e) => updateAgent({
+            snapshot: {
+              ...agent.snapshot,
+              [key]: e.target.value
+            }
+          })
+        }
+      ))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u672C\u6B21\u8865\u5145\u6307\u4EE4\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react7.default.createElement(
+        "textarea",
+        {
+          "aria-label": "\u672C\u6B21\u8865\u5145\u6307\u4EE4",
+          disabled: busy,
+          rows: 3,
+          maxLength: 16e3,
+          value: agent.specificPrompt || "",
+          onChange: (e) => updateAgent({ specificPrompt: e.target.value })
+        }
+      )), [
         ["skill", "skills", "Skill"],
         ["mcp", "mcps", "MCP"]
       ].map(([type, key, label]) => /* @__PURE__ */ import_react7.default.createElement("fieldset", { key }, /* @__PURE__ */ import_react7.default.createElement("legend", null, "\u914D\u7F6E ", label), !catalog[type].length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u6682\u65E0\u53EF\u9009\u8D44\u6E90"), catalog[type].map((r) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: r.id }, /* @__PURE__ */ import_react7.default.createElement(
@@ -3845,7 +4018,7 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           (t) => t.id !== task.id && !task.dependencies.includes(t.id)
         ).map((t) => /* @__PURE__ */ import_react7.default.createElement("option", { key: t.id, value: t.id }, t.subject))
       ))), (task || agent) && /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-delete", disabled: busy, onClick: remove }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }), "\u5220\u9664\u8282\u70B9"))),
-      /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u8FDE\u63A5\u4E2D\uFF1A\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u5DE6\u4FA7\u5706\u70B9" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u62D6\u52A8\u8FDE\u7EBF\uFF1A\u677E\u5F00\u5230\u53E6\u4E00\u8282\u70B9\u7684\u5706\u70B9" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
         "button",
         {
           className: "gal-primary",
@@ -11488,7 +11661,7 @@ function Gallery({ remote }) {
       onClick: () => setOffset((x) => x + 48)
     },
     "\u4E0B\u4E00\u9875"
-  ))), workflowWizard && /* @__PURE__ */ import_react12.default.createElement(WorkflowWizard, { onGet: (id) => call(remote, "uiGet", id), onList: async (type2) => {
+  ))), workflowWizard && /* @__PURE__ */ import_react12.default.createElement(WorkflowWizard, { onModels: () => call(remote, "uiWorkflowModels"), onExtract: (resourceId, sessionId) => call(remote, "uiExtractWorkflowAgent", json2({ resourceId, sessionId })), onGet: (id) => call(remote, "uiGet", id), onList: async (type2) => {
     const rows = [];
     for (let offset2 = 0; ; offset2 += 100) {
       const page = await call(remote, "uiList", json2({ type: type2, limit: 100, offset: offset2 }));
@@ -11836,7 +12009,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.19.0"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.20.0"), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         disabled: busy,

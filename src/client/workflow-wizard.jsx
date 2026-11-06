@@ -25,7 +25,9 @@ function initial(resource) {
   const agents =
     saved?.agents?.map((a) => ({
       ...a,
-      snapshot: definition.members.find((m) => m.name === a.id),
+      snapshot: definition.members.find(
+        (m) => m.name === (a.memberName || a.id),
+      ),
     })) ||
     definition.members.map((m, i) => ({
       id: m.name,
@@ -37,7 +39,16 @@ function initial(resource) {
       position: { x: 40, y: 70 + i * 155 },
     }));
   return {
-    definition,
+    definition: {
+      ...definition,
+      tasks: definition.tasks.map((t) => ({
+        ...t,
+        assignee: saved
+          ? agents.find((a) => (a.memberName || a.id) === t.assignee)?.id ||
+            t.assignee
+          : t.assignee,
+      })),
+    },
     agents,
     positions:
       saved?.taskPositions ||
@@ -52,7 +63,15 @@ function initial(resource) {
       ),
   };
 }
-export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
+export function WorkflowWizard({
+  resource,
+  onClose,
+  onSave,
+  onList,
+  onGet,
+  onModels,
+  onExtract,
+}) {
   const [fullscreen, setFullscreen] = useState(false);
   const editor = useRef(null),
     pan = useRef(null),
@@ -71,6 +90,10 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
   const [draft, setDraft] = useState(start.definition),
     [agents, setAgents] = useState(start.agents),
     [positions, setPositions] = useState(start.positions);
+  const [models, setModels] = useState([]),
+    [modelSession, setModelSession] = useState("");
+  const connection = useRef(null);
+  const [wire, setWire] = useState(null);
   const [catalog, setCatalog] = useState({ agent: [], skill: [], mcp: [] });
   const [selected, setSelected] = useState(null),
     [linkFrom, setLinkFrom] = useState(null),
@@ -319,13 +342,13 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
     setMarquee(null);
     event.currentTarget.classList.remove("gal-flow-panning");
   }
-  function connect(to) {
-    if (!linkFrom)
+  function connect(to, from = linkFrom) {
+    if (!from)
       return setError("先点击前置节点右侧圆点，再点击后续节点左侧圆点");
     try {
       const tasks = draft.tasks.map((t) =>
         t.id === to
-          ? { ...t, dependencies: [...new Set([...t.dependencies, linkFrom])] }
+          ? { ...t, dependencies: [...new Set([...t.dependencies, from])] }
           : t,
       );
       // Validate topology with placeholder text while the draft is incomplete.
@@ -348,6 +371,67 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       setError(e.message);
     }
   }
+  function startWire(event, id, side) {
+    if (event.button !== 0 || busy) return;
+    event.preventDefault();
+    event.stopPropagation();
+    connection.current = { id, side };
+    setLinkFrom(id);
+    setWire(worldPoint(event));
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  function finishWire(event) {
+    const start = connection.current;
+    const port = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest("[data-flow-port]");
+    if (
+      start &&
+      port &&
+      port.dataset.flowPort !== start.side &&
+      port.dataset.node !== start.id
+    ) {
+      connect(
+        start.side === "out" ? port.dataset.node : start.id,
+        start.side === "out" ? start.id : port.dataset.node,
+      );
+    }
+    connection.current = null;
+    setWire(null);
+    setLinkFrom(null);
+  }
+  async function refreshModels() {
+    setBusy(true);
+    setError("");
+    try {
+      const rows = await onModels();
+      setModels(rows);
+      setModelSession((current) =>
+        rows.some((r) => r.id === current) ? current : rows[0]?.id || "",
+      );
+      if (!rows.length) setError("请先打开一个已配置模型的 DSH 会话，再刷新");
+    } catch (e) {
+      setError(e.message || String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function extractMember() {
+    const id = agent.id;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await onExtract(agent.resourceId, modelSession);
+      const { specificPrompt, ...snapshot } = result;
+      setAgents((rows) =>
+        rows.map((a) => (a.id === id ? { ...a, snapshot, specificPrompt } : a)),
+      );
+    } catch (e) {
+      setError(e?.rpcError?.message || e.message || String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
   async function chooseAgent(id) {
     const ticket = ++pendingAgent.current,
       nodeId = selected.id;
@@ -366,9 +450,13 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
             ? {
                 ...a,
                 resourceId: id,
+                specificPrompt: "",
                 label: row.name,
                 snapshot: {
-                  name: nodeId,
+                  name:
+                    row.metadata?.agent?.slug ||
+                    row.name.replace(/[^\p{L}\p{N}_-]/gu, "-").slice(0, 80) ||
+                    nodeId,
                   summary: row.description,
                   role: row.name,
                   executionPrompt:
@@ -423,7 +511,14 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
         throw Error("请填写每个节点的任务要求或人工确认事项");
       const value = validateWorkflowTemplate({
         ...draft,
-        members: agents.map((a) => ({ ...a.snapshot, name: a.id })),
+        members: agents.map((a) => ({ ...a.snapshot })),
+        tasks: draft.tasks.map((t) => ({
+          ...t,
+          assignee: t.assignee
+            ? agents.find((a) => a.id === t.assignee)?.snapshot?.name ||
+              t.assignee
+            : "",
+        })),
         positions: {},
       });
       setBusy(true);
@@ -445,7 +540,10 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           workflowCanvas: {
             version: 1,
             taskPositions: positions,
-            agents: agents.map(({ snapshot, ...node }) => node),
+            agents: agents.map(({ snapshot, ...node }) => ({
+              ...node,
+              memberName: snapshot?.name,
+            })),
           },
         },
         references: resource?.references || [],
@@ -690,6 +788,25 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                       />
                     </marker>
                   </defs>
+                  {wire &&
+                    connection.current &&
+                    (() => {
+                      const start = positions[connection.current.id];
+                      const from =
+                        connection.current.side === "out"
+                          ? { x: start.x + 220, y: start.y + 55 }
+                          : wire;
+                      const to =
+                        connection.current.side === "out"
+                          ? wire
+                          : { x: start.x, y: start.y + 55 };
+                      return (
+                        <path
+                          className="gal-flow-wire-preview"
+                          d={`M${from.x},${from.y} C${from.x + 70},${from.y} ${to.x - 70},${to.y} ${to.x},${to.y}`}
+                        />
+                      );
+                    })()}
                   {draft.tasks.flatMap((t) => [
                     ...t.dependencies.map((id) =>
                       edge(positions[id], positions[t.id], id + ":" + t.id),
@@ -794,9 +911,17 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                           aria-label="连入"
                           title="输入：连接前置节点"
                           className="gal-flow-port-in"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            connect(n.id);
+                          data-flow-port="in"
+                          data-node={n.id}
+                          onPointerDown={(e) => startWire(e, n.id, "in")}
+                          onPointerMove={(e) => {
+                            if (connection.current) setWire(worldPoint(e));
+                          }}
+                          onPointerUp={finishWire}
+                          onPointerCancel={() => {
+                            connection.current = null;
+                            setWire(null);
+                            setLinkFrom(null);
                           }}
                         >
                           <span className="gal-sr-only">连入</span>
@@ -806,10 +931,17 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                           title="输出：连接后续节点"
                           className="gal-flow-port-out"
                           aria-pressed={linkFrom === n.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setLinkFrom(linkFrom === n.id ? null : n.id);
-                            setError("");
+                          data-flow-port="out"
+                          data-node={n.id}
+                          onPointerDown={(e) => startWire(e, n.id, "out")}
+                          onPointerMove={(e) => {
+                            if (connection.current) setWire(worldPoint(e));
+                          }}
+                          onPointerUp={finishWire}
+                          onPointerCancel={() => {
+                            connection.current = null;
+                            setWire(null);
+                            setLinkFrom(null);
                           }}
                         >
                           <span className="gal-sr-only">连出</span>
@@ -905,6 +1037,90 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                 {!catalog.agent.length && !loading && (
                   <p>资源库暂无 Agent，请先在 Agent 分类创建。</p>
                 )}
+                <fieldset>
+                  <legend>从 Agent 指引提取字段</legend>
+                  <button disabled={busy} onClick={refreshModels}>
+                    刷新宿主会话模型
+                  </button>
+                  <label>
+                    使用会话模型
+                    <select
+                      aria-label="使用会话模型"
+                      disabled={busy}
+                      value={modelSession}
+                      onChange={(e) => setModelSession(e.target.value)}
+                    >
+                      <option value="">请选择已打开的会话</option>
+                      {models.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    disabled={busy || !agent.resourceId || !modelSession}
+                    onClick={extractMember}
+                  >
+                    {busy ? "处理中…" : "用宿主模型提取"}
+                  </button>
+                  <p>只读取所选 Agent 定义，不读取会话历史。提取结果可编辑。</p>
+                </fieldset>
+                {[
+                  ["name", "名称"],
+                  ["summary", "功能概述"],
+                  ["role", "长期职责"],
+                  ["executionPrompt", "通用执行指令 PE"],
+                ].map(([key, label]) => (
+                  <label key={key}>
+                    {label}
+                    {key === "name" ? (
+                      <input
+                        aria-label={`Agent ${label}`}
+                        disabled={busy}
+                        maxLength={80}
+                        value={agent.snapshot?.[key] || ""}
+                        onChange={(e) =>
+                          updateAgent({
+                            snapshot: {
+                              ...agent.snapshot,
+                              [key]: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    ) : (
+                      <textarea
+                        aria-label={`Agent ${label}`}
+                        disabled={busy}
+                        rows={3}
+                        maxLength={16000}
+                        value={agent.snapshot?.[key] || ""}
+                        onChange={(e) =>
+                          updateAgent({
+                            snapshot: {
+                              ...agent.snapshot,
+                              [key]: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    )}
+                  </label>
+                ))}
+                <label>
+                  本次补充指令（选填）
+                  <textarea
+                    aria-label="本次补充指令"
+                    disabled={busy}
+                    rows={3}
+                    maxLength={16000}
+                    value={agent.specificPrompt || ""}
+                    onChange={(e) =>
+                      updateAgent({ specificPrompt: e.target.value })
+                    }
+                  />
+                </label>
                 {[
                   ["skill", "skills", "Skill"],
                   ["mcp", "mcps", "MCP"],
@@ -1091,7 +1307,7 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
         <footer className="gal-flow-footer">
           <span aria-live="polite">
             {linkFrom
-              ? "连接中：点击后续节点左侧圆点"
+              ? "拖动连线：松开到另一节点的圆点"
               : `${agents.length} Agent · ${draft.tasks.length} 任务与人工节点`}
           </span>
           {linkFrom && (

@@ -628,7 +628,7 @@ function Gallery({ remote }) {
           )}
         </>
       )}
-      {workflowWizard && <WorkflowWizard onGet={id => call(remote, "uiGet", id)} onList={async type => {
+      {workflowWizard && <WorkflowWizard onModels={() => call(remote,"uiWorkflowModels")} onExtract={(resourceId,sessionId) => call(remote,"uiExtractWorkflowAgent",json({resourceId,sessionId}))} onGet={id => call(remote, "uiGet", id)} onList={async type => {
         const rows = [];
         for (let offset = 0; ; offset += 100) {
           const page = await call(remote, "uiList", json({ type, limit: 100, offset }));
@@ -1113,7 +1113,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.19.0</span>
+              <span className="gal-local">v0.20.0</span>
               <button
                 disabled={busy}
                 onClick={() =>
