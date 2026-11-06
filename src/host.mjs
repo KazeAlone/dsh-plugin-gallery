@@ -144,6 +144,7 @@ export default class GalleryService extends TypertRemoteService {
     return this.ownerCall(async () => {
       const resource = this.store.getResource(id);
       demand(resource.type === "workflow", 400, "INVALID_TYPE", "仅 Workflow 可以安装到 TeamFlow");
+      demand(!resource.metadata?.workflowCanvas, 400, "WORKFLOW_ADAPTER_PENDING", "画布编排的 Agent、Skill 与 MCP 执行对接尚未完成，请先保存草稿");
       return publishToTeamflow(resource, process.env.DSH_TEAMFLOW_TEMPLATE_DIR);
     });
   }

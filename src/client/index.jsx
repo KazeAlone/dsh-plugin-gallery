@@ -628,7 +628,14 @@ function Gallery({ remote }) {
           )}
         </>
       )}
-      {workflowWizard && <WorkflowWizard resource={workflowWizard.resource} onClose={async () => { if (await confirmAction("放弃尚未保存的 Workflow？")) setWorkflowWizard(false); }} onSave={async (resource) => {
+      {workflowWizard && <WorkflowWizard onGet={id => call(remote, "uiGet", id)} onList={async type => {
+        const rows = [];
+        for (let offset = 0; ; offset += 100) {
+          const page = await call(remote, "uiList", json({ type, limit: 100, offset }));
+          rows.push(...page.items);
+          if (rows.length >= page.total || !page.items.length) return rows;
+        }
+      }} resource={workflowWizard.resource} onClose={async () => { if (await confirmAction("放弃尚未保存的 Workflow？")) setWorkflowWizard(false); }} onSave={async (resource) => {
         const existing = workflowWizard.resource;
         await (existing ? call(remote, "uiUpdate", existing.id, json({ resource, expectedRevision: existing.revision })) : call(remote, "uiCreate", json(resource)));
         setSelected(null); setWorkflowWizard(false); setRefresh(x => x + 1); setNotice("Workflow 已保存。");
@@ -735,7 +742,7 @@ function Gallery({ remote }) {
             </div>
             {hasResourceCover(content.type) && <ResourceCover resource={content} />}
             <div className="gal-detail-actions">
-              {selected.type === "workflow" && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await call(remote, "uiPublishWorkflow", selected.id); setNotice(`已安装到 TeamFlow：${result.name} v${result.version}`); })}><Glyph name="workflow" />安装到 TeamFlow</button>}
+              {selected.type === "workflow" && !selected.metadata?.workflowCanvas && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await call(remote, "uiPublishWorkflow", selected.id); setNotice(`已安装到 TeamFlow：${result.name} v${result.version}`); })}><Glyph name="workflow" />安装到 TeamFlow</button>}
               {selected.canEdit && (
                 <button disabled={busy} onClick={() => edit(selected)}>
                   <Glyph name="edit" />
@@ -1106,7 +1113,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.17.1</span>
+              <span className="gal-local">v0.18.0</span>
               <button
                 disabled={busy}
                 onClick={() =>

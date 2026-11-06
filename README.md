@@ -1,5 +1,7 @@
 # Gallery
 
+Workflow 画布原型支持添加和拖动 Agent、任务、人工节点，配置 Gallery Agent 及其 Skill/MCP 引用，连接任务依赖并保存后继续编辑。先点前置节点的「连出」，再点后续节点的「连入」；也可在右侧添加前置依赖。画布资源目前是编排草稿，暂不提供安装到 TeamFlow；执行适配后续接入。
+
 内置 `gallery-skill-reference` 参考 Skill，包含完整文件头、执行指引、输入输出示例、三类附件、标签和封面。升级首次启动时添加，可查看、编辑和调用；修改或删除后不会在重启时恢复。
 
 运行在 DSH 内的本地资源库，用于管理 **Skill、Agent 描述、MCP 配置和 Workflow 模板**。Workflow 使用 TeamFlow 的原生模板结构，可从资源详情安装到 TeamFlow 个人模板库。

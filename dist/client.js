@@ -2187,6 +2187,57 @@ fieldset.gal-skill-fields {
   .gal[data-theme="teyvat"] .gal-filters { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .gal[data-theme="teyvat"] .gal-filters button:first-child { grid-column: 1 / -1; }
 }
+
+/* Workflow canvas: one shared editor for every theme. */
+.gal .gal-flow-editor { width: min(1480px, calc(100vw - 40px)); height: min(900px, calc(100dvh - 40px)); max-height: calc(100dvh - 40px); display: flex; flex-direction: column; overflow: hidden; }
+.gal-flow-editor .gal-dialog-head { flex-shrink: 0; gap: 12px; }
+.gal-flow-status { margin-left: auto; color: var(--g-muted); font-size: 12px; }
+.gal-flow-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--g-line); }
+.gal-flow-toolbar > div { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+.gal-flow-toolbar label { display: flex; flex-direction: row; align-items: center; gap: 6px; margin: 0; white-space: nowrap; }
+.gal-flow-toolbar select { width: 90px; }
+.gal-flow-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; flex: 1; min-height: 0; }
+.gal-flow-view { min-width: 0; min-height: 0; overflow: auto; background: var(--g-soft); overscroll-behavior: contain; }
+.gal-flow-board { position: relative; transform-origin: top left; background-image: radial-gradient(var(--g-control) .8px, transparent .8px); background-size: 22px 22px; }
+.gal-flow-edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.gal-flow-edges path { fill: none; stroke: var(--g-accent); stroke-width: 2.5; }
+.gal-flow-edges path.assignment { stroke: var(--g-muted); stroke-dasharray: 6 6; opacity: .65; }
+.gal-flow-node { position: absolute; width: 220px; padding: 0 12px 10px; border: 1px solid var(--g-control); border-top: 4px solid #7965aa; border-radius: 12px; background: var(--g-card); color: var(--g-ink); box-shadow: 0 8px 20px #00000015; }
+.gal-flow-node.agent { border-top-color: #4b9985; }
+.gal-flow-node.human { border-top-color: #ba924a; }
+.gal-flow-node.selected { outline: 2px solid var(--g-ring); outline-offset: 3px; }
+.gal .gal-flow-grip { display: flex; justify-content: flex-start; width: 100%; padding: 6px 0; border: 0; min-height: 32px; background: transparent; color: var(--g-muted); font-size: 11px; cursor: grab; touch-action: none; }
+.gal .gal-flow-grip:active { cursor: grabbing; }
+.gal .gal-flow-node-title { display: block; width: 100%; padding: 4px 0; min-height: 30px; border: 0; background: transparent; text-align: left; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gal-flow-node > p { color: var(--g-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gal-flow-ports { display: flex; justify-content: space-between; gap: 8px; padding-top: 8px; }
+.gal .gal-flow-ports button { min-height: 24px; font-size: 11px; padding: 2px 10px; border-radius: 12px; }
+.gal .gal-flow-ports button[aria-pressed="true"] { background: var(--g-accent); color: var(--g-on-accent); }
+.gal-flow-inspector { overflow-y: auto; min-width: 0; padding: 20px; border-left: 1px solid var(--g-line); background: var(--g-card); }
+.gal-flow-inspector h3 { margin-bottom: 20px; }
+.gal-flow-inspector label { margin-bottom: 16px; }
+.gal-flow-inspector p { font-size: 12px; color: var(--g-muted); margin-bottom: 12px; }
+.gal-flow-inspector fieldset { min-width: 0; border: 1px solid var(--g-line); border-radius: 8px; margin: 0 0 18px; padding: 12px; }
+.gal-flow-inspector fieldset legend { font-size: 13px; padding: 0 5px; }
+.gal-flow-inspector .gal-flow-check { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 13px; font-weight: 400; overflow-wrap: anywhere; }
+.gal-flow-check input { width: 16px; height: 16px; flex: 0 0 16px; }
+.gal-flow-dependency { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+.gal-flow-dependency span { overflow-wrap: anywhere; }
+.gal-flow-dependency button { padding: 2px !important; min-height: 26px !important; }
+.gal-flow-footer { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--g-line); padding: 12px 20px; flex-shrink: 0; }
+.gal-flow-footer > span { flex: 1; color: var(--g-muted); font-size: 12px; }
+.gal-flow-error { padding: 8px 20px; display: flex; gap: 12px; justify-content: space-between; align-items: center; color: var(--g-error); background: var(--g-error-bg); }
+.gal-flow-welcome { position: absolute; top: 160px; left: 100px; display: grid; gap: 14px; color: var(--g-muted); pointer-events: none; }
+@media (max-width: 760px) {
+  .gal .gal-flow-editor { width: calc(100vw - 16px); height: calc(100dvh - 16px); max-height: calc(100dvh - 16px); }
+  .gal-flow-body { grid-template-columns: 1fr; grid-template-rows: minmax(220px, 1fr) minmax(150px, .8fr); }
+  .gal-flow-inspector { border-left: 0; border-top: 1px solid var(--g-line); padding: 14px; }
+  .gal-flow-toolbar { padding: 10px; gap: 6px; }
+  .gal-flow-toolbar > div { flex-basis: 100%; }
+  .gal-flow-toolbar button { padding: 5px 8px; font-size: 12px; }
+  .gal-flow-status { display: none; }
+  .gal-flow-footer { padding: 10px; gap: 6px; }
+}
 `;
 
 // src/client/leaderboards.jsx
@@ -2893,41 +2944,664 @@ function validateWorkflowTemplate(input) {
 }
 
 // src/client/workflow-wizard.jsx
-var steps2 = ["\u57FA\u672C\u4FE1\u606F", "\u56E2\u961F\u6210\u5458", "\u4EFB\u52A1\u8282\u70B9", "\u68C0\u67E5\u4FDD\u5B58"];
-var member = () => ({ name: "", summary: "", role: "", executionPrompt: "" });
-var task = (n) => ({ id: `t${n}`, subject: "", assignee: "", dependencies: [], checkpoint: false, general: { requirements: "", deliverables: "", acceptance: "" } });
 function initial(resource) {
+  let definition;
   try {
-    return JSON.parse(resource.files.find((f) => f.path === "workflow.json").content);
+    definition = JSON.parse(
+      resource.files.find((f) => f.path === "workflow.json").content
+    );
   } catch {
-    return { name: resource?.name || "", description: resource?.description || "", tags: resource?.tags || [], inputs: "", members: [], tasks: [], positions: {} };
+    definition = {
+      name: "",
+      description: "",
+      tags: [],
+      inputs: "",
+      members: [],
+      tasks: [],
+      positions: {}
+    };
   }
+  const saved = resource?.metadata?.workflowCanvas;
+  const agents = saved?.agents?.map((a) => ({
+    ...a,
+    snapshot: definition.members.find((m) => m.name === a.id)
+  })) || definition.members.map((m, i) => ({
+    id: m.name,
+    label: m.name,
+    resourceId: "",
+    snapshot: m,
+    skills: [],
+    mcps: [],
+    position: { x: 40, y: 70 + i * 155 }
+  }));
+  return {
+    definition,
+    agents,
+    positions: Object.fromEntries(
+      definition.tasks.map((t, i) => [
+        t.id,
+        definition.positions?.[`task:${t.id}`] || {
+          x: 380 + i % 3 * 270,
+          y: 80 + Math.floor(i / 3) * 180
+        }
+      ])
+    )
+  };
 }
-function WorkflowWizard({ resource, onClose, onSave }) {
-  const [draft, setDraft] = (0, import_react7.useState)(() => initial(resource));
-  const [step, setStep] = (0, import_react7.useState)(0), [error, setError] = (0, import_react7.useState)(""), [busy, setBusy] = (0, import_react7.useState)(false);
+function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
+  const arrow = (0, import_react7.useId)();
+  const [start] = (0, import_react7.useState)(() => initial(resource));
+  const [draft, setDraft] = (0, import_react7.useState)(start.definition), [agents, setAgents] = (0, import_react7.useState)(start.agents), [positions, setPositions] = (0, import_react7.useState)(start.positions);
+  const [catalog, setCatalog] = (0, import_react7.useState)({ agent: [], skill: [], mcp: [] });
+  const [selected, setSelected] = (0, import_react7.useState)(null), [linkFrom, setLinkFrom] = (0, import_react7.useState)(null), [zoom, setZoom] = (0, import_react7.useState)(1);
+  const [error, setError] = (0, import_react7.useState)(""), [loading, setLoading] = (0, import_react7.useState)(true), [busy, setBusy] = (0, import_react7.useState)(false);
+  const drag = (0, import_react7.useRef)(null), board = (0, import_react7.useRef)(null), view = (0, import_react7.useRef)(null), pendingAgent = (0, import_react7.useRef)(0);
+  (0, import_react7.useEffect)(() => {
+    let live = true;
+    Promise.all(
+      ["agent", "skill", "mcp"].map(async (type) => [type, await onList(type)])
+    ).then((entries) => {
+      if (live) setCatalog(Object.fromEntries(entries));
+    }).catch((e) => {
+      if (live) setError(e.message || String(e));
+    }).finally(() => {
+      if (live) setLoading(false);
+    });
+    return () => {
+      live = false;
+      pendingAgent.current++;
+    };
+  }, []);
+  const task = draft.tasks.find(
+    (t) => selected?.kind === "task" && t.id === selected.id
+  );
+  const agent = agents.find(
+    (a) => selected?.kind === "agent" && a.id === selected.id
+  );
   const update = (patch) => setDraft((d) => ({ ...d, ...patch }));
-  const changeMember = (i, key, value) => update({ members: draft.members.map((m, index) => index === i ? { ...m, [key]: value } : m) });
-  const changeTask = (i, patch) => update({ tasks: draft.tasks.map((t, index) => index === i ? { ...t, ...patch } : t) });
-  let issue = "";
-  try {
-    validateWorkflowTemplate(draft);
-  } catch (e) {
-    issue = e.message;
+  const updateTask = (patch) => setDraft((d) => ({
+    ...d,
+    tasks: d.tasks.map(
+      (t) => t.id === selected.id ? { ...t, ...patch } : t
+    )
+  }));
+  const updateAgent = (patch) => setAgents(
+    (rows) => rows.map((a) => a.id === selected.id ? { ...a, ...patch } : a)
+  );
+  function add(kind, point) {
+    if (busy) return;
+    setError("");
+    const position = point || {
+      x: Math.min(
+        900,
+        (view.current?.scrollLeft || 0) / zoom + 60 + (draft.tasks.length + agents.length) % 3 * 40
+      ),
+      y: Math.min(
+        800,
+        (view.current?.scrollTop || 0) / zoom + 70 + (draft.tasks.length + agents.length) % 4 * 45
+      )
+    };
+    if (kind === "agent") {
+      if (agents.length >= 32) return setError("\u6700\u591A\u6DFB\u52A0 32 \u4E2A Agent");
+      const id = createResourceIdentifier("a");
+      setAgents((rows) => [
+        ...rows,
+        {
+          id,
+          label: "\u9009\u62E9 Agent",
+          resourceId: "",
+          skills: [],
+          mcps: [],
+          position
+        }
+      ]);
+      setSelected({ kind: "agent", id });
+    } else {
+      if (draft.tasks.length >= 32)
+        return setError("\u6700\u591A\u6DFB\u52A0 32 \u4E2A\u4EFB\u52A1\u6216\u4EBA\u5DE5\u8282\u70B9");
+      const id = createResourceIdentifier("t");
+      update({
+        tasks: [
+          ...draft.tasks,
+          {
+            id,
+            subject: kind === "human" ? "\u4EBA\u5DE5\u786E\u8BA4" : "\u65B0\u4EFB\u52A1",
+            assignee: "",
+            dependencies: [],
+            checkpoint: kind === "human",
+            general: { requirements: "", deliverables: "", acceptance: "" }
+          }
+        ]
+      });
+      setPositions((p) => ({ ...p, [id]: position }));
+      setSelected({ kind: "task", id });
+    }
   }
-  async function save() {
+  function pointerDown(event, kind, id) {
+    if (event.button !== 0 || busy) return;
+    const position = kind === "agent" ? agents.find((a) => a.id === id).position : positions[id];
+    drag.current = { kind, id, x: event.clientX, y: event.clientY, position };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setSelected({ kind, id });
+  }
+  function move(event) {
+    if (!drag.current) return;
+    const d = drag.current, position = {
+      x: Math.round(
+        Math.max(
+          12,
+          Math.min(9700, d.position.x + (event.clientX - d.x) / zoom)
+        )
+      ),
+      y: Math.round(
+        Math.max(
+          12,
+          Math.min(9700, d.position.y + (event.clientY - d.y) / zoom)
+        )
+      )
+    };
+    if (d.kind === "agent")
+      setAgents(
+        (rows) => rows.map((a) => a.id === d.id ? { ...a, position } : a)
+      );
+    else setPositions((p) => ({ ...p, [d.id]: position }));
+  }
+  function connect(to) {
+    if (!linkFrom)
+      return setError("\u5148\u70B9\u51FB\u524D\u7F6E\u8282\u70B9\u7684\u201C\u8FDE\u51FA\u201D\uFF0C\u518D\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u7684\u201C\u8FDE\u5165\u201D");
+    try {
+      const tasks = draft.tasks.map(
+        (t) => t.id === to ? { ...t, dependencies: [.../* @__PURE__ */ new Set([...t.dependencies, linkFrom])] } : t
+      );
+      validateWorkflowTemplate({
+        ...draft,
+        name: draft.name || "\u8349\u7A3F",
+        members: agents.map((a) => ({
+          name: a.id,
+          summary: "",
+          role: "",
+          executionPrompt: ""
+        })),
+        tasks: tasks.map((t) => ({ ...t, subject: t.subject || "\u8282\u70B9" })),
+        positions: {}
+      });
+      update({ tasks });
+      setError("");
+      setLinkFrom(null);
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+  async function chooseAgent(id) {
+    const ticket = ++pendingAgent.current, nodeId = selected.id;
+    if (!id) {
+      updateAgent({ resourceId: "", label: "\u9009\u62E9 Agent", snapshot: null });
+      return;
+    }
     setBusy(true);
     setError("");
     try {
-      const value = validateWorkflowTemplate(draft);
-      if (value.tasks.some((t) => !t.general.requirements)) throw Error("\u6BCF\u4E2A\u4EFB\u52A1\u8282\u70B9\u90FD\u9700\u8981\u586B\u5199\u901A\u7528\u4EFB\u52A1\u8981\u6C42");
-      await onSave({ type: "workflow", name: value.name, description: value.description, tags: value.tags, files: [{ path: "workflow.json", encoding: "utf8", content: JSON.stringify(value, null, 2) + "\n" }], metadata: { ...resource?.metadata || {}, format: "dsh-teamflow-template-v1" }, references: resource?.references || [] });
+      const row = await onGet(id);
+      if (ticket !== pendingAgent.current) return;
+      setAgents(
+        (rows) => rows.map(
+          (a) => a.id === nodeId ? {
+            ...a,
+            resourceId: id,
+            label: row.name,
+            snapshot: {
+              name: nodeId,
+              summary: row.description,
+              role: row.name,
+              executionPrompt: row.files.find((f) => f.path === "AGENT.md")?.content || ""
+            },
+            resourceDigest: row.digest
+          } : a
+        )
+      );
+    } catch (e) {
+      setError(e.message || String(e));
+    } finally {
+      if (ticket === pendingAgent.current) setBusy(false);
+    }
+  }
+  function remove() {
+    if (agent) {
+      setAgents((rows) => rows.filter((a) => a.id !== agent.id));
+      update({
+        tasks: draft.tasks.map(
+          (t) => t.assignee === agent.id ? { ...t, assignee: "" } : t
+        )
+      });
+    } else if (task) {
+      update({
+        tasks: draft.tasks.filter((t) => t.id !== task.id).map((t) => ({
+          ...t,
+          dependencies: t.dependencies.filter((id) => id !== task.id)
+        }))
+      });
+      setPositions((p) => {
+        const copy = { ...p };
+        delete copy[task.id];
+        return copy;
+      });
+      if (linkFrom === task.id) setLinkFrom(null);
+    }
+    setSelected(null);
+  }
+  async function save() {
+    setError("");
+    try {
+      if (agents.some((a) => !a.resourceId && !a.snapshot))
+        throw Error("\u8BF7\u4E3A\u6BCF\u4E2A Agent \u8282\u70B9\u9009\u62E9\u8D44\u6E90\u5E93\u4E2D\u7684 Agent");
+      if (draft.tasks.some((t) => !t.checkpoint && !t.assignee))
+        throw Error("\u8BF7\u4E3A\u6BCF\u4E2A\u4EFB\u52A1\u8282\u70B9\u6307\u5B9A\u8D1F\u8D23\u7684 Agent");
+      if (draft.tasks.some((t) => !t.general.requirements.trim()))
+        throw Error("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u4EFB\u52A1\u8981\u6C42\u6216\u4EBA\u5DE5\u786E\u8BA4\u4E8B\u9879");
+      const value = validateWorkflowTemplate({
+        ...draft,
+        members: agents.map((a) => ({ ...a.snapshot, name: a.id })),
+        positions: Object.fromEntries(
+          draft.tasks.map((t) => [`task:${t.id}`, positions[t.id]])
+        )
+      });
+      setBusy(true);
+      await onSave({
+        type: "workflow",
+        name: value.name,
+        description: value.description,
+        tags: value.tags,
+        files: [
+          {
+            path: "workflow.json",
+            encoding: "utf8",
+            content: JSON.stringify(value, null, 2) + "\n"
+          }
+        ],
+        metadata: {
+          ...resource?.metadata || {},
+          format: "dsh-teamflow-template-v1",
+          workflowCanvas: {
+            version: 1,
+            agents: agents.map(({ snapshot, ...node }) => node)
+          }
+        },
+        references: resource?.references || []
+      });
     } catch (e) {
       setError(e?.rpcError?.message || e.message || String(e));
       setBusy(false);
     }
   }
-  return /* @__PURE__ */ import_react7.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react7.default.createElement("section", { className: "gal-dialog gal-skill-wizard", role: "dialog", "aria-modal": "true", "aria-label": resource ? "\u7F16\u8F91 Workflow" : "\u65B0\u5EFA Workflow" }, /* @__PURE__ */ import_react7.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react7.default.createElement("h2", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow" }), " ", resource ? "\u7F16\u8F91" : "\u65B0\u5EFA", " Workflow"), /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))), /* @__PURE__ */ import_react7.default.createElement("nav", { className: "gal-skill-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps2.map((label, i) => /* @__PURE__ */ import_react7.default.createElement("button", { key: label, "aria-current": step === i ? "step" : void 0, disabled: busy, onClick: () => setStep(i) }, /* @__PURE__ */ import_react7.default.createElement("span", null, i < step ? "\u2713" : i + 1), label))), /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react7.default.createElement("main", null, /* @__PURE__ */ import_react7.default.createElement("h3", null, steps2[step]), step === 0 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement("input", { "aria-label": "\u540D\u79F0", value: draft.name, onChange: (e) => update({ name: e.target.value }) })), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react7.default.createElement("textarea", { "aria-label": "\u63CF\u8FF0", value: draft.description, onChange: (e) => update({ description: e.target.value }) })), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u9002\u7528\u8F93\u5165", /* @__PURE__ */ import_react7.default.createElement("textarea", { "aria-label": "\u9002\u7528\u8F93\u5165", value: draft.inputs, onChange: (e) => update({ inputs: e.target.value }) })), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6807\u7B7E", /* @__PURE__ */ import_react7.default.createElement("input", { "aria-label": "\u6807\u7B7E", value: draft.tags.join(", "), onChange: (e) => update({ tags: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean) }) }))), step === 1 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("p", null, "\u6210\u5458\u540D\u79F0\u7528\u4E8E\u6307\u5B9A\u4EFB\u52A1\u8D1F\u8D23\u4EBA\uFF1B\u961F\u957F\u4F7F\u7528 captain\u3002"), draft.members.map((m, i) => /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-workflow-card", key: i }, /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => update({ members: draft.members.filter((_, n) => n !== i) }) }, "\u5220\u9664\u6210\u5458"), [["name", "\u540D\u79F0"], ["summary", "\u7B80\u4ECB"], ["role", "\u89D2\u8272"], ["executionPrompt", "\u6267\u884C\u6307\u4EE4"]].map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { key }, label, /* @__PURE__ */ import_react7.default.createElement("input", { "aria-label": `\u6210\u5458${i + 1}${label}`, value: m[key], onChange: (e) => changeMember(i, key, e.target.value) }))))), /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => update({ members: [...draft.members, member()] }) }, "\u6DFB\u52A0\u6210\u5458")), step === 2 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, draft.tasks.map((t, i) => /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-workflow-card", key: i }, /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => update({ tasks: draft.tasks.filter((_, n) => n !== i) }) }, "\u5220\u9664\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8282\u70B9 ID", /* @__PURE__ */ import_react7.default.createElement("input", { "aria-label": `\u8282\u70B9${i + 1} ID`, value: t.id, onChange: (e) => changeTask(i, { id: e.target.value }) })), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement("input", { "aria-label": `\u8282\u70B9${i + 1}\u540D\u79F0`, value: t.subject, onChange: (e) => changeTask(i, { subject: e.target.value }) })), /* @__PURE__ */ import_react7.default.createElement("label", null, /* @__PURE__ */ import_react7.default.createElement("input", { type: "checkbox", checked: t.checkpoint, onChange: (e) => changeTask(i, { checkpoint: e.target.checked, assignee: e.target.checked ? "" : t.assignee }) }), "\u4EBA\u5DE5\u9A8C\u6536\u70B9"), !t.checkpoint && /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D1F\u8D23\u4EBA", /* @__PURE__ */ import_react7.default.createElement("select", { "aria-label": `\u8282\u70B9${i + 1}\u8D1F\u8D23\u4EBA`, value: t.assignee, onChange: (e) => changeTask(i, { assignee: e.target.value }) }, /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u672A\u6307\u5B9A"), /* @__PURE__ */ import_react7.default.createElement("option", { value: "captain" }, "\u961F\u957F"), draft.members.map((m) => /* @__PURE__ */ import_react7.default.createElement("option", { key: m.name, value: m.name }, m.name)))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u4F9D\u8D56\u8282\u70B9", /* @__PURE__ */ import_react7.default.createElement("select", { "aria-label": `\u8282\u70B9${i + 1}\u4F9D\u8D56`, multiple: true, value: t.dependencies, onChange: (e) => changeTask(i, { dependencies: [...e.target.selectedOptions].map((o) => o.value) }) }, draft.tasks.filter((x) => x.id !== t.id).map((x) => /* @__PURE__ */ import_react7.default.createElement("option", { key: x.id, value: x.id }, x.subject || x.id)))), [["requirements", "\u901A\u7528\u4EFB\u52A1\u8981\u6C42"], ["deliverables", "\u4EA4\u4ED8\u7269"], ["acceptance", "\u9A8C\u6536\u6807\u51C6"]].map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { key }, label, /* @__PURE__ */ import_react7.default.createElement("textarea", { "aria-label": `\u8282\u70B9${i + 1}${label}`, value: t.general[key], onChange: (e) => changeTask(i, { general: { ...t.general, [key]: e.target.value } }) }))))), /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => update({ tasks: [...draft.tasks, task(Math.max(0, ...draft.tasks.map((t) => Number(/^t(\d+)$/.exec(t.id)?.[1]) || 0)) + 1)] }) }, "\u6DFB\u52A0\u8282\u70B9")), step === 3 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("p", null, draft.members.length, " \u4F4D\u6210\u5458 \xB7 ", draft.tasks.length, " \u4E2A\u8282\u70B9 \xB7 ", draft.tasks.filter((t) => t.checkpoint).length, " \u4E2A\u9A8C\u6536\u70B9"), draft.tasks.map((t) => /* @__PURE__ */ import_react7.default.createElement("p", { key: t.id }, t.subject || t.id, " \u2190 ", t.dependencies.join("\u3001") || "\u8D77\u70B9")), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u4FDD\u5B58\u5230 Gallery \u540E\uFF0C\u53EF\u4EE5\u4ECE\u8D44\u6E90\u8BE6\u60C5\u5B89\u88C5\u5230 TeamFlow \u6A21\u677F\u5E93\u3002"), issue && /* @__PURE__ */ import_react7.default.createElement("p", { role: "alert", className: "gal-error" }, issue)), error && /* @__PURE__ */ import_react7.default.createElement("p", { role: "alert", className: "gal-error" }, error))), /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react7.default.createElement("button", { disabled: busy, onClick: () => step ? setStep(step - 1) : onClose() }, step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"), step < 3 ? /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-primary", disabled: busy, onClick: () => setStep(step + 1) }, "\u4E0B\u4E00\u6B65") : /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-primary", disabled: busy || !!issue || draft.tasks.some((t) => !t.general.requirements.trim()), onClick: save }, "\u4FDD\u5B58 Workflow"))));
+  const extent = [
+    ...Object.values(positions),
+    ...agents.map((a) => a.position)
+  ];
+  const width = Math.max(1400, ...extent.map((p) => p.x + 300)), height = Math.max(1e3, ...extent.map((p) => p.y + 200));
+  function edge(from, to, key, assignment = false) {
+    if (!from || !to) return null;
+    return /* @__PURE__ */ import_react7.default.createElement(
+      "path",
+      {
+        key,
+        className: assignment ? "assignment" : "",
+        markerEnd: assignment ? void 0 : `url(#${arrow})`,
+        d: `M${from.x + 220},${from.y + 65} C${from.x + 290},${from.y + 65} ${to.x - 70},${to.y + 65} ${to.x},${to.y + 65}`
+      }
+    );
+  }
+  return /* @__PURE__ */ import_react7.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react7.default.createElement(
+    "section",
+    {
+      className: "gal-dialog gal-flow-editor",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-label": resource ? "\u7F16\u8F91 Workflow" : "\u65B0\u5EFA Workflow",
+      tabIndex: -1
+    },
+    /* @__PURE__ */ import_react7.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react7.default.createElement("h2", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow" }), " Workflow \u753B\u5E03"), /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-flow-status" }, "\u7F16\u6392\u8349\u7A3F \xB7 \u6267\u884C\u5BF9\u63A5\u5F85\u63A5\u5165"), /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))),
+    /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-toolbar" }, /* @__PURE__ */ import_react7.default.createElement("div", null, [
+      ["agent", "Agent"],
+      ["task", "\u4EFB\u52A1"],
+      ["human", "\u4EBA\u5DE5"]
+    ].map(([kind, label]) => /* @__PURE__ */ import_react7.default.createElement(
+      "button",
+      {
+        key: kind,
+        disabled: busy,
+        draggable: !busy,
+        onDragStart: (e) => e.dataTransfer.setData("application/gallery-node", kind),
+        onClick: () => add(kind)
+      },
+      /* @__PURE__ */ import_react7.default.createElement(
+        Glyph,
+        {
+          name: kind === "human" ? "user" : kind === "task" ? "file" : "agent"
+        }
+      ),
+      "\u6DFB\u52A0",
+      label,
+      "\u8282\u70B9"
+    ))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u7F29\u653E", /* @__PURE__ */ import_react7.default.createElement(
+      "select",
+      {
+        "aria-label": "\u753B\u5E03\u7F29\u653E",
+        value: zoom,
+        onChange: (e) => setZoom(Number(e.target.value))
+      },
+      [0.5, 0.75, 1, 1.25].map((z) => /* @__PURE__ */ import_react7.default.createElement("option", { key: z, value: z }, z * 100, "%"))
+    )), /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setSelected(null) }, "\u6D41\u7A0B\u4FE1\u606F")),
+    error && /* @__PURE__ */ import_react7.default.createElement("p", { role: "alert", className: "gal-flow-error" }, error, /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": "\u5173\u95ED\u9519\u8BEF", onClick: () => setError("") }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))),
+    /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-body" }, /* @__PURE__ */ import_react7.default.createElement(
+      "div",
+      {
+        className: "gal-flow-view",
+        ref: view,
+        onDragOver: (e) => e.preventDefault(),
+        onDrop: (e) => {
+          e.preventDefault();
+          const kind = e.dataTransfer.getData("application/gallery-node");
+          if (!["agent", "task", "human"].includes(kind)) return;
+          const r = board.current.getBoundingClientRect();
+          add(kind, {
+            x: Math.max(12, (e.clientX - r.left) / zoom),
+            y: Math.max(12, (e.clientY - r.top) / zoom)
+          });
+        }
+      },
+      /* @__PURE__ */ import_react7.default.createElement("div", { style: { width: width * zoom, height: height * zoom } }, /* @__PURE__ */ import_react7.default.createElement(
+        "div",
+        {
+          className: "gal-flow-board",
+          ref: board,
+          style: { width, height, transform: `scale(${zoom})` },
+          onClick: (e) => {
+            if (e.target === e.currentTarget) setSelected(null);
+          }
+        },
+        /* @__PURE__ */ import_react7.default.createElement(
+          "svg",
+          {
+            className: "gal-flow-edges",
+            width,
+            height,
+            "aria-hidden": "true"
+          },
+          /* @__PURE__ */ import_react7.default.createElement("defs", null, /* @__PURE__ */ import_react7.default.createElement(
+            "marker",
+            {
+              id: arrow,
+              viewBox: "0 0 10 10",
+              refX: "9",
+              refY: "5",
+              markerWidth: "7",
+              markerHeight: "7",
+              orient: "auto-start-reverse"
+            },
+            /* @__PURE__ */ import_react7.default.createElement(
+              "polygon",
+              {
+                points: "0 0, 10 5, 0 10",
+                fill: "var(--g-accent)"
+              }
+            )
+          )),
+          draft.tasks.flatMap((t) => [
+            ...t.dependencies.map(
+              (id) => edge(positions[id], positions[t.id], id + ":" + t.id)
+            ),
+            ...t.assignee ? [
+              edge(
+                agents.find((a) => a.id === t.assignee)?.position,
+                positions[t.id],
+                "a:" + t.id,
+                true
+              )
+            ] : []
+          ])
+        ),
+        !draft.tasks.length && !agents.length && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-welcome" }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow", size: 44 }), /* @__PURE__ */ import_react7.default.createElement("h3", null, "\u4ECE\u4E00\u4E2A\u8282\u70B9\u5F00\u59CB"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u62D6\u5165\u6216\u70B9\u51FB\u4E0A\u65B9\u8282\u70B9\uFF0C\u70B9\u51FB\u8282\u70B9\u914D\u7F6E\u5185\u5BB9\u3002")),
+        [
+          ...agents.map((a) => ({
+            kind: "agent",
+            id: a.id,
+            title: a.label,
+            position: a.position,
+            subtitle: `${a.skills.length} Skill \xB7 ${a.mcps.length} MCP`
+          })),
+          ...draft.tasks.map((t) => ({
+            kind: "task",
+            id: t.id,
+            title: t.subject,
+            position: positions[t.id],
+            human: t.checkpoint,
+            subtitle: t.checkpoint ? "\u7B49\u5F85\u4EBA\u5DE5\u786E\u8BA4" : agents.find((a) => a.id === t.assignee)?.label || "\u672A\u6307\u5B9A Agent"
+          }))
+        ].map((n) => /* @__PURE__ */ import_react7.default.createElement(
+          "article",
+          {
+            className: `gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selected?.id === n.id ? "selected" : ""}`,
+            style: { left: n.position.x, top: n.position.y },
+            key: n.id,
+            onClick: () => setSelected({ kind: n.kind, id: n.id })
+          },
+          /* @__PURE__ */ import_react7.default.createElement(
+            "button",
+            {
+              className: "gal-flow-grip",
+              "aria-label": `\u79FB\u52A8 ${n.title}`,
+              onPointerDown: (e) => pointerDown(e, n.kind, n.id),
+              onPointerMove: move,
+              onPointerUp: () => {
+                drag.current = null;
+              },
+              onPointerCancel: () => {
+                drag.current = null;
+              }
+            },
+            /* @__PURE__ */ import_react7.default.createElement(
+              Glyph,
+              {
+                name: n.kind === "agent" ? "agent" : n.human ? "user" : "file"
+              }
+            ),
+            n.kind === "agent" ? "AGENT" : n.human ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"
+          ),
+          /* @__PURE__ */ import_react7.default.createElement(
+            "button",
+            {
+              className: "gal-flow-node-title",
+              onClick: () => setSelected({ kind: n.kind, id: n.id })
+            },
+            n.title || "\u672A\u547D\u540D\u8282\u70B9"
+          ),
+          /* @__PURE__ */ import_react7.default.createElement("p", null, n.subtitle),
+          n.kind === "task" && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-ports" }, /* @__PURE__ */ import_react7.default.createElement(
+            "button",
+            {
+              onClick: (e) => {
+                e.stopPropagation();
+                connect(n.id);
+              }
+            },
+            "\u8FDE\u5165"
+          ), /* @__PURE__ */ import_react7.default.createElement(
+            "button",
+            {
+              "aria-pressed": linkFrom === n.id,
+              onClick: (e) => {
+                e.stopPropagation();
+                setLinkFrom(linkFrom === n.id ? null : n.id);
+                setError("");
+              }
+            },
+            "\u8FDE\u51FA"
+          ))
+        ))
+      ))
+    ), /* @__PURE__ */ import_react7.default.createElement("aside", { className: "gal-flow-inspector" }, loading && /* @__PURE__ */ import_react7.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u5E93\u2026"), !task && !agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "\u6D41\u7A0B\u4FE1\u606F"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
+      "input",
+      {
+        "aria-label": "\u6D41\u7A0B\u540D\u79F0",
+        maxLength: 120,
+        value: draft.name,
+        onChange: (e) => update({ name: e.target.value })
+      }
+    )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react7.default.createElement(
+      "textarea",
+      {
+        rows: 3,
+        maxLength: 2e3,
+        value: draft.description,
+        onChange: (e) => update({ description: e.target.value })
+      }
+    )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u9002\u7528\u8F93\u5165", /* @__PURE__ */ import_react7.default.createElement(
+      "textarea",
+      {
+        maxLength: 4e3,
+        value: draft.inputs,
+        onChange: (e) => update({ inputs: e.target.value })
+      }
+    )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6807\u7B7E", /* @__PURE__ */ import_react7.default.createElement(
+      "input",
+      {
+        value: draft.tags.join(", "),
+        onChange: (e) => update({
+          tags: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean)
+        })
+      }
+    )), /* @__PURE__ */ import_react7.default.createElement("p", null, "Agent \u7528\u865A\u7EBF\u5173\u8054\u8D1F\u8D23\u4EBA\uFF1B\u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9\u7528\u5B9E\u7EBF\u8868\u793A\u5148\u540E\u4F9D\u8D56\u3002")), agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Agent \u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D44\u6E90\u5E93 Agent", /* @__PURE__ */ import_react7.default.createElement(
+      "select",
+      {
+        "aria-label": "\u8D44\u6E90\u5E93 Agent",
+        value: agent.resourceId,
+        disabled: busy || loading,
+        onChange: (e) => chooseAgent(e.target.value)
+      },
+      /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9 Agent"),
+      agent.resourceId && !catalog.agent.some((r) => r.id === agent.resourceId) && /* @__PURE__ */ import_react7.default.createElement("option", { value: agent.resourceId }, agent.label, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09"),
+      catalog.agent.map((r) => /* @__PURE__ */ import_react7.default.createElement("option", { key: r.id, value: r.id }, r.name))
+    )), !catalog.agent.length && !loading && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u8D44\u6E90\u5E93\u6682\u65E0 Agent\uFF0C\u8BF7\u5148\u5728 Agent \u5206\u7C7B\u521B\u5EFA\u3002"), [
+      ["skill", "skills", "Skill"],
+      ["mcp", "mcps", "MCP"]
+    ].map(([type, key, label]) => /* @__PURE__ */ import_react7.default.createElement("fieldset", { key }, /* @__PURE__ */ import_react7.default.createElement("legend", null, "\u914D\u7F6E ", label), !catalog[type].length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u6682\u65E0\u53EF\u9009\u8D44\u6E90"), catalog[type].map((r) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: r.id }, /* @__PURE__ */ import_react7.default.createElement(
+      "input",
+      {
+        type: "checkbox",
+        checked: agent[key].some((ref) => ref.id === r.id),
+        onChange: (e) => updateAgent({
+          [key]: e.target.checked ? [
+            ...agent[key],
+            {
+              id: r.id,
+              name: r.name,
+              digest: r.digest
+            }
+          ] : agent[key].filter((ref) => ref.id !== r.id)
+        })
+      }
+    ), r.name)), agent[key].filter(
+      (ref) => !catalog[type].some((r) => r.id === ref.id)
+    ).map((ref) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: ref.id }, /* @__PURE__ */ import_react7.default.createElement(
+      "input",
+      {
+        type: "checkbox",
+        checked: true,
+        onChange: () => updateAgent({
+          [key]: agent[key].filter(
+            (item) => item.id !== ref.id
+          )
+        })
+      }
+    ), ref.name, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09")))), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u9009\u62E9\u4EC5\u7528\u4E8E\u672C\u6D41\u7A0B\uFF0C\u4FDD\u5B58\u5728\u7F16\u6392\u8349\u7A3F\u4E2D\u3002")), task && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, task.checkpoint ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
+      "input",
+      {
+        "aria-label": "\u8282\u70B9\u540D\u79F0",
+        maxLength: 200,
+        value: task.subject,
+        onChange: (e) => updateTask({ subject: e.target.value })
+      }
+    )), !task.checkpoint && /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D1F\u8D23 Agent", /* @__PURE__ */ import_react7.default.createElement(
+      "select",
+      {
+        "aria-label": "\u8D1F\u8D23 Agent",
+        value: task.assignee,
+        onChange: (e) => updateTask({ assignee: e.target.value })
+      },
+      /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9 Agent"),
+      agents.map((a) => /* @__PURE__ */ import_react7.default.createElement("option", { key: a.id, value: a.id }, a.label))
+    )), [
+      ["requirements", task.checkpoint ? "\u786E\u8BA4\u4E8B\u9879" : "\u4EFB\u52A1\u8981\u6C42"],
+      ["deliverables", "\u4EA4\u4ED8\u7269"],
+      ["acceptance", "\u9A8C\u6536\u6807\u51C6"]
+    ].map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { key }, label, /* @__PURE__ */ import_react7.default.createElement(
+      "textarea",
+      {
+        "aria-label": label,
+        rows: 3,
+        maxLength: 16e3,
+        value: task.general[key],
+        onChange: (e) => updateTask({
+          general: { ...task.general, [key]: e.target.value }
+        })
+      }
+    ))), /* @__PURE__ */ import_react7.default.createElement("fieldset", null, /* @__PURE__ */ import_react7.default.createElement("legend", null, "\u524D\u7F6E\u4F9D\u8D56"), !task.dependencies.length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u65E0\u524D\u7F6E\u8282\u70B9"), task.dependencies.map((id) => /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-dependency", key: id }, /* @__PURE__ */ import_react7.default.createElement("span", null, draft.tasks.find((t) => t.id === id)?.subject || id), /* @__PURE__ */ import_react7.default.createElement(
+      "button",
+      {
+        "aria-label": "\u79FB\u9664\u4F9D\u8D56",
+        onClick: () => updateTask({
+          dependencies: task.dependencies.filter(
+            (d) => d !== id
+          )
+        })
+      },
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" })
+    )))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6DFB\u52A0\u524D\u7F6E\u8282\u70B9", /* @__PURE__ */ import_react7.default.createElement(
+      "select",
+      {
+        "aria-label": "\u6DFB\u52A0\u524D\u7F6E\u8282\u70B9",
+        value: "",
+        onChange: (e) => {
+          setLinkFrom(null);
+          const from = e.target.value;
+          try {
+            const tasks = draft.tasks.map(
+              (t) => t.id === task.id ? { ...t, dependencies: [...t.dependencies, from] } : t
+            );
+            validateWorkflowTemplate({
+              ...draft,
+              name: draft.name || "\u8349\u7A3F",
+              members: agents.map((a) => ({
+                name: a.id,
+                summary: "",
+                role: "",
+                executionPrompt: ""
+              })),
+              tasks,
+              positions: {}
+            });
+            update({ tasks });
+            setError("");
+          } catch (e2) {
+            setError(e2.message);
+          }
+        }
+      },
+      /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u9009\u62E9\u8282\u70B9"),
+      draft.tasks.filter(
+        (t) => t.id !== task.id && !task.dependencies.includes(t.id)
+      ).map((t) => /* @__PURE__ */ import_react7.default.createElement("option", { key: t.id, value: t.id }, t.subject))
+    ))), (task || agent) && /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-delete", disabled: busy, onClick: remove }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }), "\u5220\u9664\u8282\u70B9"))),
+    /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u8FDE\u63A5\u4E2D\uFF1A\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u7684\u201C\u8FDE\u5165\u201D" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
+      "button",
+      {
+        className: "gal-primary",
+        disabled: busy || loading,
+        onClick: save
+      },
+      busy ? "\u4FDD\u5B58\u4E2D\u2026" : "\u4FDD\u5B58 Workflow"
+    ))
+  ));
 }
 
 // src/client/agent-wizard.jsx
@@ -9299,7 +9973,7 @@ function agentIssues({
 }
 
 // src/client/agent-wizard.jsx
-var steps3 = ["\u57FA\u672C\u4FE1\u606F", "\u884C\u4E3A\u6307\u5F15\u4E0E\u9644\u4EF6", "\u68C0\u67E5\u4FDD\u5B58"];
+var steps2 = ["\u57FA\u672C\u4FE1\u606F", "\u884C\u4E3A\u6307\u5F15\u4E0E\u9644\u4EF6", "\u68C0\u67E5\u4FDD\u5B58"];
 function AgentWizard({ resource, onClose, onSave }) {
   const [cover, setCover] = (0, import_react8.useState)(resource?.metadata?.cover ?? "");
   const [initial2] = (0, import_react8.useState)(() => readAgent(resource));
@@ -9434,7 +10108,7 @@ function AgentWizard({ resource, onClose, onSave }) {
       tabIndex: -1
     },
     /* @__PURE__ */ import_react8.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react8.default.createElement("h2", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "agent" }), " ", resource ? "\u7F16\u8F91 Agent" : "\u65B0\u5EFA Agent"), /* @__PURE__ */ import_react8.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react8.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps3.map((title, i) => /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react8.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps2.map((title, i) => /* @__PURE__ */ import_react8.default.createElement(
       "button",
       {
         key: title,
@@ -9445,7 +10119,7 @@ function AgentWizard({ resource, onClose, onSave }) {
       /* @__PURE__ */ import_react8.default.createElement("span", null, i < step ? "\u2713" : i + 1),
       title
     ))),
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react8.default.createElement("main", null, /* @__PURE__ */ import_react8.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps3[step]), step === 0 && /* @__PURE__ */ import_react8.default.createElement(ResourceBasics, { name, onName: setName, description, onDescription: setDescription, identifier: slug, onIdentifier: setSlug, busy }), step === 1 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "\u5199\u6E05\u804C\u8D23\u3001\u5904\u7406\u8FB9\u754C\u3001\u4F55\u65F6\u56DE\u62A5\u548C\u4EA4\u4ED8\u683C\u5F0F\u3002"), /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react8.default.createElement("main", null, /* @__PURE__ */ import_react8.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps2[step]), step === 0 && /* @__PURE__ */ import_react8.default.createElement(ResourceBasics, { name, onName: setName, description, onDescription: setDescription, identifier: slug, onIdentifier: setSlug, busy }), step === 1 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "\u5199\u6E05\u804C\u8D23\u3001\u5904\u7406\u8FB9\u754C\u3001\u4F55\u65F6\u56DE\u62A5\u548C\u4EA4\u4ED8\u683C\u5F0F\u3002"), /* @__PURE__ */ import_react8.default.createElement(
       "button",
       {
         "aria-pressed": preview,
@@ -9733,7 +10407,7 @@ ${ATTACHMENTS_END}`;
 }
 
 // src/client/skill-wizard.jsx
-var steps4 = ["\u57FA\u672C\u4FE1\u606F", "\u7F16\u5199\u6307\u5F15", "\u68C0\u67E5\u4FDD\u5B58"];
+var steps3 = ["\u57FA\u672C\u4FE1\u606F", "\u7F16\u5199\u6307\u5F15", "\u68C0\u67E5\u4FDD\u5B58"];
 var folders = [
   ["references", "\u53C2\u8003\u8D44\u6599", "\u6267\u884C\u65F6\u9700\u8981\u67E5\u9605\u7684\u6587\u6863", "file"],
   ["scripts", "\u8F85\u52A9\u811A\u672C", "\u6267\u884C\u4EFB\u52A1\u9700\u8981\u8FD0\u884C\u7684\u4EE3\u7801", "settings"],
@@ -9860,7 +10534,7 @@ function SkillWizard({ resource, onClose, onSave }) {
       tabIndex: -1
     },
     /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react9.default.createElement("h2", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "skill" }), " ", resource ? "\u7F16\u8F91 Skill" : "\u65B0\u5EFA Skill"), /* @__PURE__ */ import_react9.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react9.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps4.map((title, i) => /* @__PURE__ */ import_react9.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps3.map((title, i) => /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         key: title,
@@ -9871,7 +10545,7 @@ function SkillWizard({ resource, onClose, onSave }) {
       /* @__PURE__ */ import_react9.default.createElement("span", null, i < step ? "\u2713" : i + 1),
       title
     ))),
-    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react9.default.createElement("main", null, /* @__PURE__ */ import_react9.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps4[step]), step === 0 && /* @__PURE__ */ import_react9.default.createElement(ResourceBasics, { name: displayName, onName: setDisplayName, description, onDescription: setDescription, identifier: name, onIdentifier: setName, busy }), step === 1 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "\u5199\u6E05\u9002\u7528\u573A\u666F\u3001\u6267\u884C\u6B65\u9AA4\u548C\u4EA4\u4ED8\u7ED3\u679C\uFF0C\u53EF\u4EE5\u9644\u4E0A\u8F93\u5165\u4E0E\u8F93\u51FA\u793A\u4F8B\u3002"), /* @__PURE__ */ import_react9.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react9.default.createElement("main", null, /* @__PURE__ */ import_react9.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps3[step]), step === 0 && /* @__PURE__ */ import_react9.default.createElement(ResourceBasics, { name: displayName, onName: setDisplayName, description, onDescription: setDescription, identifier: name, onIdentifier: setName, busy }), step === 1 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "\u5199\u6E05\u9002\u7528\u573A\u666F\u3001\u6267\u884C\u6B65\u9AA4\u548C\u4EA4\u4ED8\u7ED3\u679C\uFF0C\u53EF\u4EE5\u9644\u4E0A\u8F93\u5165\u4E0E\u8F93\u51FA\u793A\u4F8B\u3002"), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         "aria-pressed": preview,
@@ -10560,7 +11234,14 @@ function Gallery({ remote }) {
       onClick: () => setOffset((x) => x + 48)
     },
     "\u4E0B\u4E00\u9875"
-  ))), workflowWizard && /* @__PURE__ */ import_react12.default.createElement(WorkflowWizard, { resource: workflowWizard.resource, onClose: async () => {
+  ))), workflowWizard && /* @__PURE__ */ import_react12.default.createElement(WorkflowWizard, { onGet: (id) => call(remote, "uiGet", id), onList: async (type2) => {
+    const rows = [];
+    for (let offset2 = 0; ; offset2 += 100) {
+      const page = await call(remote, "uiList", json2({ type: type2, limit: 100, offset: offset2 }));
+      rows.push(...page.items);
+      if (rows.length >= page.total || !page.items.length) return rows;
+    }
+  }, resource: workflowWizard.resource, onClose: async () => {
     if (await confirmAction("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Workflow\uFF1F")) setWorkflowWizard(false);
   }, onSave: async (resource) => {
     const existing = workflowWizard.resource;
@@ -10655,7 +11336,7 @@ function Gallery({ remote }) {
       /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "close" })
     )),
     hasResourceCover(content.type) && /* @__PURE__ */ import_react12.default.createElement(ResourceCover, { resource: content }),
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-detail-actions" }, selected.type === "workflow" && selected.files.some((f) => f.path === "workflow.json") && /* @__PURE__ */ import_react12.default.createElement("button", { disabled: busy, onClick: () => run(async () => {
+    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-detail-actions" }, selected.type === "workflow" && !selected.metadata?.workflowCanvas && selected.files.some((f) => f.path === "workflow.json") && /* @__PURE__ */ import_react12.default.createElement("button", { disabled: busy, onClick: () => run(async () => {
       const result = await call(remote, "uiPublishWorkflow", selected.id);
       setNotice(`\u5DF2\u5B89\u88C5\u5230 TeamFlow\uFF1A${result.name} v${result.version}`);
     }) }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "workflow" }), "\u5B89\u88C5\u5230 TeamFlow"), selected.canEdit && /* @__PURE__ */ import_react12.default.createElement("button", { disabled: busy, onClick: () => edit(selected) }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "edit" }), "\u7F16\u8F91\u8D44\u6E90"), /* @__PURE__ */ import_react12.default.createElement(
@@ -10901,7 +11582,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.17.1"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.18.0"), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         disabled: busy,
