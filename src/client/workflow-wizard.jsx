@@ -424,9 +424,9 @@ export function WorkflowWizard({
     setError("");
     try {
       const result = await onExtract(agent.resourceId, modelSession);
-      const { specificPrompt, ...snapshot } = result;
+      const snapshot = result;
       setAgents((rows) =>
-        rows.map((a) => (a.id === id ? { ...a, snapshot, specificPrompt } : a)),
+        rows.map((a) => (a.id === id ? { ...a, snapshot } : a)),
       );
     } catch (e) {
       setError(e?.rpcError?.message || e.message || String(e));
@@ -452,7 +452,6 @@ export function WorkflowWizard({
             ? {
                 ...a,
                 resourceId: id,
-                specificPrompt: "",
                 label: row.name,
                 snapshot: {
                   name:
@@ -549,7 +548,7 @@ export function WorkflowWizard({
       if (draft.tasks.some((t) => !t.checkpoint && !t.assignee))
         throw Error("请为每个任务节点指定负责的 Agent");
       if (draft.tasks.some((t) => !t.general.requirements.trim()))
-        throw Error("请填写每个节点的任务要求或人工确认事项");
+        throw Error("请填写每个节点的通用任务要求或通用检查要求");
       const value = validateWorkflowTemplate({
         ...draft,
         members: agents.map((a) => ({ ...a.snapshot })),
@@ -1092,6 +1091,7 @@ export function WorkflowWizard({
             {agent && (
               <>
                 <h3>Agent 节点</h3>
+                <p>配置长期职责与通用指令；本次补充指令在应用模板时填写。</p>
                 <label>
                   资源库 Agent
                   <select
@@ -1188,19 +1188,6 @@ export function WorkflowWizard({
                     )}
                   </label>
                 ))}
-                <label>
-                  本次补充指令（选填）
-                  <textarea
-                    aria-label="本次补充指令"
-                    disabled={busy}
-                    rows={3}
-                    maxLength={16000}
-                    value={agent.specificPrompt || ""}
-                    onChange={(e) =>
-                      updateAgent({ specificPrompt: e.target.value })
-                    }
-                  />
-                </label>
                 {[
                   ["skill", "skills", "Skill"],
                   ["mcp", "mcps", "MCP"],
@@ -1259,6 +1246,9 @@ export function WorkflowWizard({
             {task && (
               <>
                 <h3>{task.checkpoint ? "人工节点" : "任务节点"}</h3>
+                <p>
+                  填写可复用的通用要求；具体项目的任务说明在应用模板后生成。
+                </p>
                 <label>
                   名称
                   <input
@@ -1286,9 +1276,12 @@ export function WorkflowWizard({
                   </label>
                 )}
                 {[
-                  ["requirements", task.checkpoint ? "确认事项" : "任务要求"],
-                  ["deliverables", "交付物"],
-                  ["acceptance", "验收标准"],
+                  [
+                    "requirements",
+                    task.checkpoint ? "通用检查要求" : "通用任务要求",
+                  ],
+                  ["deliverables", "通用交付物"],
+                  ["acceptance", "通用验收要求"],
                 ].map(([key, label]) => (
                   <label key={key}>
                     {label}

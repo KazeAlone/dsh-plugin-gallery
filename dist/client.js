@@ -3340,9 +3340,9 @@ function WorkflowWizard({
     setError("");
     try {
       const result = await onExtract(agent.resourceId, modelSession);
-      const { specificPrompt, ...snapshot } = result;
+      const snapshot = result;
       setAgents(
-        (rows) => rows.map((a) => a.id === id ? { ...a, snapshot, specificPrompt } : a)
+        (rows) => rows.map((a) => a.id === id ? { ...a, snapshot } : a)
       );
     } catch (e) {
       setError(e?.rpcError?.message || e.message || String(e));
@@ -3366,7 +3366,6 @@ function WorkflowWizard({
           (a) => a.id === nodeId ? {
             ...a,
             resourceId: id,
-            specificPrompt: "",
             label: row.name,
             snapshot: {
               name: row.metadata?.agent?.slug || row.name.replace(/[^\p{L}\p{N}_-]/gu, "-").slice(0, 80) || nodeId,
@@ -3447,7 +3446,7 @@ function WorkflowWizard({
       if (draft.tasks.some((t) => !t.checkpoint && !t.assignee))
         throw Error("\u8BF7\u4E3A\u6BCF\u4E2A\u4EFB\u52A1\u8282\u70B9\u6307\u5B9A\u8D1F\u8D23\u7684 Agent");
       if (draft.tasks.some((t) => !t.general.requirements.trim()))
-        throw Error("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u4EFB\u52A1\u8981\u6C42\u6216\u4EBA\u5DE5\u786E\u8BA4\u4E8B\u9879");
+        throw Error("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u901A\u7528\u4EFB\u52A1\u8981\u6C42\u6216\u901A\u7528\u68C0\u67E5\u8981\u6C42");
       const value = validateWorkflowTemplate({
         ...draft,
         members: agents.map((a) => ({ ...a.snapshot })),
@@ -3904,7 +3903,7 @@ function WorkflowWizard({
             tags: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean)
           })
         }
-      )), /* @__PURE__ */ import_react7.default.createElement("p", null, "Agent \u7528\u865A\u7EBF\u5173\u8054\u8D1F\u8D23\u4EBA\uFF1B\u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9\u7528\u5B9E\u7EBF\u8868\u793A\u5148\u540E\u4F9D\u8D56\u3002")), agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Agent \u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D44\u6E90\u5E93 Agent", /* @__PURE__ */ import_react7.default.createElement(
+      )), /* @__PURE__ */ import_react7.default.createElement("p", null, "Agent \u7528\u865A\u7EBF\u5173\u8054\u8D1F\u8D23\u4EBA\uFF1B\u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9\u7528\u5B9E\u7EBF\u8868\u793A\u5148\u540E\u4F9D\u8D56\u3002")), agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Agent \u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u914D\u7F6E\u957F\u671F\u804C\u8D23\u4E0E\u901A\u7528\u6307\u4EE4\uFF1B\u672C\u6B21\u8865\u5145\u6307\u4EE4\u5728\u5E94\u7528\u6A21\u677F\u65F6\u586B\u5199\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D44\u6E90\u5E93 Agent", /* @__PURE__ */ import_react7.default.createElement(
         "select",
         {
           "aria-label": "\u8D44\u6E90\u5E93 Agent",
@@ -3966,17 +3965,7 @@ function WorkflowWizard({
             }
           })
         }
-      ))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u672C\u6B21\u8865\u5145\u6307\u4EE4\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react7.default.createElement(
-        "textarea",
-        {
-          "aria-label": "\u672C\u6B21\u8865\u5145\u6307\u4EE4",
-          disabled: busy,
-          rows: 3,
-          maxLength: 16e3,
-          value: agent.specificPrompt || "",
-          onChange: (e) => updateAgent({ specificPrompt: e.target.value })
-        }
-      )), [
+      ))), [
         ["skill", "skills", "Skill"],
         ["mcp", "mcps", "MCP"]
       ].map(([type, key, label]) => /* @__PURE__ */ import_react7.default.createElement("fieldset", { key }, /* @__PURE__ */ import_react7.default.createElement("legend", null, "\u914D\u7F6E ", label), !catalog[type].length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u6682\u65E0\u53EF\u9009\u8D44\u6E90"), catalog[type].map((r) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: r.id }, /* @__PURE__ */ import_react7.default.createElement(
@@ -4008,7 +3997,7 @@ function WorkflowWizard({
             )
           })
         }
-      ), ref.name, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09")))), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u9009\u62E9\u4EC5\u7528\u4E8E\u672C\u6D41\u7A0B\uFF0C\u4FDD\u5B58\u5728\u7F16\u6392\u8349\u7A3F\u4E2D\u3002")), task && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, task.checkpoint ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
+      ), ref.name, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09")))), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u9009\u62E9\u4EC5\u7528\u4E8E\u672C\u6D41\u7A0B\uFF0C\u4FDD\u5B58\u5728\u7F16\u6392\u8349\u7A3F\u4E2D\u3002")), task && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, task.checkpoint ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u586B\u5199\u53EF\u590D\u7528\u7684\u901A\u7528\u8981\u6C42\uFF1B\u5177\u4F53\u9879\u76EE\u7684\u4EFB\u52A1\u8BF4\u660E\u5728\u5E94\u7528\u6A21\u677F\u540E\u751F\u6210\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
         "input",
         {
           "aria-label": "\u8282\u70B9\u540D\u79F0",
@@ -4026,9 +4015,12 @@ function WorkflowWizard({
         /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9 Agent"),
         agents.map((a) => /* @__PURE__ */ import_react7.default.createElement("option", { key: a.id, value: a.id }, a.label))
       )), [
-        ["requirements", task.checkpoint ? "\u786E\u8BA4\u4E8B\u9879" : "\u4EFB\u52A1\u8981\u6C42"],
-        ["deliverables", "\u4EA4\u4ED8\u7269"],
-        ["acceptance", "\u9A8C\u6536\u6807\u51C6"]
+        [
+          "requirements",
+          task.checkpoint ? "\u901A\u7528\u68C0\u67E5\u8981\u6C42" : "\u901A\u7528\u4EFB\u52A1\u8981\u6C42"
+        ],
+        ["deliverables", "\u901A\u7528\u4EA4\u4ED8\u7269"],
+        ["acceptance", "\u901A\u7528\u9A8C\u6536\u8981\u6C42"]
       ].map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { key }, label, /* @__PURE__ */ import_react7.default.createElement(
         "textarea",
         {
@@ -12122,7 +12114,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.20.1"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.20.2"), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         disabled: busy,

@@ -9,7 +9,6 @@ const fields = {
   summary: "整理资料",
   role: "研究与证据核对",
   executionPrompt: "先读取资料，标注不确定性",
-  specificPrompt: "",
 };
 test("Agent extraction validates TeamFlow fields and reuses exactly the chosen host route", async () => {
   let request;
@@ -34,6 +33,15 @@ test("Agent extraction validates TeamFlow fields and reuses exactly the chosen h
     "session",
   );
   assert.deepEqual(result, fields);
+  assert.equal(
+    Object.hasOwn(
+      parseWorkflowAgent(
+        JSON.stringify({ ...fields, specificPrompt: "临时指令" }),
+      ),
+      "specificPrompt",
+    ),
+    false,
+  );
   assert.equal(request.provider, "host-provider");
   assert.equal(request.model, "host-model");
   assert.equal(request.tools, undefined);

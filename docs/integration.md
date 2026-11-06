@@ -99,3 +99,5 @@ Gallery MCP 资源保存 `mcp.json` 和 metadata.mcp，字段 transport 仅允�
 任务与人工节点使用 subject、assignee、dependencies、checkpoint、general.requirements/deliverables/acceptance；人工节点 checkpoint=true 且 assignee 为空。实例的 description、人工验收历史及决定不混入可复用模板。
 
 uiWorkflowModels 仅向 owner 列出当前已加载且配置了模型的 DSH 会话。uiExtractWorkflowAgent 复用指定会话的 agent.ctx.llm 与 options.provider/model，发送单个 Agent 的名称、描述及 AGENT.md，不读取会话历史、不配置独立密钥、不传工具。调用限时90秒，结果经字段类型、长度和名称格式校验后返回前端，供用户编辑。未进行真实模型网络端到端验证，已通过 mock stream 的路由与解析测试和浏览器交互测试。
+
+0.20.2：画布仅编辑模板层。模型提取返回 name/summary/role/executionPrompt 四个字段，丢弃返回中的实例字段；UI 不再填写 specificPrompt。已有画布 Agent 的 specificPrompt 元数据会原样保留，但不进入 workflow.json 的模板成员，也不会被提取操作覆盖。任务与人工节点明确使用通用字段文案；具体 description 与验收状态仍在实例阶段生成。
