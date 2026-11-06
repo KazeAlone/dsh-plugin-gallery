@@ -14,6 +14,7 @@ import { workflowFromResource } from "./workflow-template.mjs";
 import { publishToTeamflow } from "./teamflow-publish.mjs";
 import { createSkillProvider } from "./skill-provider.mjs";
 import { registerUsageTracking } from "./usage-runtime.mjs";
+import { registerRuntimeDiagnostics } from "./runtime-diagnostics.mjs";
 import { DESCRIPTORS } from "./descriptors.mjs";
 
 export default class GalleryService extends TypertRemoteService {
@@ -35,6 +36,7 @@ export default class GalleryService extends TypertRemoteService {
       );
     });
     registerUsageTracking(ctx, this.store, () => this.mcpRuntime);
+    registerRuntimeDiagnostics(ctx);
     ctx.inject(["tools"], (scope) => {
       const runtime = new GalleryMcpRuntime(scope, this.store);
       this.mcpRuntime = runtime;
