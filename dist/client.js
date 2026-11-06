@@ -2121,6 +2121,72 @@ fieldset.gal-skill-fields {
   .gal[data-theme="anime"] .gal-filters button:first-child { grid-column: 1 / -1; }
   .gal[data-theme="anime"] .gal-header-actions { gap: 6px; }
 }
+
+/* Adventure handbook: celestial navy, parchment panels and elemental accents. */
+.gal[data-theme="teyvat"] {
+  --g-bg: #f0e9da; --g-card: #f8f2e5; --g-soft: #e7deca;
+  --g-hover: #dfd3b9; --g-ink: #3e4558; --g-muted: #6a6c75;
+  --g-line: #b9aa8d; --g-control: #8f8067; --g-accent: #4c5874;
+  --g-on-accent: #fff7e7; --g-ring: #aa7940; --g-overlay: #101e38bd;
+  --g-error: #9d3c36; --g-error-bg: #f9e4d8;
+  --g-success: #32634e; --g-success-bg: #e4edda;
+  color-scheme: light;
+  background: radial-gradient(ellipse at 65% 0, #405778 0, transparent 48%), radial-gradient(ellipse at 0 65%, #273e59 0, transparent 50%), #17253c;
+}
+.gal-theme-swatch.teyvat { background: linear-gradient(135deg, #263c5e 45%, #e9d8b3 45% 70%, #a3d8cb 70%); }
+.gal[data-theme="teyvat"] .gal-header {
+  position: relative; isolation: isolate; z-index: 3;
+  min-height: 150px; align-items: center; padding: 24px 30px;
+  border-top: 1px solid #dfc897; border-bottom: 1px solid #dfc897;
+  background: radial-gradient(circle at 75% 35%, #b8dfff28 1px, transparent 2px), radial-gradient(circle at 25% 70%, #e2ceab4a 1px, transparent 2px), linear-gradient(105deg, #20324ccc, #354e6899);
+  background-size: 57px 53px, 91px 79px, auto;
+}
+.gal[data-theme="teyvat"] .gal-header::before,
+.gal[data-theme="teyvat"] .gal-header::after {
+  content: ''; position: absolute; pointer-events: none; z-index: -1;
+  left: 66%; top: 50%; width: 76px; height: 76px;
+  border: 1px solid #d3bb81; transform: translate(-50%, -50%) rotate(45deg);
+  box-shadow: 0 0 0 9px #decb9c14, 0 0 36px #99c9e32b;
+}
+.gal[data-theme="teyvat"] .gal-header::after { width: 40px; height: 40px; transform: translate(-50%, -50%); border-color: #e9d9a8; }
+.gal[data-theme="teyvat"] .gal-header h1 { font-family: Georgia, 'Songti SC', 'Noto Serif CJK SC', serif; font-size: clamp(30px, 4vw, 44px); color: #f6ecd5; letter-spacing: .035em; text-shadow: 0 2px 8px #071224; }
+.gal[data-theme="teyvat"] .gal-header-actions .gal-icon-button { color: #f5e6c6; border-color: #bca67a; background: #243750; border-radius: 50%; }
+.gal[data-theme="teyvat"] .gal-theme-menu { max-height: min(530px, 70vh); overflow-y: auto; }
+.gal[data-theme="teyvat"] .gal-toolbar { border-color: #ccbd944d; gap: 18px; }
+.gal[data-theme="teyvat"] .gal-filters { gap: 8px; }
+.gal[data-theme="teyvat"] .gal-filters button { min-height: 46px; padding-inline: 18px; border-radius: 24px; background: #25364d; color: #e5dbc7; border: 1px solid #96866a; }
+.gal[data-theme="teyvat"] .gal-filters button.active { color: #3e4558; background: #f3e9d2; border-color: #f5d99c; box-shadow: 0 0 0 3px #ddc89924; }
+.gal[data-theme="teyvat"] .gal-search-wrap input { background: #f8f2e5; border-radius: 24px; }
+.gal[data-theme="teyvat"] .gal-list-heading { color: #e6d9bc; padding-block: 20px; }
+.gal[data-theme="teyvat"] .gal-list-heading button { color: #f0e4cd; background: #263a53; }
+.gal[data-theme="teyvat"] .gal-empty { color: #e9ddc6; }
+.gal[data-theme="teyvat"] .gal-board {
+  --rank-color: #377f73; --rank-tint: #dce9d8;
+  border: 1px solid #e0cda3; border-radius: 5px 5px 16px 16px;
+  background: linear-gradient(145deg, #fff9ec, #e9dfca);
+  box-shadow: 0 12px 28px #07152666, inset 0 0 0 4px #b9a47725;
+}
+.gal[data-theme="teyvat"] .gal-board.agent { --rank-color: #5379a6; --rank-tint: #dde7ef; }
+.gal[data-theme="teyvat"] .gal-board.mcp { --rank-color: #8b65a4; --rank-tint: #e9def0; }
+.gal[data-theme="teyvat"] .gal-board.workflow { --rank-color: #a67736; --rank-tint: #efe1bf; }
+.gal[data-theme="teyvat"] .gal-board-head { position: relative; padding: 22px 16px; border-bottom: 1px solid #ad98714d; background: linear-gradient(130deg, var(--rank-tint), #faf1de); }
+.gal[data-theme="teyvat"] .gal-board-head h2 { font-family: Georgia, serif; font-size: 23px; }
+.gal[data-theme="teyvat"] .gal-board-icon { border: 1px solid var(--rank-color); border-radius: 50%; background: #fff9ec99; outline: 1px solid #b8a77d; outline-offset: 3px; }
+.gal[data-theme="teyvat"] .rank-1 { border: 1px solid #bc9b5b; background: linear-gradient(115deg, #f5e7bf, #fff8e7); }
+.gal[data-theme="teyvat"] .gal-rank-number { font-family: Georgia, serif; }
+.gal[data-theme="teyvat"] .gal-board-more { border-top: 1px solid #b7a37a; background: #e7dcc6; }
+.gal[data-theme="teyvat"] button.gal-resource-card { border: 1px solid #d8c295; border-radius: 6px 6px 16px 16px; background: #f6eedc; box-shadow: 0 12px 28px #08152b66; }
+.gal[data-theme="teyvat"] .gal-resource-content h3 { font-family: Georgia, 'Songti SC', serif; }
+.gal[data-theme="teyvat"] .gal-dialog { border: 2px solid #c7af7c; border-radius: 12px; background: #f8f1e2; box-shadow: 0 24px 70px #08162e99, inset 0 0 0 5px #bca87d24; }
+.gal[data-theme="teyvat"] .gal-dialog-head { background: #e9dfcb; border-bottom-color: #bda77d; }
+.gal[data-theme="teyvat"] .gal-dialog h2 { font-family: Georgia, 'Songti SC', serif; }
+@media (max-width: 700px) {
+  .gal[data-theme="teyvat"] .gal-header { min-height: 120px; padding: 18px 10px; }
+  .gal[data-theme="teyvat"] .gal-header::before { width: 48px; height: 48px; left: 57%; }
+  .gal[data-theme="teyvat"] .gal-header::after { width: 26px; height: 26px; left: 57%; }
+  .gal[data-theme="teyvat"] .gal-filters { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gal[data-theme="teyvat"] .gal-filters button:first-child { grid-column: 1 / -1; }
+}
 `;
 
 // src/client/leaderboards.jsx
@@ -9982,7 +10048,8 @@ var THEMES = [
   { id: "comic", label: "\u6F2B\u753B\u5370\u5237", hint: "\u7C97\u58A8\u5206\u955C\u4E0E\u5F69\u8272\u7F51\u70B9" },
   { id: "astral", label: "\u938F\u91D1\u661F\u7A79", hint: "\u661F\u8F68\u3001\u6D41\u661F\u4E0E\u5B9D\u77F3\u699C\u5355" },
   { id: "neon", label: "\u9713\u8679\u73BB\u7483", hint: "\u6C89\u6D78\u5F0F\u8D44\u6E90\u821E\u53F0" },
-  { id: "anime", label: "\u6B21\u5143\u653E\u6620\u5BA4", hint: "\u732B\u8033\u8033\u673A\u3001\u6F2B\u753B\u5206\u955C\u4E0E\u50CF\u7D20\u661F\u5149" }
+  { id: "anime", label: "\u6B21\u5143\u653E\u6620\u5BA4", hint: "\u732B\u8033\u8033\u673A\u3001\u6F2B\u753B\u5206\u955C\u4E0E\u50CF\u7D20\u661F\u5149" },
+  { id: "teyvat", label: "\u539F\u795E \xB7 \u5192\u9669\u624B\u518C", hint: "\u661F\u7A7A\u3001\u7F8A\u76AE\u7EB8\u4E0E\u5143\u7D20\u7EB9\u7AE0" }
 ];
 function loadTheme(storage) {
   try {
@@ -10826,7 +10893,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.16.0"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.17.0"), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         disabled: busy,

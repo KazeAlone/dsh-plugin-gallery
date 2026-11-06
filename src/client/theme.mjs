@@ -7,6 +7,7 @@ export const THEMES = [
   { id: 'astral', label: '鎏金星穹', hint: '星轨、流星与宝石榜单' },
   { id: 'neon', label: '霓虹玻璃', hint: '沉浸式资源舞台' },
   { id: 'anime', label: '次元放映室', hint: '猫耳耳机、漫画分镜与像素星光' },
+  { id: 'teyvat', label: '原神 · 冒险手册', hint: '星空、羊皮纸与元素纹章' },
 ];
 export function loadTheme(storage) {
   try {
