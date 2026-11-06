@@ -2247,6 +2247,20 @@ fieldset.gal-skill-fields {
 .gal .gal-flow-editor.gal-flow-fullscreen,
 .gal .gal-flow-editor:fullscreen { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border-radius: 0; z-index: 1000; }
 .gal-flow-editor::backdrop { background: #101521; }
+
+/* Camera-based workspace: panning is independent of document scroll bounds. */
+.gal-flow-view { position: relative; overflow: hidden; touch-action: none; background-image: radial-gradient(var(--g-control) .8px, transparent .8px); }
+.gal-flow-board { position: absolute; left: 0; top: 0; background: none; overflow: visible; }
+.gal-flow-node { min-height: 110px; cursor: grab; touch-action: none; user-select: none; }
+.gal-flow-node:active { cursor: grabbing; }
+.gal .gal-flow-node-title { cursor: inherit; }
+.gal-flow-marquee { position: absolute; z-index: 5; border: 1px solid var(--g-ring); background: color-mix(in srgb, var(--g-ring) 16%, transparent); pointer-events: none; }
+.gal-flow-ports { position: absolute; inset: 0; padding: 0; pointer-events: none; }
+.gal .gal-flow-ports button { position: absolute; top: 55px; width: 14px; height: 14px; min-height: 14px; padding: 0; border: 2px solid var(--g-accent); border-radius: 50%; background: var(--g-card); pointer-events: auto; transform: translateY(-50%); cursor: crosshair; }
+.gal .gal-flow-ports .gal-flow-port-in { left: -8px; }
+.gal .gal-flow-ports .gal-flow-port-out { right: -8px; }
+.gal .gal-flow-ports button:hover { box-shadow: 0 0 0 5px color-mix(in srgb, var(--g-ring) 25%, transparent); }
+.gal-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 `;
 
 // src/client/leaderboards.jsx
@@ -2986,7 +3000,7 @@ function initial(resource) {
   return {
     definition,
     agents,
-    positions: Object.fromEntries(
+    positions: saved?.taskPositions || Object.fromEntries(
       definition.tasks.map((t, i) => [
         t.id,
         definition.positions?.[`task:${t.id}`] || {
@@ -2999,7 +3013,13 @@ function initial(resource) {
 }
 function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
   const [fullscreen, setFullscreen] = (0, import_react7.useState)(false);
-  const editor = (0, import_react7.useRef)(null), pan = (0, import_react7.useRef)(null), zoomValue = (0, import_react7.useRef)(1), pendingScroll = (0, import_react7.useRef)(null);
+  const editor = (0, import_react7.useRef)(null), pan = (0, import_react7.useRef)(null), zoomValue = (0, import_react7.useRef)(1), cameraRef = (0, import_react7.useRef)({ x: 0, y: 0 }), boxDrag = (0, import_react7.useRef)(null);
+  const [camera, setCamera] = (0, import_react7.useState)({ x: 0, y: 0 });
+  const [selection, setSelection] = (0, import_react7.useState)([]), [marquee, setMarquee] = (0, import_react7.useState)(null);
+  function cameraTo(value) {
+    cameraRef.current = value;
+    setCamera(value);
+  }
   const arrow = (0, import_react7.useId)();
   const [start] = (0, import_react7.useState)(() => initial(resource));
   const [draft, setDraft] = (0, import_react7.useState)(start.definition), [agents, setAgents] = (0, import_react7.useState)(start.agents), [positions, setPositions] = (0, import_react7.useState)(start.positions);
@@ -3028,19 +3048,46 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
     next = Math.max(0.25, Math.min(2, Math.round(next * 100) / 100));
     if (!viewport || next === zoomValue.current) return;
     const ratio = next / zoomValue.current;
-    pendingScroll.current = {
-      left: (viewport.scrollLeft + x) * ratio - x,
-      top: (viewport.scrollTop + y) * ratio - y
-    };
+    const old = cameraRef.current;
+    cameraTo({ x: x - (x - old.x) * ratio, y: y - (y - old.y) * ratio });
     zoomValue.current = next;
     setZoom(next);
   }
-  (0, import_react7.useLayoutEffect)(() => {
-    if (pendingScroll.current && view.current) {
-      view.current.scrollTo(pendingScroll.current);
-      pendingScroll.current = null;
+  function fitView() {
+    const points = [
+      ...Object.values(positions),
+      ...agents.map((a) => a.position)
+    ];
+    if (!points.length || !view.current) {
+      cameraTo({ x: 0, y: 0 });
+      zoomValue.current = 1;
+      setZoom(1);
+      return;
     }
-  }, [zoom]);
+    const minX = Math.min(...points.map((p) => p.x)), minY = Math.min(...points.map((p) => p.y));
+    const maxX = Math.max(...points.map((p) => p.x + 220)), maxY = Math.max(...points.map((p) => p.y + 110));
+    const z = Math.max(
+      0.25,
+      Math.min(
+        1,
+        (view.current.clientWidth - 60) / (maxX - minX),
+        (view.current.clientHeight - 60) / (maxY - minY)
+      )
+    );
+    zoomValue.current = z;
+    setZoom(z);
+    cameraTo({ x: 30 - minX * z, y: 30 - minY * z });
+  }
+  (0, import_react7.useEffect)(() => {
+    fitView();
+  }, []);
+  function worldPoint(event) {
+    const r = view.current.getBoundingClientRect();
+    return {
+      x: (event.clientX - r.left - cameraRef.current.x) / zoomValue.current,
+      y: (event.clientY - r.top - cameraRef.current.y) / zoomValue.current
+    };
+  }
   (0, import_react7.useEffect)(() => {
     const viewport = view.current;
     const wheel = (event) => {
@@ -3095,14 +3142,8 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
     if (busy) return;
     setError("");
     const position = point || {
-      x: Math.min(
-        900,
-        (view.current?.scrollLeft || 0) / zoom + 60 + (draft.tasks.length + agents.length) % 3 * 40
-      ),
-      y: Math.min(
-        800,
-        (view.current?.scrollTop || 0) / zoom + 70 + (draft.tasks.length + agents.length) % 4 * 45
-      )
+      x: (60 - cameraRef.current.x) / zoomValue.current + (draft.tasks.length + agents.length) % 3 * 40,
+      y: (70 - cameraRef.current.y) / zoomValue.current + (draft.tasks.length + agents.length) % 4 * 45
     };
     if (kind === "agent") {
       if (agents.length >= 32) return setError("\u6700\u591A\u6DFB\u52A0 32 \u4E2A Agent");
@@ -3119,6 +3160,7 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
         }
       ]);
       setSelected({ kind: "agent", id });
+      setSelection([id]);
     } else {
       if (draft.tasks.length >= 32)
         return setError("\u6700\u591A\u6DFB\u52A0 32 \u4E2A\u4EFB\u52A1\u6216\u4EBA\u5DE5\u8282\u70B9");
@@ -3138,40 +3180,68 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       });
       setPositions((p) => ({ ...p, [id]: position }));
       setSelected({ kind: "task", id });
+      setSelection([id]);
     }
   }
   function pointerDown(event, kind, id) {
-    if (event.button !== 0 || busy) return;
-    const position = kind === "agent" ? agents.find((a) => a.id === id).position : positions[id];
-    drag.current = { kind, id, x: event.clientX, y: event.clientY, position };
+    if (event.button !== 0 || busy || event.target.closest(".gal-flow-ports"))
+      return;
+    event.stopPropagation();
+    let ids = selection.includes(id) ? selection : [id];
+    if (event.shiftKey) {
+      ids = selection.includes(id) ? selection.filter((value) => value !== id) : [...selection, id];
+      setSelection(ids);
+      setSelected(
+        ids.length === 1 ? {
+          kind: agents.some((a) => a.id === ids[0]) ? "agent" : "task",
+          id: ids[0]
+        } : null
+      );
+      return;
+    }
+    setSelection(ids);
+    setSelected(ids.length === 1 ? { kind, id } : null);
+    drag.current = {
+      x: event.clientX,
+      y: event.clientY,
+      ids,
+      positions: {
+        ...positions,
+        ...Object.fromEntries(agents.map((a) => [a.id, a.position]))
+      }
+    };
     event.currentTarget.setPointerCapture(event.pointerId);
-    setSelected({ kind, id });
   }
   function move(event) {
     if (!drag.current) return;
-    const d = drag.current, position = {
-      x: Math.round(
-        Math.max(
-          12,
-          Math.min(9700, d.position.x + (event.clientX - d.x) / zoom)
-        )
-      ),
-      y: Math.round(
-        Math.max(
-          12,
-          Math.min(9700, d.position.y + (event.clientY - d.y) / zoom)
-        )
+    const d = drag.current, dx = (event.clientX - d.x) / zoomValue.current, dy = (event.clientY - d.y) / zoomValue.current;
+    const point = (id) => ({
+      x: Math.round(d.positions[id].x + dx),
+      y: Math.round(d.positions[id].y + dy)
+    });
+    setAgents(
+      (rows) => rows.map(
+        (a) => d.ids.includes(a.id) ? { ...a, position: point(a.id) } : a
       )
-    };
-    if (d.kind === "agent")
-      setAgents(
-        (rows) => rows.map((a) => a.id === d.id ? { ...a, position } : a)
-      );
-    else setPositions((p) => ({ ...p, [d.id]: position }));
+    );
+    setPositions(
+      (p) => Object.fromEntries(
+        Object.entries(p).map(([id, value]) => [
+          id,
+          d.ids.includes(id) ? point(id) : value
+        ])
+      )
+    );
+  }
+  function endGesture(event) {
+    pan.current = null;
+    boxDrag.current = null;
+    setMarquee(null);
+    event.currentTarget.classList.remove("gal-flow-panning");
   }
   function connect(to) {
     if (!linkFrom)
-      return setError("\u5148\u70B9\u51FB\u524D\u7F6E\u8282\u70B9\u7684\u201C\u8FDE\u51FA\u201D\uFF0C\u518D\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u7684\u201C\u8FDE\u5165\u201D");
+      return setError("\u5148\u70B9\u51FB\u524D\u7F6E\u8282\u70B9\u53F3\u4FA7\u5706\u70B9\uFF0C\u518D\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u5DE6\u4FA7\u5706\u70B9");
     try {
       const tasks = draft.tasks.map(
         (t) => t.id === to ? { ...t, dependencies: [.../* @__PURE__ */ new Set([...t.dependencies, linkFrom])] } : t
@@ -3251,6 +3321,7 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       if (linkFrom === task.id) setLinkFrom(null);
     }
     setSelected(null);
+    setSelection([]);
   }
   async function save() {
     setError("");
@@ -3264,9 +3335,7 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       const value = validateWorkflowTemplate({
         ...draft,
         members: agents.map((a) => ({ ...a.snapshot, name: a.id })),
-        positions: Object.fromEntries(
-          draft.tasks.map((t) => [`task:${t.id}`, positions[t.id]])
-        )
+        positions: {}
       });
       setBusy(true);
       await onSave({
@@ -3286,6 +3355,7 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           format: "dsh-teamflow-template-v1",
           workflowCanvas: {
             version: 1,
+            taskPositions: positions,
             agents: agents.map(({ snapshot, ...node }) => node)
           }
         },
@@ -3296,11 +3366,6 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       setBusy(false);
     }
   }
-  const extent = [
-    ...Object.values(positions),
-    ...agents.map((a) => a.position)
-  ];
-  const width = Math.max(1400, ...extent.map((p) => p.x + 300)), height = Math.max(1e3, ...extent.map((p) => p.y + 200));
   function edge(from, to, key, assignment = false) {
     if (!from || !to) return null;
     return /* @__PURE__ */ import_react7.default.createElement(
@@ -3309,7 +3374,7 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
         key,
         className: assignment ? "assignment" : "",
         markerEnd: assignment ? void 0 : `url(#${arrow})`,
-        d: `M${from.x + 220},${from.y + 65} C${from.x + 290},${from.y + 65} ${to.x - 70},${to.y + 65} ${to.x},${to.y + 65}`
+        d: `M${from.x + 220},${from.y + 55} C${from.x + 290},${from.y + 55} ${to.x - 70},${to.y + 55} ${to.x},${to.y + 55}`
       }
     );
   }
@@ -3380,7 +3445,24 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           )
         },
         [.../* @__PURE__ */ new Set([0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, zoom])].sort((a, b) => a - b).map((z) => /* @__PURE__ */ import_react7.default.createElement("option", { key: z, value: z }, Math.round(z * 100), "%"))
-      )), /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setSelected(null) }, "\u6D41\u7A0B\u4FE1\u606F"), /* @__PURE__ */ import_react7.default.createElement(
+      )), /* @__PURE__ */ import_react7.default.createElement(
+        "button",
+        {
+          onClick: () => {
+            setSelected(null);
+            setSelection([]);
+          }
+        },
+        "\u6D41\u7A0B\u4FE1\u606F"
+      ), /* @__PURE__ */ import_react7.default.createElement(
+        "button",
+        {
+          onClick: () => {
+            fitView();
+          }
+        },
+        "\u91CD\u7F6E\u89C6\u56FE"
+      ), /* @__PURE__ */ import_react7.default.createElement(
         "button",
         {
           "aria-label": fullscreen ? "\u9000\u51FA\u5168\u5C4F" : "\u5168\u5C4F\u753B\u5E03",
@@ -3395,65 +3477,85 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           className: "gal-flow-view",
           ref: view,
           onContextMenu: (e) => e.preventDefault(),
+          style: {
+            backgroundPosition: `${camera.x}px ${camera.y}px`,
+            backgroundSize: `${22 * zoom}px ${22 * zoom}px`
+          },
           onPointerDown: (e) => {
-            if (e.button !== 2) return;
-            e.preventDefault();
-            pan.current = {
-              x: e.clientX,
-              y: e.clientY,
-              left: e.currentTarget.scrollLeft,
-              top: e.currentTarget.scrollTop
-            };
+            if (e.button === 2) {
+              e.preventDefault();
+              pan.current = { x: e.clientX, y: e.clientY };
+              pan.current.startX = cameraRef.current.x;
+              pan.current.startY = cameraRef.current.y;
+              pan.current.x = e.clientX;
+              pan.current.y = e.clientY;
+              e.currentTarget.classList.add("gal-flow-panning");
+            } else if (e.button === 0 && !e.target.closest(".gal-flow-node")) {
+              const point = worldPoint(e);
+              boxDrag.current = { point, base: e.shiftKey ? selection : [] };
+              setSelected(null);
+              if (!e.shiftKey) setSelection([]);
+            } else return;
             e.currentTarget.setPointerCapture(e.pointerId);
-            e.currentTarget.classList.add("gal-flow-panning");
           },
           onPointerMove: (e) => {
-            if (!pan.current) return;
-            e.currentTarget.scrollLeft = pan.current.left - (e.clientX - pan.current.x);
-            e.currentTarget.scrollTop = pan.current.top - (e.clientY - pan.current.y);
-          },
-          onPointerUp: (e) => {
-            if (e.button === 2) {
-              pan.current = null;
-              e.currentTarget.classList.remove("gal-flow-panning");
+            if (pan.current) {
+              const p = pan.current;
+              cameraTo({
+                x: p.startX + e.clientX - p.x,
+                y: p.startY + e.clientY - p.y
+              });
+            } else if (boxDrag.current) {
+              const current = worldPoint(e), start2 = boxDrag.current.point;
+              const r = {
+                x: Math.min(start2.x, current.x),
+                y: Math.min(start2.y, current.y),
+                width: Math.abs(start2.x - current.x),
+                height: Math.abs(start2.y - current.y)
+              };
+              setMarquee(r);
+              const nodes = [
+                ...agents.map((a) => ({ id: a.id, p: a.position })),
+                ...Object.entries(positions).map(([id, p]) => ({ id, p }))
+              ];
+              setSelection([
+                .../* @__PURE__ */ new Set([
+                  ...boxDrag.current.base,
+                  ...nodes.filter(
+                    ({ p }) => p.x < r.x + r.width && p.x + 220 > r.x && p.y < r.y + r.height && p.y + 110 > r.y
+                  ).map((n) => n.id)
+                ])
+              ]);
             }
           },
-          onPointerCancel: (e) => {
-            pan.current = null;
-            e.currentTarget.classList.remove("gal-flow-panning");
-          },
-          onLostPointerCapture: (e) => {
-            pan.current = null;
-            e.currentTarget.classList.remove("gal-flow-panning");
-          },
+          onPointerUp: endGesture,
+          onPointerCancel: endGesture,
+          onLostPointerCapture: endGesture,
           onDragOver: (e) => e.preventDefault(),
           onDrop: (e) => {
             e.preventDefault();
             const kind = e.dataTransfer.getData("application/gallery-node");
             if (!["agent", "task", "human"].includes(kind)) return;
-            const r = board.current.getBoundingClientRect();
-            add(kind, {
-              x: Math.max(12, (e.clientX - r.left) / zoom),
-              y: Math.max(12, (e.clientY - r.top) / zoom)
-            });
+            add(kind, worldPoint(e));
           }
         },
-        /* @__PURE__ */ import_react7.default.createElement("div", { style: { width: width * zoom, height: height * zoom } }, /* @__PURE__ */ import_react7.default.createElement(
+        /* @__PURE__ */ import_react7.default.createElement("div", { style: { width: "100%", height: "100%" } }, /* @__PURE__ */ import_react7.default.createElement(
           "div",
           {
             className: "gal-flow-board",
             ref: board,
-            style: { width, height, transform: `scale(${zoom})` },
-            onClick: (e) => {
-              if (e.target === e.currentTarget) setSelected(null);
+            style: {
+              width: 1,
+              height: 1,
+              transform: `translate(${camera.x}px, ${camera.y}px) scale(${zoom})`
             }
           },
           /* @__PURE__ */ import_react7.default.createElement(
             "svg",
             {
               className: "gal-flow-edges",
-              width,
-              height,
+              width: 1,
+              height: 1,
               "aria-hidden": "true"
             },
             /* @__PURE__ */ import_react7.default.createElement("defs", null, /* @__PURE__ */ import_react7.default.createElement(
@@ -3489,6 +3591,18 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
               ] : []
             ])
           ),
+          marquee && /* @__PURE__ */ import_react7.default.createElement(
+            "div",
+            {
+              className: "gal-flow-marquee",
+              style: {
+                left: marquee.x,
+                top: marquee.y,
+                width: marquee.width,
+                height: marquee.height
+              }
+            }
+          ),
           !draft.tasks.length && !agents.length && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-welcome" }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow", size: 44 }), /* @__PURE__ */ import_react7.default.createElement("h3", null, "\u4ECE\u4E00\u4E2A\u8282\u70B9\u5F00\u59CB"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u62D6\u5165\u6216\u70B9\u51FB\u4E0A\u65B9\u8282\u70B9\uFF0C\u70B9\u51FB\u8282\u70B9\u914D\u7F6E\u5185\u5BB9\u3002")),
           [
             ...agents.map((a) => ({
@@ -3509,24 +3623,23 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           ].map((n) => /* @__PURE__ */ import_react7.default.createElement(
             "article",
             {
-              className: `gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selected?.id === n.id ? "selected" : ""}`,
+              className: `gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selection.includes(n.id) ? "selected" : ""}`,
               style: { left: n.position.x, top: n.position.y },
               key: n.id,
-              onClick: () => setSelected({ kind: n.kind, id: n.id })
+              onPointerDown: (e) => pointerDown(e, n.kind, n.id),
+              onPointerMove: move,
+              onPointerUp: () => {
+                drag.current = null;
+              },
+              onPointerCancel: () => {
+                drag.current = null;
+              }
             },
             /* @__PURE__ */ import_react7.default.createElement(
               "button",
               {
                 className: "gal-flow-grip",
-                "aria-label": `\u79FB\u52A8 ${n.title}`,
-                onPointerDown: (e) => pointerDown(e, n.kind, n.id),
-                onPointerMove: move,
-                onPointerUp: () => {
-                  drag.current = null;
-                },
-                onPointerCancel: () => {
-                  drag.current = null;
-                }
+                "aria-label": `\u79FB\u52A8 ${n.title}`
               },
               /* @__PURE__ */ import_react7.default.createElement(
                 Glyph,
@@ -3540,7 +3653,12 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
               "button",
               {
                 className: "gal-flow-node-title",
-                onClick: () => setSelected({ kind: n.kind, id: n.id })
+                onClick: (e) => {
+                  if (e.detail === 0) {
+                    setSelection([n.id]);
+                    setSelected({ kind: n.kind, id: n.id });
+                  }
+                }
               },
               n.title || "\u672A\u547D\u540D\u8282\u70B9"
             ),
@@ -3548,15 +3666,21 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
             n.kind === "task" && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-ports" }, /* @__PURE__ */ import_react7.default.createElement(
               "button",
               {
+                "aria-label": "\u8FDE\u5165",
+                title: "\u8F93\u5165\uFF1A\u8FDE\u63A5\u524D\u7F6E\u8282\u70B9",
+                className: "gal-flow-port-in",
                 onClick: (e) => {
                   e.stopPropagation();
                   connect(n.id);
                 }
               },
-              "\u8FDE\u5165"
+              /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-sr-only" }, "\u8FDE\u5165")
             ), /* @__PURE__ */ import_react7.default.createElement(
               "button",
               {
+                "aria-label": "\u8FDE\u51FA",
+                title: "\u8F93\u51FA\uFF1A\u8FDE\u63A5\u540E\u7EED\u8282\u70B9",
+                className: "gal-flow-port-out",
                 "aria-pressed": linkFrom === n.id,
                 onClick: (e) => {
                   e.stopPropagation();
@@ -3564,11 +3688,11 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                   setError("");
                 }
               },
-              "\u8FDE\u51FA"
+              /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-sr-only" }, "\u8FDE\u51FA")
             ))
           ))
         ))
-      ), /* @__PURE__ */ import_react7.default.createElement("aside", { className: "gal-flow-inspector" }, loading && /* @__PURE__ */ import_react7.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u5E93\u2026"), !task && !agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "\u6D41\u7A0B\u4FE1\u606F"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
+      ), /* @__PURE__ */ import_react7.default.createElement("aside", { className: "gal-flow-inspector" }, loading && /* @__PURE__ */ import_react7.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u5E93\u2026"), !task && !agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, selection.length > 1 && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u5DF2\u9009\u62E9 ", selection.length, " ", "\u4E2A\u8282\u70B9\uFF0C\u62D6\u52A8\u4EFB\u4E00\u9009\u4E2D\u8282\u70B9\u53EF\u4E00\u8D77\u79FB\u52A8\u3002"), /* @__PURE__ */ import_react7.default.createElement("h3", null, "\u6D41\u7A0B\u4FE1\u606F"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
         "input",
         {
           "aria-label": "\u6D41\u7A0B\u540D\u79F0",
@@ -3721,7 +3845,7 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           (t) => t.id !== task.id && !task.dependencies.includes(t.id)
         ).map((t) => /* @__PURE__ */ import_react7.default.createElement("option", { key: t.id, value: t.id }, t.subject))
       ))), (task || agent) && /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-delete", disabled: busy, onClick: remove }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }), "\u5220\u9664\u8282\u70B9"))),
-      /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u8FDE\u63A5\u4E2D\uFF1A\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u7684\u201C\u8FDE\u5165\u201D" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u8FDE\u63A5\u4E2D\uFF1A\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u5DE6\u4FA7\u5706\u70B9" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
         "button",
         {
           className: "gal-primary",
@@ -11712,7 +11836,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.18.1"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.19.0"), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         disabled: busy,

@@ -2157,3 +2157,17 @@ fieldset.gal-skill-fields {
 .gal .gal-flow-editor.gal-flow-fullscreen,
 .gal .gal-flow-editor:fullscreen { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border-radius: 0; z-index: 1000; }
 .gal-flow-editor::backdrop { background: #101521; }
+
+/* Camera-based workspace: panning is independent of document scroll bounds. */
+.gal-flow-view { position: relative; overflow: hidden; touch-action: none; background-image: radial-gradient(var(--g-control) .8px, transparent .8px); }
+.gal-flow-board { position: absolute; left: 0; top: 0; background: none; overflow: visible; }
+.gal-flow-node { min-height: 110px; cursor: grab; touch-action: none; user-select: none; }
+.gal-flow-node:active { cursor: grabbing; }
+.gal .gal-flow-node-title { cursor: inherit; }
+.gal-flow-marquee { position: absolute; z-index: 5; border: 1px solid var(--g-ring); background: color-mix(in srgb, var(--g-ring) 16%, transparent); pointer-events: none; }
+.gal-flow-ports { position: absolute; inset: 0; padding: 0; pointer-events: none; }
+.gal .gal-flow-ports button { position: absolute; top: 55px; width: 14px; height: 14px; min-height: 14px; padding: 0; border: 2px solid var(--g-accent); border-radius: 50%; background: var(--g-card); pointer-events: auto; transform: translateY(-50%); cursor: crosshair; }
+.gal .gal-flow-ports .gal-flow-port-in { left: -8px; }
+.gal .gal-flow-ports .gal-flow-port-out { right: -8px; }
+.gal .gal-flow-ports button:hover { box-shadow: 0 0 0 5px color-mix(in srgb, var(--g-ring) 25%, transparent); }
+.gal-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }

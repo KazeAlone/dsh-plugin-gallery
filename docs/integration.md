@@ -84,8 +84,10 @@ Gallery MCP 资源保存 `mcp.json` 和 metadata.mcp，字段 transport 仅允�
 
 ### Workflow 画布草稿（0.18.0）
 
-画布沿用 `workflow.json` 的任务、成员与任务位置格式；`metadata.workflowCanvas` 记录画布版本、Agent 节点位置、Gallery Agent ID、摘要，以及 Skill/MCP 的 ID、名称和摘要引用。成员指令快照保存在 `workflow.json`，不会修改原始 Agent。技能与 MCP 引用尚无执行适配，画布草稿的 TeamFlow 安装入口暂时关闭，宿主也拒绝通过安装 RPC 导出该草稿。旧的非画布模板仍保留安装行为。
+画布沿用 `workflow.json` 的任务、成员与任务位置格式；`metadata.workflowCanvas` 记录画布版本、taskPositions（支持负坐标）、Agent 节点位置、Gallery Agent ID、摘要，以及 Skill/MCP 的 ID、名称和摘要引用。成员指令快照保存在 `workflow.json`，不会修改原始 Agent。技能与 MCP 引用尚无执行适配，画布草稿的 TeamFlow 安装入口暂时关闭，宿主也拒绝通过安装 RPC 导出该草稿。旧的非画布模板仍保留安装行为。
 
 客户端分页读取三类资源，选择 Agent 时获取完整资源快照。任务依赖禁止循环，删除 Agent 清空任务负责人，删除任务清除其他节点对它的依赖。浏览器预览已验证创建、拖动、资源勾选、循环拒绝、保存重开及移动端布局；尚未对接 TeamFlow 执行。
 
 在启用 tools 的 DSH 预设中，Gallery 注册只读的 `gallery_agent_list`；启用 subagents 后另注册 `gallery_agent_run`，并要求 spawn 提供方可用。后者把 `AGENT.md` 指令、本次任务和按需读取的附件目录交给 `spawn` 子 Agent，完成通知返回当前会话。资源内容作为子 Agent 的任务输入，尚不是独立的 DSH Agent preset；其 `config.json` 模型配置当前不作为子 Agent 模型覆盖。
+
+0.19.0 画布通过视图变换自由平移，Task 位置保存到 workflowCanvas.taskPositions；workflow.json 的 positions 暂留空，避免将画布负坐标误交给尚未适配的 TeamFlow。

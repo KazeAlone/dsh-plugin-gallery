@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
 import { createResourceIdentifier } from "./resource-id.mjs";
@@ -45,15 +39,17 @@ function initial(resource) {
   return {
     definition,
     agents,
-    positions: Object.fromEntries(
-      definition.tasks.map((t, i) => [
-        t.id,
-        definition.positions?.[`task:${t.id}`] || {
-          x: 380 + (i % 3) * 270,
-          y: 80 + Math.floor(i / 3) * 180,
-        },
-      ]),
-    ),
+    positions:
+      saved?.taskPositions ||
+      Object.fromEntries(
+        definition.tasks.map((t, i) => [
+          t.id,
+          definition.positions?.[`task:${t.id}`] || {
+            x: 380 + (i % 3) * 270,
+            y: 80 + Math.floor(i / 3) * 180,
+          },
+        ]),
+      ),
   };
 }
 export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
@@ -61,7 +57,15 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
   const editor = useRef(null),
     pan = useRef(null),
     zoomValue = useRef(1),
-    pendingScroll = useRef(null);
+    cameraRef = useRef({ x: 0, y: 0 }),
+    boxDrag = useRef(null);
+  const [camera, setCamera] = useState({ x: 0, y: 0 });
+  const [selection, setSelection] = useState([]),
+    [marquee, setMarquee] = useState(null);
+  function cameraTo(value) {
+    cameraRef.current = value;
+    setCamera(value);
+  }
   const arrow = useId();
   const [start] = useState(() => initial(resource));
   const [draft, setDraft] = useState(start.definition),
@@ -102,19 +106,48 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
     next = Math.max(0.25, Math.min(2, Math.round(next * 100) / 100));
     if (!viewport || next === zoomValue.current) return;
     const ratio = next / zoomValue.current;
-    pendingScroll.current = {
-      left: (viewport.scrollLeft + x) * ratio - x,
-      top: (viewport.scrollTop + y) * ratio - y,
-    };
+    const old = cameraRef.current;
+    cameraTo({ x: x - (x - old.x) * ratio, y: y - (y - old.y) * ratio });
     zoomValue.current = next;
     setZoom(next);
   }
-  useLayoutEffect(() => {
-    if (pendingScroll.current && view.current) {
-      view.current.scrollTo(pendingScroll.current);
-      pendingScroll.current = null;
+  function fitView() {
+    const points = [
+      ...Object.values(positions),
+      ...agents.map((a) => a.position),
+    ];
+    if (!points.length || !view.current) {
+      cameraTo({ x: 0, y: 0 });
+      zoomValue.current = 1;
+      setZoom(1);
+      return;
     }
-  }, [zoom]);
+    const minX = Math.min(...points.map((p) => p.x)),
+      minY = Math.min(...points.map((p) => p.y));
+    const maxX = Math.max(...points.map((p) => p.x + 220)),
+      maxY = Math.max(...points.map((p) => p.y + 110));
+    const z = Math.max(
+      0.25,
+      Math.min(
+        1,
+        (view.current.clientWidth - 60) / (maxX - minX),
+        (view.current.clientHeight - 60) / (maxY - minY),
+      ),
+    );
+    zoomValue.current = z;
+    setZoom(z);
+    cameraTo({ x: 30 - minX * z, y: 30 - minY * z });
+  }
+  useEffect(() => {
+    fitView();
+  }, []);
+  function worldPoint(event) {
+    const r = view.current.getBoundingClientRect();
+    return {
+      x: (event.clientX - r.left - cameraRef.current.x) / zoomValue.current,
+      y: (event.clientY - r.top - cameraRef.current.y) / zoomValue.current,
+    };
+  }
   useEffect(() => {
     const viewport = view.current;
     const wheel = (event) => {
@@ -179,18 +212,12 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
     if (busy) return;
     setError("");
     const position = point || {
-      x: Math.min(
-        900,
-        (view.current?.scrollLeft || 0) / zoom +
-          60 +
-          ((draft.tasks.length + agents.length) % 3) * 40,
-      ),
-      y: Math.min(
-        800,
-        (view.current?.scrollTop || 0) / zoom +
-          70 +
-          ((draft.tasks.length + agents.length) % 4) * 45,
-      ),
+      x:
+        (60 - cameraRef.current.x) / zoomValue.current +
+        ((draft.tasks.length + agents.length) % 3) * 40,
+      y:
+        (70 - cameraRef.current.y) / zoomValue.current +
+        ((draft.tasks.length + agents.length) % 4) * 45,
     };
     if (kind === "agent") {
       if (agents.length >= 32) return setError("最多添加 32 个 Agent");
@@ -207,6 +234,7 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
         },
       ]);
       setSelected({ kind: "agent", id });
+      setSelection([id]);
     } else {
       if (draft.tasks.length >= 32)
         return setError("最多添加 32 个任务或人工节点");
@@ -226,44 +254,74 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       });
       setPositions((p) => ({ ...p, [id]: position }));
       setSelected({ kind: "task", id });
+      setSelection([id]);
     }
   }
   function pointerDown(event, kind, id) {
-    if (event.button !== 0 || busy) return;
-    const position =
-      kind === "agent"
-        ? agents.find((a) => a.id === id).position
-        : positions[id];
-    drag.current = { kind, id, x: event.clientX, y: event.clientY, position };
+    if (event.button !== 0 || busy || event.target.closest(".gal-flow-ports"))
+      return;
+    event.stopPropagation();
+    let ids = selection.includes(id) ? selection : [id];
+    if (event.shiftKey) {
+      ids = selection.includes(id)
+        ? selection.filter((value) => value !== id)
+        : [...selection, id];
+      setSelection(ids);
+      setSelected(
+        ids.length === 1
+          ? {
+              kind: agents.some((a) => a.id === ids[0]) ? "agent" : "task",
+              id: ids[0],
+            }
+          : null,
+      );
+      return;
+    }
+    setSelection(ids);
+    setSelected(ids.length === 1 ? { kind, id } : null);
+    drag.current = {
+      x: event.clientX,
+      y: event.clientY,
+      ids,
+      positions: {
+        ...positions,
+        ...Object.fromEntries(agents.map((a) => [a.id, a.position])),
+      },
+    };
     event.currentTarget.setPointerCapture(event.pointerId);
-    setSelected({ kind, id });
   }
   function move(event) {
     if (!drag.current) return;
     const d = drag.current,
-      position = {
-        x: Math.round(
-          Math.max(
-            12,
-            Math.min(9700, d.position.x + (event.clientX - d.x) / zoom),
-          ),
-        ),
-        y: Math.round(
-          Math.max(
-            12,
-            Math.min(9700, d.position.y + (event.clientY - d.y) / zoom),
-          ),
-        ),
-      };
-    if (d.kind === "agent")
-      setAgents((rows) =>
-        rows.map((a) => (a.id === d.id ? { ...a, position } : a)),
-      );
-    else setPositions((p) => ({ ...p, [d.id]: position }));
+      dx = (event.clientX - d.x) / zoomValue.current,
+      dy = (event.clientY - d.y) / zoomValue.current;
+    const point = (id) => ({
+      x: Math.round(d.positions[id].x + dx),
+      y: Math.round(d.positions[id].y + dy),
+    });
+    setAgents((rows) =>
+      rows.map((a) =>
+        d.ids.includes(a.id) ? { ...a, position: point(a.id) } : a,
+      ),
+    );
+    setPositions((p) =>
+      Object.fromEntries(
+        Object.entries(p).map(([id, value]) => [
+          id,
+          d.ids.includes(id) ? point(id) : value,
+        ]),
+      ),
+    );
+  }
+  function endGesture(event) {
+    pan.current = null;
+    boxDrag.current = null;
+    setMarquee(null);
+    event.currentTarget.classList.remove("gal-flow-panning");
   }
   function connect(to) {
     if (!linkFrom)
-      return setError("先点击前置节点的“连出”，再点击后续节点的“连入”");
+      return setError("先点击前置节点右侧圆点，再点击后续节点左侧圆点");
     try {
       const tasks = draft.tasks.map((t) =>
         t.id === to
@@ -352,6 +410,7 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       if (linkFrom === task.id) setLinkFrom(null);
     }
     setSelected(null);
+    setSelection([]);
   }
   async function save() {
     setError("");
@@ -365,9 +424,7 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       const value = validateWorkflowTemplate({
         ...draft,
         members: agents.map((a) => ({ ...a.snapshot, name: a.id })),
-        positions: Object.fromEntries(
-          draft.tasks.map((t) => [`task:${t.id}`, positions[t.id]]),
-        ),
+        positions: {},
       });
       setBusy(true);
       await onSave({
@@ -387,6 +444,7 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           format: "dsh-teamflow-template-v1",
           workflowCanvas: {
             version: 1,
+            taskPositions: positions,
             agents: agents.map(({ snapshot, ...node }) => node),
           },
         },
@@ -397,12 +455,6 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       setBusy(false);
     }
   }
-  const extent = [
-    ...Object.values(positions),
-    ...agents.map((a) => a.position),
-  ];
-  const width = Math.max(1400, ...extent.map((p) => p.x + 300)),
-    height = Math.max(1000, ...extent.map((p) => p.y + 200));
   function edge(from, to, key, assignment = false) {
     if (!from || !to) return null;
     return (
@@ -410,7 +462,7 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
         key={key}
         className={assignment ? "assignment" : ""}
         markerEnd={assignment ? undefined : `url(#${arrow})`}
-        d={`M${from.x + 220},${from.y + 65} C${from.x + 290},${from.y + 65} ${to.x - 70},${to.y + 65} ${to.x},${to.y + 65}`}
+        d={`M${from.x + 220},${from.y + 55} C${from.x + 290},${from.y + 55} ${to.x - 70},${to.y + 55} ${to.x},${to.y + 55}`}
       />
     );
   }
@@ -499,7 +551,21 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                 ))}
             </select>
           </label>
-          <button onClick={() => setSelected(null)}>流程信息</button>
+          <button
+            onClick={() => {
+              setSelected(null);
+              setSelection([]);
+            }}
+          >
+            流程信息
+          </button>
+          <button
+            onClick={() => {
+              fitView();
+            }}
+          >
+            重置视图
+          </button>
           <button
             aria-label={fullscreen ? "退出全屏" : "全屏画布"}
             onClick={toggleFullscreen}
@@ -520,64 +586,92 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
             className="gal-flow-view"
             ref={view}
             onContextMenu={(e) => e.preventDefault()}
+            style={{
+              backgroundPosition: `${camera.x}px ${camera.y}px`,
+              backgroundSize: `${22 * zoom}px ${22 * zoom}px`,
+            }}
             onPointerDown={(e) => {
-              if (e.button !== 2) return;
-              e.preventDefault();
-              pan.current = {
-                x: e.clientX,
-                y: e.clientY,
-                left: e.currentTarget.scrollLeft,
-                top: e.currentTarget.scrollTop,
-              };
+              if (e.button === 2) {
+                e.preventDefault();
+                pan.current = { x: e.clientX, y: e.clientY };
+                pan.current.startX = cameraRef.current.x;
+                pan.current.startY = cameraRef.current.y;
+                pan.current.x = e.clientX;
+                pan.current.y = e.clientY;
+                e.currentTarget.classList.add("gal-flow-panning");
+              } else if (
+                e.button === 0 &&
+                !e.target.closest(".gal-flow-node")
+              ) {
+                const point = worldPoint(e);
+                boxDrag.current = { point, base: e.shiftKey ? selection : [] };
+                setSelected(null);
+                if (!e.shiftKey) setSelection([]);
+              } else return;
               e.currentTarget.setPointerCapture(e.pointerId);
-              e.currentTarget.classList.add("gal-flow-panning");
             }}
             onPointerMove={(e) => {
-              if (!pan.current) return;
-              e.currentTarget.scrollLeft =
-                pan.current.left - (e.clientX - pan.current.x);
-              e.currentTarget.scrollTop =
-                pan.current.top - (e.clientY - pan.current.y);
-            }}
-            onPointerUp={(e) => {
-              if (e.button === 2) {
-                pan.current = null;
-                e.currentTarget.classList.remove("gal-flow-panning");
+              if (pan.current) {
+                const p = pan.current;
+                cameraTo({
+                  x: p.startX + e.clientX - p.x,
+                  y: p.startY + e.clientY - p.y,
+                });
+              } else if (boxDrag.current) {
+                const current = worldPoint(e),
+                  start = boxDrag.current.point;
+                const r = {
+                  x: Math.min(start.x, current.x),
+                  y: Math.min(start.y, current.y),
+                  width: Math.abs(start.x - current.x),
+                  height: Math.abs(start.y - current.y),
+                };
+                setMarquee(r);
+                const nodes = [
+                  ...agents.map((a) => ({ id: a.id, p: a.position })),
+                  ...Object.entries(positions).map(([id, p]) => ({ id, p })),
+                ];
+                setSelection([
+                  ...new Set([
+                    ...boxDrag.current.base,
+                    ...nodes
+                      .filter(
+                        ({ p }) =>
+                          p.x < r.x + r.width &&
+                          p.x + 220 > r.x &&
+                          p.y < r.y + r.height &&
+                          p.y + 110 > r.y,
+                      )
+                      .map((n) => n.id),
+                  ]),
+                ]);
               }
             }}
-            onPointerCancel={(e) => {
-              pan.current = null;
-              e.currentTarget.classList.remove("gal-flow-panning");
-            }}
-            onLostPointerCapture={(e) => {
-              pan.current = null;
-              e.currentTarget.classList.remove("gal-flow-panning");
-            }}
+            onPointerUp={endGesture}
+            onPointerCancel={endGesture}
+            onLostPointerCapture={endGesture}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
               const kind = e.dataTransfer.getData("application/gallery-node");
               if (!["agent", "task", "human"].includes(kind)) return;
-              const r = board.current.getBoundingClientRect();
-              add(kind, {
-                x: Math.max(12, (e.clientX - r.left) / zoom),
-                y: Math.max(12, (e.clientY - r.top) / zoom),
-              });
+              add(kind, worldPoint(e));
             }}
           >
-            <div style={{ width: width * zoom, height: height * zoom }}>
+            <div style={{ width: "100%", height: "100%" }}>
               <div
                 className="gal-flow-board"
                 ref={board}
-                style={{ width, height, transform: `scale(${zoom})` }}
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) setSelected(null);
+                style={{
+                  width: 1,
+                  height: 1,
+                  transform: `translate(${camera.x}px, ${camera.y}px) scale(${zoom})`,
                 }}
               >
                 <svg
                   className="gal-flow-edges"
-                  width={width}
-                  height={height}
+                  width={1}
+                  height={1}
                   aria-hidden="true"
                 >
                   <defs>
@@ -612,6 +706,17 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                       : []),
                   ])}
                 </svg>
+                {marquee && (
+                  <div
+                    className="gal-flow-marquee"
+                    style={{
+                      left: marquee.x,
+                      top: marquee.y,
+                      width: marquee.width,
+                      height: marquee.height,
+                    }}
+                  />
+                )}
                 {!draft.tasks.length && !agents.length && (
                   <div className="gal-flow-welcome">
                     <Glyph name="workflow" size={44} />
@@ -640,22 +745,21 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                   })),
                 ].map((n) => (
                   <article
-                    className={`gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selected?.id === n.id ? "selected" : ""}`}
+                    className={`gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selection.includes(n.id) ? "selected" : ""}`}
                     style={{ left: n.position.x, top: n.position.y }}
                     key={n.id}
-                    onClick={() => setSelected({ kind: n.kind, id: n.id })}
+                    onPointerDown={(e) => pointerDown(e, n.kind, n.id)}
+                    onPointerMove={move}
+                    onPointerUp={() => {
+                      drag.current = null;
+                    }}
+                    onPointerCancel={() => {
+                      drag.current = null;
+                    }}
                   >
                     <button
                       className="gal-flow-grip"
                       aria-label={`移动 ${n.title}`}
-                      onPointerDown={(e) => pointerDown(e, n.kind, n.id)}
-                      onPointerMove={move}
-                      onPointerUp={() => {
-                        drag.current = null;
-                      }}
-                      onPointerCancel={() => {
-                        drag.current = null;
-                      }}
                     >
                       <Glyph
                         name={
@@ -674,7 +778,12 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                     </button>
                     <button
                       className="gal-flow-node-title"
-                      onClick={() => setSelected({ kind: n.kind, id: n.id })}
+                      onClick={(e) => {
+                        if (e.detail === 0) {
+                          setSelection([n.id]);
+                          setSelected({ kind: n.kind, id: n.id });
+                        }
+                      }}
                     >
                       {n.title || "未命名节点"}
                     </button>
@@ -682,14 +791,20 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                     {n.kind === "task" && (
                       <div className="gal-flow-ports">
                         <button
+                          aria-label="连入"
+                          title="输入：连接前置节点"
+                          className="gal-flow-port-in"
                           onClick={(e) => {
                             e.stopPropagation();
                             connect(n.id);
                           }}
                         >
-                          连入
+                          <span className="gal-sr-only">连入</span>
                         </button>
                         <button
+                          aria-label="连出"
+                          title="输出：连接后续节点"
+                          className="gal-flow-port-out"
                           aria-pressed={linkFrom === n.id}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -697,7 +812,7 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
                             setError("");
                           }}
                         >
-                          连出
+                          <span className="gal-sr-only">连出</span>
                         </button>
                       </div>
                     )}
@@ -710,6 +825,12 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
             {loading && <p role="status">正在读取资源库…</p>}
             {!task && !agent && (
               <>
+                {selection.length > 1 && (
+                  <p>
+                    已选择 {selection.length}{" "}
+                    个节点，拖动任一选中节点可一起移动。
+                  </p>
+                )}
                 <h3>流程信息</h3>
                 <label>
                   名称
@@ -970,7 +1091,7 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
         <footer className="gal-flow-footer">
           <span aria-live="polite">
             {linkFrom
-              ? "连接中：点击后续节点的“连入”"
+              ? "连接中：点击后续节点左侧圆点"
               : `${agents.length} Agent · ${draft.tasks.length} 任务与人工节点`}
           </span>
           {linkFrom && (
