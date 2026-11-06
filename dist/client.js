@@ -1924,8 +1924,8 @@ fieldset.gal-skill-fields {
   letter-spacing: .18em;
 }
 .gal[data-theme="astral"] .gal-leaderboards {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
   align-items: stretch;
 }
 .gal[data-theme="astral"] .gal-board {
@@ -1984,8 +1984,13 @@ fieldset.gal-skill-fields {
 .gal[data-theme="astral"] .gal-board-top { position: absolute; right: 15px; bottom: 9px; writing-mode: horizontal-tb; }
 .gal[data-theme="astral"] .gal-board-empty { min-height: 115px; }
 .gal[data-theme="astral"] .gal-board-more { margin-top: auto; }
-@media (max-width: 700px) {
+@media (max-width: 1100px) {
+  .gal[data-theme="astral"] .gal-leaderboards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
   .gal[data-theme="astral"] .gal-leaderboards { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
   .gal-astral-title { display: none; }
 }
 
@@ -10840,7 +10845,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react10.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react10.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react10.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "gal-local" }, "v0.13.1"), /* @__PURE__ */ import_react10.default.createElement(
+    /* @__PURE__ */ import_react10.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "gal-local" }, "v0.13.2"), /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
         disabled: busy,
