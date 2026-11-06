@@ -1,3 +1,4 @@
+import { ResourceBasics } from "./resource-basics.jsx";
 import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import React, { useState, useRef, useEffect } from "react";
 import { Modal } from "./modal.jsx";
@@ -186,34 +187,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
             <h3 ref={heading} tabIndex={-1}>
               {steps[step]}
             </h3>
-            {step === 0 && (
-              <div className="gal-skill-fields">
-                <label>名称<input aria-label="名称" maxLength={160} value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="代码审查" /></label>
-                <details><summary>高级设置</summary>                <label>
-                  调用标识
-                  <input
-                    value={name}
-                    maxLength={64}
-                    placeholder="code-review"
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </label>
-                <p>使用小写英文、数字和连字符，也作为文件夹名称。</p>
-</details>
-                <label>
-                  描述
-                  <textarea
-                    aria-label="描述"
-                    rows={4}
-                    maxLength={1024}
-                    value={description}
-                    placeholder="审查代码改动，在代码评审或提交前检查时使用。"
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
-                </label>
-                <p>说明它能做什么，以及什么时候使用。</p>
-              </div>
-            )}
+            {step === 0 && <ResourceBasics name={displayName} onName={setDisplayName} description={description} onDescription={setDescription} identifier={name} onIdentifier={setName} busy={busy} />}
             {step === 1 && (
               <div className="gal-skill-fields">
                 <p>

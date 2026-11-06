@@ -1,3 +1,4 @@
+import { ResourceBasics } from "./resource-basics.jsx";
 import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import React, { useEffect, useState, useRef } from "react";
 import { Modal } from "./modal.jsx";
@@ -8,7 +9,7 @@ import {
   readAgent,
   agentIssues,
 } from "./agent-format.mjs";
-const steps = ["身份与职责", "行为指引与附件", "检查保存"];
+const steps = ["基本信息", "行为指引与附件", "检查保存"];
 export function AgentWizard({ resource, onClose, onSave }) {
   const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const [initial] = useState(() => readAgent(resource));
@@ -190,43 +191,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
             <h3 ref={heading} tabIndex={-1}>
               {steps[step]}
             </h3>
-            {step === 0 && (
-              <div className="gal-skill-fields">
-                <label>
-                  名称
-                  <input
-                    aria-label="名称"
-                    value={name}
-                    maxLength={160}
-                    placeholder="研究助手"
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </label>
-                <label>
-                  描述
-                  <textarea
-                    aria-label="描述"
-                    rows={3}
-                    maxLength={1024}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="说明这个 Agent 负责什么。"
-                  />
-                </label>
-                <details><summary>高级设置</summary>                <label>
-                  调用标识
-                  <input
-                    aria-label="调用标识"
-                    value={slug}
-                    maxLength={64}
-                    placeholder="research-agent"
-                    onChange={(e) => setSlug(e.target.value)}
-                  />
-                </label>
-                <p>作为 Agent 文件夹名称，使用小写英文、数字和连字符。</p>
-</details>
-              </div>
-            )}
+            {step === 0 && <ResourceBasics name={name} onName={setName} description={description} onDescription={setDescription} identifier={slug} onIdentifier={setSlug} busy={busy} />}
             {step === 1 && (
               <div className="gal-skill-fields">
                 <p>写清职责、处理边界、何时回报和交付格式。</p>

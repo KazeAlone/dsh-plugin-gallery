@@ -1,3 +1,4 @@
+import { ResourceBasics } from "./resource-basics.jsx";
 import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { Modal } from "./modal.jsx";
@@ -154,44 +155,10 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
             <h3 ref={heading} tabIndex={-1}>
               {steps[step]}
             </h3>
-            {step === 0 && (
-              <div className="gal-skill-fields">
-                <label>
-                  名称
-                  <input
-                    aria-label="名称"
-                    value={name}
-                    maxLength={160}
-                    placeholder="文件系统服务"
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </label>
-                <label>
-                  描述
-                  <textarea
-                    aria-label="描述"
-                    rows={4}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="这个 MCP 服务提供什么能力"
-                  />
-                </label>
-              </div>
-            )}
+            {step === 0 && <ResourceBasics name={name} onName={setName} description={description} onDescription={setDescription} identifier={serverName} onIdentifier={value => { setServerName(value); setTestResult(null); }} identifierMax={32} busy={busy} />}
             {step === 1 && (
               <div className="gal-skill-fields">
-                <details><summary>高级设置 · 调用标识</summary>                <label>
-                  调用标识
-                  <input
-                    aria-label="调用标识"
-                    value={serverName}
-                    maxLength={32}
-                    placeholder="filesystem"
-                    onChange={change(setServerName)}
-                  />
-                </label>
-                <p>1–32 位字母、数字、下划线或连字符；作为工具名称前缀。</p>
-</details>
+
                 <div className="gal-mcp-transport">
                   <button
                     aria-pressed={transport === "stdio"}
