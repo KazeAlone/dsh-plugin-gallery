@@ -1,5 +1,7 @@
 # Gallery
 
+内置 `gallery-skill-reference` 参考 Skill，包含完整文件头、执行指引、输入输出示例、三类附件、标签和封面。升级首次启动时添加，可查看、编辑和调用；修改或删除后不会在重启时恢复。
+
 运行在 DSH 内的本地资源库，用于管理 **Skill、Agent 描述、MCP 配置和 Workflow 模板**。Workflow 使用 TeamFlow 的原生模板结构，可从资源详情安装到 TeamFlow 个人模板库。
 
 打开「Gallery」即可使用，**无需填写姓名、接入码或 Gallery 身份凭证**。沿用 DSH 自身的宿主访问认证，不增加插件登录流程。

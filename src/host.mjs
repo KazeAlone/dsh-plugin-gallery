@@ -15,6 +15,7 @@ import { publishToTeamflow } from "./teamflow-publish.mjs";
 import { createSkillProvider } from "./skill-provider.mjs";
 import { registerUsageTracking } from "./usage-runtime.mjs";
 import { registerRuntimeDiagnostics } from "./runtime-diagnostics.mjs";
+import { installReferenceSkill } from "./builtin-skill.mjs";
 import { DESCRIPTORS } from "./descriptors.mjs";
 
 export default class GalleryService extends TypertRemoteService {
@@ -24,6 +25,7 @@ export default class GalleryService extends TypertRemoteService {
     this.store = new StorageManager(
       join(process.env.DSH_HOME ?? join(homedir(), ".dsh"), "gallery"),
     );
+    installReferenceSkill(this.store.adapter());
     this.skillProvider = createSkillProvider(this.store);
     this.invalidateSkills = () => {};
     this.mcpRuntime = null;

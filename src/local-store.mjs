@@ -113,7 +113,7 @@ export class LocalGalleryStore {
     const temp = this.path + "." + randomUUID();
     try {
       const data = this.read();
-      const row = change(data.resources);
+      const row = change(data.resources, data);
       writeFileSync(temp, JSON.stringify(data) + "\n", {
         mode: 0o600,
         flag: "wx",
