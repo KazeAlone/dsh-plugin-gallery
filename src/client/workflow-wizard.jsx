@@ -90,6 +90,8 @@ export function WorkflowWizard({
   const [draft, setDraft] = useState(start.definition),
     [agents, setAgents] = useState(start.agents),
     [positions, setPositions] = useState(start.positions);
+  const [contextMenu, setContextMenu] = useState(null);
+  const rightGesture = useRef({ moved: false, nodeId: null });
   const [models, setModels] = useState([]),
     [modelSession, setModelSession] = useState("");
   const connection = useRef(null);
@@ -473,33 +475,72 @@ export function WorkflowWizard({
       if (ticket === pendingAgent.current) setBusy(false);
     }
   }
-  function remove() {
-    if (agent) {
-      setAgents((rows) => rows.filter((a) => a.id !== agent.id));
-      update({
-        tasks: draft.tasks.map((t) =>
-          t.assignee === agent.id ? { ...t, assignee: "" } : t,
-        ),
-      });
-    } else if (task) {
-      update({
-        tasks: draft.tasks
-          .filter((t) => t.id !== task.id)
-          .map((t) => ({
-            ...t,
-            dependencies: t.dependencies.filter((id) => id !== task.id),
-          })),
-      });
-      setPositions((p) => {
-        const copy = { ...p };
-        delete copy[task.id];
-        return copy;
-      });
-      if (linkFrom === task.id) setLinkFrom(null);
+  function remove(ids = selection) {
+    if (busy) return;
+    if (!Array.isArray(ids)) ids = selection;
+    const deleted = new Set(ids);
+    setAgents((rows) => rows.filter((a) => !deleted.has(a.id)));
+    setDraft((d) => ({
+      ...d,
+      tasks: d.tasks
+        .filter((t) => !deleted.has(t.id))
+        .map((t) => ({
+          ...t,
+          assignee: deleted.has(t.assignee) ? "" : t.assignee,
+          dependencies: t.dependencies.filter((id) => !deleted.has(id)),
+        })),
+    }));
+    setPositions((p) =>
+      Object.fromEntries(Object.entries(p).filter(([id]) => !deleted.has(id))),
+    );
+    if (deleted.has(linkFrom)) {
+      setLinkFrom(null);
+      setWire(null);
+      connection.current = null;
     }
     setSelected(null);
     setSelection([]);
+    setContextMenu(null);
+    view.current?.focus({ preventScroll: true });
   }
+  useEffect(() => {
+    const key = (event) => {
+      if (!editor.current?.contains(event.target)) return;
+      if (event.key === "Escape" && contextMenu) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        setContextMenu(null);
+        return;
+      }
+      if (
+        event.key !== "Delete" ||
+        event.isComposing ||
+        event.target.closest(
+          'input,textarea,select,[contenteditable="true"]',
+        ) ||
+        !selection.length ||
+        busy
+      )
+        return;
+      const overlays = document.querySelectorAll("[data-gallery-modal]");
+      if (
+        overlays.length &&
+        !overlays[overlays.length - 1].contains(editor.current)
+      )
+        return;
+      event.preventDefault();
+      remove();
+    };
+    const outside = (event) => {
+      if (!event.target.closest(".gal-flow-context-menu")) setContextMenu(null);
+    };
+    document.addEventListener("keydown", key, true);
+    document.addEventListener("pointerdown", outside);
+    return () => {
+      document.removeEventListener("keydown", key, true);
+      document.removeEventListener("pointerdown", outside);
+    };
+  }, [contextMenu, selection, busy, linkFrom]);
   async function save() {
     setError("");
     try {
@@ -683,7 +724,35 @@ export function WorkflowWizard({
           <div
             className="gal-flow-view"
             ref={view}
-            onContextMenu={(e) => e.preventDefault()}
+            tabIndex={0}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              if (busy || rightGesture.current.moved) return;
+              const id =
+                e.target.closest("[data-flow-node]")?.dataset.flowNode ||
+                rightGesture.current.nodeId;
+              const ids = id ? (selection.includes(id) ? selection : [id]) : [];
+              if (id) {
+                setSelection(ids);
+                setSelected(
+                  ids.length === 1
+                    ? {
+                        kind: agents.some((a) => a.id === id)
+                          ? "agent"
+                          : "task",
+                        id,
+                      }
+                    : null,
+                );
+              }
+              setContextMenu({
+                x: Math.max(8, Math.min(e.clientX, window.innerWidth - 215)),
+                y: Math.max(8, Math.min(e.clientY, window.innerHeight - 165)),
+                point: worldPoint(e),
+                ids,
+              });
+              view.current?.focus({ preventScroll: true });
+            }}
             style={{
               backgroundPosition: `${camera.x}px ${camera.y}px`,
               backgroundSize: `${22 * zoom}px ${22 * zoom}px`,
@@ -691,6 +760,12 @@ export function WorkflowWizard({
             onPointerDown={(e) => {
               if (e.button === 2) {
                 e.preventDefault();
+                rightGesture.current = {
+                  moved: false,
+                  nodeId:
+                    e.target.closest("[data-flow-node]")?.dataset.flowNode ||
+                    null,
+                };
                 pan.current = { x: e.clientX, y: e.clientY };
                 pan.current.startX = cameraRef.current.x;
                 pan.current.startY = cameraRef.current.y;
@@ -711,6 +786,10 @@ export function WorkflowWizard({
             onPointerMove={(e) => {
               if (pan.current) {
                 const p = pan.current;
+                if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > 4) {
+                  rightGesture.current.moved = true;
+                  setContextMenu(null);
+                }
                 cameraTo({
                   x: p.startX + e.clientX - p.x,
                   y: p.startY + e.clientY - p.y,
@@ -865,6 +944,7 @@ export function WorkflowWizard({
                     className={`gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selection.includes(n.id) ? "selected" : ""}`}
                     style={{ left: n.position.x, top: n.position.y }}
                     key={n.id}
+                    data-flow-node={n.id}
                     onPointerDown={(e) => pointerDown(e, n.kind, n.id)}
                     onPointerMove={move}
                     onPointerUp={() => {
@@ -1304,6 +1384,54 @@ export function WorkflowWizard({
             )}
           </aside>
         </div>
+        {contextMenu && (
+          <div
+            className="gal-flow-context-menu"
+            role="group"
+            aria-label="画布右键菜单"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            {contextMenu.ids.length ? (
+              <button
+                className="gal-delete"
+                onClick={() => remove(contextMenu.ids)}
+              >
+                <Glyph name="trash" />
+                删除
+                {contextMenu.ids.length > 1
+                  ? ` ${contextMenu.ids.length} 个`
+                  : ""}
+                节点<span>Del</span>
+              </button>
+            ) : (
+              [
+                ["agent", "Agent"],
+                ["task", "任务"],
+                ["human", "人工"],
+              ].map(([kind, label]) => (
+                <button
+                  key={kind}
+                  onClick={() => {
+                    add(kind, contextMenu.point);
+                    setContextMenu(null);
+                  }}
+                >
+                  <Glyph
+                    name={
+                      kind === "agent"
+                        ? "agent"
+                        : kind === "human"
+                          ? "user"
+                          : "file"
+                    }
+                  />
+                  添加{label}节点
+                </button>
+              ))
+            )}
+          </div>
+        )}
         <footer className="gal-flow-footer">
           <span aria-live="polite">
             {linkFrom

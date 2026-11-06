@@ -2265,6 +2265,12 @@ fieldset.gal-skill-fields {
 .gal-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .gal-flow-wire-preview { stroke-dasharray: 5 4; opacity: .8; }
 .gal .gal-flow-ports button { touch-action: none; }
+.gal-flow-context-menu { position: fixed; z-index: 1200; width: 205px; padding: 6px; background: var(--g-card); color: var(--g-ink); border: 1px solid var(--g-line); border-radius: 10px; box-shadow: 0 12px 32px #00000040; }
+.gal .gal-flow-context-menu button { width: 100%; border: 0; justify-content: flex-start; background: transparent; text-align: left; }
+.gal .gal-flow-context-menu button:hover { background: var(--g-hover); }
+.gal-flow-context-menu button span { margin-left: auto; color: var(--g-muted); font-size: 11px; }
+/* Prevent focus from scrolling the transformed scene behind the camera. */
+.gal-flow-view { overflow: clip; }
 `;
 
 // src/client/leaderboards.jsx
@@ -3043,6 +3049,8 @@ function WorkflowWizard({
   const arrow = (0, import_react7.useId)();
   const [start] = (0, import_react7.useState)(() => initial(resource));
   const [draft, setDraft] = (0, import_react7.useState)(start.definition), [agents, setAgents] = (0, import_react7.useState)(start.agents), [positions, setPositions] = (0, import_react7.useState)(start.positions);
+  const [contextMenu, setContextMenu] = (0, import_react7.useState)(null);
+  const rightGesture = (0, import_react7.useRef)({ moved: false, nodeId: null });
   const [models, setModels] = (0, import_react7.useState)([]), [modelSession, setModelSession] = (0, import_react7.useState)("");
   const connection = (0, import_react7.useRef)(null);
   const [wire, setWire] = (0, import_react7.useState)(null);
@@ -3376,31 +3384,61 @@ function WorkflowWizard({
       if (ticket === pendingAgent.current) setBusy(false);
     }
   }
-  function remove() {
-    if (agent) {
-      setAgents((rows) => rows.filter((a) => a.id !== agent.id));
-      update({
-        tasks: draft.tasks.map(
-          (t) => t.assignee === agent.id ? { ...t, assignee: "" } : t
-        )
-      });
-    } else if (task) {
-      update({
-        tasks: draft.tasks.filter((t) => t.id !== task.id).map((t) => ({
-          ...t,
-          dependencies: t.dependencies.filter((id) => id !== task.id)
-        }))
-      });
-      setPositions((p) => {
-        const copy = { ...p };
-        delete copy[task.id];
-        return copy;
-      });
-      if (linkFrom === task.id) setLinkFrom(null);
+  function remove(ids = selection) {
+    if (busy) return;
+    if (!Array.isArray(ids)) ids = selection;
+    const deleted = new Set(ids);
+    setAgents((rows) => rows.filter((a) => !deleted.has(a.id)));
+    setDraft((d) => ({
+      ...d,
+      tasks: d.tasks.filter((t) => !deleted.has(t.id)).map((t) => ({
+        ...t,
+        assignee: deleted.has(t.assignee) ? "" : t.assignee,
+        dependencies: t.dependencies.filter((id) => !deleted.has(id))
+      }))
+    }));
+    setPositions(
+      (p) => Object.fromEntries(Object.entries(p).filter(([id]) => !deleted.has(id)))
+    );
+    if (deleted.has(linkFrom)) {
+      setLinkFrom(null);
+      setWire(null);
+      connection.current = null;
     }
     setSelected(null);
     setSelection([]);
+    setContextMenu(null);
+    view.current?.focus({ preventScroll: true });
   }
+  (0, import_react7.useEffect)(() => {
+    const key = (event) => {
+      if (!editor.current?.contains(event.target)) return;
+      if (event.key === "Escape" && contextMenu) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        setContextMenu(null);
+        return;
+      }
+      if (event.key !== "Delete" || event.isComposing || event.target.closest(
+        'input,textarea,select,[contenteditable="true"]'
+      ) || !selection.length || busy)
+        return;
+      const overlays = document.querySelectorAll("[data-gallery-modal]");
+      if (overlays.length && !overlays[overlays.length - 1].contains(editor.current))
+        return;
+      event.preventDefault();
+      remove();
+    };
+    const outside = (event) => {
+      if (!event.target.closest(".gal-flow-context-menu")) setContextMenu(null);
+    };
+    document.addEventListener("keydown", key, true);
+    document.addEventListener("pointerdown", outside);
+    return () => {
+      document.removeEventListener("keydown", key, true);
+      document.removeEventListener("pointerdown", outside);
+    };
+  }, [contextMenu, selection, busy, linkFrom]);
   async function save() {
     setError("");
     try {
@@ -3561,7 +3599,29 @@ function WorkflowWizard({
         {
           className: "gal-flow-view",
           ref: view,
-          onContextMenu: (e) => e.preventDefault(),
+          tabIndex: 0,
+          onContextMenu: (e) => {
+            e.preventDefault();
+            if (busy || rightGesture.current.moved) return;
+            const id = e.target.closest("[data-flow-node]")?.dataset.flowNode || rightGesture.current.nodeId;
+            const ids = id ? selection.includes(id) ? selection : [id] : [];
+            if (id) {
+              setSelection(ids);
+              setSelected(
+                ids.length === 1 ? {
+                  kind: agents.some((a) => a.id === id) ? "agent" : "task",
+                  id
+                } : null
+              );
+            }
+            setContextMenu({
+              x: Math.max(8, Math.min(e.clientX, window.innerWidth - 215)),
+              y: Math.max(8, Math.min(e.clientY, window.innerHeight - 165)),
+              point: worldPoint(e),
+              ids
+            });
+            view.current?.focus({ preventScroll: true });
+          },
           style: {
             backgroundPosition: `${camera.x}px ${camera.y}px`,
             backgroundSize: `${22 * zoom}px ${22 * zoom}px`
@@ -3569,6 +3629,10 @@ function WorkflowWizard({
           onPointerDown: (e) => {
             if (e.button === 2) {
               e.preventDefault();
+              rightGesture.current = {
+                moved: false,
+                nodeId: e.target.closest("[data-flow-node]")?.dataset.flowNode || null
+              };
               pan.current = { x: e.clientX, y: e.clientY };
               pan.current.startX = cameraRef.current.x;
               pan.current.startY = cameraRef.current.y;
@@ -3586,6 +3650,10 @@ function WorkflowWizard({
           onPointerMove: (e) => {
             if (pan.current) {
               const p = pan.current;
+              if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > 4) {
+                rightGesture.current.moved = true;
+                setContextMenu(null);
+              }
               cameraTo({
                 x: p.startX + e.clientX - p.x,
                 y: p.startY + e.clientY - p.y
@@ -3723,6 +3791,7 @@ function WorkflowWizard({
               className: `gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selection.includes(n.id) ? "selected" : ""}`,
               style: { left: n.position.x, top: n.position.y },
               key: n.id,
+              "data-flow-node": n.id,
               onPointerDown: (e) => pointerDown(e, n.kind, n.id),
               onPointerMove: move,
               onPointerUp: () => {
@@ -4018,6 +4087,50 @@ function WorkflowWizard({
           (t) => t.id !== task.id && !task.dependencies.includes(t.id)
         ).map((t) => /* @__PURE__ */ import_react7.default.createElement("option", { key: t.id, value: t.id }, t.subject))
       ))), (task || agent) && /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-delete", disabled: busy, onClick: remove }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }), "\u5220\u9664\u8282\u70B9"))),
+      contextMenu && /* @__PURE__ */ import_react7.default.createElement(
+        "div",
+        {
+          className: "gal-flow-context-menu",
+          role: "group",
+          "aria-label": "\u753B\u5E03\u53F3\u952E\u83DC\u5355",
+          style: { left: contextMenu.x, top: contextMenu.y },
+          onPointerDown: (e) => e.stopPropagation()
+        },
+        contextMenu.ids.length ? /* @__PURE__ */ import_react7.default.createElement(
+          "button",
+          {
+            className: "gal-delete",
+            onClick: () => remove(contextMenu.ids)
+          },
+          /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }),
+          "\u5220\u9664",
+          contextMenu.ids.length > 1 ? ` ${contextMenu.ids.length} \u4E2A` : "",
+          "\u8282\u70B9",
+          /* @__PURE__ */ import_react7.default.createElement("span", null, "Del")
+        ) : [
+          ["agent", "Agent"],
+          ["task", "\u4EFB\u52A1"],
+          ["human", "\u4EBA\u5DE5"]
+        ].map(([kind, label]) => /* @__PURE__ */ import_react7.default.createElement(
+          "button",
+          {
+            key: kind,
+            onClick: () => {
+              add(kind, contextMenu.point);
+              setContextMenu(null);
+            }
+          },
+          /* @__PURE__ */ import_react7.default.createElement(
+            Glyph,
+            {
+              name: kind === "agent" ? "agent" : kind === "human" ? "user" : "file"
+            }
+          ),
+          "\u6DFB\u52A0",
+          label,
+          "\u8282\u70B9"
+        ))
+      ),
       /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u62D6\u52A8\u8FDE\u7EBF\uFF1A\u677E\u5F00\u5230\u53E6\u4E00\u8282\u70B9\u7684\u5706\u70B9" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
         "button",
         {
@@ -12009,7 +12122,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.20.0"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.20.1"), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         disabled: busy,
