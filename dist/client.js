@@ -10845,7 +10845,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react10.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react10.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react10.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "gal-local" }, "v0.14.0"), /* @__PURE__ */ import_react10.default.createElement(
+    /* @__PURE__ */ import_react10.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "gal-local" }, "v0.14.1"), /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
         disabled: busy,

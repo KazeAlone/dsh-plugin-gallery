@@ -9,7 +9,7 @@ export function referenceSkill() {
     description: '完整 Skill 参考模板：演示基本信息、执行指引、脚本、参考资料与素材的组织方式。可用于整理用户提供的笔记并生成结构化摘要。',
     license: 'MIT',
     compatibility: 'DSH Skill 服务；可选脚本需要 Python 3，仅使用标准库。',
-    metadata: { author: 'Gallery', version: '1.0.0' },
+    metadata: { author: 'ZelongWANG', version: '1.0.0' },
     'user-invocable': true,
     'disable-model-invocation': false,
   };
@@ -55,14 +55,23 @@ export function referenceSkill() {
 }
 /** Seed once in the resource transaction; edits and deletions survive restart. */
 export function installReferenceSkill(adapter) {
-  if (adapter.read().builtinSeeds?.includes(seed)) return;
+  const current = adapter.read();
+  if (current.builtinSeeds?.includes(seed)) {
+    const existing = current.resources.find(row => row.metadata?.builtin === seed && row.creator?.username === 'Gallery');
+    if (!existing) return;
+    return adapter.write(rows => {
+      const row = rows.find(item => item.id === existing.id);
+      if (row.creator?.username === 'Gallery') row.creator = { username: 'ZelongWANG' };
+      return row;
+    });
+  }
   return adapter.write((rows, data) => {
     const existing = rows.find(row => row.metadata?.builtin === seed);
     data.builtinSeeds = [...new Set([...(data.builtinSeeds || []), seed])];
     if (existing) return existing;
     const resource = normalizeResource(referenceSkill());
     const now = new Date().toISOString();
-    const row = { ...resource, id: randomUUID(), creator: { username: 'Gallery' }, digest: digest(JSON.stringify(resource)), revision: 1, createdAt: now, updatedAt: now };
+    const row = { ...resource, id: randomUUID(), creator: { username: 'ZelongWANG' }, digest: digest(JSON.stringify(resource)), revision: 1, createdAt: now, updatedAt: now };
     rows.push(row);
     return row;
   });
