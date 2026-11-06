@@ -10,7 +10,7 @@ const covers = [
   { id: "automation", label: "连接与自动化", keywords: /连接|自动化|集成|接口|automation|connector|integration|api/, hue: 326, path: "M7 7h12v12H7z M29 29h12v12H29z M13 19v10a6 6 0 0 0 6 6h10M35 29V19a6 6 0 0 0-6-6h-4" },
 ];
 
-export const hasResourceCover = (type) => ["skill", "agent", "mcp"].includes(type);
+export const hasResourceCover = (type) => ["skill", "agent", "mcp", "workflow"].includes(type);
 
 function resolveCover(resource) {
   const selected = resource.cover ?? resource.metadata?.cover;
@@ -38,7 +38,7 @@ export function ResourceCover({ resource }) {
   const cover = resolveCover(resource);
   return (
     <span className="gal-resource-visual gal-purpose-cover" style={{ "--cover-hue": cover.hue }} aria-hidden="true">
-      <span className="gal-visual-type"><Glyph name={resource.type} size={14} />{{ skill: "Skill", agent: "Agent", mcp: "MCP" }[resource.type]}</span>
+      <span className="gal-visual-type"><Glyph name={resource.type} size={14} />{{ skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" }[resource.type]}</span>
       <span className="gal-purpose-drawing"><CoverDrawing cover={cover} /></span>
     </span>
   );

@@ -29,20 +29,14 @@ export function parseWorkflowAgent(text) {
     demand(result[key], 400, "INVALID_EXTRACTION", `提取的 ${key} 不能为空`);
   return result;
 }
-export async function extractWorkflowAgent(ctx, resource, sessionId) {
-  const agent = ctx.get("agents")?.get(sessionId);
+export async function extractWorkflowAgent(ctx, resource) {
+  const llm = ctx.get("llm");
+  const selection = ctx.get("agentDefaultModel")?.currentSelection();
   demand(
-    agent,
-    400,
-    "NO_MODEL_SESSION",
-    "请先打开一个 DSH 会话，再选择该会话的模型",
-  );
-  const llm = agent.ctx.get("llm");
-  demand(
-    llm && agent.options?.provider && agent.options?.model,
+    llm && selection?.provider && selection.model,
     400,
     "NO_MODEL",
-    "所选会话没有可用模型",
+    "请先在 DSH 的模型设置中配置默认模型，再提取字段",
   );
   const md = resource.files.find(
     (f) => f.path === "AGENT.md" && f.encoding === "utf8",
@@ -61,11 +55,7 @@ export async function extractWorkflowAgent(ctx, resource, sessionId) {
   );
   let output = "";
   for await (const chunk of llm.stream({
-    provider: agent.options.provider,
-    model: agent.options.model,
-    ...(agent.options.reasoningEffort
-      ? { reasoningEffort: agent.options.reasoningEffort }
-      : {}),
+    ...selection,
     maxTokens: 5000,
     signal: AbortSignal.timeout(90000),
     system:

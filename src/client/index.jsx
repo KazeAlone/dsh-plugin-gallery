@@ -628,7 +628,7 @@ function Gallery({ remote }) {
           )}
         </>
       )}
-      {workflowWizard && <WorkflowWizard onModels={() => call(remote,"uiWorkflowModels")} onExtract={(resourceId,sessionId) => call(remote,"uiExtractWorkflowAgent",json({resourceId,sessionId}))} onGet={id => call(remote, "uiGet", id)} onList={async type => {
+      {workflowWizard && <WorkflowWizard onExtract={(resourceId) => call(remote,"uiExtractWorkflowAgent",json({resourceId}))} onGet={id => call(remote, "uiGet", id)} onList={async type => {
         const rows = [];
         for (let offset = 0; ; offset += 100) {
           const page = await call(remote, "uiList", json({ type, limit: 100, offset }));
@@ -741,8 +741,14 @@ function Gallery({ remote }) {
               </button>
             </div>
             {hasResourceCover(content.type) && <ResourceCover resource={content} />}
+            {selected.type === "workflow" &&
+              selected.metadata?.workflowCanvas?.agents?.some(
+                (agent) => agent.skills?.length || agent.mcps?.length,
+              ) && (
+                <p>Skill 和 MCP 引用保留在 Gallery 中，当前 TeamFlow 模板只接收流程与成员定义。</p>
+              )}
             <div className="gal-detail-actions">
-              {selected.type === "workflow" && !selected.metadata?.workflowCanvas && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await call(remote, "uiPublishWorkflow", selected.id); setNotice(`已安装到 TeamFlow：${result.name} v${result.version}`); })}><Glyph name="workflow" />安装到 TeamFlow</button>}
+              {selected.type === "workflow" && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await call(remote, "uiPublishWorkflow", selected.id); setNotice(`已注册到 TeamFlow：${result.name} v${result.version}`); })}><Glyph name="workflow" />注册到 TeamFlow</button>}
               {selected.canEdit && (
                 <button disabled={busy} onClick={() => edit(selected)}>
                   <Glyph name="edit" />
@@ -1113,7 +1119,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.20.2</span>
+              <span className="gal-local">v0.20.3</span>
               <button
                 disabled={busy}
                 onClick={() =>

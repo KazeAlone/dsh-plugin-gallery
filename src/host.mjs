@@ -12,11 +12,12 @@ import { checkMcpConnection } from "./mcp-check.mjs";
 import { GalleryMcpRuntime } from "./mcp-runtime.mjs";
 import { registerGalleryAgentListTool, registerGalleryAgentRunTool } from "./agent-runtime.mjs";
 import { workflowFromResource } from "./workflow-template.mjs";
+import { syncWorkflowUsage } from "./workflow-usage.mjs";
 import { publishToTeamflow } from "./teamflow-publish.mjs";
 import { createSkillProvider } from "./skill-provider.mjs";
 import { registerUsageTracking } from "./usage-runtime.mjs";
 import { registerRuntimeDiagnostics } from "./runtime-diagnostics.mjs";
-import { installReferenceSkill } from "./builtin-skill.mjs";
+import { installReferenceExamples } from "./builtin-examples.mjs";
 import { DESCRIPTORS } from "./descriptors.mjs";
 
 export default class GalleryService extends TypertRemoteService {
@@ -26,7 +27,7 @@ export default class GalleryService extends TypertRemoteService {
     this.store = new StorageManager(
       join(process.env.DSH_HOME ?? join(homedir(), ".dsh"), "gallery"),
     );
-    installReferenceSkill(this.store.adapter());
+    installReferenceExamples(this.store.adapter());
     this.skillProvider = createSkillProvider(this.store);
     this.invalidateSkills = () => {};
     this.mcpRuntime = null;
@@ -104,10 +105,19 @@ export default class GalleryService extends TypertRemoteService {
     });
   }
   uiList(payload) {
-    return this.ownerCall(() => this.store.listResources(JSON.parse(payload)));
+    return this.ownerCall(async () => {
+      const query = JSON.parse(payload);
+      if (!query.type || query.type === "workflow") await syncWorkflowUsage(this.ctx, this.store);
+      return this.store.listResources(query);
+    });
   }
   uiGet(id) {
-    return this.ownerCall(() => this.store.getResource(id));
+    return this.ownerCall(async () => {
+      const resource = this.store.getResource(id);
+      if (resource.type !== "workflow") return resource;
+      await syncWorkflowUsage(this.ctx, this.store);
+      return this.store.getResource(id);
+    });
   }
   uiCreate(payload) {
     return this.ownerCall(async () => {
@@ -141,20 +151,16 @@ export default class GalleryService extends TypertRemoteService {
   uiCheckMcp(payload) {
     return this.ownerCall(() => checkMcpConnection(JSON.parse(payload)));
   }
-  uiWorkflowModels() {
-    return this.ownerCall(() => (this.ctx.get('agents')?.list() || []).filter(a => a.options?.provider && a.options?.model).map(a => ({ id: a.id, label: `${a.options.provider} / ${a.options.model} · ${String(a.id).slice(-8)}` })));
-  }
   uiExtractWorkflowAgent(payload) {
     return this.ownerCall(() => {
-      const { resourceId, sessionId } = JSON.parse(payload);
-      return extractWorkflowAgent(this.ctx, this.store.getResource(resourceId), sessionId);
+      const { resourceId } = JSON.parse(payload);
+      return extractWorkflowAgent(this.ctx, this.store.getResource(resourceId));
     });
   }
   uiPublishWorkflow(id) {
     return this.ownerCall(async () => {
       const resource = this.store.getResource(id);
       demand(resource.type === "workflow", 400, "INVALID_TYPE", "仅 Workflow 可以安装到 TeamFlow");
-      demand(!resource.metadata?.workflowCanvas, 400, "WORKFLOW_ADAPTER_PENDING", "画布编排的 Agent、Skill 与 MCP 执行对接尚未完成，请先保存草稿");
       return publishToTeamflow(resource, process.env.DSH_TEAMFLOW_TEMPLATE_DIR);
     });
   }

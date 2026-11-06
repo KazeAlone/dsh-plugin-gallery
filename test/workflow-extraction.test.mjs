@@ -10,7 +10,7 @@ const fields = {
   role: "研究与证据核对",
   executionPrompt: "先读取资料，标注不确定性",
 };
-test("Agent extraction validates TeamFlow fields and reuses exactly the chosen host route", async () => {
+test("Agent extraction validates TeamFlow fields and uses the host default model without a session", async () => {
   let request;
   const llm = {
     async *stream(options) {
@@ -18,19 +18,20 @@ test("Agent extraction validates TeamFlow fields and reuses exactly the chosen h
       yield { type: "text-delta", text: JSON.stringify(fields) };
     },
   };
-  const agent = {
-    options: { provider: "host-provider", model: "host-model" },
-    ctx: { get: () => llm },
+  const services = {
+    llm,
+    agentDefaultModel: {
+      currentSelection: () => ({ provider: "host-provider", model: "host-model", reasoningEffort: "high" }),
+    },
   };
   const result = await extractWorkflowAgent(
-    { get: () => ({ get: () => agent }) },
+    { get: (name) => services[name] },
     {
       type: "agent",
       name: "研究助手",
       description: "研究",
       files: [{ path: "AGENT.md", encoding: "utf8", content: "# 研究职责" }],
     },
-    "session",
   );
   assert.deepEqual(result, fields);
   assert.equal(
@@ -44,6 +45,7 @@ test("Agent extraction validates TeamFlow fields and reuses exactly the chosen h
   );
   assert.equal(request.provider, "host-provider");
   assert.equal(request.model, "host-model");
+  assert.equal(request.reasoningEffort, "high");
   assert.equal(request.tools, undefined);
   assert.equal(request.messages.length, 1);
   assert.throws(
@@ -51,7 +53,7 @@ test("Agent extraction validates TeamFlow fields and reuses exactly the chosen h
     /名称/,
   );
   await assert.rejects(
-    () => extractWorkflowAgent({ get: () => undefined }, {}, "missing"),
-    /会话/,
+    () => extractWorkflowAgent({ get: () => undefined }, {}),
+    /默认模型/,
   );
 });

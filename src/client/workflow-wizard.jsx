@@ -1,8 +1,13 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
+import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import { createResourceIdentifier } from "./resource-id.mjs";
 import { validateWorkflowTemplate } from "../workflow-template.mjs";
+
+const nodeWidth = 220;
+const nodeHeight = 110;
+const portY = nodeHeight / 2;
 
 function initial(resource) {
   let definition;
@@ -69,9 +74,9 @@ export function WorkflowWizard({
   onSave,
   onList,
   onGet,
-  onModels,
   onExtract,
 }) {
+  const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const [fullscreen, setFullscreen] = useState(false);
   const editor = useRef(null),
     pan = useRef(null),
@@ -91,9 +96,6 @@ export function WorkflowWizard({
     [agents, setAgents] = useState(start.agents),
     [positions, setPositions] = useState(start.positions);
   const [contextMenu, setContextMenu] = useState(null);
-  const rightGesture = useRef({ moved: false, nodeId: null });
-  const [models, setModels] = useState([]),
-    [modelSession, setModelSession] = useState("");
   const connection = useRef(null);
   const [wire, setWire] = useState(null);
   const [catalog, setCatalog] = useState({ agent: [], skill: [], mcp: [] });
@@ -149,8 +151,8 @@ export function WorkflowWizard({
     }
     const minX = Math.min(...points.map((p) => p.x)),
       minY = Math.min(...points.map((p) => p.y));
-    const maxX = Math.max(...points.map((p) => p.x + 220)),
-      maxY = Math.max(...points.map((p) => p.y + 110));
+    const maxX = Math.max(...points.map((p) => p.x + nodeWidth)),
+      maxY = Math.max(...points.map((p) => p.y + nodeHeight));
     const z = Math.max(
       0.25,
       Math.min(
@@ -382,51 +384,47 @@ export function WorkflowWizard({
     setWire(worldPoint(event));
     event.currentTarget.setPointerCapture(event.pointerId);
   }
+  function wireTarget(event, start) {
+    if (!start) return null;
+    const port = document.elementFromPoint(event.clientX, event.clientY)
+      ?.closest("[data-flow-port]");
+    if (!port || !view.current?.contains(port)) return null;
+    const { flowPort, node } = port.dataset;
+    return flowPort !== start.side && node !== start.id ? port.dataset : null;
+  }
+  function moveWire(event) {
+    const start = connection.current;
+    if (!start) return;
+    const target = wireTarget(event, start);
+    const position = positions[target?.node];
+    setWire(position ? {
+      x: position.x + (target.flowPort === "out" ? nodeWidth : 0),
+      y: position.y + portY,
+      target: target.node,
+      side: target.flowPort,
+    } : worldPoint(event));
+  }
   function finishWire(event) {
     const start = connection.current;
-    const port = document
-      .elementFromPoint(event.clientX, event.clientY)
-      ?.closest("[data-flow-port]");
-    if (
-      start &&
-      port &&
-      port.dataset.flowPort !== start.side &&
-      port.dataset.node !== start.id
-    ) {
+    const target = wireTarget(event, start);
+    if (target) {
       connect(
-        start.side === "out" ? port.dataset.node : start.id,
-        start.side === "out" ? start.id : port.dataset.node,
+        start.side === "out" ? target.node : start.id,
+        start.side === "out" ? start.id : target.node,
       );
     }
     connection.current = null;
     setWire(null);
     setLinkFrom(null);
   }
-  async function refreshModels() {
-    setBusy(true);
-    setError("");
-    try {
-      const rows = await onModels();
-      setModels(rows);
-      setModelSession((current) =>
-        rows.some((r) => r.id === current) ? current : rows[0]?.id || "",
-      );
-      if (!rows.length) setError("请先打开一个已配置模型的 DSH 会话，再刷新");
-    } catch (e) {
-      setError(e.message || String(e));
-    } finally {
-      setBusy(false);
-    }
-  }
   async function extractMember() {
     const id = agent.id;
     setBusy(true);
     setError("");
     try {
-      const result = await onExtract(agent.resourceId, modelSession);
-      const snapshot = result;
+      const result = await onExtract(agent.resourceId);
       setAgents((rows) =>
-        rows.map((a) => (a.id === id ? { ...a, snapshot } : a)),
+        rows.map((a) => (a.id === id ? { ...a, snapshot: result } : a)),
       );
     } catch (e) {
       setError(e?.rpcError?.message || e.message || String(e));
@@ -545,8 +543,6 @@ export function WorkflowWizard({
     try {
       if (agents.some((a) => !a.resourceId && !a.snapshot))
         throw Error("请为每个 Agent 节点选择资源库中的 Agent");
-      if (draft.tasks.some((t) => !t.checkpoint && !t.assignee))
-        throw Error("请为每个任务节点指定负责的 Agent");
       if (draft.tasks.some((t) => !t.general.requirements.trim()))
         throw Error("请填写每个节点的通用任务要求或通用检查要求");
       const value = validateWorkflowTemplate({
@@ -575,7 +571,7 @@ export function WorkflowWizard({
           },
         ],
         metadata: {
-          ...(resource?.metadata || {}),
+          ...withResourceCover(resource?.metadata, cover),
           format: "dsh-teamflow-template-v1",
           workflowCanvas: {
             version: 1,
@@ -593,15 +589,20 @@ export function WorkflowWizard({
       setBusy(false);
     }
   }
-  function edge(from, to, key, assignment = false) {
+  function edge(from, to, key, { fromId, toId, assignment = false }) {
     if (!from || !to) return null;
+    const path = `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
     return (
-      <path
-        key={key}
-        className={assignment ? "assignment" : ""}
-        markerEnd={assignment ? undefined : `url(#${arrow})`}
-        d={`M${from.x + 220},${from.y + 55} C${from.x + 290},${from.y + 55} ${to.x - 70},${to.y + 55} ${to.x},${to.y + 55}`}
-      />
+      <g key={key}>
+        <path
+          className={assignment ? "assignment" : ""}
+          markerEnd={assignment ? undefined : `url(#${arrow})`}
+          d={path}
+        />
+        <path className="gal-flow-edge-hit" d={path}
+          data-edge-from={fromId} data-edge-to={toId}
+          data-edge-assignment={assignment ? "true" : undefined} />
+      </g>
     );
   }
   return (
@@ -724,52 +725,25 @@ export function WorkflowWizard({
             className="gal-flow-view"
             ref={view}
             tabIndex={0}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              if (busy || rightGesture.current.moved) return;
-              const id =
-                e.target.closest("[data-flow-node]")?.dataset.flowNode ||
-                rightGesture.current.nodeId;
-              const ids = id ? (selection.includes(id) ? selection : [id]) : [];
-              if (id) {
-                setSelection(ids);
-                setSelected(
-                  ids.length === 1
-                    ? {
-                        kind: agents.some((a) => a.id === id)
-                          ? "agent"
-                          : "task",
-                        id,
-                      }
-                    : null,
-                );
-              }
-              setContextMenu({
-                x: Math.max(8, Math.min(e.clientX, window.innerWidth - 215)),
-                y: Math.max(8, Math.min(e.clientY, window.innerHeight - 165)),
-                point: worldPoint(e),
-                ids,
-              });
-              view.current?.focus({ preventScroll: true });
-            }}
+            onContextMenu={(e) => e.preventDefault()}
             style={{
+              "--gal-flow-node-width": `${nodeWidth}px`,
+              "--gal-flow-node-height": `${nodeHeight}px`,
               backgroundPosition: `${camera.x}px ${camera.y}px`,
               backgroundSize: `${22 * zoom}px ${22 * zoom}px`,
             }}
             onPointerDown={(e) => {
               if (e.button === 2) {
                 e.preventDefault();
-                rightGesture.current = {
+                pan.current = {
+                  x: e.clientX,
+                  y: e.clientY,
+                  startX: cameraRef.current.x,
+                  startY: cameraRef.current.y,
+                  nodeId: e.target.closest("[data-flow-node]")?.dataset.flowNode,
+                  edge: e.target.closest("[data-edge-from]")?.dataset,
                   moved: false,
-                  nodeId:
-                    e.target.closest("[data-flow-node]")?.dataset.flowNode ||
-                    null,
                 };
-                pan.current = { x: e.clientX, y: e.clientY };
-                pan.current.startX = cameraRef.current.x;
-                pan.current.startY = cameraRef.current.y;
-                pan.current.x = e.clientX;
-                pan.current.y = e.clientY;
                 e.currentTarget.classList.add("gal-flow-panning");
               } else if (
                 e.button === 0 &&
@@ -786,9 +760,9 @@ export function WorkflowWizard({
               if (pan.current) {
                 const p = pan.current;
                 if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > 4) {
-                  rightGesture.current.moved = true;
-                  setContextMenu(null);
+                  p.moved = true;
                 }
+                if (!p.moved) return;
                 cameraTo({
                   x: p.startX + e.clientX - p.x,
                   y: p.startY + e.clientY - p.y,
@@ -814,16 +788,46 @@ export function WorkflowWizard({
                       .filter(
                         ({ p }) =>
                           p.x < r.x + r.width &&
-                          p.x + 220 > r.x &&
+                          p.x + nodeWidth > r.x &&
                           p.y < r.y + r.height &&
-                          p.y + 110 > r.y,
+                          p.y + nodeHeight > r.y,
                       )
                       .map((n) => n.id),
                   ]),
                 ]);
               }
             }}
-            onPointerUp={endGesture}
+            onPointerUp={(e) => {
+              const gesture = pan.current;
+              endGesture(e);
+              if (
+                busy || e.button !== 2 || !gesture || gesture.moved ||
+                Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) > 4
+              ) return;
+              const id = gesture.nodeId;
+              const ids = id ? (selection.includes(id) ? selection : [id]) : [];
+              if (id) {
+                setSelection(ids);
+                setSelected(
+                  ids.length === 1
+                    ? {
+                        kind: agents.some((a) => a.id === id)
+                          ? "agent"
+                          : "task",
+                        id,
+                      }
+                    : null,
+                );
+              }
+              setContextMenu({
+                x: Math.max(8, Math.min(e.clientX, window.innerWidth - 215)),
+                y: Math.max(8, Math.min(e.clientY, window.innerHeight - 165)),
+                point: worldPoint(e),
+                ids,
+                edge: gesture.edge,
+              });
+              view.current?.focus({ preventScroll: true });
+            }}
             onPointerCancel={endGesture}
             onLostPointerCapture={endGesture}
             onDragOver={(e) => e.preventDefault()}
@@ -872,12 +876,12 @@ export function WorkflowWizard({
                       const start = positions[connection.current.id];
                       const from =
                         connection.current.side === "out"
-                          ? { x: start.x + 220, y: start.y + 55 }
+                          ? { x: start.x + nodeWidth, y: start.y + portY }
                           : wire;
                       const to =
                         connection.current.side === "out"
                           ? wire
-                          : { x: start.x, y: start.y + 55 };
+                          : { x: start.x, y: start.y + portY };
                       return (
                         <path
                           className="gal-flow-wire-preview"
@@ -887,7 +891,7 @@ export function WorkflowWizard({
                     })()}
                   {draft.tasks.flatMap((t) => [
                     ...t.dependencies.map((id) =>
-                      edge(positions[id], positions[t.id], id + ":" + t.id),
+                      edge(positions[id], positions[t.id], id + ":" + t.id, { fromId: id, toId: t.id }),
                     ),
                     ...(t.assignee
                       ? [
@@ -895,7 +899,7 @@ export function WorkflowWizard({
                             agents.find((a) => a.id === t.assignee)?.position,
                             positions[t.id],
                             "a:" + t.id,
-                            true,
+                            { fromId: t.assignee, toId: t.id, assignment: true },
                           ),
                         ]
                       : []),
@@ -911,13 +915,6 @@ export function WorkflowWizard({
                       height: marquee.height,
                     }}
                   />
-                )}
-                {!draft.tasks.length && !agents.length && (
-                  <div className="gal-flow-welcome">
-                    <Glyph name="workflow" size={44} />
-                    <h3>从一个节点开始</h3>
-                    <p>拖入或点击上方节点，点击节点配置内容。</p>
-                  </div>
                 )}
                 {[
                   ...agents.map((a) => ({
@@ -991,11 +988,10 @@ export function WorkflowWizard({
                           title="输入：连接前置节点"
                           className="gal-flow-port-in"
                           data-flow-port="in"
+                          data-snap={wire?.target === n.id && wire.side === "in" ? "true" : undefined}
                           data-node={n.id}
                           onPointerDown={(e) => startWire(e, n.id, "in")}
-                          onPointerMove={(e) => {
-                            if (connection.current) setWire(worldPoint(e));
-                          }}
+                          onPointerMove={moveWire}
                           onPointerUp={finishWire}
                           onPointerCancel={() => {
                             connection.current = null;
@@ -1011,11 +1007,10 @@ export function WorkflowWizard({
                           className="gal-flow-port-out"
                           aria-pressed={linkFrom === n.id}
                           data-flow-port="out"
+                          data-snap={wire?.target === n.id && wire.side === "out" ? "true" : undefined}
                           data-node={n.id}
                           onPointerDown={(e) => startWire(e, n.id, "out")}
-                          onPointerMove={(e) => {
-                            if (connection.current) setWire(worldPoint(e));
-                          }}
+                          onPointerMove={moveWire}
                           onPointerUp={finishWire}
                           onPointerCancel={() => {
                             connection.current = null;
@@ -1083,8 +1078,9 @@ export function WorkflowWizard({
                     }
                   />
                 </label>
+                <ResourceCoverPicker resource={{ ...draft, type: "workflow", cover }} onChange={setCover} />
                 <p>
-                  Agent 用虚线关联负责人；任务与人工节点用实线表示先后依赖。
+                  Agent 用虚线关联负责人；任务与人工节点用实线表示先后依赖，右键单击实线可删除依赖。
                 </p>
               </>
             )}
@@ -1117,35 +1113,13 @@ export function WorkflowWizard({
                 {!catalog.agent.length && !loading && (
                   <p>资源库暂无 Agent，请先在 Agent 分类创建。</p>
                 )}
-                <fieldset>
-                  <legend>从 Agent 指引提取字段</legend>
-                  <button disabled={busy} onClick={refreshModels}>
-                    刷新宿主会话模型
-                  </button>
-                  <label>
-                    使用会话模型
-                    <select
-                      aria-label="使用会话模型"
-                      disabled={busy}
-                      value={modelSession}
-                      onChange={(e) => setModelSession(e.target.value)}
-                    >
-                      <option value="">请选择已打开的会话</option>
-                      {models.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    disabled={busy || !agent.resourceId || !modelSession}
-                    onClick={extractMember}
-                  >
-                    {busy ? "处理中…" : "用宿主模型提取"}
-                  </button>
-                  <p>只读取所选 Agent 定义，不读取会话历史。提取结果可编辑。</p>
-                </fieldset>
+                <button
+                  type="button"
+                  disabled={busy || !agent.resourceId}
+                  onClick={extractMember}
+                >
+                  提取字段
+                </button>
                 {[
                   ["name", "名称"],
                   ["summary", "功能概述"],
@@ -1240,7 +1214,7 @@ export function WorkflowWizard({
                       ))}
                   </fieldset>
                 ))}
-                <p>选择仅用于本流程，保存在编排草稿中。</p>
+                <p>Skill 和 MCP 引用保存在 Gallery 的画布中，当前 TeamFlow 模板尚不接收这些引用。</p>
               </>
             )}
             {task && (
@@ -1250,9 +1224,9 @@ export function WorkflowWizard({
                   填写可复用的通用要求；具体项目的任务说明在应用模板后生成。
                 </p>
                 <label>
-                  名称
+                  通用节点名称
                   <input
-                    aria-label="节点名称"
+                    aria-label="通用节点名称"
                     maxLength={200}
                     value={task.subject}
                     onChange={(e) => updateTask({ subject: e.target.value })}
@@ -1266,7 +1240,8 @@ export function WorkflowWizard({
                       value={task.assignee}
                       onChange={(e) => updateTask({ assignee: e.target.value })}
                     >
-                      <option value="">请选择 Agent</option>
+                      <option value="">由空闲成员领取</option>
+                      <option value="captain">Captain（主会话）</option>
                       {agents.map((a) => (
                         <option key={a.id} value={a.id}>
                           {a.label}
@@ -1298,75 +1273,6 @@ export function WorkflowWizard({
                     />
                   </label>
                 ))}
-                <fieldset>
-                  <legend>前置依赖</legend>
-                  {!task.dependencies.length && <p>无前置节点</p>}
-                  {task.dependencies.map((id) => (
-                    <div className="gal-flow-dependency" key={id}>
-                      <span>
-                        {draft.tasks.find((t) => t.id === id)?.subject || id}
-                      </span>
-                      <button
-                        aria-label="移除依赖"
-                        onClick={() =>
-                          updateTask({
-                            dependencies: task.dependencies.filter(
-                              (d) => d !== id,
-                            ),
-                          })
-                        }
-                      >
-                        <Glyph name="close" />
-                      </button>
-                    </div>
-                  ))}
-                </fieldset>
-                <label>
-                  添加前置节点
-                  <select
-                    aria-label="添加前置节点"
-                    value=""
-                    onChange={(e) => {
-                      setLinkFrom(null);
-                      const from = e.target.value;
-                      try {
-                        const tasks = draft.tasks.map((t) =>
-                          t.id === task.id
-                            ? { ...t, dependencies: [...t.dependencies, from] }
-                            : t,
-                        );
-                        validateWorkflowTemplate({
-                          ...draft,
-                          name: draft.name || "草稿",
-                          members: agents.map((a) => ({
-                            name: a.id,
-                            summary: "",
-                            role: "",
-                            executionPrompt: "",
-                          })),
-                          tasks,
-                          positions: {},
-                        });
-                        update({ tasks });
-                        setError("");
-                      } catch (e) {
-                        setError(e.message);
-                      }
-                    }}
-                  >
-                    <option value="">选择节点</option>
-                    {draft.tasks
-                      .filter(
-                        (t) =>
-                          t.id !== task.id && !task.dependencies.includes(t.id),
-                      )
-                      .map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.subject}
-                        </option>
-                      ))}
-                  </select>
-                </label>
               </>
             )}
             {(task || agent) && (
@@ -1385,7 +1291,24 @@ export function WorkflowWizard({
             style={{ left: contextMenu.x, top: contextMenu.y }}
             onPointerDown={(e) => e.stopPropagation()}
           >
-            {contextMenu.ids.length ? (
+            {contextMenu.edge ? (
+              <button onClick={() => {
+                const { edgeFrom, edgeTo, edgeAssignment } = contextMenu.edge;
+                setDraft((value) => ({
+                  ...value,
+                  tasks: value.tasks.map((node) => {
+                    if (node.id !== edgeTo) return node;
+                    if (edgeAssignment) {
+                      return node.assignee === edgeFrom ? { ...node, assignee: "" } : node;
+                    }
+                    return { ...node, dependencies: node.dependencies.filter((id) => id !== edgeFrom) };
+                  }),
+                }));
+                setContextMenu(null);
+              }}>
+                <Glyph name="trash" />删除连线
+              </button>
+            ) : contextMenu.ids.length ? (
               <button
                 className="gal-delete"
                 onClick={() => remove(contextMenu.ids)}

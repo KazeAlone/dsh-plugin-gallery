@@ -84,13 +84,13 @@ Gallery MCP 资源保存 `mcp.json` 和 metadata.mcp，字段 transport 仅允�
 
 ### Workflow 画布草稿（0.18.0）
 
-画布沿用 `workflow.json` 的任务、成员与任务位置格式；`metadata.workflowCanvas` 记录画布版本、taskPositions（支持负坐标）、Agent 节点位置、Gallery Agent ID、摘要，以及 Skill/MCP 的 ID、名称和摘要引用。成员指令快照保存在 `workflow.json`，不会修改原始 Agent。技能与 MCP 引用尚无执行适配，画布草稿的 TeamFlow 安装入口暂时关闭，宿主也拒绝通过安装 RPC 导出该草稿。旧的非画布模板仍保留安装行为。
+画布沿用 `workflow.json` 的任务、成员与任务位置格式；`metadata.workflowCanvas` 记录画布版本、taskPositions（支持负坐标）、Agent 节点位置、Gallery Agent ID、摘要，以及 Skill/MCP 的 ID、名称和摘要引用。成员指令快照保存在 `workflow.json`，不会修改原始 Agent。注册到 TeamFlow 时，导出成员、任务、人工检查和任务布局，Skill/MCP 引用保留在 Gallery 元数据中。
 
 客户端分页读取三类资源，选择 Agent 时获取完整资源快照。任务依赖禁止循环，删除 Agent 清空任务负责人，删除任务清除其他节点对它的依赖。浏览器预览已验证创建、拖动、资源勾选、循环拒绝、保存重开及移动端布局；尚未对接 TeamFlow 执行。
 
 在启用 tools 的 DSH 预设中，Gallery 注册只读的 `gallery_agent_list`；启用 subagents 后另注册 `gallery_agent_run`，并要求 spawn 提供方可用。后者把 `AGENT.md` 指令、本次任务和按需读取的附件目录交给 `spawn` 子 Agent，完成通知返回当前会话。资源内容作为子 Agent 的任务输入，尚不是独立的 DSH Agent preset；其 `config.json` 模型配置当前不作为子 Agent 模型覆盖。
 
-0.19.0 画布通过视图变换自由平移，Task 位置保存到 workflowCanvas.taskPositions；workflow.json 的 positions 暂留空，避免将画布负坐标误交给尚未适配的 TeamFlow。
+0.19.0 画布通过视图变换自由平移，Task 位置保存到 workflowCanvas.taskPositions；保存到 Gallery 时 workflow.json 的 positions 留空，注册到 TeamFlow 时将任务布局转换到其支持的坐标范围。
 
 ## Workflow 字段与提取（0.20.0）
 
@@ -98,6 +98,6 @@ Gallery MCP 资源保存 `mcp.json` 和 metadata.mcp，字段 transport 仅允�
 
 任务与人工节点使用 subject、assignee、dependencies、checkpoint、general.requirements/deliverables/acceptance；人工节点 checkpoint=true 且 assignee 为空。实例的 description、人工验收历史及决定不混入可复用模板。
 
-uiWorkflowModels 仅向 owner 列出当前已加载且配置了模型的 DSH 会话。uiExtractWorkflowAgent 复用指定会话的 agent.ctx.llm 与 options.provider/model，发送单个 Agent 的名称、描述及 AGENT.md，不读取会话历史、不配置独立密钥、不传工具。调用限时90秒，结果经字段类型、长度和名称格式校验后返回前端，供用户编辑。未进行真实模型网络端到端验证，已通过 mock stream 的路由与解析测试和浏览器交互测试。
+uiExtractWorkflowAgent 仅向 owner 开放，通过宿主的 agentDefaultModel 和 llm 服务直接提取字段。请求仅包含所选 Agent 的名称、描述及 AGENT.md，调用限时 90 秒，结果经校验后返回前端供编辑。
 
 0.20.2：画布仅编辑模板层。模型提取返回 name/summary/role/executionPrompt 四个字段，丢弃返回中的实例字段；UI 不再填写 specificPrompt。已有画布 Agent 的 specificPrompt 元数据会原样保留，但不进入 workflow.json 的模板成员，也不会被提取操作覆盖。任务与人工节点明确使用通用字段文案；具体 description 与验收状态仍在实例阶段生成。

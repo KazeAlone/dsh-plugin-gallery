@@ -21,7 +21,6 @@ const string = (name) => ({
 });
 const methods = {
   uiStatus: [],
-  uiWorkflowModels: [],
   uiExtractWorkflowAgent: ["payload"],
   uiSkillCatalog: [],
   uiCheckMcp: ["payload"],

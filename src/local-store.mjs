@@ -208,7 +208,7 @@ export class LocalGalleryStore {
       const row = rows.find((r) => r.id === id);
       demand(row, 404, "NOT_FOUND", "资源不存在");
       demand(
-        ["skill", "agent", "mcp"].includes(type) && row.type === type,
+        ["skill", "agent", "mcp", "workflow"].includes(type) && row.type === type,
         400,
         "INVALID_TYPE",
         "调用统计的资源类型不匹配",

@@ -6,6 +6,23 @@ import { workflowFromResource } from './workflow-template.mjs';
 
 export async function publishToTeamflow(resource, directory = join(homedir(), '.dsh-teamflow', 'templates')) {
   const definition = workflowFromResource(resource);
+  const canvasPositions = resource.metadata?.workflowCanvas?.taskPositions;
+  if (canvasPositions) {
+    const entries = definition.tasks.flatMap(({ id }) => {
+      const point = canvasPositions[id];
+      return Number.isFinite(point?.x) && Number.isFinite(point?.y) ? [[id, point]] : [];
+    });
+    const left = Math.min(0, ...entries.map(([, p]) => p.x));
+    const top = Math.min(0, ...entries.map(([, p]) => p.y));
+    const span = Math.max(10000, ...entries.map(([, p]) => Math.max(p.x - left, p.y - top)));
+    const scale = 10000 / span;
+    for (const [id, point] of entries) {
+      definition.positions[`task:${id}`] = {
+        x: Math.min(10000, (point.x - left) * scale),
+        y: Math.min(10000, (point.y - top) * scale),
+      };
+    }
+  }
   if (definition.tasks.some(t => !t.general.requirements)) throw new Error('每个节点都需要填写通用任务要求');
   const root = resolve(directory), lock = join(root, '.write-lock');
   await mkdir(root, { recursive: true });

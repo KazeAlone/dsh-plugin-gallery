@@ -35,8 +35,8 @@ export function referenceSkill() {
 交付主题、摘要、关键事实、待办事项及待确认问题。保留必要的人名、日期、数字，不扩写原文没有的结论。
 
 ## 输入输出示例
-输入：周五前完成界面初稿，由小林负责；评审时间待定。
-输出：主题：界面初稿；待办：小林在周五前完成初稿；待确认：评审时间。其他信息原文未提供。
+输入：周五前完成界面初稿，由小黄负责；评审时间待定。
+输出：主题：界面初稿；待办：小黄在周五前完成初稿；待确认：评审时间。其他信息原文未提供。
 `;
   const resource = {
     type: 'skill', name: header.name, description: header.description,
@@ -58,12 +58,18 @@ export function installReferenceSkill(adapter) {
     const existing = current.resources.find(row => row.metadata?.builtin === seed);
     if (!existing) return;
     const fresh = normalizeResource(referenceSkill());
-    const refresh = existing.revision === 1 && existing.digest !== digest(JSON.stringify(fresh));
+    const nextDigest = digest(JSON.stringify(fresh));
+    const oldSkill = structuredClone(fresh);
+    oldSkill.files.find(file => file.path === 'SKILL.md').content =
+      oldSkill.files.find(file => file.path === 'SKILL.md').content.replaceAll('小黄', '小林');
+    const oldDigest = digest(JSON.stringify(oldSkill));
+    const refresh = existing.digest !== nextDigest &&
+      (existing.revision === 1 || existing.digest === oldDigest);
     if (!refresh && existing.creator?.username !== 'Gallery') return;
     return adapter.write(rows => {
       const row = rows.find(item => item.id === existing.id);
-      if (refresh && row.revision === 1) {
-        Object.assign(row, fresh, { digest: digest(JSON.stringify(fresh)), revision: row.revision + 1, updatedAt: new Date().toISOString() });
+      if (refresh && row.digest === existing.digest && row.revision === existing.revision) {
+        Object.assign(row, fresh, { digest: nextDigest, revision: row.revision + 1, updatedAt: new Date().toISOString() });
       }
       if (row.creator?.username === 'Gallery') row.creator = { username: 'ZelongWANG' };
       return row;

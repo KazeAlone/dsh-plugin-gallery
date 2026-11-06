@@ -2111,8 +2111,9 @@ fieldset.gal-skill-fields {
 .gal-flow-board { position: relative; transform-origin: top left; background-image: radial-gradient(var(--g-control) .8px, transparent .8px); background-size: 22px 22px; }
 .gal-flow-edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .gal-flow-edges path { fill: none; stroke: var(--g-accent); stroke-width: 2.5; }
+.gal-flow-edges path.gal-flow-edge-hit { stroke: transparent; stroke-width: 12px; pointer-events: stroke; }
 .gal-flow-edges path.assignment { stroke: var(--g-muted); stroke-dasharray: 6 6; opacity: .65; }
-.gal-flow-node { position: absolute; width: 220px; padding: 0 12px 10px; border: 1px solid var(--g-control); border-top: 4px solid #7965aa; border-radius: 12px; background: var(--g-card); color: var(--g-ink); box-shadow: 0 8px 20px #00000015; }
+.gal-flow-node { position: absolute; width: var(--gal-flow-node-width); height: var(--gal-flow-node-height); padding: 0 12px 10px; border: 1px solid var(--g-control); border-top: 4px solid #7965aa; border-radius: 12px; background: var(--g-card); color: var(--g-ink); box-shadow: 0 8px 20px #00000015; }
 .gal-flow-node.agent { border-top-color: #4b9985; }
 .gal-flow-node.human { border-top-color: #ba924a; }
 .gal-flow-node.selected { outline: 2px solid var(--g-ring); outline-offset: 3px; }
@@ -2131,13 +2132,9 @@ fieldset.gal-skill-fields {
 .gal-flow-inspector fieldset legend { font-size: 13px; padding: 0 5px; }
 .gal-flow-inspector .gal-flow-check { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 13px; font-weight: 400; overflow-wrap: anywhere; }
 .gal-flow-check input { width: 16px; height: 16px; flex: 0 0 16px; }
-.gal-flow-dependency { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
-.gal-flow-dependency span { overflow-wrap: anywhere; }
-.gal-flow-dependency button { padding: 2px !important; min-height: 26px !important; }
 .gal-flow-footer { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--g-line); padding: 12px 20px; flex-shrink: 0; }
 .gal-flow-footer > span { flex: 1; color: var(--g-muted); font-size: 12px; }
 .gal-flow-error { padding: 8px 20px; display: flex; gap: 12px; justify-content: space-between; align-items: center; color: var(--g-error); background: var(--g-error-bg); }
-.gal-flow-welcome { position: absolute; top: 160px; left: 100px; display: grid; gap: 14px; color: var(--g-muted); pointer-events: none; }
 @media (max-width: 760px) {
   .gal .gal-flow-editor { width: calc(100vw - 16px); height: calc(100dvh - 16px); max-height: calc(100dvh - 16px); }
   .gal-flow-body { grid-template-columns: 1fr; grid-template-rows: minmax(220px, 1fr) minmax(150px, .8fr); }
@@ -2161,15 +2158,19 @@ fieldset.gal-skill-fields {
 /* Camera-based workspace: panning is independent of document scroll bounds. */
 .gal-flow-view { position: relative; overflow: hidden; touch-action: none; background-image: radial-gradient(var(--g-control) .8px, transparent .8px); }
 .gal-flow-board { position: absolute; left: 0; top: 0; background: none; overflow: visible; }
-.gal-flow-node { min-height: 110px; cursor: grab; touch-action: none; user-select: none; }
+.gal-flow-node { cursor: grab; touch-action: none; user-select: none; }
 .gal-flow-node:active { cursor: grabbing; }
 .gal .gal-flow-node-title { cursor: inherit; }
 .gal-flow-marquee { position: absolute; z-index: 5; border: 1px solid var(--g-ring); background: color-mix(in srgb, var(--g-ring) 16%, transparent); pointer-events: none; }
-.gal-flow-ports { position: absolute; inset: 0; padding: 0; pointer-events: none; }
-.gal .gal-flow-ports button { position: absolute; top: 55px; width: 14px; height: 14px; min-height: 14px; padding: 0; border: 2px solid var(--g-accent); border-radius: 50%; background: var(--g-card); pointer-events: auto; transform: translateY(-50%); cursor: crosshair; }
-.gal .gal-flow-ports .gal-flow-port-in { left: -8px; }
-.gal .gal-flow-ports .gal-flow-port-out { right: -8px; }
-.gal .gal-flow-ports button:hover { box-shadow: 0 0 0 5px color-mix(in srgb, var(--g-ring) 25%, transparent); }
+.gal-flow-ports { position: absolute; inset: -4px -1px -1px; padding: 0; pointer-events: none; }
+.gal .gal-flow-ports button { position: absolute; top: 50%; width: 14px; height: 14px; min-height: 14px; padding: 0; border: 2px solid var(--g-accent); border-radius: 50%; background: var(--g-card); pointer-events: auto; transform: translateY(-50%); cursor: crosshair; }
+.gal .gal-flow-ports .gal-flow-port-in { left: -7px; }
+.gal .gal-flow-ports .gal-flow-port-out { right: -7px; }
+.gal .gal-flow-ports button:is(:hover, [data-snap="true"]) { box-shadow: 0 0 0 5px color-mix(in srgb, var(--g-ring) 25%, transparent); }
+.gal .gal-flow-ports button[data-snap="true"] { transform: translateY(-50%) scale(1.2); }
+@media (prefers-reduced-motion: no-preference) {
+  .gal .gal-flow-ports button { transition: box-shadow 150ms, transform 150ms; }
+}
 .gal-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .gal-flow-wire-preview { stroke-dasharray: 5 4; opacity: .8; }
 .gal .gal-flow-ports button { touch-action: none; }
