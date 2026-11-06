@@ -745,7 +745,7 @@ function Gallery({ remote }) {
               selected.metadata?.workflowCanvas?.agents?.some(
                 (agent) => agent.skills?.length || agent.mcps?.length,
               ) && (
-                <p>Skill 和 MCP 引用保留在 Gallery 中，当前 TeamFlow 模板只接收流程与成员定义。</p>
+                <p>原有 Skill 和 MCP 引用保留在 Gallery 中。TeamFlow 按 Agent 节点的两个开关启用资源。</p>
               )}
             <div className="gal-detail-actions">
               {selected.type === "workflow" && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await call(remote, "uiPublishWorkflow", selected.id); setNotice(`已注册到 TeamFlow：${result.name} v${result.version}`); })}><Glyph name="workflow" />注册到 TeamFlow</button>}
@@ -1119,7 +1119,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.20.3</span>
+              <span className="gal-local">v0.20.4</span>
               <button
                 disabled={busy}
                 onClick={() =>

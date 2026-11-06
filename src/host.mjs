@@ -20,6 +20,10 @@ import { registerRuntimeDiagnostics } from "./runtime-diagnostics.mjs";
 import { installReferenceExamples } from "./builtin-examples.mjs";
 import { DESCRIPTORS } from "./descriptors.mjs";
 
+const mcpResourceTools = new Set([
+  "list_mcp_resources", "list_mcp_resource_templates", "read_mcp_resource",
+]);
+
 export default class GalleryService extends TypertRemoteService {
   static inject = ["typert"];
   constructor(ctx) {
@@ -28,7 +32,8 @@ export default class GalleryService extends TypertRemoteService {
       join(process.env.DSH_HOME ?? join(homedir(), ".dsh"), "gallery"),
     );
     installReferenceExamples(this.store.adapter());
-    this.skillProvider = createSkillProvider(this.store);
+    this.memberAccess = new WeakMap();
+    this.skillProvider = createSkillProvider(this.store, (scope) => this.memberAccess.get(scope)?.gallerySkill !== false);
     this.invalidateSkills = () => {};
     this.mcpRuntime = null;
     ctx.inject(["skills"], (scope) => {
@@ -44,6 +49,12 @@ export default class GalleryService extends TypertRemoteService {
     ctx.inject(["tools"], (scope) => {
       const runtime = new GalleryMcpRuntime(scope, this.store);
       this.mcpRuntime = runtime;
+      scope.effect(() => scope.tools.guard(({ agent, name, arguments: args }) => {
+        if (this.memberAccess.get(agent)?.galleryMcp === false &&
+          (runtime.ownsTool(name) || mcpResourceTools.has(name) && runtime.ownsServer(args?.server))) {
+          return "此 TeamFlow 成员未启用 Gallery MCP";
+        }
+      }));
       scope.effect(() => registerGalleryAgentListTool(scope, this.store));
       scope.effect(() => {
         void runtime.refresh();
@@ -96,6 +107,47 @@ export default class GalleryService extends TypertRemoteService {
         code: e.code ?? "GALLERY_ERROR",
         status: e.status ?? 500,
       });
+    }
+  }
+  /** Same-process integration for TeamFlow child activation. */
+  setMemberAccess(agent, access) {
+    const token = { ...access };
+    this.memberAccess.set(agent, token);
+    this.invalidateSkills();
+    let stopListener, stopFilter, signature = "";
+    let disposed = false;
+    const update = () => {
+      if (disposed) return;
+      const tools = agent.ctx.get("tools");
+      const deny = tools?.schemas().map(tool => tool.name)
+        .filter(name => this.mcpRuntime?.ownsTool(name)).sort() ?? [];
+      const next = deny.join("\n");
+      if (next === signature) return;
+      const previous = stopFilter;
+      stopFilter = deny.length ? tools.restrict({ deny }) : undefined;
+      signature = next;
+      previous?.();
+    };
+    const cleanup = () => {
+      disposed = true;
+      stopListener?.();
+      stopFilter?.();
+      if (this.memberAccess.get(agent) !== token) return;
+      this.memberAccess.delete(agent);
+      this.invalidateSkills();
+    };
+    try {
+      if (access.galleryMcp === false) {
+        update();
+        stopListener = agent.ctx.on("tools/change", () => queueMicrotask(() => {
+          try { update(); }
+          catch (error) { this.ctx.logger?.warn?.(`Gallery MCP visibility update failed: ${error.message}`); }
+        }));
+      }
+      return cleanup;
+    } catch (error) {
+      cleanup();
+      throw error;
     }
   }
   uiStatus() {

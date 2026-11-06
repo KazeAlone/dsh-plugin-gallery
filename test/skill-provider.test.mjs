@@ -154,3 +154,16 @@ test("/gallery cancellation and backend failures never insert stale results", as
     cancelled.candidates({}, { query: "gallery", signal: AbortSignal.abort() }),
   );
 });
+
+test("Gallery access denies both skill discovery and direct loading for one member", async (t) => {
+  const { store } = setup(t);
+  store.createResource(skill);
+  const denied = {};
+  const allowed = {};
+  const provider = createSkillProvider(store, scope => scope !== denied);
+  const [candidate] = await provider.list({ scope: allowed });
+  assert.ok(candidate);
+  assert.deepEqual(await provider.list({ scope: denied }), []);
+  assert.equal(await provider.get(candidate, { scope: denied }), undefined);
+  assert.ok(await provider.get(candidate, { scope: allowed }));
+});

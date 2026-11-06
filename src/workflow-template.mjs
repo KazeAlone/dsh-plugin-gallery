@@ -18,7 +18,13 @@ export function validateWorkflowTemplate(input) {
   const v = object(input, '模板');
   const members = array(v.members, '成员', 32).map((raw) => {
     const m = object(raw, '成员');
-    return { name: text(m.name, '成员名称', 80, true), summary: text(m.summary, '简介', 16000), role: text(m.role, '角色', 16000), executionPrompt: text(m.executionPrompt, '执行指令', 16000) };
+    const access = {};
+    for (const key of ['gallerySkill', 'galleryMcp']) {
+      if (m[key] === undefined) continue;
+      demand(typeof m[key] === 'boolean', 400, 'INVALID_WORKFLOW', `${key} 必须是布尔值`);
+      access[key] = m[key];
+    }
+    return { ...access, name: text(m.name, '成员名称', 80, true), summary: text(m.summary, '简介', 16000), role: text(m.role, '角色', 16000), executionPrompt: text(m.executionPrompt, '执行指令', 16000) };
   });
   demand(members.every(m => /^[\p{L}\p{N}_-]+$/u.test(m.name) && m.name.toLowerCase() !== 'captain') && new Set(members.map(m => m.name.toLowerCase())).size === members.length, 400, 'INVALID_WORKFLOW', '成员名称重复或无效');
   const tasks = array(v.tasks, '节点', 32).map((raw) => {

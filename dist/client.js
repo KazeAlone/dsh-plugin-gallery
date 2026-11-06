@@ -2941,7 +2941,13 @@ function validateWorkflowTemplate(input) {
   const v = object(input, "\u6A21\u677F");
   const members = array(v.members, "\u6210\u5458", 32).map((raw) => {
     const m = object(raw, "\u6210\u5458");
-    return { name: text(m.name, "\u6210\u5458\u540D\u79F0", 80, true), summary: text(m.summary, "\u7B80\u4ECB", 16e3), role: text(m.role, "\u89D2\u8272", 16e3), executionPrompt: text(m.executionPrompt, "\u6267\u884C\u6307\u4EE4", 16e3) };
+    const access = {};
+    for (const key of ["gallerySkill", "galleryMcp"]) {
+      if (m[key] === void 0) continue;
+      demand(typeof m[key] === "boolean", 400, "INVALID_WORKFLOW", `${key} \u5FC5\u987B\u662F\u5E03\u5C14\u503C`);
+      access[key] = m[key];
+    }
+    return { ...access, name: text(m.name, "\u6210\u5458\u540D\u79F0", 80, true), summary: text(m.summary, "\u7B80\u4ECB", 16e3), role: text(m.role, "\u89D2\u8272", 16e3), executionPrompt: text(m.executionPrompt, "\u6267\u884C\u6307\u4EE4", 16e3) };
   });
   demand(members.every((m) => /^[\p{L}\p{N}_-]+$/u.test(m.name) && m.name.toLowerCase() !== "captain") && new Set(members.map((m) => m.name.toLowerCase())).size === members.length, 400, "INVALID_WORKFLOW", "\u6210\u5458\u540D\u79F0\u91CD\u590D\u6216\u65E0\u6548");
   const tasks = array(v.tasks, "\u8282\u70B9", 32).map((raw) => {
@@ -2980,6 +2986,10 @@ function validateWorkflowTemplate(input) {
 var nodeWidth = 220;
 var nodeHeight = 110;
 var portY = nodeHeight / 2;
+var galleryAccess = [
+  ["gallerySkill", "\u5141\u8BB8\u4F7F\u7528 Gallery Skill"],
+  ["galleryMcp", "\u5141\u8BB8\u4F7F\u7528 Gallery MCP"]
+];
 function initial(resource) {
   let definition;
   try {
@@ -3003,11 +3013,17 @@ function initial(resource) {
     snapshot: definition.members.find(
       (m) => m.name === (a.memberName || a.id)
     )
+  })).map((a) => ({
+    ...a,
+    gallerySkill: a.snapshot?.gallerySkill,
+    galleryMcp: a.snapshot?.galleryMcp
   })) || definition.members.map((m, i) => ({
     id: m.name,
     label: m.name,
     resourceId: "",
     snapshot: m,
+    gallerySkill: m.gallerySkill,
+    galleryMcp: m.galleryMcp,
     skills: [],
     mcps: [],
     position: { x: 40, y: 70 + i * 155 }
@@ -3055,16 +3071,14 @@ function WorkflowWizard({
   const [contextMenu, setContextMenu] = (0, import_react7.useState)(null);
   const connection = (0, import_react7.useRef)(null);
   const [wire, setWire] = (0, import_react7.useState)(null);
-  const [catalog, setCatalog] = (0, import_react7.useState)({ agent: [], skill: [], mcp: [] });
+  const [catalog, setCatalog] = (0, import_react7.useState)([]);
   const [selected, setSelected] = (0, import_react7.useState)(null), [linkFrom, setLinkFrom] = (0, import_react7.useState)(null), [zoom, setZoom] = (0, import_react7.useState)(1);
   const [error, setError] = (0, import_react7.useState)(""), [loading, setLoading] = (0, import_react7.useState)(true), [busy, setBusy] = (0, import_react7.useState)(false);
   const drag = (0, import_react7.useRef)(null), board = (0, import_react7.useRef)(null), view = (0, import_react7.useRef)(null), pendingAgent = (0, import_react7.useRef)(0);
   (0, import_react7.useEffect)(() => {
     let live = true;
-    Promise.all(
-      ["agent", "skill", "mcp"].map(async (type) => [type, await onList(type)])
-    ).then((entries) => {
-      if (live) setCatalog(Object.fromEntries(entries));
+    onList("agent").then((entries) => {
+      if (live) setCatalog(entries);
     }).catch((e) => {
       if (live) setError(e.message || String(e));
     }).finally(() => {
@@ -3188,6 +3202,8 @@ function WorkflowWizard({
           resourceId: "",
           skills: [],
           mcps: [],
+          gallerySkill: false,
+          galleryMcp: false,
           position
         }
       ]);
@@ -3450,7 +3466,7 @@ function WorkflowWizard({
         throw Error("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u901A\u7528\u4EFB\u52A1\u8981\u6C42\u6216\u901A\u7528\u68C0\u67E5\u8981\u6C42");
       const value = validateWorkflowTemplate({
         ...draft,
-        members: agents.map((a) => ({ ...a.snapshot })),
+        members: agents.map((a) => ({ ...a.snapshot, gallerySkill: a.gallerySkill, galleryMcp: a.galleryMcp })),
         tasks: draft.tasks.map((t) => ({
           ...t,
           assignee: t.assignee ? agents.find((a) => a.id === t.assignee)?.snapshot?.name || t.assignee : ""
@@ -3787,7 +3803,7 @@ function WorkflowWizard({
               id: a.id,
               title: a.label,
               position: a.position,
-              subtitle: `${a.skills.length} Skill \xB7 ${a.mcps.length} MCP`
+              subtitle: `Skill ${a.gallerySkill === false ? "\u5173\u95ED" : "\u53EF\u7528"} \xB7 MCP ${a.galleryMcp === false ? "\u5173\u95ED" : "\u53EF\u7528"}`
             })),
             ...draft.tasks.map((t) => ({
               kind: "task",
@@ -3923,9 +3939,9 @@ function WorkflowWizard({
           onChange: (e) => chooseAgent(e.target.value)
         },
         /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9 Agent"),
-        agent.resourceId && !catalog.agent.some((r) => r.id === agent.resourceId) && /* @__PURE__ */ import_react7.default.createElement("option", { value: agent.resourceId }, agent.label, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09"),
-        catalog.agent.map((r) => /* @__PURE__ */ import_react7.default.createElement("option", { key: r.id, value: r.id }, r.name))
-      )), !catalog.agent.length && !loading && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u8D44\u6E90\u5E93\u6682\u65E0 Agent\uFF0C\u8BF7\u5148\u5728 Agent \u5206\u7C7B\u521B\u5EFA\u3002"), /* @__PURE__ */ import_react7.default.createElement(
+        agent.resourceId && !catalog.some((r) => r.id === agent.resourceId) && /* @__PURE__ */ import_react7.default.createElement("option", { value: agent.resourceId }, agent.label, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09"),
+        catalog.map((r) => /* @__PURE__ */ import_react7.default.createElement("option", { key: r.id, value: r.id }, r.name))
+      )), !catalog.length && !loading && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u8D44\u6E90\u5E93\u6682\u65E0 Agent\uFF0C\u8BF7\u5148\u5728 Agent \u5206\u7C7B\u521B\u5EFA\u3002"), /* @__PURE__ */ import_react7.default.createElement(
         "button",
         {
           type: "button",
@@ -3967,39 +3983,14 @@ function WorkflowWizard({
             }
           })
         }
-      ))), [
-        ["skill", "skills", "Skill"],
-        ["mcp", "mcps", "MCP"]
-      ].map(([type, key, label]) => /* @__PURE__ */ import_react7.default.createElement("fieldset", { key }, /* @__PURE__ */ import_react7.default.createElement("legend", null, "\u914D\u7F6E ", label), !catalog[type].length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u6682\u65E0\u53EF\u9009\u8D44\u6E90"), catalog[type].map((r) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: r.id }, /* @__PURE__ */ import_react7.default.createElement(
+      ))), galleryAccess.map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key }, /* @__PURE__ */ import_react7.default.createElement(
         "input",
         {
           type: "checkbox",
-          checked: agent[key].some((ref) => ref.id === r.id),
-          onChange: (e) => updateAgent({
-            [key]: e.target.checked ? [
-              ...agent[key],
-              {
-                id: r.id,
-                name: r.name,
-                digest: r.digest
-              }
-            ] : agent[key].filter((ref) => ref.id !== r.id)
-          })
+          checked: agent[key] !== false,
+          onChange: (e) => updateAgent({ [key]: e.target.checked })
         }
-      ), r.name)), agent[key].filter(
-        (ref) => !catalog[type].some((r) => r.id === ref.id)
-      ).map((ref) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: ref.id }, /* @__PURE__ */ import_react7.default.createElement(
-        "input",
-        {
-          type: "checkbox",
-          checked: true,
-          onChange: () => updateAgent({
-            [key]: agent[key].filter(
-              (item) => item.id !== ref.id
-            )
-          })
-        }
-      ), ref.name, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09")))), /* @__PURE__ */ import_react7.default.createElement("p", null, "Skill \u548C MCP \u5F15\u7528\u4FDD\u5B58\u5728 Gallery \u7684\u753B\u5E03\u4E2D\uFF0C\u5F53\u524D TeamFlow \u6A21\u677F\u5C1A\u4E0D\u63A5\u6536\u8FD9\u4E9B\u5F15\u7528\u3002")), task && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, task.checkpoint ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u586B\u5199\u53EF\u590D\u7528\u7684\u901A\u7528\u8981\u6C42\uFF1B\u5177\u4F53\u9879\u76EE\u7684\u4EFB\u52A1\u8BF4\u660E\u5728\u5E94\u7528\u6A21\u677F\u540E\u751F\u6210\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u901A\u7528\u8282\u70B9\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
+      ), label))), task && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, task.checkpoint ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u586B\u5199\u53EF\u590D\u7528\u7684\u901A\u7528\u8981\u6C42\uFF1B\u5177\u4F53\u9879\u76EE\u7684\u4EFB\u52A1\u8BF4\u660E\u5728\u5E94\u7528\u6A21\u677F\u540E\u751F\u6210\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u901A\u7528\u8282\u70B9\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
         "input",
         {
           "aria-label": "\u901A\u7528\u8282\u70B9\u540D\u79F0",
@@ -11840,7 +11831,7 @@ function Gallery({ remote }) {
     hasResourceCover(content.type) && /* @__PURE__ */ import_react12.default.createElement(ResourceCover, { resource: content }),
     selected.type === "workflow" && selected.metadata?.workflowCanvas?.agents?.some(
       (agent) => agent.skills?.length || agent.mcps?.length
-    ) && /* @__PURE__ */ import_react12.default.createElement("p", null, "Skill \u548C MCP \u5F15\u7528\u4FDD\u7559\u5728 Gallery \u4E2D\uFF0C\u5F53\u524D TeamFlow \u6A21\u677F\u53EA\u63A5\u6536\u6D41\u7A0B\u4E0E\u6210\u5458\u5B9A\u4E49\u3002"),
+    ) && /* @__PURE__ */ import_react12.default.createElement("p", null, "\u539F\u6709 Skill \u548C MCP \u5F15\u7528\u4FDD\u7559\u5728 Gallery \u4E2D\u3002TeamFlow \u6309 Agent \u8282\u70B9\u7684\u4E24\u4E2A\u5F00\u5173\u542F\u7528\u8D44\u6E90\u3002"),
     /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-detail-actions" }, selected.type === "workflow" && selected.files.some((f) => f.path === "workflow.json") && /* @__PURE__ */ import_react12.default.createElement("button", { disabled: busy, onClick: () => run(async () => {
       const result = await call(remote, "uiPublishWorkflow", selected.id);
       setNotice(`\u5DF2\u6CE8\u518C\u5230 TeamFlow\uFF1A${result.name} v${result.version}`);
@@ -12087,7 +12078,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.20.3"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.20.4"), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         disabled: busy,

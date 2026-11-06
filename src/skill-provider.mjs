@@ -80,19 +80,21 @@ export function skillContentWithAttachments(resource, directory) {
   );
   return `${body.trimEnd()}\n\n## Gallery 附件\n以下文件与 SKILL.md 同属一个 Skill，按需读取；相对路径以本 Skill 的资源目录为基准。\n${entries.join("\n")}\n`;
 }
-export function createSkillProvider(store) {
+export function createSkillProvider(store, allowed = () => true) {
   return {
     name: GALLERY_SKILL_PROVIDER,
-    async list({ signal } = {}) {
+    async list({ signal, scope } = {}) {
       signal?.throwIfAborted();
+      if (!allowed(scope)) return [];
       return store
         .adapter()
         .read()
         .resources.map(skillCandidate)
         .filter(Boolean);
     },
-    async get(candidate, { signal } = {}) {
+    async get(candidate, { signal, scope } = {}) {
       signal?.throwIfAborted();
+      if (!allowed(scope)) return undefined;
       const resource = store.getResource(candidate.locator);
       const current = skillCandidate(resource);
       if (!current || current.name !== candidate.name) return undefined;

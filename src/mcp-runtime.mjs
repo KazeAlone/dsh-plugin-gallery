@@ -7,6 +7,7 @@ export class GalleryMcpRuntime {
     this.ctx = ctx;
     this.store = store;
     this.active = new Map();
+    this.connecting = new Set();
     this.pending = Promise.resolve();
   }
   refresh() {
@@ -30,12 +31,24 @@ export class GalleryMcpRuntime {
         const config = safe.transport === 'stdio'
           ? { transport: safe.transport, serverName: safe.serverName, command: safe.command, args: safe.args, cwd: safe.cwd, env: safe.env }
           : { transport: safe.transport, serverName: safe.serverName, url: safe.url, headers: safe.headers };
-        const fiber = await this.ctx.plugin(mcpClient, config);
-        this.active.set(resource.id, { serialized, fiber, serverName: safe.serverName });
+        this.connecting.add(safe.serverName);
+        try {
+          const fiber = await this.ctx.plugin(mcpClient, config);
+          this.active.set(resource.id, { serialized, fiber, serverName: safe.serverName });
+        } finally {
+          this.connecting.delete(safe.serverName);
+        }
       } catch (error) {
         this.ctx.logger?.warn?.(`gallery: MCP ${resource.id} could not activate: ${error.message}`);
       }
     }
+  }
+  ownsServer(name) {
+    return this.connecting.has(name) || [...this.active.values()].some(entry => entry.serverName === name);
+  }
+  ownsTool(name) {
+    return [...this.connecting, ...Array.from(this.active.values(), entry => entry.serverName)]
+      .some(serverName => name.startsWith(`mcp__${serverName}__`));
   }
   resourceForTool(name) {
     const matches = [...this.active].filter(([, entry]) =>

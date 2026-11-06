@@ -8,6 +8,10 @@ import { validateWorkflowTemplate } from "../workflow-template.mjs";
 const nodeWidth = 220;
 const nodeHeight = 110;
 const portY = nodeHeight / 2;
+const galleryAccess = [
+  ["gallerySkill", "允许使用 Gallery Skill"],
+  ["galleryMcp", "允许使用 Gallery MCP"],
+];
 
 function initial(resource) {
   let definition;
@@ -33,12 +37,18 @@ function initial(resource) {
       snapshot: definition.members.find(
         (m) => m.name === (a.memberName || a.id),
       ),
+    })).map((a) => ({
+      ...a,
+      gallerySkill: a.snapshot?.gallerySkill,
+      galleryMcp: a.snapshot?.galleryMcp,
     })) ||
     definition.members.map((m, i) => ({
       id: m.name,
       label: m.name,
       resourceId: "",
       snapshot: m,
+      gallerySkill: m.gallerySkill,
+      galleryMcp: m.galleryMcp,
       skills: [],
       mcps: [],
       position: { x: 40, y: 70 + i * 155 },
@@ -98,7 +108,7 @@ export function WorkflowWizard({
   const [contextMenu, setContextMenu] = useState(null);
   const connection = useRef(null);
   const [wire, setWire] = useState(null);
-  const [catalog, setCatalog] = useState({ agent: [], skill: [], mcp: [] });
+  const [catalog, setCatalog] = useState([]);
   const [selected, setSelected] = useState(null),
     [linkFrom, setLinkFrom] = useState(null),
     [zoom, setZoom] = useState(1);
@@ -111,11 +121,9 @@ export function WorkflowWizard({
     pendingAgent = useRef(0);
   useEffect(() => {
     let live = true;
-    Promise.all(
-      ["agent", "skill", "mcp"].map(async (type) => [type, await onList(type)]),
-    )
+    onList("agent")
       .then((entries) => {
-        if (live) setCatalog(Object.fromEntries(entries));
+        if (live) setCatalog(entries);
       })
       .catch((e) => {
         if (live) setError(e.message || String(e));
@@ -257,6 +265,8 @@ export function WorkflowWizard({
           resourceId: "",
           skills: [],
           mcps: [],
+          gallerySkill: false,
+          galleryMcp: false,
           position,
         },
       ]);
@@ -547,7 +557,7 @@ export function WorkflowWizard({
         throw Error("请填写每个节点的通用任务要求或通用检查要求");
       const value = validateWorkflowTemplate({
         ...draft,
-        members: agents.map((a) => ({ ...a.snapshot })),
+        members: agents.map((a) => ({ ...a.snapshot, gallerySkill: a.gallerySkill, galleryMcp: a.galleryMcp })),
         tasks: draft.tasks.map((t) => ({
           ...t,
           assignee: t.assignee
@@ -922,7 +932,7 @@ export function WorkflowWizard({
                     id: a.id,
                     title: a.label,
                     position: a.position,
-                    subtitle: `${a.skills.length} Skill · ${a.mcps.length} MCP`,
+                    subtitle: `Skill ${a.gallerySkill === false ? "关闭" : "可用"} · MCP ${a.galleryMcp === false ? "关闭" : "可用"}`,
                   })),
                   ...draft.tasks.map((t) => ({
                     kind: "task",
@@ -1098,19 +1108,19 @@ export function WorkflowWizard({
                   >
                     <option value="">请选择 Agent</option>
                     {agent.resourceId &&
-                      !catalog.agent.some((r) => r.id === agent.resourceId) && (
+                      !catalog.some((r) => r.id === agent.resourceId) && (
                         <option value={agent.resourceId}>
                           {agent.label}（资源已不可用）
                         </option>
                       )}
-                    {catalog.agent.map((r) => (
+                    {catalog.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.name}
                       </option>
                     ))}
                   </select>
                 </label>
-                {!catalog.agent.length && !loading && (
+                {!catalog.length && !loading && (
                   <p>资源库暂无 Agent，请先在 Agent 分类创建。</p>
                 )}
                 <button
@@ -1162,59 +1172,13 @@ export function WorkflowWizard({
                     )}
                   </label>
                 ))}
-                {[
-                  ["skill", "skills", "Skill"],
-                  ["mcp", "mcps", "MCP"],
-                ].map(([type, key, label]) => (
-                  <fieldset key={key}>
-                    <legend>配置 {label}</legend>
-                    {!catalog[type].length && <p>暂无可选资源</p>}
-                    {catalog[type].map((r) => (
-                      <label className="gal-flow-check" key={r.id}>
-                        <input
-                          type="checkbox"
-                          checked={agent[key].some((ref) => ref.id === r.id)}
-                          onChange={(e) =>
-                            updateAgent({
-                              [key]: e.target.checked
-                                ? [
-                                    ...agent[key],
-                                    {
-                                      id: r.id,
-                                      name: r.name,
-                                      digest: r.digest,
-                                    },
-                                  ]
-                                : agent[key].filter((ref) => ref.id !== r.id),
-                            })
-                          }
-                        />
-                        {r.name}
-                      </label>
-                    ))}
-                    {agent[key]
-                      .filter(
-                        (ref) => !catalog[type].some((r) => r.id === ref.id),
-                      )
-                      .map((ref) => (
-                        <label className="gal-flow-check" key={ref.id}>
-                          <input
-                            type="checkbox"
-                            checked
-                            onChange={() =>
-                              updateAgent({
-                                [key]: agent[key].filter(
-                                  (item) => item.id !== ref.id,
-                                ),
-                              })
-                            }
-                          />
-                          {ref.name}（资源已不可用）
-                        </label>
-                      ))}
-                  </fieldset>
+                {galleryAccess.map(([key, label]) => (
+                  <label className="gal-flow-check" key={key}>
+                    <input type="checkbox" checked={agent[key] !== false}
+                      onChange={(e) => updateAgent({ [key]: e.target.checked })} />
+                    {label}
+                  </label>
                 ))}
-                <p>Skill 和 MCP 引用保存在 Gallery 的画布中，当前 TeamFlow 模板尚不接收这些引用。</p>
               </>
             )}
             {task && (

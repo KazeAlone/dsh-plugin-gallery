@@ -101,3 +101,8 @@ Gallery MCP 资源保存 `mcp.json` 和 metadata.mcp，字段 transport 仅允�
 uiExtractWorkflowAgent 仅向 owner 开放，通过宿主的 agentDefaultModel 和 llm 服务直接提取字段。请求仅包含所选 Agent 的名称、描述及 AGENT.md，调用限时 90 秒，结果经校验后返回前端供编辑。
 
 0.20.2：画布仅编辑模板层。模型提取返回 name/summary/role/executionPrompt 四个字段，丢弃返回中的实例字段；UI 不再填写 specificPrompt。已有画布 Agent 的 specificPrompt 元数据会原样保留，但不进入 workflow.json 的模板成员，也不会被提取操作覆盖。任务与人工节点明确使用通用字段文案；具体 description 与验收状态仍在实例阶段生成。
+
+
+### TeamFlow 成员的 Gallery 访问
+
+成员模板可携带独立的布尔字段 `gallerySkill` 和 `galleryMcp`。TeamFlow 在子 Agent 激活时通过 Gallery 的同进程服务设置访问状态。关闭 Skill 会在成员作用域中过滤发现和加载，关闭 MCP 会隐藏已注册的 Gallery 工具，并在执行入口拦截工具调用和资源读取。旧模板省略字段时沿用宿主原有行为。
