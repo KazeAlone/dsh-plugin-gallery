@@ -2148,3 +2148,12 @@ fieldset.gal-skill-fields {
   .gal-flow-status { display: none; }
   .gal-flow-footer { padding: 10px; gap: 6px; }
 }
+
+.gal .gal-flow-node .gal-flow-grip:hover:not(:disabled),
+.gal .gal-flow-node .gal-flow-grip:active:not(:disabled),
+.gal .gal-flow-node .gal-flow-node-title:hover:not(:disabled),
+.gal .gal-flow-node .gal-flow-node-title:active:not(:disabled) { background: transparent; }
+.gal-flow-view.gal-flow-panning, .gal-flow-view.gal-flow-panning * { cursor: grabbing !important; user-select: none; }
+.gal .gal-flow-editor.gal-flow-fullscreen,
+.gal .gal-flow-editor:fullscreen { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border-radius: 0; z-index: 1000; }
+.gal-flow-editor::backdrop { background: #101521; }

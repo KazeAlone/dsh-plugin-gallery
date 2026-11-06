@@ -1,4 +1,10 @@
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
 import { createResourceIdentifier } from "./resource-id.mjs";
@@ -51,6 +57,11 @@ function initial(resource) {
   };
 }
 export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
+  const [fullscreen, setFullscreen] = useState(false);
+  const editor = useRef(null),
+    pan = useRef(null),
+    zoomValue = useRef(1),
+    pendingScroll = useRef(null);
   const arrow = useId();
   const [start] = useState(() => initial(resource));
   const [draft, setDraft] = useState(start.definition),
@@ -86,6 +97,66 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       pendingAgent.current++;
     };
   }, []);
+  function zoomAt(next, x, y) {
+    const viewport = view.current;
+    next = Math.max(0.25, Math.min(2, Math.round(next * 100) / 100));
+    if (!viewport || next === zoomValue.current) return;
+    const ratio = next / zoomValue.current;
+    pendingScroll.current = {
+      left: (viewport.scrollLeft + x) * ratio - x,
+      top: (viewport.scrollTop + y) * ratio - y,
+    };
+    zoomValue.current = next;
+    setZoom(next);
+  }
+  useLayoutEffect(() => {
+    if (pendingScroll.current && view.current) {
+      view.current.scrollTo(pendingScroll.current);
+      pendingScroll.current = null;
+    }
+  }, [zoom]);
+  useEffect(() => {
+    const viewport = view.current;
+    const wheel = (event) => {
+      event.preventDefault();
+      const r = viewport.getBoundingClientRect();
+      const delta =
+        event.deltaY *
+        (event.deltaMode === 1
+          ? 16
+          : event.deltaMode === 2
+            ? viewport.clientHeight
+            : 1);
+      zoomAt(
+        zoomValue.current * Math.exp(-delta * 0.0015),
+        event.clientX - r.left,
+        event.clientY - r.top,
+      );
+    };
+    viewport.addEventListener("wheel", wheel, { passive: false });
+    return () => viewport.removeEventListener("wheel", wheel);
+  }, []);
+  useEffect(() => {
+    const change = () =>
+      setFullscreen(document.fullscreenElement === editor.current);
+    document.addEventListener("fullscreenchange", change);
+    return () => document.removeEventListener("fullscreenchange", change);
+  }, []);
+  async function toggleFullscreen() {
+    if (fullscreen) {
+      if (document.fullscreenElement === editor.current)
+        await document.exitFullscreen();
+      setFullscreen(false);
+    } else {
+      try {
+        if (editor.current.requestFullscreen)
+          await editor.current.requestFullscreen();
+      } catch {
+        /* Fall back to a viewport-sized editor. */
+      }
+      setFullscreen(true);
+    }
+  }
   const task = draft.tasks.find(
     (t) => selected?.kind === "task" && t.id === selected.id,
   );
@@ -344,9 +415,18 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
     );
   }
   return (
-    <Modal onClose={() => !busy && onClose()}>
+    <Modal
+      onClose={() => {
+        if (fullscreen) {
+          void toggleFullscreen();
+          return;
+        }
+        if (!busy) onClose();
+      }}
+    >
       <section
-        className="gal-dialog gal-flow-editor"
+        ref={editor}
+        className={`gal-dialog gal-flow-editor ${fullscreen ? "gal-flow-fullscreen" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={resource ? "编辑 Workflow" : "新建 Workflow"}
@@ -357,7 +437,14 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
             <Glyph name="workflow" /> Workflow 画布
           </h2>
           <span className="gal-flow-status">编排草稿 · 执行对接待接入</span>
-          <button aria-label="关闭编辑" disabled={busy} onClick={onClose}>
+          <button
+            aria-label="关闭编辑"
+            disabled={busy}
+            onClick={async () => {
+              if (fullscreen) await toggleFullscreen();
+              onClose();
+            }}
+          >
             <Glyph name="close" />
           </button>
         </header>
@@ -395,16 +482,30 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
             <select
               aria-label="画布缩放"
               value={zoom}
-              onChange={(e) => setZoom(Number(e.target.value))}
+              onChange={(e) =>
+                zoomAt(
+                  Number(e.target.value),
+                  view.current.clientWidth / 2,
+                  view.current.clientHeight / 2,
+                )
+              }
             >
-              {[0.5, 0.75, 1, 1.25].map((z) => (
-                <option key={z} value={z}>
-                  {z * 100}%
-                </option>
-              ))}
+              {[...new Set([0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, zoom])]
+                .sort((a, b) => a - b)
+                .map((z) => (
+                  <option key={z} value={z}>
+                    {Math.round(z * 100)}%
+                  </option>
+                ))}
             </select>
           </label>
           <button onClick={() => setSelected(null)}>流程信息</button>
+          <button
+            aria-label={fullscreen ? "退出全屏" : "全屏画布"}
+            onClick={toggleFullscreen}
+          >
+            {fullscreen ? "退出全屏" : "全屏画布"}
+          </button>
         </div>
         {error && (
           <p role="alert" className="gal-flow-error">
@@ -418,6 +519,40 @@ export function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
           <div
             className="gal-flow-view"
             ref={view}
+            onContextMenu={(e) => e.preventDefault()}
+            onPointerDown={(e) => {
+              if (e.button !== 2) return;
+              e.preventDefault();
+              pan.current = {
+                x: e.clientX,
+                y: e.clientY,
+                left: e.currentTarget.scrollLeft,
+                top: e.currentTarget.scrollTop,
+              };
+              e.currentTarget.setPointerCapture(e.pointerId);
+              e.currentTarget.classList.add("gal-flow-panning");
+            }}
+            onPointerMove={(e) => {
+              if (!pan.current) return;
+              e.currentTarget.scrollLeft =
+                pan.current.left - (e.clientX - pan.current.x);
+              e.currentTarget.scrollTop =
+                pan.current.top - (e.clientY - pan.current.y);
+            }}
+            onPointerUp={(e) => {
+              if (e.button === 2) {
+                pan.current = null;
+                e.currentTarget.classList.remove("gal-flow-panning");
+              }
+            }}
+            onPointerCancel={(e) => {
+              pan.current = null;
+              e.currentTarget.classList.remove("gal-flow-panning");
+            }}
+            onLostPointerCapture={(e) => {
+              pan.current = null;
+              e.currentTarget.classList.remove("gal-flow-panning");
+            }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();

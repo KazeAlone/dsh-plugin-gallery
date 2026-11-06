@@ -2238,6 +2238,15 @@ fieldset.gal-skill-fields {
   .gal-flow-status { display: none; }
   .gal-flow-footer { padding: 10px; gap: 6px; }
 }
+
+.gal .gal-flow-node .gal-flow-grip:hover:not(:disabled),
+.gal .gal-flow-node .gal-flow-grip:active:not(:disabled),
+.gal .gal-flow-node .gal-flow-node-title:hover:not(:disabled),
+.gal .gal-flow-node .gal-flow-node-title:active:not(:disabled) { background: transparent; }
+.gal-flow-view.gal-flow-panning, .gal-flow-view.gal-flow-panning * { cursor: grabbing !important; user-select: none; }
+.gal .gal-flow-editor.gal-flow-fullscreen,
+.gal .gal-flow-editor:fullscreen { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border-radius: 0; z-index: 1000; }
+.gal-flow-editor::backdrop { background: #101521; }
 `;
 
 // src/client/leaderboards.jsx
@@ -2989,6 +2998,8 @@ function initial(resource) {
   };
 }
 function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
+  const [fullscreen, setFullscreen] = (0, import_react7.useState)(false);
+  const editor = (0, import_react7.useRef)(null), pan = (0, import_react7.useRef)(null), zoomValue = (0, import_react7.useRef)(1), pendingScroll = (0, import_react7.useRef)(null);
   const arrow = (0, import_react7.useId)();
   const [start] = (0, import_react7.useState)(() => initial(resource));
   const [draft, setDraft] = (0, import_react7.useState)(start.definition), [agents, setAgents] = (0, import_react7.useState)(start.agents), [positions, setPositions] = (0, import_react7.useState)(start.positions);
@@ -3012,6 +3023,58 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       pendingAgent.current++;
     };
   }, []);
+  function zoomAt(next, x, y) {
+    const viewport = view.current;
+    next = Math.max(0.25, Math.min(2, Math.round(next * 100) / 100));
+    if (!viewport || next === zoomValue.current) return;
+    const ratio = next / zoomValue.current;
+    pendingScroll.current = {
+      left: (viewport.scrollLeft + x) * ratio - x,
+      top: (viewport.scrollTop + y) * ratio - y
+    };
+    zoomValue.current = next;
+    setZoom(next);
+  }
+  (0, import_react7.useLayoutEffect)(() => {
+    if (pendingScroll.current && view.current) {
+      view.current.scrollTo(pendingScroll.current);
+      pendingScroll.current = null;
+    }
+  }, [zoom]);
+  (0, import_react7.useEffect)(() => {
+    const viewport = view.current;
+    const wheel = (event) => {
+      event.preventDefault();
+      const r = viewport.getBoundingClientRect();
+      const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientHeight : 1);
+      zoomAt(
+        zoomValue.current * Math.exp(-delta * 15e-4),
+        event.clientX - r.left,
+        event.clientY - r.top
+      );
+    };
+    viewport.addEventListener("wheel", wheel, { passive: false });
+    return () => viewport.removeEventListener("wheel", wheel);
+  }, []);
+  (0, import_react7.useEffect)(() => {
+    const change = () => setFullscreen(document.fullscreenElement === editor.current);
+    document.addEventListener("fullscreenchange", change);
+    return () => document.removeEventListener("fullscreenchange", change);
+  }, []);
+  async function toggleFullscreen() {
+    if (fullscreen) {
+      if (document.fullscreenElement === editor.current)
+        await document.exitFullscreen();
+      setFullscreen(false);
+    } else {
+      try {
+        if (editor.current.requestFullscreen)
+          await editor.current.requestFullscreen();
+      } catch {
+      }
+      setFullscreen(true);
+    }
+  }
   const task = draft.tasks.find(
     (t) => selected?.kind === "task" && t.id === selected.id
   );
@@ -3250,358 +3313,425 @@ function WorkflowWizard({ resource, onClose, onSave, onList, onGet }) {
       }
     );
   }
-  return /* @__PURE__ */ import_react7.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react7.default.createElement(
-    "section",
+  return /* @__PURE__ */ import_react7.default.createElement(
+    Modal,
     {
-      className: "gal-dialog gal-flow-editor",
-      role: "dialog",
-      "aria-modal": "true",
-      "aria-label": resource ? "\u7F16\u8F91 Workflow" : "\u65B0\u5EFA Workflow",
-      tabIndex: -1
+      onClose: () => {
+        if (fullscreen) {
+          void toggleFullscreen();
+          return;
+        }
+        if (!busy) onClose();
+      }
     },
-    /* @__PURE__ */ import_react7.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react7.default.createElement("h2", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow" }), " Workflow \u753B\u5E03"), /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-flow-status" }, "\u7F16\u6392\u8349\u7A3F \xB7 \u6267\u884C\u5BF9\u63A5\u5F85\u63A5\u5165"), /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-toolbar" }, /* @__PURE__ */ import_react7.default.createElement("div", null, [
-      ["agent", "Agent"],
-      ["task", "\u4EFB\u52A1"],
-      ["human", "\u4EBA\u5DE5"]
-    ].map(([kind, label]) => /* @__PURE__ */ import_react7.default.createElement(
-      "button",
+    /* @__PURE__ */ import_react7.default.createElement(
+      "section",
       {
-        key: kind,
-        disabled: busy,
-        draggable: !busy,
-        onDragStart: (e) => e.dataTransfer.setData("application/gallery-node", kind),
-        onClick: () => add(kind)
+        ref: editor,
+        className: `gal-dialog gal-flow-editor ${fullscreen ? "gal-flow-fullscreen" : ""}`,
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": resource ? "\u7F16\u8F91 Workflow" : "\u65B0\u5EFA Workflow",
+        tabIndex: -1
       },
-      /* @__PURE__ */ import_react7.default.createElement(
-        Glyph,
+      /* @__PURE__ */ import_react7.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react7.default.createElement("h2", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow" }), " Workflow \u753B\u5E03"), /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-flow-status" }, "\u7F16\u6392\u8349\u7A3F \xB7 \u6267\u884C\u5BF9\u63A5\u5F85\u63A5\u5165"), /* @__PURE__ */ import_react7.default.createElement(
+        "button",
         {
-          name: kind === "human" ? "user" : kind === "task" ? "file" : "agent"
-        }
-      ),
-      "\u6DFB\u52A0",
-      label,
-      "\u8282\u70B9"
-    ))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u7F29\u653E", /* @__PURE__ */ import_react7.default.createElement(
-      "select",
-      {
-        "aria-label": "\u753B\u5E03\u7F29\u653E",
-        value: zoom,
-        onChange: (e) => setZoom(Number(e.target.value))
-      },
-      [0.5, 0.75, 1, 1.25].map((z) => /* @__PURE__ */ import_react7.default.createElement("option", { key: z, value: z }, z * 100, "%"))
-    )), /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setSelected(null) }, "\u6D41\u7A0B\u4FE1\u606F")),
-    error && /* @__PURE__ */ import_react7.default.createElement("p", { role: "alert", className: "gal-flow-error" }, error, /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": "\u5173\u95ED\u9519\u8BEF", onClick: () => setError("") }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-body" }, /* @__PURE__ */ import_react7.default.createElement(
-      "div",
-      {
-        className: "gal-flow-view",
-        ref: view,
-        onDragOver: (e) => e.preventDefault(),
-        onDrop: (e) => {
-          e.preventDefault();
-          const kind = e.dataTransfer.getData("application/gallery-node");
-          if (!["agent", "task", "human"].includes(kind)) return;
-          const r = board.current.getBoundingClientRect();
-          add(kind, {
-            x: Math.max(12, (e.clientX - r.left) / zoom),
-            y: Math.max(12, (e.clientY - r.top) / zoom)
-          });
-        }
-      },
-      /* @__PURE__ */ import_react7.default.createElement("div", { style: { width: width * zoom, height: height * zoom } }, /* @__PURE__ */ import_react7.default.createElement(
-        "div",
-        {
-          className: "gal-flow-board",
-          ref: board,
-          style: { width, height, transform: `scale(${zoom})` },
-          onClick: (e) => {
-            if (e.target === e.currentTarget) setSelected(null);
+          "aria-label": "\u5173\u95ED\u7F16\u8F91",
+          disabled: busy,
+          onClick: async () => {
+            if (fullscreen) await toggleFullscreen();
+            onClose();
           }
         },
+        /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" })
+      )),
+      /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-toolbar" }, /* @__PURE__ */ import_react7.default.createElement("div", null, [
+        ["agent", "Agent"],
+        ["task", "\u4EFB\u52A1"],
+        ["human", "\u4EBA\u5DE5"]
+      ].map(([kind, label]) => /* @__PURE__ */ import_react7.default.createElement(
+        "button",
+        {
+          key: kind,
+          disabled: busy,
+          draggable: !busy,
+          onDragStart: (e) => e.dataTransfer.setData("application/gallery-node", kind),
+          onClick: () => add(kind)
+        },
         /* @__PURE__ */ import_react7.default.createElement(
-          "svg",
+          Glyph,
           {
-            className: "gal-flow-edges",
-            width,
-            height,
-            "aria-hidden": "true"
-          },
-          /* @__PURE__ */ import_react7.default.createElement("defs", null, /* @__PURE__ */ import_react7.default.createElement(
-            "marker",
-            {
-              id: arrow,
-              viewBox: "0 0 10 10",
-              refX: "9",
-              refY: "5",
-              markerWidth: "7",
-              markerHeight: "7",
-              orient: "auto-start-reverse"
-            },
-            /* @__PURE__ */ import_react7.default.createElement(
-              "polygon",
-              {
-                points: "0 0, 10 5, 0 10",
-                fill: "var(--g-accent)"
-              }
-            )
-          )),
-          draft.tasks.flatMap((t) => [
-            ...t.dependencies.map(
-              (id) => edge(positions[id], positions[t.id], id + ":" + t.id)
-            ),
-            ...t.assignee ? [
-              edge(
-                agents.find((a) => a.id === t.assignee)?.position,
-                positions[t.id],
-                "a:" + t.id,
-                true
-              )
-            ] : []
-          ])
+            name: kind === "human" ? "user" : kind === "task" ? "file" : "agent"
+          }
         ),
-        !draft.tasks.length && !agents.length && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-welcome" }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow", size: 44 }), /* @__PURE__ */ import_react7.default.createElement("h3", null, "\u4ECE\u4E00\u4E2A\u8282\u70B9\u5F00\u59CB"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u62D6\u5165\u6216\u70B9\u51FB\u4E0A\u65B9\u8282\u70B9\uFF0C\u70B9\u51FB\u8282\u70B9\u914D\u7F6E\u5185\u5BB9\u3002")),
-        [
-          ...agents.map((a) => ({
-            kind: "agent",
-            id: a.id,
-            title: a.label,
-            position: a.position,
-            subtitle: `${a.skills.length} Skill \xB7 ${a.mcps.length} MCP`
-          })),
-          ...draft.tasks.map((t) => ({
-            kind: "task",
-            id: t.id,
-            title: t.subject,
-            position: positions[t.id],
-            human: t.checkpoint,
-            subtitle: t.checkpoint ? "\u7B49\u5F85\u4EBA\u5DE5\u786E\u8BA4" : agents.find((a) => a.id === t.assignee)?.label || "\u672A\u6307\u5B9A Agent"
-          }))
-        ].map((n) => /* @__PURE__ */ import_react7.default.createElement(
-          "article",
+        "\u6DFB\u52A0",
+        label,
+        "\u8282\u70B9"
+      ))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u7F29\u653E", /* @__PURE__ */ import_react7.default.createElement(
+        "select",
+        {
+          "aria-label": "\u753B\u5E03\u7F29\u653E",
+          value: zoom,
+          onChange: (e) => zoomAt(
+            Number(e.target.value),
+            view.current.clientWidth / 2,
+            view.current.clientHeight / 2
+          )
+        },
+        [.../* @__PURE__ */ new Set([0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, zoom])].sort((a, b) => a - b).map((z) => /* @__PURE__ */ import_react7.default.createElement("option", { key: z, value: z }, Math.round(z * 100), "%"))
+      )), /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setSelected(null) }, "\u6D41\u7A0B\u4FE1\u606F"), /* @__PURE__ */ import_react7.default.createElement(
+        "button",
+        {
+          "aria-label": fullscreen ? "\u9000\u51FA\u5168\u5C4F" : "\u5168\u5C4F\u753B\u5E03",
+          onClick: toggleFullscreen
+        },
+        fullscreen ? "\u9000\u51FA\u5168\u5C4F" : "\u5168\u5C4F\u753B\u5E03"
+      )),
+      error && /* @__PURE__ */ import_react7.default.createElement("p", { role: "alert", className: "gal-flow-error" }, error, /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": "\u5173\u95ED\u9519\u8BEF", onClick: () => setError("") }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))),
+      /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-body" }, /* @__PURE__ */ import_react7.default.createElement(
+        "div",
+        {
+          className: "gal-flow-view",
+          ref: view,
+          onContextMenu: (e) => e.preventDefault(),
+          onPointerDown: (e) => {
+            if (e.button !== 2) return;
+            e.preventDefault();
+            pan.current = {
+              x: e.clientX,
+              y: e.clientY,
+              left: e.currentTarget.scrollLeft,
+              top: e.currentTarget.scrollTop
+            };
+            e.currentTarget.setPointerCapture(e.pointerId);
+            e.currentTarget.classList.add("gal-flow-panning");
+          },
+          onPointerMove: (e) => {
+            if (!pan.current) return;
+            e.currentTarget.scrollLeft = pan.current.left - (e.clientX - pan.current.x);
+            e.currentTarget.scrollTop = pan.current.top - (e.clientY - pan.current.y);
+          },
+          onPointerUp: (e) => {
+            if (e.button === 2) {
+              pan.current = null;
+              e.currentTarget.classList.remove("gal-flow-panning");
+            }
+          },
+          onPointerCancel: (e) => {
+            pan.current = null;
+            e.currentTarget.classList.remove("gal-flow-panning");
+          },
+          onLostPointerCapture: (e) => {
+            pan.current = null;
+            e.currentTarget.classList.remove("gal-flow-panning");
+          },
+          onDragOver: (e) => e.preventDefault(),
+          onDrop: (e) => {
+            e.preventDefault();
+            const kind = e.dataTransfer.getData("application/gallery-node");
+            if (!["agent", "task", "human"].includes(kind)) return;
+            const r = board.current.getBoundingClientRect();
+            add(kind, {
+              x: Math.max(12, (e.clientX - r.left) / zoom),
+              y: Math.max(12, (e.clientY - r.top) / zoom)
+            });
+          }
+        },
+        /* @__PURE__ */ import_react7.default.createElement("div", { style: { width: width * zoom, height: height * zoom } }, /* @__PURE__ */ import_react7.default.createElement(
+          "div",
           {
-            className: `gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selected?.id === n.id ? "selected" : ""}`,
-            style: { left: n.position.x, top: n.position.y },
-            key: n.id,
-            onClick: () => setSelected({ kind: n.kind, id: n.id })
+            className: "gal-flow-board",
+            ref: board,
+            style: { width, height, transform: `scale(${zoom})` },
+            onClick: (e) => {
+              if (e.target === e.currentTarget) setSelected(null);
+            }
           },
           /* @__PURE__ */ import_react7.default.createElement(
-            "button",
+            "svg",
             {
-              className: "gal-flow-grip",
-              "aria-label": `\u79FB\u52A8 ${n.title}`,
-              onPointerDown: (e) => pointerDown(e, n.kind, n.id),
-              onPointerMove: move,
-              onPointerUp: () => {
-                drag.current = null;
-              },
-              onPointerCancel: () => {
-                drag.current = null;
-              }
+              className: "gal-flow-edges",
+              width,
+              height,
+              "aria-hidden": "true"
             },
-            /* @__PURE__ */ import_react7.default.createElement(
-              Glyph,
+            /* @__PURE__ */ import_react7.default.createElement("defs", null, /* @__PURE__ */ import_react7.default.createElement(
+              "marker",
               {
-                name: n.kind === "agent" ? "agent" : n.human ? "user" : "file"
-              }
-            ),
-            n.kind === "agent" ? "AGENT" : n.human ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"
+                id: arrow,
+                viewBox: "0 0 10 10",
+                refX: "9",
+                refY: "5",
+                markerWidth: "7",
+                markerHeight: "7",
+                orient: "auto-start-reverse"
+              },
+              /* @__PURE__ */ import_react7.default.createElement(
+                "polygon",
+                {
+                  points: "0 0, 10 5, 0 10",
+                  fill: "var(--g-accent)"
+                }
+              )
+            )),
+            draft.tasks.flatMap((t) => [
+              ...t.dependencies.map(
+                (id) => edge(positions[id], positions[t.id], id + ":" + t.id)
+              ),
+              ...t.assignee ? [
+                edge(
+                  agents.find((a) => a.id === t.assignee)?.position,
+                  positions[t.id],
+                  "a:" + t.id,
+                  true
+                )
+              ] : []
+            ])
           ),
-          /* @__PURE__ */ import_react7.default.createElement(
-            "button",
+          !draft.tasks.length && !agents.length && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-welcome" }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow", size: 44 }), /* @__PURE__ */ import_react7.default.createElement("h3", null, "\u4ECE\u4E00\u4E2A\u8282\u70B9\u5F00\u59CB"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u62D6\u5165\u6216\u70B9\u51FB\u4E0A\u65B9\u8282\u70B9\uFF0C\u70B9\u51FB\u8282\u70B9\u914D\u7F6E\u5185\u5BB9\u3002")),
+          [
+            ...agents.map((a) => ({
+              kind: "agent",
+              id: a.id,
+              title: a.label,
+              position: a.position,
+              subtitle: `${a.skills.length} Skill \xB7 ${a.mcps.length} MCP`
+            })),
+            ...draft.tasks.map((t) => ({
+              kind: "task",
+              id: t.id,
+              title: t.subject,
+              position: positions[t.id],
+              human: t.checkpoint,
+              subtitle: t.checkpoint ? "\u7B49\u5F85\u4EBA\u5DE5\u786E\u8BA4" : agents.find((a) => a.id === t.assignee)?.label || "\u672A\u6307\u5B9A Agent"
+            }))
+          ].map((n) => /* @__PURE__ */ import_react7.default.createElement(
+            "article",
             {
-              className: "gal-flow-node-title",
+              className: `gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selected?.id === n.id ? "selected" : ""}`,
+              style: { left: n.position.x, top: n.position.y },
+              key: n.id,
               onClick: () => setSelected({ kind: n.kind, id: n.id })
             },
-            n.title || "\u672A\u547D\u540D\u8282\u70B9"
-          ),
-          /* @__PURE__ */ import_react7.default.createElement("p", null, n.subtitle),
-          n.kind === "task" && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-ports" }, /* @__PURE__ */ import_react7.default.createElement(
-            "button",
-            {
-              onClick: (e) => {
-                e.stopPropagation();
-                connect(n.id);
-              }
-            },
-            "\u8FDE\u5165"
-          ), /* @__PURE__ */ import_react7.default.createElement(
-            "button",
-            {
-              "aria-pressed": linkFrom === n.id,
-              onClick: (e) => {
-                e.stopPropagation();
-                setLinkFrom(linkFrom === n.id ? null : n.id);
-                setError("");
-              }
-            },
-            "\u8FDE\u51FA"
+            /* @__PURE__ */ import_react7.default.createElement(
+              "button",
+              {
+                className: "gal-flow-grip",
+                "aria-label": `\u79FB\u52A8 ${n.title}`,
+                onPointerDown: (e) => pointerDown(e, n.kind, n.id),
+                onPointerMove: move,
+                onPointerUp: () => {
+                  drag.current = null;
+                },
+                onPointerCancel: () => {
+                  drag.current = null;
+                }
+              },
+              /* @__PURE__ */ import_react7.default.createElement(
+                Glyph,
+                {
+                  name: n.kind === "agent" ? "agent" : n.human ? "user" : "file"
+                }
+              ),
+              n.kind === "agent" ? "AGENT" : n.human ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"
+            ),
+            /* @__PURE__ */ import_react7.default.createElement(
+              "button",
+              {
+                className: "gal-flow-node-title",
+                onClick: () => setSelected({ kind: n.kind, id: n.id })
+              },
+              n.title || "\u672A\u547D\u540D\u8282\u70B9"
+            ),
+            /* @__PURE__ */ import_react7.default.createElement("p", null, n.subtitle),
+            n.kind === "task" && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-ports" }, /* @__PURE__ */ import_react7.default.createElement(
+              "button",
+              {
+                onClick: (e) => {
+                  e.stopPropagation();
+                  connect(n.id);
+                }
+              },
+              "\u8FDE\u5165"
+            ), /* @__PURE__ */ import_react7.default.createElement(
+              "button",
+              {
+                "aria-pressed": linkFrom === n.id,
+                onClick: (e) => {
+                  e.stopPropagation();
+                  setLinkFrom(linkFrom === n.id ? null : n.id);
+                  setError("");
+                }
+              },
+              "\u8FDE\u51FA"
+            ))
           ))
         ))
-      ))
-    ), /* @__PURE__ */ import_react7.default.createElement("aside", { className: "gal-flow-inspector" }, loading && /* @__PURE__ */ import_react7.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u5E93\u2026"), !task && !agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "\u6D41\u7A0B\u4FE1\u606F"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
-      "input",
-      {
-        "aria-label": "\u6D41\u7A0B\u540D\u79F0",
-        maxLength: 120,
-        value: draft.name,
-        onChange: (e) => update({ name: e.target.value })
-      }
-    )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react7.default.createElement(
-      "textarea",
-      {
-        rows: 3,
-        maxLength: 2e3,
-        value: draft.description,
-        onChange: (e) => update({ description: e.target.value })
-      }
-    )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u9002\u7528\u8F93\u5165", /* @__PURE__ */ import_react7.default.createElement(
-      "textarea",
-      {
-        maxLength: 4e3,
-        value: draft.inputs,
-        onChange: (e) => update({ inputs: e.target.value })
-      }
-    )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6807\u7B7E", /* @__PURE__ */ import_react7.default.createElement(
-      "input",
-      {
-        value: draft.tags.join(", "),
-        onChange: (e) => update({
-          tags: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean)
-        })
-      }
-    )), /* @__PURE__ */ import_react7.default.createElement("p", null, "Agent \u7528\u865A\u7EBF\u5173\u8054\u8D1F\u8D23\u4EBA\uFF1B\u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9\u7528\u5B9E\u7EBF\u8868\u793A\u5148\u540E\u4F9D\u8D56\u3002")), agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Agent \u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D44\u6E90\u5E93 Agent", /* @__PURE__ */ import_react7.default.createElement(
-      "select",
-      {
-        "aria-label": "\u8D44\u6E90\u5E93 Agent",
-        value: agent.resourceId,
-        disabled: busy || loading,
-        onChange: (e) => chooseAgent(e.target.value)
-      },
-      /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9 Agent"),
-      agent.resourceId && !catalog.agent.some((r) => r.id === agent.resourceId) && /* @__PURE__ */ import_react7.default.createElement("option", { value: agent.resourceId }, agent.label, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09"),
-      catalog.agent.map((r) => /* @__PURE__ */ import_react7.default.createElement("option", { key: r.id, value: r.id }, r.name))
-    )), !catalog.agent.length && !loading && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u8D44\u6E90\u5E93\u6682\u65E0 Agent\uFF0C\u8BF7\u5148\u5728 Agent \u5206\u7C7B\u521B\u5EFA\u3002"), [
-      ["skill", "skills", "Skill"],
-      ["mcp", "mcps", "MCP"]
-    ].map(([type, key, label]) => /* @__PURE__ */ import_react7.default.createElement("fieldset", { key }, /* @__PURE__ */ import_react7.default.createElement("legend", null, "\u914D\u7F6E ", label), !catalog[type].length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u6682\u65E0\u53EF\u9009\u8D44\u6E90"), catalog[type].map((r) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: r.id }, /* @__PURE__ */ import_react7.default.createElement(
-      "input",
-      {
-        type: "checkbox",
-        checked: agent[key].some((ref) => ref.id === r.id),
-        onChange: (e) => updateAgent({
-          [key]: e.target.checked ? [
-            ...agent[key],
-            {
-              id: r.id,
-              name: r.name,
-              digest: r.digest
-            }
-          ] : agent[key].filter((ref) => ref.id !== r.id)
-        })
-      }
-    ), r.name)), agent[key].filter(
-      (ref) => !catalog[type].some((r) => r.id === ref.id)
-    ).map((ref) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: ref.id }, /* @__PURE__ */ import_react7.default.createElement(
-      "input",
-      {
-        type: "checkbox",
-        checked: true,
-        onChange: () => updateAgent({
-          [key]: agent[key].filter(
-            (item) => item.id !== ref.id
-          )
-        })
-      }
-    ), ref.name, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09")))), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u9009\u62E9\u4EC5\u7528\u4E8E\u672C\u6D41\u7A0B\uFF0C\u4FDD\u5B58\u5728\u7F16\u6392\u8349\u7A3F\u4E2D\u3002")), task && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, task.checkpoint ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
-      "input",
-      {
-        "aria-label": "\u8282\u70B9\u540D\u79F0",
-        maxLength: 200,
-        value: task.subject,
-        onChange: (e) => updateTask({ subject: e.target.value })
-      }
-    )), !task.checkpoint && /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D1F\u8D23 Agent", /* @__PURE__ */ import_react7.default.createElement(
-      "select",
-      {
-        "aria-label": "\u8D1F\u8D23 Agent",
-        value: task.assignee,
-        onChange: (e) => updateTask({ assignee: e.target.value })
-      },
-      /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9 Agent"),
-      agents.map((a) => /* @__PURE__ */ import_react7.default.createElement("option", { key: a.id, value: a.id }, a.label))
-    )), [
-      ["requirements", task.checkpoint ? "\u786E\u8BA4\u4E8B\u9879" : "\u4EFB\u52A1\u8981\u6C42"],
-      ["deliverables", "\u4EA4\u4ED8\u7269"],
-      ["acceptance", "\u9A8C\u6536\u6807\u51C6"]
-    ].map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { key }, label, /* @__PURE__ */ import_react7.default.createElement(
-      "textarea",
-      {
-        "aria-label": label,
-        rows: 3,
-        maxLength: 16e3,
-        value: task.general[key],
-        onChange: (e) => updateTask({
-          general: { ...task.general, [key]: e.target.value }
-        })
-      }
-    ))), /* @__PURE__ */ import_react7.default.createElement("fieldset", null, /* @__PURE__ */ import_react7.default.createElement("legend", null, "\u524D\u7F6E\u4F9D\u8D56"), !task.dependencies.length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u65E0\u524D\u7F6E\u8282\u70B9"), task.dependencies.map((id) => /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-dependency", key: id }, /* @__PURE__ */ import_react7.default.createElement("span", null, draft.tasks.find((t) => t.id === id)?.subject || id), /* @__PURE__ */ import_react7.default.createElement(
-      "button",
-      {
-        "aria-label": "\u79FB\u9664\u4F9D\u8D56",
-        onClick: () => updateTask({
-          dependencies: task.dependencies.filter(
-            (d) => d !== id
-          )
-        })
-      },
-      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" })
-    )))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6DFB\u52A0\u524D\u7F6E\u8282\u70B9", /* @__PURE__ */ import_react7.default.createElement(
-      "select",
-      {
-        "aria-label": "\u6DFB\u52A0\u524D\u7F6E\u8282\u70B9",
-        value: "",
-        onChange: (e) => {
-          setLinkFrom(null);
-          const from = e.target.value;
-          try {
-            const tasks = draft.tasks.map(
-              (t) => t.id === task.id ? { ...t, dependencies: [...t.dependencies, from] } : t
-            );
-            validateWorkflowTemplate({
-              ...draft,
-              name: draft.name || "\u8349\u7A3F",
-              members: agents.map((a) => ({
-                name: a.id,
-                summary: "",
-                role: "",
-                executionPrompt: ""
-              })),
-              tasks,
-              positions: {}
-            });
-            update({ tasks });
-            setError("");
-          } catch (e2) {
-            setError(e2.message);
-          }
+      ), /* @__PURE__ */ import_react7.default.createElement("aside", { className: "gal-flow-inspector" }, loading && /* @__PURE__ */ import_react7.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u5E93\u2026"), !task && !agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "\u6D41\u7A0B\u4FE1\u606F"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
+        "input",
+        {
+          "aria-label": "\u6D41\u7A0B\u540D\u79F0",
+          maxLength: 120,
+          value: draft.name,
+          onChange: (e) => update({ name: e.target.value })
         }
-      },
-      /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u9009\u62E9\u8282\u70B9"),
-      draft.tasks.filter(
-        (t) => t.id !== task.id && !task.dependencies.includes(t.id)
-      ).map((t) => /* @__PURE__ */ import_react7.default.createElement("option", { key: t.id, value: t.id }, t.subject))
-    ))), (task || agent) && /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-delete", disabled: busy, onClick: remove }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }), "\u5220\u9664\u8282\u70B9"))),
-    /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u8FDE\u63A5\u4E2D\uFF1A\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u7684\u201C\u8FDE\u5165\u201D" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
-      "button",
-      {
-        className: "gal-primary",
-        disabled: busy || loading,
-        onClick: save
-      },
-      busy ? "\u4FDD\u5B58\u4E2D\u2026" : "\u4FDD\u5B58 Workflow"
-    ))
-  ));
+      )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react7.default.createElement(
+        "textarea",
+        {
+          rows: 3,
+          maxLength: 2e3,
+          value: draft.description,
+          onChange: (e) => update({ description: e.target.value })
+        }
+      )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u9002\u7528\u8F93\u5165", /* @__PURE__ */ import_react7.default.createElement(
+        "textarea",
+        {
+          maxLength: 4e3,
+          value: draft.inputs,
+          onChange: (e) => update({ inputs: e.target.value })
+        }
+      )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6807\u7B7E", /* @__PURE__ */ import_react7.default.createElement(
+        "input",
+        {
+          value: draft.tags.join(", "),
+          onChange: (e) => update({
+            tags: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean)
+          })
+        }
+      )), /* @__PURE__ */ import_react7.default.createElement("p", null, "Agent \u7528\u865A\u7EBF\u5173\u8054\u8D1F\u8D23\u4EBA\uFF1B\u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9\u7528\u5B9E\u7EBF\u8868\u793A\u5148\u540E\u4F9D\u8D56\u3002")), agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Agent \u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D44\u6E90\u5E93 Agent", /* @__PURE__ */ import_react7.default.createElement(
+        "select",
+        {
+          "aria-label": "\u8D44\u6E90\u5E93 Agent",
+          value: agent.resourceId,
+          disabled: busy || loading,
+          onChange: (e) => chooseAgent(e.target.value)
+        },
+        /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9 Agent"),
+        agent.resourceId && !catalog.agent.some((r) => r.id === agent.resourceId) && /* @__PURE__ */ import_react7.default.createElement("option", { value: agent.resourceId }, agent.label, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09"),
+        catalog.agent.map((r) => /* @__PURE__ */ import_react7.default.createElement("option", { key: r.id, value: r.id }, r.name))
+      )), !catalog.agent.length && !loading && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u8D44\u6E90\u5E93\u6682\u65E0 Agent\uFF0C\u8BF7\u5148\u5728 Agent \u5206\u7C7B\u521B\u5EFA\u3002"), [
+        ["skill", "skills", "Skill"],
+        ["mcp", "mcps", "MCP"]
+      ].map(([type, key, label]) => /* @__PURE__ */ import_react7.default.createElement("fieldset", { key }, /* @__PURE__ */ import_react7.default.createElement("legend", null, "\u914D\u7F6E ", label), !catalog[type].length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u6682\u65E0\u53EF\u9009\u8D44\u6E90"), catalog[type].map((r) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: r.id }, /* @__PURE__ */ import_react7.default.createElement(
+        "input",
+        {
+          type: "checkbox",
+          checked: agent[key].some((ref) => ref.id === r.id),
+          onChange: (e) => updateAgent({
+            [key]: e.target.checked ? [
+              ...agent[key],
+              {
+                id: r.id,
+                name: r.name,
+                digest: r.digest
+              }
+            ] : agent[key].filter((ref) => ref.id !== r.id)
+          })
+        }
+      ), r.name)), agent[key].filter(
+        (ref) => !catalog[type].some((r) => r.id === ref.id)
+      ).map((ref) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: ref.id }, /* @__PURE__ */ import_react7.default.createElement(
+        "input",
+        {
+          type: "checkbox",
+          checked: true,
+          onChange: () => updateAgent({
+            [key]: agent[key].filter(
+              (item) => item.id !== ref.id
+            )
+          })
+        }
+      ), ref.name, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09")))), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u9009\u62E9\u4EC5\u7528\u4E8E\u672C\u6D41\u7A0B\uFF0C\u4FDD\u5B58\u5728\u7F16\u6392\u8349\u7A3F\u4E2D\u3002")), task && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, task.checkpoint ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
+        "input",
+        {
+          "aria-label": "\u8282\u70B9\u540D\u79F0",
+          maxLength: 200,
+          value: task.subject,
+          onChange: (e) => updateTask({ subject: e.target.value })
+        }
+      )), !task.checkpoint && /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D1F\u8D23 Agent", /* @__PURE__ */ import_react7.default.createElement(
+        "select",
+        {
+          "aria-label": "\u8D1F\u8D23 Agent",
+          value: task.assignee,
+          onChange: (e) => updateTask({ assignee: e.target.value })
+        },
+        /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9 Agent"),
+        agents.map((a) => /* @__PURE__ */ import_react7.default.createElement("option", { key: a.id, value: a.id }, a.label))
+      )), [
+        ["requirements", task.checkpoint ? "\u786E\u8BA4\u4E8B\u9879" : "\u4EFB\u52A1\u8981\u6C42"],
+        ["deliverables", "\u4EA4\u4ED8\u7269"],
+        ["acceptance", "\u9A8C\u6536\u6807\u51C6"]
+      ].map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { key }, label, /* @__PURE__ */ import_react7.default.createElement(
+        "textarea",
+        {
+          "aria-label": label,
+          rows: 3,
+          maxLength: 16e3,
+          value: task.general[key],
+          onChange: (e) => updateTask({
+            general: { ...task.general, [key]: e.target.value }
+          })
+        }
+      ))), /* @__PURE__ */ import_react7.default.createElement("fieldset", null, /* @__PURE__ */ import_react7.default.createElement("legend", null, "\u524D\u7F6E\u4F9D\u8D56"), !task.dependencies.length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u65E0\u524D\u7F6E\u8282\u70B9"), task.dependencies.map((id) => /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-dependency", key: id }, /* @__PURE__ */ import_react7.default.createElement("span", null, draft.tasks.find((t) => t.id === id)?.subject || id), /* @__PURE__ */ import_react7.default.createElement(
+        "button",
+        {
+          "aria-label": "\u79FB\u9664\u4F9D\u8D56",
+          onClick: () => updateTask({
+            dependencies: task.dependencies.filter(
+              (d) => d !== id
+            )
+          })
+        },
+        /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" })
+      )))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6DFB\u52A0\u524D\u7F6E\u8282\u70B9", /* @__PURE__ */ import_react7.default.createElement(
+        "select",
+        {
+          "aria-label": "\u6DFB\u52A0\u524D\u7F6E\u8282\u70B9",
+          value: "",
+          onChange: (e) => {
+            setLinkFrom(null);
+            const from = e.target.value;
+            try {
+              const tasks = draft.tasks.map(
+                (t) => t.id === task.id ? { ...t, dependencies: [...t.dependencies, from] } : t
+              );
+              validateWorkflowTemplate({
+                ...draft,
+                name: draft.name || "\u8349\u7A3F",
+                members: agents.map((a) => ({
+                  name: a.id,
+                  summary: "",
+                  role: "",
+                  executionPrompt: ""
+                })),
+                tasks,
+                positions: {}
+              });
+              update({ tasks });
+              setError("");
+            } catch (e2) {
+              setError(e2.message);
+            }
+          }
+        },
+        /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u9009\u62E9\u8282\u70B9"),
+        draft.tasks.filter(
+          (t) => t.id !== task.id && !task.dependencies.includes(t.id)
+        ).map((t) => /* @__PURE__ */ import_react7.default.createElement("option", { key: t.id, value: t.id }, t.subject))
+      ))), (task || agent) && /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-delete", disabled: busy, onClick: remove }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }), "\u5220\u9664\u8282\u70B9"))),
+      /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u8FDE\u63A5\u4E2D\uFF1A\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u7684\u201C\u8FDE\u5165\u201D" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
+        "button",
+        {
+          className: "gal-primary",
+          disabled: busy || loading,
+          onClick: save
+        },
+        busy ? "\u4FDD\u5B58\u4E2D\u2026" : "\u4FDD\u5B58 Workflow"
+      ))
+    )
+  );
 }
 
 // src/client/agent-wizard.jsx
@@ -11582,7 +11712,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.18.0"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.18.1"), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         disabled: busy,
