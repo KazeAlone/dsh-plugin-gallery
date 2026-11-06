@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { LocalGalleryStore } from '../src/local-store.mjs';
 import { installReferenceSkill, referenceSkill } from '../src/builtin-skill.mjs';
-import { readSkill, skillIssues } from '../src/client/skill-format.mjs';
+import { readSkill, skillIssues, syncSkillAttachments } from '../src/client/skill-format.mjs';
 import { skillCandidate } from '../src/skill-provider.mjs';
 test('complete reference Skill validates and seeds once without overwriting edits or restoring deletion', () => {
   const root = mkdtempSync(join(tmpdir(), 'gallery-builtin-'));
@@ -17,6 +17,8 @@ test('complete reference Skill validates and seeds once without overwriting edit
     assert.deepEqual(skillIssues(parsed.name, parsed.description, parsed.body, parsed.files), []);
     assert.ok(skillCandidate(store.getResource(resource.id)));
     assert.equal(parsed.files.length, 3);
+    assert.equal((parsed.body.match(/## 附属文件/g) || []).length, 1);
+    assert.equal(parsed.body.trimEnd(), syncSkillAttachments(parsed.body, parsed.files).trimEnd());
     const edited = store.updateResource(resource.id, { ...referenceSkill(), description: '用户修改' }, resource.revision);
     installReferenceSkill(store);
     assert.equal(store.getResource(resource.id).description, '用户修改');

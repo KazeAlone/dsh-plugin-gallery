@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { normalizeResource, digest } from './model.mjs';
 import { stringify } from 'yaml';
+import { syncSkillAttachments } from './client/skill-format.mjs';
 
 const seed = 'gallery-skill-reference-v1';
 export function referenceSkill() {
@@ -36,13 +37,8 @@ export function referenceSkill() {
 ## 输入输出示例
 输入：周五前完成界面初稿，由小林负责；评审时间待定。
 输出：主题：界面初稿；待办：小林在周五前完成初稿；待确认：评审时间。其他信息原文未提供。
-
-## 附属文件
-- [可选只读辅助脚本](scripts/inspect_note.py)
-- [摘要规则与检查清单](references/summary-rules.md)
-- [摘要输出模板](assets/summary-template.md)
 `;
-  return {
+  const resource = {
     type: 'skill', name: header.name, description: header.description,
     tags: ['参考模板', '文档', '摘要'], metadata: { cover: 'writing', builtin: seed }, references: [],
     files: [
@@ -52,15 +48,23 @@ export function referenceSkill() {
       { path: 'assets/summary-template.md', encoding: 'utf8', content: '# 主题\n\n## 摘要\n\n## 关键事实\n\n## 待办事项\n\n| 事项 | 负责人 | 截止时间 |\n| --- | --- | --- |\n\n## 待确认问题\n' },
     ],
   };
+  resource.files[0].content = `---\n${stringify(header)}---\n\n${syncSkillAttachments(body, resource.files.slice(1).sort((a, b) => a.path.localeCompare(b.path)))}\n`;
+  return resource;
 }
 /** Seed once in the resource transaction; edits and deletions survive restart. */
 export function installReferenceSkill(adapter) {
   const current = adapter.read();
   if (current.builtinSeeds?.includes(seed)) {
-    const existing = current.resources.find(row => row.metadata?.builtin === seed && row.creator?.username === 'Gallery');
+    const existing = current.resources.find(row => row.metadata?.builtin === seed);
     if (!existing) return;
+    const fresh = normalizeResource(referenceSkill());
+    const refresh = existing.revision === 1 && existing.digest !== digest(JSON.stringify(fresh));
+    if (!refresh && existing.creator?.username !== 'Gallery') return;
     return adapter.write(rows => {
       const row = rows.find(item => item.id === existing.id);
+      if (refresh && row.revision === 1) {
+        Object.assign(row, fresh, { digest: digest(JSON.stringify(fresh)), revision: row.revision + 1, updatedAt: new Date().toISOString() });
+      }
       if (row.creator?.username === 'Gallery') row.creator = { username: 'ZelongWANG' };
       return row;
     });
