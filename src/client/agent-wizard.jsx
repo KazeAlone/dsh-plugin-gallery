@@ -13,7 +13,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
   const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const [initial] = useState(() => readAgent(resource));
   const [step, setStep] = useState(0),
-    [slug, setSlug] = useState(initial.slug),
+    [slug, setSlug] = useState(initial.slug || `agent-${crypto.randomUUID().slice(0, 8)}`),
     [name, setName] = useState(resource?.name || ""),
     [description, setDescription] = useState(initial.description),
     [instructions, setInstructions] = useState(() =>
@@ -24,11 +24,6 @@ export function AgentWizard({ resource, onClose, onSave }) {
       ]
         .filter(Boolean)
         .join("\n\n"),
-    ),
-    [model, setModel] = useState(
-      resource?.metadata?.agent?.model ||
-        resource?.metadata?.agent?.config?.model ||
-        "",
     ),
     [tags, setTags] = useState((resource?.tags || []).join(", ")),
     [files, setFiles] = useState(
@@ -54,11 +49,8 @@ export function AgentWizard({ resource, onClose, onSave }) {
   ];
   const goal = "",
     boundaries = "";
-  const config = {
-    ...(resource?.metadata?.agent?.config || {}),
-    ...(model.trim() ? { model: model.trim() } : {}),
-  };
-  if (!model.trim()) delete config.model;
+  const config = { ...(resource?.metadata?.agent?.config || {}) };
+  delete config.model;
   const hasConfig = Object.keys(config).length > 0;
   const document = agentDocument(
     { slug, description, goal, boundaries, instructions },
@@ -138,7 +130,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
             goal,
             boundaries,
             instructions,
-            model: model.trim(),
+            model: "",
             config,
           },
         },
@@ -201,20 +193,9 @@ export function AgentWizard({ resource, onClose, onSave }) {
             {step === 0 && (
               <div className="gal-skill-fields">
                 <label>
-                  英文标识
+                  名称
                   <input
-                    aria-label="英文标识"
-                    value={slug}
-                    maxLength={64}
-                    placeholder="research-agent"
-                    onChange={(e) => setSlug(e.target.value)}
-                  />
-                </label>
-                <p>作为 Agent 文件夹名称，使用小写英文、数字和连字符。</p>
-                <label>
-                  显示名称
-                  <input
-                    aria-label="显示名称"
+                    aria-label="名称"
                     value={name}
                     maxLength={160}
                     placeholder="研究助手"
@@ -222,9 +203,9 @@ export function AgentWizard({ resource, onClose, onSave }) {
                   />
                 </label>
                 <label>
-                  简介
+                  描述
                   <textarea
-                    aria-label="简介"
+                    aria-label="描述"
                     rows={3}
                     maxLength={1024}
                     value={description}
@@ -232,6 +213,18 @@ export function AgentWizard({ resource, onClose, onSave }) {
                     placeholder="说明这个 Agent 负责什么。"
                   />
                 </label>
+                <details><summary>高级设置</summary>                <label>
+                  调用标识
+                  <input
+                    aria-label="调用标识"
+                    value={slug}
+                    maxLength={64}
+                    placeholder="research-agent"
+                    onChange={(e) => setSlug(e.target.value)}
+                  />
+                </label>
+                <p>作为 Agent 文件夹名称，使用小写英文、数字和连字符。</p>
+</details>
               </div>
             )}
             {step === 1 && (
@@ -259,16 +252,6 @@ export function AgentWizard({ resource, onClose, onSave }) {
                 )}
                 <details className="gal-skill-fields">
                   <summary>附属文件与选项 · {files.length} 个附件</summary>
-                  <label>
-                    模型（选填）
-                    <input
-                      aria-label="模型"
-                      value={model}
-                      onChange={(e) => setModel(e.target.value)}
-                      placeholder="留空则沿用父会话模型"
-                    />
-                  </label>
-                  <p>填写父会话模型提供方下的模型 ID。</p>
                   <div className="gal-skill-folders">
                     {[
                       ["references", "参考资料"],

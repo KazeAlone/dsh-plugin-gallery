@@ -86,3 +86,5 @@ Gallery Skill 的 `SKILL.md` 和附件一起写入运行目录。加载 Skill �
 
 
 MCP 分类提供专用四步向导。可保存本地 stdio 或远程 Streamable HTTP 连接配置，按需测试并查看工具列表；保存不会自动启用该服务，仍需接入 DSH MCP 客户端配置。
+
+创建向导统一使用名称、描述；调用标识自动生成，可在高级设置修改。Agent 沿用父会话模型。MCP 在连接配置步骤内测试连接，支持 stdio 与 Streamable HTTP。

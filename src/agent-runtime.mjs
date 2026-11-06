@@ -37,10 +37,7 @@ export function registerGalleryAgentRunTool(ctx, store) {
       const directory = materializeSkill(store.directory, entry.resource);
       const instructions = entry.resource.files.find(f => f.path === 'AGENT.md')?.content || '';
       const prompt = `请按照以下 Gallery Agent 定义执行任务。定义文件：${directory}/AGENT.md。附件位于同一目录，按需读取。\n\n${instructions}\n\n本次任务：\n${args.task.trim()}`;
-      const configuredModel = entry.resource.metadata?.agent?.model
-        || entry.resource.metadata?.agent?.config?.model;
-      const model = typeof configuredModel === "string" ? configuredModel.trim() : "";
-      const activation = await ctx.subagents.startActivation({ provider: 'spawn', label: entry.resource.name, request: { parent: exec.agent, ...(model ? { agentOptions: { model } } : {}), prompt: [{ type: 'text', text: prompt }] }, signal: exec.signal, delivery: 'parent' });
+      const activation = await ctx.subagents.startActivation({ provider: 'spawn', label: entry.resource.name, request: { parent: exec.agent, prompt: [{ type: 'text', text: prompt }] }, signal: exec.signal, delivery: 'parent' });
       countUsage(ctx, store, entry.resource.id, "agent", [exec.agent.id, exec.callId ?? activation.childId]);
       return { child_id: activation.childId, agent: entry.resource.name };
     },

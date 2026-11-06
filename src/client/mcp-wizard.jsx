@@ -2,7 +2,7 @@ import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
-const steps = ["基本信息", "连接方式", "检查连接", "检查保存"];
+const steps = ["基本信息", "连接配置与测试", "检查保存"];
 const parseLines = (value) =>
   value
     .split("\n")
@@ -22,7 +22,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
   const [step, setStep] = useState(0),
     [name, setName] = useState(resource?.name || ""),
     [description, setDescription] = useState(resource?.description || ""),
-    [serverName, setServerName] = useState(saved.serverName || ""),
+    [serverName, setServerName] = useState(saved.serverName || `mcp-${crypto.randomUUID().slice(0, 8)}`),
     [transport, setTransport] = useState(saved.transport || "stdio"),
     [command, setCommand] = useState(saved.command || ""),
     [args, setArgs] = useState((saved.args || []).join("\n")),
@@ -134,7 +134,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
             <Glyph name="close" />
           </button>
         </header>
-        <nav className="gal-skill-steps" aria-label="创建进度">
+        <nav className="gal-skill-steps gal-three-steps" aria-label="创建进度">
           {steps.map((title, i) => (
             <button
               key={title}
@@ -157,9 +157,9 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
             {step === 0 && (
               <div className="gal-skill-fields">
                 <label>
-                  显示名称
+                  名称
                   <input
-                    aria-label="显示名称"
+                    aria-label="名称"
                     value={name}
                     maxLength={160}
                     placeholder="文件系统服务"
@@ -167,19 +167,23 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
                   />
                 </label>
                 <label>
-                  简介
+                  描述
                   <textarea
-                    aria-label="简介"
+                    aria-label="描述"
                     rows={4}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="这个 MCP 服务提供什么能力"
                   />
                 </label>
-                <label>
-                  服务器名称
+              </div>
+            )}
+            {step === 1 && (
+              <div className="gal-skill-fields">
+                <details><summary>高级设置 · 调用标识</summary>                <label>
+                  调用标识
                   <input
-                    aria-label="服务器名称"
+                    aria-label="调用标识"
                     value={serverName}
                     maxLength={32}
                     placeholder="filesystem"
@@ -187,10 +191,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
                   />
                 </label>
                 <p>1–32 位字母、数字、下划线或连字符；作为工具名称前缀。</p>
-              </div>
-            )}
-            {step === 1 && (
-              <div className="gal-skill-fields">
+</details>
                 <div className="gal-mcp-transport">
                   <button
                     aria-pressed={transport === "stdio"}
@@ -273,14 +274,10 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
                   每行填写「服务字段=DSH
                   环境变量名」。资源中只保存变量名，不保存密钥。
                 </p>
-              </div>
-            )}
-            {step === 2 && (
-              <div className="gal-skill-fields">
                 <p>
                   连接测试会尝试启动或访问该服务，并读取它提供的工具。完成后会断开测试连接。
                 </p>
-                <button className="gal-primary" disabled={busy} onClick={check}>
+                <button className="gal-primary" disabled={busy || !validConnection} onClick={check}>
                   <Glyph name="refresh" />
                   {busy ? "检查中…" : "检查连接"}
                 </button>
@@ -303,7 +300,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
                 <p>也可以跳过检查，保存为待验证配置。</p>
               </div>
             )}
-            {step === 3 && (
+            {step === 2 && (
               <div className="gal-skill-fields">
                 <div className="gal-skill-summary">
                   <Glyph name="mcp" size={36} />
@@ -375,7 +372,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
           >
             {step ? "上一步" : "取消"}
           </button>
-          {step < 3 ? (
+          {step < 2 ? (
             <button
               className="gal-primary"
               disabled={

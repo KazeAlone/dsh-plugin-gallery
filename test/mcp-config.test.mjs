@@ -13,3 +13,9 @@ test('owner-initiated stdio connection test discovers tools and closes probe',as
  const result=await checkMcpConnection({serverName:'test',transport:'stdio',command:process.execPath,args:['test/mcp-fixture.mjs'],cwd:process.cwd()});
  assert.equal(result.connected,true);assert.ok(result.tools.some(tool=>tool.name==='ping'));
 });
+
+test('HTTP MCP accepts hyphenated header names while stdio env names stay strict',()=>{
+ const c={serverName:'remote',transport:'streamable-http',url:'https://example.com/mcp',envRefs:{'X-API-Key':'HOST_KEY'}};
+ assert.equal(resolveMcpConfig(c,{HOST_KEY:'value'}).headers['X-API-Key'],'value');
+ assert.throws(()=>validateMcpConfig({...c,envRefs:{'Bad Header':'HOST_KEY'}}));
+});

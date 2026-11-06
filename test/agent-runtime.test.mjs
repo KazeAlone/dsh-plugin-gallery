@@ -14,7 +14,7 @@ test('Gallery Agent tools list and delegate a saved Agent to DSH spawn', async (
   assert.equal(result.child_id, 'child-one');
   assert.equal(activation.provider, 'spawn');
   assert.equal(activation.delivery, 'parent');
-  assert.deepEqual(activation.request.agentOptions, { model: 'review-model' });
+  assert.equal(activation.request.agentOptions, undefined);
   assert.match(activation.request.prompt[0].text, /Check correctness/);
   assert.match(activation.request.prompt[0].text, /Review this file/);
   dispose(); assert.equal(tools.size, 0);

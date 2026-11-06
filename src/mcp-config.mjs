@@ -28,7 +28,7 @@ export function validateMcpConfig(input) {
   );
   for (const [key, value] of Object.entries(envRefs))
     demand(
-      /^[A-Za-z_][A-Za-z0-9_]*$/.test(key) &&
+      (input.transport === "streamable-http" ? /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/.test(key) : /^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) &&
         typeof value === "string" &&
         /^[A-Za-z_][A-Za-z0-9_]*$/.test(value),
       400,

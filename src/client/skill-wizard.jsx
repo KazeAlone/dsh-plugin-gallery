@@ -31,7 +31,8 @@ export function SkillWizard({ resource, onClose, onSave }) {
   const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const [initial] = useState(() => readSkill(resource));
   const [step, setStep] = useState(0),
-    [name, setName] = useState(initial.name),
+    [name, setName] = useState(initial.name || `skill-${crypto.randomUUID().slice(0, 8)}`),
+    [displayName, setDisplayName] = useState(resource?.name || ""),
     [description, setDescription] = useState(initial.description),
     [body, setBody] = useState(initial.body),
     [files, setFiles] = useState(initial.files),
@@ -67,10 +68,12 @@ export function SkillWizard({ resource, onClose, onSave }) {
     ...(parsedTags.some((tag) => tag.length > 40)
       ? ["每个标签最多 40 个字符。"]
       : []),
+    ...(!displayName.trim() || displayName.length > 160 ? ["请填写名称，最多 160 字符。"] : []),
     ...(initial.error ? [initial.error] : []),
     ...skillIssues(name, description, linkedBody, files),
   ];
   const basicValid =
+    !!displayName.trim() && displayName.length <= 160 &&
     /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) &&
     name.length <= 64 &&
     !!description.trim() &&
@@ -132,7 +135,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
     try {
       await onSave({
         type: "skill",
-        name: name.trim(),
+        name: displayName.trim(),
         description: description.trim(),
         tags: parsedTags,
         metadata: withResourceCover(resource?.metadata, cover),
@@ -185,8 +188,9 @@ export function SkillWizard({ resource, onClose, onSave }) {
             </h3>
             {step === 0 && (
               <div className="gal-skill-fields">
-                <label>
-                  Skill 名称
+                <label>名称<input aria-label="名称" maxLength={160} value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="代码审查" /></label>
+                <details><summary>高级设置</summary>                <label>
+                  调用标识
                   <input
                     value={name}
                     maxLength={64}
@@ -195,6 +199,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
                   />
                 </label>
                 <p>使用小写英文、数字和连字符，也作为文件夹名称。</p>
+</details>
                 <label>
                   描述
                   <textarea
