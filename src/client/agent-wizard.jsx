@@ -1,3 +1,4 @@
+import { createResourceIdentifier } from "./resource-id.mjs";
 import { ResourceBasics } from "./resource-basics.jsx";
 import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import React, { useEffect, useState, useRef } from "react";
@@ -14,7 +15,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
   const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const [initial] = useState(() => readAgent(resource));
   const [step, setStep] = useState(0),
-    [slug, setSlug] = useState(initial.slug || `agent-${crypto.randomUUID().slice(0, 8)}`),
+    [slug, setSlug] = useState(() => initial.slug || createResourceIdentifier("agent")),
     [name, setName] = useState(resource?.name || ""),
     [description, setDescription] = useState(initial.description),
     [instructions, setInstructions] = useState(() =>

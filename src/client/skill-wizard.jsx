@@ -1,3 +1,4 @@
+import { createResourceIdentifier } from "./resource-id.mjs";
 import { ResourceBasics } from "./resource-basics.jsx";
 import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import React, { useState, useRef, useEffect } from "react";
@@ -32,7 +33,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
   const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const [initial] = useState(() => readSkill(resource));
   const [step, setStep] = useState(0),
-    [name, setName] = useState(initial.name || `skill-${crypto.randomUUID().slice(0, 8)}`),
+    [name, setName] = useState(() => initial.name || createResourceIdentifier("skill")),
     [displayName, setDisplayName] = useState(resource?.name || ""),
     [description, setDescription] = useState(initial.description),
     [body, setBody] = useState(initial.body),

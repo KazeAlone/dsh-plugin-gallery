@@ -1,3 +1,4 @@
+import { createResourceIdentifier } from "./resource-id.mjs";
 import { ResourceBasics } from "./resource-basics.jsx";
 import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import React, { useState, useEffect, useRef } from "react";
@@ -23,7 +24,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
   const [step, setStep] = useState(0),
     [name, setName] = useState(resource?.name || ""),
     [description, setDescription] = useState(resource?.description || ""),
-    [serverName, setServerName] = useState(saved.serverName || `mcp-${crypto.randomUUID().slice(0, 8)}`),
+    [serverName, setServerName] = useState(() => saved.serverName || createResourceIdentifier("mcp")),
     [transport, setTransport] = useState(saved.transport || "stdio"),
     [command, setCommand] = useState(saved.command || ""),
     [args, setArgs] = useState((saved.args || []).join("\n")),

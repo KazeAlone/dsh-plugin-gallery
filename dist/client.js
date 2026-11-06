@@ -2489,6 +2489,14 @@ function createGalleryTrigger(remote, icon) {
   };
 }
 
+// src/client/resource-id.mjs
+function createResourceIdentifier(type, cryptoApi = globalThis.crypto) {
+  const bytes = new Uint8Array(12);
+  if (typeof cryptoApi?.getRandomValues === "function") cryptoApi.getRandomValues(bytes);
+  else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+  return `${type}-${Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")}`;
+}
+
 // src/client/resource-basics.jsx
 var import_react3 = __toESM(require("react"), 1);
 function ResourceBasics({ name, onName, description, onDescription, identifier, onIdentifier, identifierMax = 64, busy = false }) {
@@ -2610,7 +2618,7 @@ var parseRefs = (value) => Object.fromEntries(
 function McpWizard({ resource, onClose, onSave, onCheck }) {
   const [cover, setCover] = (0, import_react6.useState)(resource?.metadata?.cover ?? "");
   const saved = resource?.metadata?.mcp || {};
-  const [step, setStep] = (0, import_react6.useState)(0), [name, setName] = (0, import_react6.useState)(resource?.name || ""), [description, setDescription] = (0, import_react6.useState)(resource?.description || ""), [serverName, setServerName] = (0, import_react6.useState)(saved.serverName || `mcp-${crypto.randomUUID().slice(0, 8)}`), [transport, setTransport] = (0, import_react6.useState)(saved.transport || "stdio"), [command, setCommand] = (0, import_react6.useState)(saved.command || ""), [args, setArgs] = (0, import_react6.useState)((saved.args || []).join("\n")), [cwd, setCwd] = (0, import_react6.useState)(saved.cwd || ""), [url, setUrl] = (0, import_react6.useState)(saved.url || ""), [envRefs, setEnvRefs] = (0, import_react6.useState)(
+  const [step, setStep] = (0, import_react6.useState)(0), [name, setName] = (0, import_react6.useState)(resource?.name || ""), [description, setDescription] = (0, import_react6.useState)(resource?.description || ""), [serverName, setServerName] = (0, import_react6.useState)(() => saved.serverName || createResourceIdentifier("mcp")), [transport, setTransport] = (0, import_react6.useState)(saved.transport || "stdio"), [command, setCommand] = (0, import_react6.useState)(saved.command || ""), [args, setArgs] = (0, import_react6.useState)((saved.args || []).join("\n")), [cwd, setCwd] = (0, import_react6.useState)(saved.cwd || ""), [url, setUrl] = (0, import_react6.useState)(saved.url || ""), [envRefs, setEnvRefs] = (0, import_react6.useState)(
     Object.entries(saved.envRefs || {}).map(([a, b]) => `${a}=${b}`).join("\n")
   ), [tags, setTags] = (0, import_react6.useState)((resource?.tags || []).join(", ")), [testResult, setTestResult] = (0, import_react6.useState)(
     resource?.metadata?.mcpVerification ?? null
@@ -9295,7 +9303,7 @@ var steps3 = ["\u57FA\u672C\u4FE1\u606F", "\u884C\u4E3A\u6307\u5F15\u4E0E\u9644\
 function AgentWizard({ resource, onClose, onSave }) {
   const [cover, setCover] = (0, import_react8.useState)(resource?.metadata?.cover ?? "");
   const [initial2] = (0, import_react8.useState)(() => readAgent(resource));
-  const [step, setStep] = (0, import_react8.useState)(0), [slug, setSlug] = (0, import_react8.useState)(initial2.slug || `agent-${crypto.randomUUID().slice(0, 8)}`), [name, setName] = (0, import_react8.useState)(resource?.name || ""), [description, setDescription] = (0, import_react8.useState)(initial2.description), [instructions, setInstructions] = (0, import_react8.useState)(
+  const [step, setStep] = (0, import_react8.useState)(0), [slug, setSlug] = (0, import_react8.useState)(() => initial2.slug || createResourceIdentifier("agent")), [name, setName] = (0, import_react8.useState)(resource?.name || ""), [description, setDescription] = (0, import_react8.useState)(initial2.description), [instructions, setInstructions] = (0, import_react8.useState)(
     () => [
       initial2.goal && "## \u4EFB\u52A1\u76EE\u6807\n" + initial2.goal,
       initial2.boundaries && "## \u5904\u7406\u8FB9\u754C\n" + initial2.boundaries,
@@ -9742,7 +9750,7 @@ function Preview({ text: text2 }) {
 function SkillWizard({ resource, onClose, onSave }) {
   const [cover, setCover] = (0, import_react9.useState)(resource?.metadata?.cover ?? "");
   const [initial2] = (0, import_react9.useState)(() => readSkill(resource));
-  const [step, setStep] = (0, import_react9.useState)(0), [name, setName] = (0, import_react9.useState)(initial2.name || `skill-${crypto.randomUUID().slice(0, 8)}`), [displayName, setDisplayName] = (0, import_react9.useState)(resource?.name || ""), [description, setDescription] = (0, import_react9.useState)(initial2.description), [body, setBody] = (0, import_react9.useState)(initial2.body), [files, setFiles] = (0, import_react9.useState)(initial2.files), [tags, setTags] = (0, import_react9.useState)((resource?.tags || []).join(", ")), [active, setActive] = (0, import_react9.useState)(-1), [preview, setPreview] = (0, import_react9.useState)(false), [error, setError] = (0, import_react9.useState)(""), [busy, setBusy] = (0, import_react9.useState)(false);
+  const [step, setStep] = (0, import_react9.useState)(0), [name, setName] = (0, import_react9.useState)(() => initial2.name || createResourceIdentifier("skill")), [displayName, setDisplayName] = (0, import_react9.useState)(resource?.name || ""), [description, setDescription] = (0, import_react9.useState)(initial2.description), [body, setBody] = (0, import_react9.useState)(initial2.body), [files, setFiles] = (0, import_react9.useState)(initial2.files), [tags, setTags] = (0, import_react9.useState)((resource?.tags || []).join(", ")), [active, setActive] = (0, import_react9.useState)(-1), [preview, setPreview] = (0, import_react9.useState)(false), [error, setError] = (0, import_react9.useState)(""), [busy, setBusy] = (0, import_react9.useState)(false);
   const heading = (0, import_react9.useRef)(null);
   (0, import_react9.useEffect)(() => {
     heading.current?.focus();
@@ -10893,7 +10901,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.17.0"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.17.1"), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         disabled: busy,
