@@ -20,6 +20,8 @@ npx dsh plugin --profile web add github:KazeAlone/dsh-plugin-gallery --ignore-sc
 
 更新后重启 DSH 并刷新浏览器。仓库包含构建好的客户端。
 
+本地目录链接与安装包的依赖行为不同，详见[安装说明](docs/installation.md)。
+
 ## 本地存储
 
 无需启动 `gallery.mjs serve`，无需配置服务地址，也不连接 SQLite 或统一数据库。默认数据文件：
