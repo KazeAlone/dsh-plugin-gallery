@@ -13,7 +13,7 @@ npm pack --ignore-scripts
 该操作生成安装包，不要求先给源码目录安装依赖。使用实际生成的文件名安装：
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.20.6.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.20.7.tgz --ignore-scripts
 ```
 
 包管理器会为安装包解析和安装运行依赖。--ignore-scripts 仅跳过生命周期脚本，不等于跳过运行依赖。安装后重启 DSH、刷新浏览器。
@@ -34,7 +34,7 @@ dsh plugin --profile web add /absolute/path/dsh-gallery --ignore-scripts
 
 ```bash
 dsh plugin --profile web remove dsh-plugin-gallery
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.20.6.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.20.7.tgz --ignore-scripts
 ```
 
 使用指定 CLI 版本时，命令前缀为 npx @deepseek-ai/dsh@0.2.1-rc.5 plugin --profile web。插件管理使用 plugin 子命令，而不是把 update 参数传给 Web 启动命令。配置名需与实际运行实例一致。
