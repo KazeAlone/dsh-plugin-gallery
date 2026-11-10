@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-gallery",
-  "version": "0.20.8",
+  "version": "0.21.0",
   "description": "Local DSH resource gallery for skills, agents, MCP and workflows",
   "type": "module",
   "main": "./src/host.mjs",

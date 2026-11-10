@@ -2,6 +2,7 @@ export const THEME_KEY = 'dsh-gallery-theme';
 export const THEMES = [
   { id: 'system', label: '跟随系统', hint: '当前 Gallery 外观' },
   { id: 'atelier', label: '墨绿黄铜', hint: '深色展厅' },
+  { id: 'folio', label: '纸境 · Paper', hint: '图形封面、分类榜单与侧边详情' },
   { id: 'paper', label: '暖纸', hint: '柔和浅色' },
   { id: 'comic', label: '漫画印刷', hint: '粗墨分镜与彩色网点' },
   { id: 'astral', label: '鎏金星穹', hint: '星轨、流星与宝石榜单' },

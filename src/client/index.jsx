@@ -14,6 +14,8 @@ import { Glyph } from "./icons.jsx";
 import { ResourceCover, hasResourceCover } from "./resource-cover.jsx";
 import { THEMES, loadTheme, saveTheme } from "./theme.mjs";
 import { AnimeMascot } from "./anime-mascot.jsx";
+import { PaperBrowser, PaperDetail } from "./paper-browser.jsx";
+import paperStyles from "./paper-browser.css";
 
 const NS = "dsh-gallery",
   TYPES = { skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" };
@@ -42,11 +44,41 @@ function download(name, value, type = "application/json") {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+function exportResource(content) {
+  download(
+    `${content.name}.gallery.json`,
+    json(
+      {
+        format: "dsh-gallery-resource",
+        schemaVersion: 2,
+        resource: {
+          type: content.type,
+          name: content.name,
+          description: content.description,
+          tags: content.tags,
+          files: content.files,
+          metadata: content.metadata,
+          references: content.references,
+        },
+        source: {
+          libraryId: content.libraryId,
+          id: content.id,
+          digest: content.digest,
+        },
+      },
+      null,
+      2,
+    ),
+  );
+}
 function Icon({ size = 20 }) {
   return <BrandIcon size={size} />;
 }
 function Gallery({ remote }) {
   const [theme, setTheme] = useState(() => loadTheme(globalThis.localStorage));
+  const [paperDark, setPaperDark] = useState(() => {
+    try { return globalThis.localStorage?.getItem("dsh-gallery-paper-dark") === "true"; } catch { return false; }
+  });
   const [motionPaused, setMotionPaused] = useState(false);
   const [themeMenu, setThemeMenu] = useState(false);
   const themeMenuRef = useRef(null);
@@ -77,6 +109,7 @@ function Gallery({ remote }) {
     const root = document.createElement("div");
     root.className = "gal gal-toast-host";
     root.dataset.theme = theme;
+    root.dataset.paperDark = String(paperDark);
     const toast = document.createElement("div");
     toast.className = "gal-notice";
     toast.setAttribute("role", "status");
@@ -99,7 +132,7 @@ function Gallery({ remote }) {
       clearTimeout(timer);
       root.remove();
     };
-  }, [notice, theme]);
+  }, [notice, theme, paperDark]);
   const [boards, setBoards] = useState([]);
   const [items, setItems] = useState([]),
     [total, setTotal] = useState(0),
@@ -156,7 +189,7 @@ function Gallery({ remote }) {
     };
   }, []);
   useEffect(() => {
-    if (!status?.ready) return;
+    if (!status?.ready || theme === "folio") return;
     let live = true;
     setLoading(true);
     const timer = setTimeout(
@@ -199,6 +232,7 @@ function Gallery({ remote }) {
     };
   }, [
     status?.ready,
+    theme,
     status?.storage?.activeLibraryId,
     type,
     scope,
@@ -211,28 +245,28 @@ function Gallery({ remote }) {
     setSelected(r);
     return r;
   }
-  function edit(r) {
+  function edit(r, resourceType = type) {
     setNotice("");
     setError("");
-    if (!r && !type) return;
+    if (!r && !resourceType) return;
     setSelected(null);
-    if ((r?.type || type) === "skill") {
+    if ((r?.type || resourceType) === "skill") {
       setSkillWizard({ resource: r || null });
       return;
     }
-    if ((r?.type || type) === "agent") {
+    if ((r?.type || resourceType) === "agent") {
       setAgentWizard({ resource: r || null });
       return;
     }
-    if ((r?.type || type) === "mcp") {
+    if ((r?.type || resourceType) === "mcp") {
       setMcpWizard({ resource: r || null });
       return;
     }
-    if ((r?.type || type) === "workflow") {
+    if ((r?.type || resourceType) === "workflow") {
       setWorkflowWizard({ resource: r || null });
       return;
     }
-    const d = r || { ...blank(), type };
+    const d = r || { ...blank(), type: resourceType };
     setEditor({
       id: r?.id,
       revision: r?.revision,
@@ -390,8 +424,55 @@ function Gallery({ remote }) {
     setType(t);
     setOffset(0);
   };
+  const themePicker = (
+    <div className="gal-theme-picker" ref={themeMenuRef}>
+      <button
+        className="gal-icon-button"
+        aria-label="切换主题"
+        aria-expanded={themeMenu}
+        title={`主题 · ${THEMES.find((item) => item.id === theme)?.label}`}
+        onClick={() => setThemeMenu((open) => !open)}
+      >
+        <Glyph name="palette" size={20} />
+      </button>
+      {themeMenu && (
+        <div className="gal-theme-menu" role="group" aria-label="选择主题">
+          {THEMES.map((item) => (
+            <button
+              key={item.id}
+              aria-pressed={theme === item.id}
+              onClick={() => {
+                saveTheme(globalThis.localStorage, item.id);
+                setTheme(item.id);
+                setThemeMenu(false);
+              }}
+            >
+              <span
+                className={`gal-theme-swatch ${item.id}`}
+                aria-hidden="true"
+              />
+              <span>
+                <strong>{item.label}</strong>
+                <small>{item.hint}</small>
+              </span>
+              {theme === item.id && <Glyph name="check" size={16} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+  const openStorage = () => run(async () => {
+    const settings = await call(remote, "uiStorageSettings");
+    setStorageSettings(settings);
+    setConnectionResult("");
+  });
+  const publishWorkflow = () => run(async () => {
+    const result = await call(remote, "uiPublishWorkflow", selected.id);
+    setNotice(`已注册到 TeamFlow：${result.name} v${result.version}`);
+  });
   return (
-    <div className="gal" data-theme={theme} data-motion-paused={motionPaused}>
+    <div className="gal" data-theme={theme} data-motion-paused={motionPaused} data-paper-dark={paperDark}>
       {theme === "astral" && (
         <div className="gal-astral-sky" aria-hidden="true">
           <svg className="gal-astral-chart" viewBox="0 0 540 240" fill="none">
@@ -409,7 +490,7 @@ function Gallery({ remote }) {
           <span className="gal-astral-meteor" />
         </div>
       )}
-      <header className="gal-header">
+      {(theme !== "folio" || !status?.ready) && <header className="gal-header">
         {theme === "anime" && <AnimeMascot />}
         <div>
           <h1>
@@ -425,12 +506,7 @@ function Gallery({ remote }) {
               {motionPaused ? "继续动效" : "暂停动效"}
             </button>
           )}
-          <div className="gal-theme-picker" ref={themeMenuRef}>
-            <button className="gal-icon-button" aria-label="切换主题" aria-expanded={themeMenu} title={`主题 · ${THEMES.find(item => item.id === theme)?.label}`} onClick={() => setThemeMenu(open => !open)}><Glyph name="palette" size={20} /></button>
-            {themeMenu && <div className="gal-theme-menu" role="group" aria-label="选择主题">
-              {THEMES.map(item => <button key={item.id} aria-pressed={theme === item.id} onClick={() => { saveTheme(globalThis.localStorage, item.id); setTheme(item.id); setThemeMenu(false); }}><span className={`gal-theme-swatch ${item.id}`} aria-hidden="true" /><span><strong>{item.label}</strong><small>{item.hint}</small></span>{theme === item.id && <Glyph name="check" size={16} />}</button>)}
-            </div>}
-          </div>
+          {themePicker}
           <button
             className="gal-icon-button"
             aria-label="存储设置"
@@ -453,7 +529,7 @@ function Gallery({ remote }) {
             <Glyph name="settings" size={20} />
           </button>
         </div>
-      </header>
+      </header>}
       {error && (
         <div role="alert" className="gal-alert">
           {error}
@@ -468,6 +544,16 @@ function Gallery({ remote }) {
             ? "资源库暂时不可用，请检查提示后刷新。"
             : "正在打开本地资源库…"}
         </div>
+      ) : theme === "folio" ? (
+        <PaperBrowser remote={remote} status={status} refresh={refresh} busy={busy}
+          onError={setError} onOpen={r => run(() => load(r.id))}
+          onCreate={resourceType => { chooseFilter(resourceType); edit(null, resourceType); }}
+          onRefresh={() => { setError(""); setRefresh(x => x + 1); }} onStorage={openStorage}
+          themePicker={themePicker} dark={paperDark} onToggleDark={() => setPaperDark(current => {
+            const next = !current;
+            try { globalThis.localStorage?.setItem("dsh-gallery-paper-dark", String(next)); } catch { /* Apply for this visit. */ }
+            return next;
+          })} />
       ) : (
         <>
           <div className="gal-toolbar">
@@ -713,7 +799,13 @@ function Gallery({ remote }) {
           }}
         />
       )}
-      {selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && (
+      {theme === "folio" && selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && (
+        <PaperDetail key={selected.id} resource={selected} busy={busy} error={error}
+          onClose={() => setSelected(null)} onEdit={() => edit(selected)}
+          onDelete={() => removeResource(selected)} onExport={() => exportResource(selected)}
+          onPublish={publishWorkflow} />
+      )}
+      {theme !== "folio" && selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && (
         <Modal onClose={() => !busy && setSelected(null)}>
           <section
             tabIndex={-1}
@@ -757,31 +849,7 @@ function Gallery({ remote }) {
               )}
               <button
                 onClick={() =>
-                  download(
-                    `${content.name}.gallery.json`,
-                    json(
-                      {
-                        format: "dsh-gallery-resource",
-                        schemaVersion: 2,
-                        resource: {
-                          type: content.type,
-                          name: content.name,
-                          description: content.description,
-                          tags: content.tags,
-                          files: content.files,
-                          metadata: content.metadata,
-                          references: content.references,
-                        },
-                        source: {
-                          libraryId: selected.libraryId,
-                          id: selected.id,
-                          digest: selected.digest,
-                        },
-                      },
-                      null,
-                      2,
-                    ),
-                  )
+                  exportResource(content)
                 }
               >
                 <Glyph name="download" />
@@ -1194,7 +1262,7 @@ export async function apply(ctx) {
   ctx.effect(() => {
     const s = document.createElement("style");
     s.dataset.gallery = "styles";
-    s.textContent = styles;
+    s.textContent = styles + "\n" + paperStyles;
     document.head.appendChild(s);
     return () => s.remove();
   });
