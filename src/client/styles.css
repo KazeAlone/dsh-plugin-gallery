@@ -1474,17 +1474,6 @@ fieldset.gal-skill-fields {
   }
 }
 
-.gal.gal-toast-host {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  pointer-events: none;
-  width: auto;
-  min-height: 0;
-  overflow: visible;
-  padding: 0;
-  background: transparent;
-}
 .gal-toast-host .gal-notice {
   position: absolute;
   pointer-events: auto;
@@ -2180,3 +2169,20 @@ fieldset.gal-skill-fields {
 .gal-flow-context-menu button span { margin-left: auto; color: var(--g-muted); font-size: 11px; }
 /* Prevent focus from scrolling the transformed scene behind the camera. */
 .gal-flow-view { overflow: clip; }
+
+/* Toast portal inherits theme colors, never the themed page surface/layout. */
+.gal.gal-toast-host[data-theme] {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  width: auto;
+  min-height: 0;
+  overflow: visible;
+  padding: 0;
+  background: transparent;
+  background-image: none;
+  border: 0;
+  box-shadow: none;
+  isolation: auto;
+}

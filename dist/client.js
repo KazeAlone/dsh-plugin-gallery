@@ -1565,17 +1565,6 @@ fieldset.gal-skill-fields {
   }
 }
 
-.gal.gal-toast-host {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  pointer-events: none;
-  width: auto;
-  min-height: 0;
-  overflow: visible;
-  padding: 0;
-  background: transparent;
-}
 .gal-toast-host .gal-notice {
   position: absolute;
   pointer-events: auto;
@@ -2271,6 +2260,23 @@ fieldset.gal-skill-fields {
 .gal-flow-context-menu button span { margin-left: auto; color: var(--g-muted); font-size: 11px; }
 /* Prevent focus from scrolling the transformed scene behind the camera. */
 .gal-flow-view { overflow: clip; }
+
+/* Toast portal inherits theme colors, never the themed page surface/layout. */
+.gal.gal-toast-host[data-theme] {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  width: auto;
+  min-height: 0;
+  overflow: visible;
+  padding: 0;
+  background: transparent;
+  background-image: none;
+  border: 0;
+  box-shadow: none;
+  isolation: auto;
+}
 `;
 
 // src/client/leaderboards.jsx
@@ -12078,7 +12084,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.20.6"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.20.7"), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         disabled: busy,
