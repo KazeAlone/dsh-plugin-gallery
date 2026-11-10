@@ -8,17 +8,17 @@ Workflow 画布原型支持添加和拖动 Agent、任务、人工节点，配�
 
 打开「Gallery」即可使用，**无需填写姓名、接入码或 Gallery 身份凭证**。沿用 DSH 自身的宿主访问认证，不增加插件登录流程。
 
-## 安装
+## 内部安装
 
 要求 Node.js >=24.9、DSH 0.2.1-rc.3 或 0.2.1-rc.5。
 
 rc.3 与 rc.5 的 Gallery 所用核心接口已完成静态对比；rc.3 的完整运行验证尚未完成。开发依赖仍固定 rc.5，安装时通过 peer 依赖复用宿主对应版本，避免混用运行时。TeamFlow 的宿主兼容范围以该插件自身声明为准。
 
 ```bash
-npx dsh plugin --profile web add github:KazeAlone/dsh-plugin-gallery --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.20.5.tgz --ignore-scripts
 ```
 
-更新后重启 DSH 并刷新浏览器。仓库包含构建好的客户端。
+将内部发布的安装包放到本机，用实际绝对路径替换上述示例。更新后重启 DSH 并刷新浏览器。安装包包含构建好的客户端。
 
 ## 本地存储
 
@@ -100,3 +100,7 @@ Workflow Agent 节点可用 DSH 默认模型从 AGENT.md 提取名称、功能�
 画布空白处右键可在鼠标位置添加三类节点；节点右键可删除。选中节点或框选后按 Delete 删除，编辑输入框文字时不会触发节点删除。右键拖动仍用于平移画布。
 
 Workflow 编辑器仅配置可复用模板：Agent 四项通用字段及 Skill/MCP，任务和人工节点填写通用要求、通用交付物与通用验收要求。本次补充指令和具体任务说明留到应用模板阶段。
+
+## 内部打包
+
+在源码目录执行 `npm ci`、`npm run build`、`npm run check`，再执行 `npm pack --ignore-scripts` 生成安装包。宿主依赖由目标 DSH 提供；其余 npm 依赖需由内部软件源或已准备的缓存提供。源码归档不包含版本控制目录。

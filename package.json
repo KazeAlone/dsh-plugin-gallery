@@ -82,14 +82,6 @@
     "format": "prettier --write src scripts test"
   },
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/KazeAlone/dsh-plugin-gallery.git"
-  },
-  "homepage": "https://github.com/KazeAlone/dsh-plugin-gallery#readme",
-  "bugs": {
-    "url": "https://github.com/KazeAlone/dsh-plugin-gallery/issues"
-  },
   "bin": {
     "dsh-gallery": "./scripts/gallery.mjs"
   },

@@ -94,7 +94,7 @@ Gallery MCP 资源保存 `mcp.json` 和 metadata.mcp，字段 transport 仅允�
 
 ## Workflow 字段与提取（0.20.0）
 
-核对 yogurtss/dsh-teamflow 的 src/templates.ts、template-brief.ts、workflow-native.ts 和 builtin-templates.ts 后，成员模板字段对应 name、summary、role、executionPrompt。specificPrompt 属于运行实例，单独保存在画布 Agent 元数据中；Skill/MCP 也保存在节点元数据中，尚无执行适配。模板 members.name 使用可编辑的成员名称，保存时将画布内部节点 ID 的负责人引用转换为该名称；重新打开时反向还原，避免改名断开任务负责人。
+核对 TeamFlow 的 src/templates.ts、template-brief.ts、workflow-native.ts 和 builtin-templates.ts 后，成员模板字段对应 name、summary、role、executionPrompt。specificPrompt 属于运行实例，单独保存在画布 Agent 元数据中；Skill/MCP 也保存在节点元数据中，尚无执行适配。模板 members.name 使用可编辑的成员名称，保存时将画布内部节点 ID 的负责人引用转换为该名称；重新打开时反向还原，避免改名断开任务负责人。
 
 任务与人工节点使用 subject、assignee、dependencies、checkpoint、general.requirements/deliverables/acceptance；人工节点 checkpoint=true 且 assignee 为空。实例的 description、人工验收历史及决定不混入可复用模板。
 
