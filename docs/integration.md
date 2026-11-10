@@ -106,3 +106,9 @@ uiExtractWorkflowAgent 仅向 owner 开放，通过宿主的 agentDefaultModel �
 ### TeamFlow 成员的 Gallery 访问
 
 成员模板可携带独立的布尔字段 `gallerySkill` 和 `galleryMcp`。TeamFlow 在子 Agent 激活时通过 Gallery 的同进程服务设置访问状态。关闭 Skill 会在成员作用域中过滤发现和加载，关闭 MCP 会隐藏已注册的 Gallery 工具，并在执行入口拦截工具调用和资源读取。旧模板省略字段时沿用宿主原有行为。
+
+### 按开关注入 MCP 使用指引（0.20.8）
+
+TeamFlow 在成员激活时调用 setMemberAccess；当 galleryMcp 明确为 true，Gallery 在该成员的 systemPrompt 作用域注册一段提示词。每次组装时读取成员有效工具列表与当前 Gallery 服务描述，仅包含可见的 Gallery MCP 工具，建议相关调研优先检索知识库，覆盖不足或调用失败再说明并补充外部资料。不包含环境变量映射或密钥，不读取对话内容。开关关闭、权限记录更换或成员清理后，不再提供该指引；工具限制保持原有执行检查。
+
+这是模型选择引导，不是强制执行顺序；没有相关工具时不注入，也不自动执行写操作。已通过开关、有效工具过滤、提示清理和完整测试套件；尚未进行真实模型调研行为的端到端验证。

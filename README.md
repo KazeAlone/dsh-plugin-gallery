@@ -15,7 +15,7 @@ Workflow 画布原型支持添加和拖动 Agent、任务、人工节点，配�
 rc.3 与 rc.5 的 Gallery 所用核心接口已完成静态对比；rc.3 的完整运行验证尚未完成。开发依赖仍固定 rc.5，安装时通过 peer 依赖复用宿主对应版本，避免混用运行时。TeamFlow 的宿主兼容范围以该插件自身声明为准。
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.20.7.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.20.8.tgz --ignore-scripts
 ```
 
 将内部发布的安装包放到本机，用实际绝对路径替换上述示例。更新后重启 DSH 并刷新浏览器。安装包包含构建好的客户端。
@@ -106,3 +106,5 @@ Workflow 编辑器仅配置可复用模板：Agent 四项通用字段及 Skill/M
 ## 内部打包
 
 在源码目录执行 `npm ci`、`npm run build`、`npm run check`，再执行 `npm pack --ignore-scripts` 生成安装包。宿主依赖由目标 DSH 提供；其余 npm 依赖需由内部软件源或已准备的缓存提供。源码归档不包含版本控制目录。
+
+TeamFlow 成员开启「允许使用 Gallery MCP」后，会自动获得相关知识库优先检索指引，无需在每个任务重复填写。只引导选择实际可用的相关工具，不强制无关任务调用 MCP；覆盖不足时仍可补充外部检索。更新重启后在成员激活时生效。

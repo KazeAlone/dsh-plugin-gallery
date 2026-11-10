@@ -1,3 +1,4 @@
+import { registerMemberMcpGuidance } from "./member-mcp-guidance.mjs";
 import { extractWorkflowAgent } from "./workflow-extraction.mjs";
 import {
   TypertRemoteService,
@@ -114,7 +115,7 @@ export default class GalleryService extends TypertRemoteService {
     const token = { ...access };
     this.memberAccess.set(agent, token);
     this.invalidateSkills();
-    let stopListener, stopFilter, signature = "";
+    let stopListener, stopFilter, stopPrompt, signature = "";
     let disposed = false;
     const update = () => {
       if (disposed) return;
@@ -132,11 +133,15 @@ export default class GalleryService extends TypertRemoteService {
       disposed = true;
       stopListener?.();
       stopFilter?.();
+      stopPrompt?.();
       if (this.memberAccess.get(agent) !== token) return;
       this.memberAccess.delete(agent);
       this.invalidateSkills();
     };
     try {
+      if (access.galleryMcp === true) {
+        stopPrompt = registerMemberMcpGuidance(agent, this.store, () => this.mcpRuntime, () => this.memberAccess.get(agent) === token && token.galleryMcp === true);
+      }
       if (access.galleryMcp === false) {
         update();
         stopListener = agent.ctx.on("tools/change", () => queueMicrotask(() => {
