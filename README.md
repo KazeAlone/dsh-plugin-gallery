@@ -10,7 +10,9 @@ Workflow 画布原型支持添加和拖动 Agent、任务、人工节点，配�
 
 ## 安装
 
-要求 Node.js >=24.9、DSH 0.2.1-rc.5。
+要求 Node.js >=24.9、DSH 0.2.1-rc.3 或 0.2.1-rc.5。
+
+rc.3 与 rc.5 的 Gallery 所用核心接口已完成静态对比；rc.3 的完整运行验证尚未完成。开发依赖仍固定 rc.5，安装时通过 peer 依赖复用宿主对应版本，避免混用运行时。TeamFlow 的宿主兼容范围以该插件自身声明为准。
 
 ```bash
 npx dsh plugin --profile web add github:KazeAlone/dsh-plugin-gallery --ignore-scripts

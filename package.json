@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-gallery",
-  "version": "0.20.4",
+  "version": "0.20.5",
   "description": "Local DSH resource gallery for skills, agents, MCP and workflows",
   "type": "module",
   "main": "./src/host.mjs",
@@ -23,7 +23,7 @@
   ],
   "engines": {
     "node": ">=24.9.0",
-    "dsh": "0.2.1-rc.5"
+    "dsh": "0.2.1-rc.3 || 0.2.1-rc.5"
   },
   "dsh": {
     "manifestVersion": 1,
@@ -44,10 +44,10 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.0.5",
-    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.3 || 0.2.1-rc.5",
     "react": ">=18 <20",
-    "@deepseek-ai/dsh-tools": "0.2.1-rc.5",
-    "@deepseek-ai/dsh-mcp-client": "0.2.1-rc.5"
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.3 || 0.2.1-rc.5",
+    "@deepseek-ai/dsh-mcp-client": "0.2.1-rc.3 || 0.2.1-rc.5"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {
