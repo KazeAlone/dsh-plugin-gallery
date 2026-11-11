@@ -77,7 +77,8 @@
   place-items: center;
   width: 32px;
   height: 36px;
-  background: var(--g-ink);
+  background: #c47b24;
+  background: light-dark(#c47b24, #e9b568);
   color: var(--pb-panel);
   border-radius: 9px;
   font-size: 23px;
