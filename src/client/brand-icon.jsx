@@ -4,6 +4,8 @@ import React from "react";
 export function BrandIcon({ size = 20 }) {
   return (
     <svg
+      className="gal-brand-icon"
+      style={{ color: "light-dark(#c47b24, #e9b568)" }}
       width={size}
       height={size}
       viewBox="3 2.5 26 26"

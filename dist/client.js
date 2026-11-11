@@ -11018,6 +11018,8 @@ function BrandIcon({ size = 20 }) {
   return /* @__PURE__ */ import_react10.default.createElement(
     "svg",
     {
+      className: "gal-brand-icon",
+      style: { color: "light-dark(#c47b24, #e9b568)" },
       width: size,
       height: size,
       viewBox: "3 2.5 26 26",
