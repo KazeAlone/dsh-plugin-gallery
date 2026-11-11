@@ -77,8 +77,7 @@
   place-items: center;
   width: 32px;
   height: 36px;
-  background: #c47b24;
-  background: light-dark(#c47b24, #e9b568);
+  background: linear-gradient(135deg, #12d9af 0%, #35abff 48%, #9e6aff 100%);
   color: var(--pb-panel);
   border-radius: 9px;
   font-size: 23px;
