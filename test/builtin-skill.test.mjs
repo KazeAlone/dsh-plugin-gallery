@@ -92,3 +92,39 @@ test('upgrading examples preserves user changes to the old Skill template', () =
     assert.equal(store.listResources({}).total, 0);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+const originalTemplate = JSON.parse(readFileSync(new URL('./fixtures/skill-reference-original.json', import.meta.url), 'utf8'));
+
+test('the first two shipped Skill templates upgrade without replacing edited or deleted copies', () => {
+  for (const originalAuthor of ['Gallery', 'ZelongWANG']) for (const revision of [1, 3]) {
+    const root = mkdtempSync(join(tmpdir(), 'gallery-builtin-original-'));
+    try {
+      const store = new LocalGalleryStore(join(root, 'resources.json'));
+      const input = structuredClone(originalTemplate);
+      input.files[0].content = input.files[0].content.replace('author: Gallery', `author: ${originalAuthor}`);
+      const saved = store.createResource(input, { username: 'ZelongWANG' });
+      store.write((rows, data) => {
+        data.builtinSeeds = [input.metadata.builtin];
+        Object.assign(rows[0], { revision, usageCount: 19 });
+        return rows[0];
+      });
+      installReferenceSkill(store);
+      const upgraded = store.getResource(saved.id);
+      assert.equal(upgraded.name, referenceSkill().name);
+      assert.equal(upgraded.revision, revision + 1);
+      assert.equal(upgraded.usageCount, 19);
+      assert.equal(upgraded.createdAt, saved.createdAt);
+      assert.equal(upgraded.digest, digest(JSON.stringify(normalizeResource(referenceSkill()))));
+      assert.equal(store.listResources({}).total, 1);
+      installReferenceSkill(store);
+      assert.equal(store.getResource(saved.id).revision, upgraded.revision);
+      store.deleteResource(saved.id, upgraded.revision);
+      installReferenceSkill(store);
+      assert.equal(store.listResources({}).total, 0);
+      const custom = store.createResource({ ...input, description: '用户自己的整理方式' }, { username: 'ZelongWANG' });
+      installReferenceSkill(store);
+      assert.equal(store.getResource(custom.id).description, '用户自己的整理方式');
+      assert.equal(store.getResource(custom.id).revision, 1);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  }
+});

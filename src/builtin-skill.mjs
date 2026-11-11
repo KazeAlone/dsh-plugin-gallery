@@ -4,10 +4,14 @@ import { stringify } from 'yaml';
 import { syncSkillAttachments } from './client/skill-format.mjs';
 
 const seed = 'gallery-skill-reference-v1';
-// Only refresh exact copies of the two previously shipped templates.
+// Only refresh exact copies of all previously shipped templates.
 // Revisions can also increase when Gallery updates a built-in, so they do not
 // reliably distinguish a user edit from an earlier automatic update.
 const previousDigests = new Set([
+  // Initial template, before and after the author correction.
+  '102215720ad397095b7db553236e744d915ded031f9d26c9854e0c4da4a9befc',
+  '833b85542a0d7d60b8a5711fc11ef4465bd91fc144f1cf00331f363bcd1c0a7d',
+  // Templates with automatically generated attachment links.
   'd6f702eb399cce245a1bec442e50f6d0fcc9117aa1a13abe7d466f84363b588b',
   '1b58bd2ed92c82b5ddfa9b6305e974657f58e0f521cc5489df7297a9c40d718b',
 ]);
