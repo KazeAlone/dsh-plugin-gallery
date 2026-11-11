@@ -11028,7 +11028,7 @@ function BrandIcon({ size = 20 }) {
       "aria-hidden": "true",
       focusable: "false"
     },
-    /* @__PURE__ */ import_react10.default.createElement("defs", null, /* @__PURE__ */ import_react10.default.createElement("linearGradient", { id: gradientId, x1: "7", y1: "26", x2: "25", y2: "5", gradientUnits: "userSpaceOnUse" }, /* @__PURE__ */ import_react10.default.createElement("stop", { offset: "0", stopColor: "#12d9af" }), /* @__PURE__ */ import_react10.default.createElement("stop", { offset: "0.48", stopColor: "#35abff" }), /* @__PURE__ */ import_react10.default.createElement("stop", { offset: "1", stopColor: "#9e6aff" }))),
+    /* @__PURE__ */ import_react10.default.createElement("defs", null, /* @__PURE__ */ import_react10.default.createElement("linearGradient", { id: gradientId, x1: "16", y1: "26", x2: "16", y2: "5", gradientUnits: "userSpaceOnUse" }, /* @__PURE__ */ import_react10.default.createElement("stop", { offset: "0", stopColor: "#12d9af" }), /* @__PURE__ */ import_react10.default.createElement("stop", { offset: "0.48", stopColor: "#35abff" }), /* @__PURE__ */ import_react10.default.createElement("stop", { offset: "1", stopColor: "#9e6aff" }))),
     /* @__PURE__ */ import_react10.default.createElement(
       "path",
       {

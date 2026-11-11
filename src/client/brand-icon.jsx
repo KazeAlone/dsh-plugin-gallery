@@ -15,7 +15,7 @@ export function BrandIcon({ size = 20 }) {
       focusable="false"
     >
       <defs>
-        <linearGradient id={gradientId} x1="7" y1="26" x2="25" y2="5" gradientUnits="userSpaceOnUse">
+        <linearGradient id={gradientId} x1="16" y1="26" x2="16" y2="5" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#12d9af" />
           <stop offset="0.48" stopColor="#35abff" />
           <stop offset="1" stopColor="#9e6aff" />
