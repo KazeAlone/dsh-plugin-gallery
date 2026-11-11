@@ -15,7 +15,7 @@ Workflow 画布原型支持添加和拖动 Agent、任务、人工节点，配�
 rc.3 与 rc.5 的 Gallery 所用核心接口已完成静态对比；rc.3 的完整运行验证尚未完成。开发依赖仍固定 rc.5，安装时通过 peer 依赖复用宿主对应版本，避免混用运行时。TeamFlow 的宿主兼容范围以该插件自身声明为准。
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.21.3.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.21.4.tgz --ignore-scripts
 ```
 
 将内部发布的安装包放到本机，用实际绝对路径替换上述示例。更新后重启 DSH 并刷新浏览器。安装包包含构建好的客户端。

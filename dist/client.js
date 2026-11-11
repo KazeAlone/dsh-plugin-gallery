@@ -11015,11 +11015,12 @@ function SkillWizard({ resource, onClose, onSave }) {
 // src/client/brand-icon.jsx
 var import_react10 = __toESM(require("react"), 1);
 function BrandIcon({ size = 20 }) {
+  const gradientId = `gal-aurora-${(0, import_react10.useId)().replace(/:/g, "")}`;
+  const paint = `url(#${gradientId})`;
   return /* @__PURE__ */ import_react10.default.createElement(
     "svg",
     {
       className: "gal-brand-icon",
-      style: { color: "light-dark(#c47b24, #e9b568)" },
       width: size,
       height: size,
       viewBox: "3 2.5 26 26",
@@ -11027,11 +11028,12 @@ function BrandIcon({ size = 20 }) {
       "aria-hidden": "true",
       focusable: "false"
     },
+    /* @__PURE__ */ import_react10.default.createElement("defs", null, /* @__PURE__ */ import_react10.default.createElement("linearGradient", { id: gradientId, x1: "7", y1: "26", x2: "25", y2: "5", gradientUnits: "userSpaceOnUse" }, /* @__PURE__ */ import_react10.default.createElement("stop", { offset: "0", stopColor: "#12d9af" }), /* @__PURE__ */ import_react10.default.createElement("stop", { offset: "0.48", stopColor: "#35abff" }), /* @__PURE__ */ import_react10.default.createElement("stop", { offset: "1", stopColor: "#9e6aff" }))),
     /* @__PURE__ */ import_react10.default.createElement(
       "path",
       {
         d: "M8 12h16l1 14H7l1-14Z",
-        stroke: "currentColor",
+        stroke: paint,
         strokeWidth: "1.8",
         strokeLinejoin: "round"
       }
@@ -11040,15 +11042,15 @@ function BrandIcon({ size = 20 }) {
       "path",
       {
         d: "M12 12V9a4 4 0 0 1 8 0v3",
-        stroke: "currentColor",
+        stroke: paint,
         strokeWidth: "1.8",
         strokeLinecap: "round"
       }
     ),
-    /* @__PURE__ */ import_react10.default.createElement("rect", { x: "11", y: "16", width: "4", height: "3", rx: ".8", fill: "currentColor" }),
-    /* @__PURE__ */ import_react10.default.createElement("rect", { x: "17", y: "16", width: "4", height: "3", rx: ".8", fill: "currentColor" }),
-    /* @__PURE__ */ import_react10.default.createElement("rect", { x: "11", y: "21", width: "4", height: "3", rx: ".8", fill: "currentColor" }),
-    /* @__PURE__ */ import_react10.default.createElement("rect", { x: "17", y: "21", width: "4", height: "3", rx: ".8", fill: "currentColor" })
+    /* @__PURE__ */ import_react10.default.createElement("rect", { x: "11", y: "16", width: "4", height: "3", rx: ".8", fill: paint }),
+    /* @__PURE__ */ import_react10.default.createElement("rect", { x: "17", y: "16", width: "4", height: "3", rx: ".8", fill: paint }),
+    /* @__PURE__ */ import_react10.default.createElement("rect", { x: "11", y: "21", width: "4", height: "3", rx: ".8", fill: paint }),
+    /* @__PURE__ */ import_react10.default.createElement("rect", { x: "17", y: "21", width: "4", height: "3", rx: ".8", fill: paint })
   );
 }
 
