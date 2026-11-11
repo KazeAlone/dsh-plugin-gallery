@@ -13,7 +13,6 @@ import { BrandIcon } from "./brand-icon.jsx";
 import { Glyph } from "./icons.jsx";
 import { ResourceCover, hasResourceCover } from "./resource-cover.jsx";
 import { THEMES, loadTheme, saveTheme } from "./theme.mjs";
-import { AnimeMascot } from "./anime-mascot.jsx";
 
 const NS = "dsh-gallery",
   TYPES = { skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" };
@@ -410,7 +409,6 @@ function Gallery({ remote }) {
         </div>
       )}
       <header className="gal-header">
-        {theme === "anime" && <AnimeMascot />}
         <div>
           <h1>
             <BrandIcon size={32} />

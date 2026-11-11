@@ -15,7 +15,7 @@ Workflow 画布原型支持添加和拖动 Agent、任务、人工节点，配�
 rc.3 与 rc.5 的 Gallery 所用核心接口已完成静态对比；rc.3 的完整运行验证尚未完成。开发依赖仍固定 rc.5，安装时通过 peer 依赖复用宿主对应版本，避免混用运行时。TeamFlow 的宿主兼容范围以该插件自身声明为准。
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.20.8.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.21.1.tgz --ignore-scripts
 ```
 
 将内部发布的安装包放到本机，用实际绝对路径替换上述示例。更新后重启 DSH 并刷新浏览器。安装包包含构建好的客户端。
@@ -45,7 +45,7 @@ $DSH_HOME/gallery/resources.json
 
 Gallery 保存和读取资源。有效的 Agent 可通过会话工具 `gallery_agent_list`、`gallery_agent_run` 交给 DSH `spawn` 子 Agent 执行；需要启用 DSH tools、subagents 和 spawn 提供方。保存的 MCP 服务通过 DSH 官方 MCP 客户端注册为 `mcp__<serverName>__<tool>` 会话工具，所引用的环境变量必须在宿主启动时可用。Workflow 可以安装到 TeamFlow 模板库，再从 TeamFlow 模板库应用到会话；Gallery 本身不执行 Workflow。默认模板目录为 `~/.dsh-teamflow/templates`，如 TeamFlow 配置了其他 `templateDirectory`，请给 Gallery 进程设置 `DSH_TEAMFLOW_TEMPLATE_DIR` 为相同路径。当前不提供发布版本、历史回滚和远程同步。
 
-Gallery 顶部的主题按钮提供「跟随系统」「墨绿黄铜」「暖纸」「霓虹玻璃」「鎏金星穹」五种外观。鎏金星穹包含星轨、向下划落的流星与四类榜单轮流亮起的光晕，可在页眉暂停动效，并遵循系统的减少动态效果设置。选择只保存在当前浏览器，不改变资源数据或功能。
+Gallery 顶部的主题按钮提供「跟随系统」「墨绿黄铜」「暖纸」「漫画印刷」「鎏金星穹」「原神 · 冒险手册」六种外观。四种资源分类的新建按钮尺寸统一。鎏金星穹可在页眉暂停动效，并遵循系统的减少动态效果设置。选择只保存在当前浏览器，不改变资源数据或功能。
 
 ## 其他插件接入
 
