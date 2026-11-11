@@ -4,25 +4,32 @@ import { stringify } from 'yaml';
 import { syncSkillAttachments } from './client/skill-format.mjs';
 
 const seed = 'gallery-skill-reference-v1';
+// Only refresh exact copies of the two previously shipped templates.
+// Revisions can also increase when Gallery updates a built-in, so they do not
+// reliably distinguish a user edit from an earlier automatic update.
+const previousDigests = new Set([
+  'd6f702eb399cce245a1bec442e50f6d0fcc9117aa1a13abe7d466f84363b588b',
+  '1b58bd2ed92c82b5ddfa9b6305e974657f58e0f521cc5489df7297a9c40d718b',
+]);
 export function referenceSkill() {
   const header = {
     name: 'gallery-skill-reference',
-    description: '完整 Skill 参考模板：演示基本信息、执行指引、脚本、参考资料与素材的组织方式。可用于整理用户提供的笔记并生成结构化摘要。',
+    description: '将用户提供的会议原文整理为结构化纪要，保留关键事实、负责人、截止时间及待确认项。',
     license: 'MIT',
     compatibility: 'DSH Skill 服务；可选脚本需要 Python 3，仅使用标准库。',
-    metadata: { author: 'ZelongWANG', version: '1.0.0' },
+    metadata: { author: 'ZelongWANG', version: '1.1.0' },
     'user-invocable': true,
     'disable-model-invocation': false,
   };
-  const body = `# 笔记整理与摘要 · 完整参考 Skill
+  const body = `# 会议纪要整理与摘要
 
-这是可编辑的参考模板。name 和 description 是基础字段；license、compatibility、metadata 与调用开关是可选扩展示例，不要求每个 Skill 都填写。标签与封面保存在 Gallery 资源信息中。
+依据用户提供的会议原文整理纪要，提取结论、关键事实和待办，明确区分已确认内容与待确认信息。
 
 ## 适用场景
-用户希望把一段笔记、会议记录或草稿整理成清晰的摘要。只在用户明确要求整理内容或调用此模板时执行。
+用户希望整理会议记录、会议转写或会后笔记，形成便于审阅和跟进的纪要。只在用户明确要求整理内容或调用此 Skill 时执行。
 
 ## 输入
-用户提供的原文，以及可选的目标读者、篇幅与输出语言。缺少原文时先询问，不编造内容。默认使用原文语言。
+用户提供的会议原文，以及可选的目标读者、篇幅与输出语言。缺少原文时先询问，不编造内容。默认使用原文语言。
 
 ## 执行步骤
 1. 阅读原文，识别主题、事实、结论和待办事项。
@@ -39,8 +46,8 @@ export function referenceSkill() {
 输出：主题：界面初稿；待办：小黄在周五前完成初稿；待确认：评审时间。其他信息原文未提供。
 `;
   const resource = {
-    type: 'skill', name: header.name, description: header.description,
-    tags: ['参考模板', '文档', '摘要'], metadata: { cover: 'writing', builtin: seed }, references: [],
+    type: 'skill', name: '会议纪要整理与摘要 · Skill 示例', description: header.description,
+    tags: ['参考模板', '会议纪要', '摘要'], metadata: { cover: 'writing', builtin: seed }, references: [],
     files: [
       { path: 'SKILL.md', encoding: 'utf8', content: `---\n${stringify(header)}---\n\n${body}` },
       { path: 'scripts/inspect_note.py', encoding: 'utf8', content: '"""Read a UTF-8 note and print statistics without changing files."""\nimport argparse\nimport json\nfrom pathlib import Path\n\nparser = argparse.ArgumentParser(description=__doc__)\nparser.add_argument("file", type=Path, help="User-selected UTF-8 text file")\nargs = parser.parse_args()\ntext = args.file.read_text(encoding="utf-8")\nlines = text.splitlines()\nprint(json.dumps({"lines": len(lines), "headings": sum(line.startswith("#") for line in lines)}, ensure_ascii=False))\n' },
@@ -59,12 +66,7 @@ export function installReferenceSkill(adapter) {
     if (!existing) return;
     const fresh = normalizeResource(referenceSkill());
     const nextDigest = digest(JSON.stringify(fresh));
-    const oldSkill = structuredClone(fresh);
-    oldSkill.files.find(file => file.path === 'SKILL.md').content =
-      oldSkill.files.find(file => file.path === 'SKILL.md').content.replaceAll('小黄', '小林');
-    const oldDigest = digest(JSON.stringify(oldSkill));
-    const refresh = existing.digest !== nextDigest &&
-      (existing.revision === 1 || existing.digest === oldDigest);
+    const refresh = existing.digest !== nextDigest && previousDigests.has(existing.digest);
     if (!refresh && existing.creator?.username !== 'Gallery') return;
     return adapter.write(rows => {
       const row = rows.find(item => item.id === existing.id);
