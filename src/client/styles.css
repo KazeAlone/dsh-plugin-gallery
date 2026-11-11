@@ -2186,3 +2186,18 @@ fieldset.gal-skill-fields {
   box-shadow: none;
   isolation: auto;
 }
+
+/* Keep category creation actions the same size for all four resource labels. */
+.gal .gal-list-actions > button.gal-primary,
+.gal[data-theme="folio"] .pb-list-actions > button.pb-primary {
+  box-sizing: border-box;
+  flex: 0 0 144px;
+  width: 144px;
+  min-width: 144px;
+  max-width: 144px;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
