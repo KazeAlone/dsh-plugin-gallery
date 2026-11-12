@@ -2534,26 +2534,20 @@ function Modal({ children, onClose, confirmation = false }) {
 // src/client/mcp-wizard.jsx
 var steps = ["\u57FA\u672C\u4FE1\u606F", "\u8FDE\u63A5\u914D\u7F6E\u4E0E\u6D4B\u8BD5", "\u68C0\u67E5\u4FDD\u5B58"];
 var parseLines = (value) => value.split("\n").map((x) => x.trim()).filter(Boolean);
-var parseRefs = (value) => Object.fromEntries(
-  parseLines(value).map((line) => {
-    const index = line.indexOf("=");
-    if (index < 1) throw Error("\u73AF\u5883\u53D8\u91CF\u6620\u5C04\u6BCF\u884C\u586B\u5199 KEY=\u73AF\u5883\u53D8\u91CF\u540D");
-    return [line.slice(0, index).trim(), line.slice(index + 1).trim()];
-  })
-);
 function McpWizard({ resource, onClose, onSave, onCheck }) {
   const [cover, setCover] = (0, import_react6.useState)(resource?.metadata?.cover ?? "");
   const saved = resource?.metadata?.mcp || {};
   const [step, setStep] = (0, import_react6.useState)(0), [name, setName] = (0, import_react6.useState)(resource?.name || ""), [description, setDescription] = (0, import_react6.useState)(resource?.description || ""), [serverName, setServerName] = (0, import_react6.useState)(
     () => saved.serverName || createResourceIdentifier("mcp")
-  ), [transport, setTransport] = (0, import_react6.useState)(saved.transport || "stdio"), [command, setCommand] = (0, import_react6.useState)(saved.command || ""), [args, setArgs] = (0, import_react6.useState)((saved.args || []).join("\n")), [cwd, setCwd] = (0, import_react6.useState)(saved.cwd || ""), [url, setUrl] = (0, import_react6.useState)(saved.url || ""), [envRefs, setEnvRefs] = (0, import_react6.useState)(
-    Object.entries(saved.envRefs || {}).map(([a, b]) => `${a}=${b}`).join("\n")
-  ), [credentialMode, setCredentialMode] = (0, import_react6.useState)(
-    Object.keys(saved.envRefs || {}).length && !saved.credentialKeys?.length ? "environment" : "direct"
-  ), [authType, setAuthType] = (0, import_react6.useState)(
-    saved.authType || (saved.credentialKeys?.length ? "headers" : "none")
+  ), [transport, setTransport] = (0, import_react6.useState)(saved.transport || "stdio"), [command, setCommand] = (0, import_react6.useState)(saved.command || ""), [args, setArgs] = (0, import_react6.useState)((saved.args || []).join("\n")), [cwd, setCwd] = (0, import_react6.useState)(saved.cwd || ""), [url, setUrl] = (0, import_react6.useState)(saved.url || ""), [authType, setAuthType] = (0, import_react6.useState)(
+    saved.authType || (saved.credentialKeys?.length || Object.keys(saved.envRefs || {}).length ? "headers" : "none")
   ), [token, setToken] = (0, import_react6.useState)(""), [entries, setEntries] = (0, import_react6.useState)(
-    () => (saved.credentialKeys || []).filter(
+    () => [
+      .../* @__PURE__ */ new Set([
+        ...saved.credentialKeys || [],
+        ...Object.keys(saved.envRefs || {})
+      ])
+    ].filter(
       (key) => !(saved.authType === "bearer" && key.toLowerCase() === "authorization")
     ).map((key) => ({
       key,
@@ -2561,7 +2555,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
       saved: resource?.mcpCredentialKeys?.includes(key) || false
     }))
   ), [tags, setTags] = (0, import_react6.useState)((resource?.tags || []).join(", ")), [testResult, setTestResult] = (0, import_react6.useState)(
-    resource?.metadata?.mcpVerification ?? null
+    Object.keys(saved.envRefs || {}).length ? null : resource?.metadata?.mcpVerification ?? null
   ), [error, setError] = (0, import_react6.useState)(""), [busy, setBusy] = (0, import_react6.useState)(false);
   const heading = (0, import_react6.useRef)(null);
   (0, import_react6.useEffect)(() => {
@@ -2571,7 +2565,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
   const validServer = /^[A-Za-z0-9_-]{1,32}$/.test(serverName);
   const tokenSaved = resource?.mcpCredentialKeys?.includes("Authorization") || false;
   const directEntries = transport === "streamable-http" && authType === "none" ? [] : transport === "streamable-http" && authType === "bearer" ? [{ key: "Authorization", value: token, saved: tokenSaved }] : entries.filter((entry) => entry.key.trim() || entry.value);
-  const validCredentials = credentialMode !== "direct" || directEntries.every(
+  const validCredentials = directEntries.every(
     (entry) => (transport === "stdio" ? /^[A-Za-z_][A-Za-z0-9_]*$/.test(entry.key.trim()) : /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/.test(entry.key.trim())) && (entry.value.trim() || entry.saved)
   ) && new Set(
     directEntries.map(
@@ -2580,7 +2574,6 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
   ).size === directEntries.length;
   const validConnection = validServer && validCredentials && (transport === "stdio" ? !!command.trim() : /^https?:\/\/[^\s/]+/.test(url));
   function credentialValues() {
-    if (credentialMode !== "direct") return {};
     return Object.fromEntries(
       directEntries.filter((entry) => entry.value).map((entry) => [
         entry.key.trim(),
@@ -2589,15 +2582,12 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
     );
   }
   function config() {
-    const direct = credentialMode === "direct";
     return {
       serverName,
       transport,
-      envRefs: direct ? {} : parseRefs(envRefs),
-      ...direct ? {
-        credentialKeys: directEntries.map((entry) => entry.key.trim()),
-        ...transport === "streamable-http" ? { authType } : {}
-      } : {},
+      envRefs: {},
+      credentialKeys: directEntries.map((entry) => entry.key.trim()),
+      ...transport === "streamable-http" ? { authType } : {},
       ...transport === "stdio" ? { command, args: parseLines(args), cwd } : { url }
     };
   }
@@ -2763,26 +2753,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         onChange: change(setUrl),
         placeholder: "https://example.com/mcp"
       }
-    )), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u8BA4\u8BC1\u4FE1\u606F", /* @__PURE__ */ import_react6.default.createElement(
-      "select",
-      {
-        "aria-label": "\u8BA4\u8BC1\u586B\u5199\u65B9\u5F0F",
-        value: credentialMode,
-        disabled: busy,
-        onChange: change(setCredentialMode)
-      },
-      /* @__PURE__ */ import_react6.default.createElement("option", { value: "direct" }, "\u5728\u9875\u9762\u586B\u5199"),
-      /* @__PURE__ */ import_react6.default.createElement("option", { value: "environment" }, "\u5F15\u7528\u5BBF\u4E3B\u73AF\u5883\u53D8\u91CF")
-    )), credentialMode === "environment" ? /* @__PURE__ */ import_react6.default.createElement(import_react6.default.Fragment, null, /* @__PURE__ */ import_react6.default.createElement("label", null, transport === "stdio" ? "\u73AF\u5883\u53D8\u91CF\u6620\u5C04" : "\u8BF7\u6C42\u5934\u6620\u5C04", "\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react6.default.createElement(
-      "textarea",
-      {
-        "aria-label": "\u73AF\u5883\u53D8\u91CF\u6620\u5C04",
-        rows: 3,
-        value: envRefs,
-        onChange: change(setEnvRefs),
-        placeholder: transport === "stdio" ? "API_KEY=MY_API_KEY" : "Authorization=MCP_AUTH_HEADER"
-      }
-    )), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u6BCF\u884C\u586B\u5199\u300C\u670D\u52A1\u5B57\u6BB5=\u5BBF\u4E3B\u73AF\u5883\u53D8\u91CF\u540D\u300D\u3002Authorization \u5BF9\u5E94\u7684\u53D8\u91CF\u503C\u5E94\u5305\u542B Bearer \u524D\u7F00\u3002")) : /* @__PURE__ */ import_react6.default.createElement(import_react6.default.Fragment, null, transport === "streamable-http" && /* @__PURE__ */ import_react6.default.createElement("label", null, "\u8BA4\u8BC1\u65B9\u5F0F", /* @__PURE__ */ import_react6.default.createElement(
+    )), Object.keys(saved.envRefs || {}).length > 0 && /* @__PURE__ */ import_react6.default.createElement("p", { role: "note" }, "\u6B64\u8D44\u6E90\u539F\u6765\u5F15\u7528\u5BBF\u4E3B\u73AF\u5883\u53D8\u91CF\u3002\u5B57\u6BB5\u540D\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u586B\u5199\u5B9E\u9645\u8BA4\u8BC1\u503C\u540E\u4FDD\u5B58\uFF0C\u6216\u79FB\u9664\u4E0D\u518D\u4F7F\u7528\u7684\u5B57\u6BB5\u3002"), /* @__PURE__ */ import_react6.default.createElement(import_react6.default.Fragment, null, transport === "streamable-http" && /* @__PURE__ */ import_react6.default.createElement("label", null, "\u8BA4\u8BC1\u65B9\u5F0F", /* @__PURE__ */ import_react6.default.createElement(
       "select",
       {
         "aria-label": "HTTP \u8BA4\u8BC1\u65B9\u5F0F",
