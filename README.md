@@ -15,7 +15,7 @@ Workflow 画布原型支持添加和拖动 Agent、任务、人工节点，配�
 rc.3 与 rc.5 的 Gallery 所用核心接口已完成静态对比；rc.3 的完整运行验证尚未完成。开发依赖仍固定 rc.5，安装时通过 peer 依赖复用宿主对应版本，避免混用运行时。TeamFlow 的宿主兼容范围以该插件自身声明为准。
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.21.6.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.22.0.tgz --ignore-scripts
 ```
 
 将内部发布的安装包放到本机，用实际绝对路径替换上述示例。更新后重启 DSH 并刷新浏览器。安装包包含构建好的客户端。
@@ -43,7 +43,7 @@ $DSH_HOME/gallery/resources.json
 - 每个资源最多 100 个文件，总计 5 MiB；资源类型创建后固定。
 - `metadata` 保存扩展配置，`references` 保存 `{id,digest?}` 引用。
 
-Gallery 保存和读取资源。有效的 Agent 可通过会话工具 `gallery_agent_list`、`gallery_agent_run` 交给 DSH `spawn` 子 Agent 执行；需要启用 DSH tools、subagents 和 spawn 提供方。保存的 MCP 服务通过 DSH 官方 MCP 客户端注册为 `mcp__<serverName>__<tool>` 会话工具，所引用的环境变量必须在宿主启动时可用。Workflow 可以安装到 TeamFlow 模板库，再从 TeamFlow 模板库应用到会话；Gallery 本身不执行 Workflow。默认模板目录为 `~/.dsh-teamflow/templates`，如 TeamFlow 配置了其他 `templateDirectory`，请给 Gallery 进程设置 `DSH_TEAMFLOW_TEMPLATE_DIR` 为相同路径。当前不提供发布版本、历史回滚和远程同步。
+Gallery 保存和读取资源。有效的 Agent 可通过会话工具 `gallery_agent_list`、`gallery_agent_run` 交给 DSH `spawn` 子 Agent 执行；需要启用 DSH tools、subagents 和 spawn 提供方。保存的 MCP 服务通过 DSH 官方 MCP 客户端注册为 `mcp__<serverName>__<tool>` 会话工具，认证值可在 MCP 配置页面直接填写；选择环境变量引用时，对应变量仍须在宿主启动时可用。Workflow 可以安装到 TeamFlow 模板库，再从 TeamFlow 模板库应用到会话；Gallery 本身不执行 Workflow。默认模板目录为 `~/.dsh-teamflow/templates`，如 TeamFlow 配置了其他 `templateDirectory`，请给 Gallery 进程设置 `DSH_TEAMFLOW_TEMPLATE_DIR` 为相同路径。当前不提供发布版本、历史回滚和远程同步。
 
 Gallery 顶部的主题按钮提供「跟随系统」「墨绿黄铜」「暖纸」「漫画印刷」「鎏金星穹」「原神 · 冒险手册」六种外观。四种资源分类的新建按钮尺寸统一。鎏金星穹可在页眉暂停动效，并遵循系统的减少动态效果设置。选择只保存在当前浏览器，不改变资源数据或功能。
 
@@ -91,7 +91,7 @@ npm pack
 Gallery Skill 的 `SKILL.md` 和附件一起写入运行目录。加载 Skill 时会列出 `references/`、`scripts/`、`assets/` 中的文件路径；需要读取具体附件的任务，应使用支持文件读取工具的 DSH 会话。
 
 
-MCP 分类提供专用四步向导。可保存本地 stdio 或远程 Streamable HTTP 连接配置，按需测试并查看工具列表；保存不会自动启用该服务，仍需接入 DSH MCP 客户端配置。
+MCP 分类提供基本信息、连接配置与测试、检查保存三步向导。支持本地 stdio 和远程 Streamable HTTP；保存后由 DSH 官方 MCP 客户端注册工具，修改连接或密钥后自动更新连接。认证信息默认直接在页面填写：HTTP 支持 Bearer Token（自动添加前缀）及自定义请求头，本地进程支持变量名和值。已有环境变量引用配置继续兼容。直接填写的认证值保存在 DSH 主机内部资源文件的私有字段中（文件权限 0600，不额外加密），仅用于连接；资源列表、详情、快照和常规导出不含认证值。再次编辑时密钥不回显，留空保留，填写新值替换；删除字段或切换为无需认证后保存会移除旧值。导出到其他主机后需重新填写密钥。
 
 创建向导统一使用名称、描述；调用标识自动生成，可在高级设置修改。Agent 沿用父会话模型。MCP 在连接配置步骤内测试连接，支持 stdio 与 Streamable HTTP。
 

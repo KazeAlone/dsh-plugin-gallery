@@ -2107,6 +2107,12 @@ fieldset.gal-skill-fields {
   padding: 8px 12px;
   white-space: nowrap;
 }
+
+/* Write-only MCP credentials share the existing connection step. */
+.gal .gal-mcp-credential-row { display:grid; grid-template-columns:minmax(100px,1fr) minmax(120px,1.5fr) auto; gap:10px; align-items:end; margin:12px 0; }
+.gal .gal-mcp-credential-row label { margin:0; min-width:0; }
+.gal .gal-mcp-credential-row > button { margin-bottom:1px; }
+@media (max-width:600px) { .gal .gal-mcp-credential-row { grid-template-columns:minmax(0,1fr) auto; } .gal .gal-mcp-credential-row label:first-child { grid-column:1/-1; } }
 `;
 
 // src/client/leaderboards.jsx
@@ -2538,8 +2544,22 @@ var parseRefs = (value) => Object.fromEntries(
 function McpWizard({ resource, onClose, onSave, onCheck }) {
   const [cover, setCover] = (0, import_react6.useState)(resource?.metadata?.cover ?? "");
   const saved = resource?.metadata?.mcp || {};
-  const [step, setStep] = (0, import_react6.useState)(0), [name, setName] = (0, import_react6.useState)(resource?.name || ""), [description, setDescription] = (0, import_react6.useState)(resource?.description || ""), [serverName, setServerName] = (0, import_react6.useState)(() => saved.serverName || createResourceIdentifier("mcp")), [transport, setTransport] = (0, import_react6.useState)(saved.transport || "stdio"), [command, setCommand] = (0, import_react6.useState)(saved.command || ""), [args, setArgs] = (0, import_react6.useState)((saved.args || []).join("\n")), [cwd, setCwd] = (0, import_react6.useState)(saved.cwd || ""), [url, setUrl] = (0, import_react6.useState)(saved.url || ""), [envRefs, setEnvRefs] = (0, import_react6.useState)(
+  const [step, setStep] = (0, import_react6.useState)(0), [name, setName] = (0, import_react6.useState)(resource?.name || ""), [description, setDescription] = (0, import_react6.useState)(resource?.description || ""), [serverName, setServerName] = (0, import_react6.useState)(
+    () => saved.serverName || createResourceIdentifier("mcp")
+  ), [transport, setTransport] = (0, import_react6.useState)(saved.transport || "stdio"), [command, setCommand] = (0, import_react6.useState)(saved.command || ""), [args, setArgs] = (0, import_react6.useState)((saved.args || []).join("\n")), [cwd, setCwd] = (0, import_react6.useState)(saved.cwd || ""), [url, setUrl] = (0, import_react6.useState)(saved.url || ""), [envRefs, setEnvRefs] = (0, import_react6.useState)(
     Object.entries(saved.envRefs || {}).map(([a, b]) => `${a}=${b}`).join("\n")
+  ), [credentialMode, setCredentialMode] = (0, import_react6.useState)(
+    Object.keys(saved.envRefs || {}).length && !saved.credentialKeys?.length ? "environment" : "direct"
+  ), [authType, setAuthType] = (0, import_react6.useState)(
+    saved.authType || (saved.credentialKeys?.length ? "headers" : "none")
+  ), [token, setToken] = (0, import_react6.useState)(""), [entries, setEntries] = (0, import_react6.useState)(
+    () => (saved.credentialKeys || []).filter(
+      (key) => !(saved.authType === "bearer" && key.toLowerCase() === "authorization")
+    ).map((key) => ({
+      key,
+      value: "",
+      saved: resource?.mcpCredentialKeys?.includes(key) || false
+    }))
   ), [tags, setTags] = (0, import_react6.useState)((resource?.tags || []).join(", ")), [testResult, setTestResult] = (0, import_react6.useState)(
     resource?.metadata?.mcpVerification ?? null
   ), [error, setError] = (0, import_react6.useState)(""), [busy, setBusy] = (0, import_react6.useState)(false);
@@ -2549,13 +2569,49 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
   }, [step]);
   const validName = !!name.trim() && name.length <= 160 && !!description.trim();
   const validServer = /^[A-Za-z0-9_-]{1,32}$/.test(serverName);
-  const validConnection = validServer && (transport === "stdio" ? !!command.trim() : /^https?:\/\/[^\s/]+/.test(url));
+  const tokenSaved = resource?.mcpCredentialKeys?.includes("Authorization") || false;
+  const directEntries = transport === "streamable-http" && authType === "none" ? [] : transport === "streamable-http" && authType === "bearer" ? [{ key: "Authorization", value: token, saved: tokenSaved }] : entries.filter((entry) => entry.key.trim() || entry.value);
+  const validCredentials = credentialMode !== "direct" || directEntries.every(
+    (entry) => (transport === "stdio" ? /^[A-Za-z_][A-Za-z0-9_]*$/.test(entry.key.trim()) : /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/.test(entry.key.trim())) && (entry.value.trim() || entry.saved)
+  ) && new Set(
+    directEntries.map(
+      (entry) => transport === "stdio" ? entry.key.trim() : entry.key.trim().toLowerCase()
+    )
+  ).size === directEntries.length;
+  const validConnection = validServer && validCredentials && (transport === "stdio" ? !!command.trim() : /^https?:\/\/[^\s/]+/.test(url));
+  function credentialValues() {
+    if (credentialMode !== "direct") return {};
+    return Object.fromEntries(
+      directEntries.filter((entry) => entry.value).map((entry) => [
+        entry.key.trim(),
+        transport === "streamable-http" && authType === "bearer" ? `Bearer ${entry.value.trim().replace(/^Bearer\s+/i, "")}` : entry.value
+      ])
+    );
+  }
   function config() {
+    const direct = credentialMode === "direct";
     return {
       serverName,
       transport,
-      ...transport === "stdio" ? { command, args: parseLines(args), cwd, envRefs: parseRefs(envRefs) } : { url, envRefs: parseRefs(envRefs) }
+      envRefs: direct ? {} : parseRefs(envRefs),
+      ...direct ? {
+        credentialKeys: directEntries.map((entry) => entry.key.trim()),
+        ...transport === "streamable-http" ? { authType } : {}
+      } : {},
+      ...transport === "stdio" ? { command, args: parseLines(args), cwd } : { url }
     };
+  }
+  function editEntry(index, key, value) {
+    setEntries(
+      (rows) => rows.map(
+        (entry, i) => i === index ? {
+          ...entry,
+          [key]: value,
+          ...key === "key" ? { saved: false } : {}
+        } : entry
+      )
+    );
+    setTestResult(null);
   }
   function change(setter) {
     return (e) => {
@@ -2572,7 +2628,11 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
     setBusy(true);
     setError("");
     try {
-      const result = await onCheck(config());
+      const result = await onCheck({
+        ...config(),
+        credentials: credentialValues(),
+        ...resource?.id ? { resourceId: resource.id } : {}
+      });
       setTestResult({ ...result, checkedAt: (/* @__PURE__ */ new Date()).toISOString() });
     } catch (e) {
       setTestResult(null);
@@ -2588,6 +2648,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
       const data = config();
       await onSave({
         type: "mcp",
+        mcpCredentials: credentialValues(),
         name: name.trim(),
         description: description.trim(),
         tags: parsedTags,
@@ -2631,10 +2692,22 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
       /* @__PURE__ */ import_react6.default.createElement("span", null, i < step ? "\u2713" : i + 1),
       title
     ))),
-    /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react6.default.createElement("main", null, /* @__PURE__ */ import_react6.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps[step]), step === 0 && /* @__PURE__ */ import_react6.default.createElement(ResourceBasics, { name, onName: setName, description, onDescription: setDescription, identifier: serverName, onIdentifier: (value) => {
-      setServerName(value);
-      setTestResult(null);
-    }, identifierMax: 32, busy }), step === 1 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-mcp-transport" }, /* @__PURE__ */ import_react6.default.createElement(
+    /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react6.default.createElement("main", null, /* @__PURE__ */ import_react6.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps[step]), step === 0 && /* @__PURE__ */ import_react6.default.createElement(
+      ResourceBasics,
+      {
+        name,
+        onName: setName,
+        description,
+        onDescription: setDescription,
+        identifier: serverName,
+        onIdentifier: (value) => {
+          setServerName(value);
+          setTestResult(null);
+        },
+        identifierMax: 32,
+        busy
+      }
+    ), step === 1 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-mcp-transport" }, /* @__PURE__ */ import_react6.default.createElement(
       "button",
       {
         "aria-pressed": transport === "stdio",
@@ -2690,7 +2763,17 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         onChange: change(setUrl),
         placeholder: "https://example.com/mcp"
       }
-    )), /* @__PURE__ */ import_react6.default.createElement("label", null, transport === "stdio" ? "\u73AF\u5883\u53D8\u91CF\u6620\u5C04" : "\u8BF7\u6C42\u5934\u6620\u5C04", "\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react6.default.createElement(
+    )), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u8BA4\u8BC1\u4FE1\u606F", /* @__PURE__ */ import_react6.default.createElement(
+      "select",
+      {
+        "aria-label": "\u8BA4\u8BC1\u586B\u5199\u65B9\u5F0F",
+        value: credentialMode,
+        disabled: busy,
+        onChange: change(setCredentialMode)
+      },
+      /* @__PURE__ */ import_react6.default.createElement("option", { value: "direct" }, "\u5728\u9875\u9762\u586B\u5199"),
+      /* @__PURE__ */ import_react6.default.createElement("option", { value: "environment" }, "\u5F15\u7528\u5BBF\u4E3B\u73AF\u5883\u53D8\u91CF")
+    )), credentialMode === "environment" ? /* @__PURE__ */ import_react6.default.createElement(import_react6.default.Fragment, null, /* @__PURE__ */ import_react6.default.createElement("label", null, transport === "stdio" ? "\u73AF\u5883\u53D8\u91CF\u6620\u5C04" : "\u8BF7\u6C42\u5934\u6620\u5C04", "\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react6.default.createElement(
       "textarea",
       {
         "aria-label": "\u73AF\u5883\u53D8\u91CF\u6620\u5C04",
@@ -2699,7 +2782,89 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         onChange: change(setEnvRefs),
         placeholder: transport === "stdio" ? "API_KEY=MY_API_KEY" : "Authorization=MCP_AUTH_HEADER"
       }
-    )), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u6BCF\u884C\u586B\u5199\u300C\u670D\u52A1\u5B57\u6BB5=DSH \u73AF\u5883\u53D8\u91CF\u540D\u300D\u3002\u8D44\u6E90\u4E2D\u53EA\u4FDD\u5B58\u53D8\u91CF\u540D\uFF0C\u4E0D\u4FDD\u5B58\u5BC6\u94A5\u3002"), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u8FDE\u63A5\u6D4B\u8BD5\u4F1A\u5C1D\u8BD5\u542F\u52A8\u6216\u8BBF\u95EE\u8BE5\u670D\u52A1\uFF0C\u5E76\u8BFB\u53D6\u5B83\u63D0\u4F9B\u7684\u5DE5\u5177\u3002\u5B8C\u6210\u540E\u4F1A\u65AD\u5F00\u6D4B\u8BD5\u8FDE\u63A5\u3002"), /* @__PURE__ */ import_react6.default.createElement("button", { className: "gal-primary", disabled: busy || !validConnection, onClick: check }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "refresh" }), busy ? "\u68C0\u67E5\u4E2D\u2026" : "\u68C0\u67E5\u8FDE\u63A5"), testResult && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-mcp-result", role: "status" }, /* @__PURE__ */ import_react6.default.createElement("strong", null, "\u2713 \u8FDE\u63A5\u6210\u529F", testResult.tools && ` \xB7 ${testResult.tools.length} \u4E2A\u5DE5\u5177`), testResult.tools?.map((tool) => /* @__PURE__ */ import_react6.default.createElement("p", { key: tool.name }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "mcp", size: 15 }), /* @__PURE__ */ import_react6.default.createElement("b", null, tool.name), tool.description && /* @__PURE__ */ import_react6.default.createElement("span", null, tool.description)))), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u4E5F\u53EF\u4EE5\u8DF3\u8FC7\u68C0\u67E5\uFF0C\u4FDD\u5B58\u4E3A\u5F85\u9A8C\u8BC1\u914D\u7F6E\u3002")), step === 2 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "mcp", size: 36 }), /* @__PURE__ */ import_react6.default.createElement("h2", null, name), /* @__PURE__ */ import_react6.default.createElement("p", null, description), /* @__PURE__ */ import_react6.default.createElement("span", null, serverName, " \xB7", " ", transport === "stdio" ? "\u672C\u5730\u8FDB\u7A0B" : "\u8FDC\u7A0B HTTP")), /* @__PURE__ */ import_react6.default.createElement(
+    )), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u6BCF\u884C\u586B\u5199\u300C\u670D\u52A1\u5B57\u6BB5=\u5BBF\u4E3B\u73AF\u5883\u53D8\u91CF\u540D\u300D\u3002Authorization \u5BF9\u5E94\u7684\u53D8\u91CF\u503C\u5E94\u5305\u542B Bearer \u524D\u7F00\u3002")) : /* @__PURE__ */ import_react6.default.createElement(import_react6.default.Fragment, null, transport === "streamable-http" && /* @__PURE__ */ import_react6.default.createElement("label", null, "\u8BA4\u8BC1\u65B9\u5F0F", /* @__PURE__ */ import_react6.default.createElement(
+      "select",
+      {
+        "aria-label": "HTTP \u8BA4\u8BC1\u65B9\u5F0F",
+        value: authType,
+        disabled: busy,
+        onChange: change(setAuthType)
+      },
+      /* @__PURE__ */ import_react6.default.createElement("option", { value: "none" }, "\u65E0\u9700\u8BA4\u8BC1"),
+      /* @__PURE__ */ import_react6.default.createElement("option", { value: "bearer" }, "Bearer Token"),
+      /* @__PURE__ */ import_react6.default.createElement("option", { value: "headers" }, "\u81EA\u5B9A\u4E49\u8BF7\u6C42\u5934 / API Key")
+    )), transport === "streamable-http" && authType === "bearer" ? /* @__PURE__ */ import_react6.default.createElement("label", null, "Token", /* @__PURE__ */ import_react6.default.createElement(
+      "input",
+      {
+        "aria-label": "Bearer Token",
+        type: "password",
+        autoComplete: "new-password",
+        value: token,
+        disabled: busy,
+        onChange: change(setToken),
+        placeholder: tokenSaved ? "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u7EE7\u7EED\u4F7F\u7528\uFF1B\u586B\u5199\u53EF\u66FF\u6362" : "\u7C98\u8D34 Token\uFF0C\u65E0\u9700\u586B\u5199 Bearer \u524D\u7F00"
+      }
+    ), tokenSaved && /* @__PURE__ */ import_react6.default.createElement("small", null, "\u5DF2\u4FDD\u5B58 Token\uFF0C\u539F\u503C\u4E0D\u56DE\u663E\u3002")) : (transport === "stdio" || authType === "headers") && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-mcp-credentials" }, /* @__PURE__ */ import_react6.default.createElement("p", null, transport === "stdio" ? "\u586B\u5199\u670D\u52A1\u8FDB\u7A0B\u9700\u8981\u7684\u73AF\u5883\u53D8\u91CF\u53CA\u5176\u5B9E\u9645\u503C\u3002" : "\u586B\u5199\u8BF7\u6C42\u5934\u540D\u79F0\u53CA\u5176\u5B8C\u6574\u503C\uFF0C\u4F8B\u5982 X-API-Key\u3002"), entries.map((entry, index) => /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-mcp-credential-row", key: index }, /* @__PURE__ */ import_react6.default.createElement("label", null, transport === "stdio" ? "\u53D8\u91CF\u540D" : "\u8BF7\u6C42\u5934\u540D\u79F0", /* @__PURE__ */ import_react6.default.createElement(
+      "input",
+      {
+        "aria-label": `\u8BA4\u8BC1\u5B57\u6BB5 ${index + 1}`,
+        autoComplete: "off",
+        value: entry.key,
+        disabled: busy,
+        onChange: (e) => editEntry(index, "key", e.target.value),
+        placeholder: transport === "stdio" ? "API_KEY" : "X-API-Key"
+      }
+    )), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u503C", /* @__PURE__ */ import_react6.default.createElement(
+      "input",
+      {
+        "aria-label": `\u8BA4\u8BC1\u503C ${index + 1}`,
+        type: "password",
+        autoComplete: "new-password",
+        value: entry.value,
+        disabled: busy,
+        onChange: (e) => editEntry(index, "value", e.target.value),
+        placeholder: entry.saved ? "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u4FDD\u7559" : "\u586B\u5199\u5B9E\u9645\u503C"
+      }
+    )), /* @__PURE__ */ import_react6.default.createElement(
+      "button",
+      {
+        type: "button",
+        disabled: busy,
+        "aria-label": `\u5220\u9664\u8BA4\u8BC1\u5B57\u6BB5 ${index + 1}`,
+        onClick: () => {
+          setEntries(
+            (rows) => rows.filter((_, i) => i !== index)
+          );
+          setTestResult(null);
+        }
+      },
+      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "trash", size: 16 })
+    ))), /* @__PURE__ */ import_react6.default.createElement(
+      "button",
+      {
+        type: "button",
+        disabled: busy || entries.length >= 32,
+        onClick: () => {
+          setEntries((rows) => [
+            ...rows,
+            { key: "", value: "", saved: false }
+          ]);
+          setTestResult(null);
+        }
+      },
+      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "plus", size: 16 }),
+      "\u6DFB\u52A0",
+      transport === "stdio" ? "\u73AF\u5883\u53D8\u91CF" : "\u8BF7\u6C42\u5934"
+    )), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u8BA4\u8BC1\u503C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D DSH \u4E3B\u673A\uFF0C\u4E0D\u663E\u793A\u5728\u8D44\u6E90\u6587\u4EF6\u3001\u5BFC\u51FA\u5305\u548C\u6A21\u578B\u63D0\u793A\u8BCD\u4E2D\u3002\u7F16\u8F91\u65F6\u7559\u7A7A\u4FDD\u7559\u5DF2\u4FDD\u5B58\u7684\u503C\uFF0C\u5220\u9664\u5B57\u6BB5\u6216\u5173\u95ED\u8BA4\u8BC1\u5C06\u5728\u4FDD\u5B58\u540E\u79FB\u9664\u3002")), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u8FDE\u63A5\u6D4B\u8BD5\u4F1A\u5C1D\u8BD5\u542F\u52A8\u6216\u8BBF\u95EE\u8BE5\u670D\u52A1\uFF0C\u5E76\u8BFB\u53D6\u5B83\u63D0\u4F9B\u7684\u5DE5\u5177\u3002\u5B8C\u6210\u540E\u4F1A\u65AD\u5F00\u6D4B\u8BD5\u8FDE\u63A5\u3002"), /* @__PURE__ */ import_react6.default.createElement(
+      "button",
+      {
+        className: "gal-primary",
+        disabled: busy || !validConnection,
+        onClick: check
+      },
+      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "refresh" }),
+      busy ? "\u68C0\u67E5\u4E2D\u2026" : "\u68C0\u67E5\u8FDE\u63A5"
+    ), testResult && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-mcp-result", role: "status" }, /* @__PURE__ */ import_react6.default.createElement("strong", null, "\u2713 \u8FDE\u63A5\u6210\u529F", testResult.tools && ` \xB7 ${testResult.tools.length} \u4E2A\u5DE5\u5177`), testResult.tools?.map((tool) => /* @__PURE__ */ import_react6.default.createElement("p", { key: tool.name }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "mcp", size: 15 }), /* @__PURE__ */ import_react6.default.createElement("b", null, tool.name), tool.description && /* @__PURE__ */ import_react6.default.createElement("span", null, tool.description)))), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u4E5F\u53EF\u4EE5\u8DF3\u8FC7\u68C0\u67E5\uFF0C\u4FDD\u5B58\u4E3A\u5F85\u9A8C\u8BC1\u914D\u7F6E\u3002")), step === 2 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "mcp", size: 36 }), /* @__PURE__ */ import_react6.default.createElement("h2", null, name), /* @__PURE__ */ import_react6.default.createElement("p", null, description), /* @__PURE__ */ import_react6.default.createElement("span", null, serverName, " \xB7", " ", transport === "stdio" ? "\u672C\u5730\u8FDB\u7A0B" : "\u8FDC\u7A0B HTTP")), /* @__PURE__ */ import_react6.default.createElement(
       ResourceCoverPicker,
       {
         resource: {
@@ -2723,7 +2888,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
       try {
         return JSON.stringify(config(), null, 2);
       } catch {
-        return "\u8BF7\u68C0\u67E5\u73AF\u5883\u53D8\u91CF\u6620\u5C04\u683C\u5F0F";
+        return "\u8BF7\u68C0\u67E5\u8BA4\u8BC1\u4FE1\u606F\u683C\u5F0F";
       }
     })()))), error && /* @__PURE__ */ import_react6.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react6.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react6.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react6.default.createElement("strong", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "folder" }), " ", serverName || "my-mcp", "/"), /* @__PURE__ */ import_react6.default.createElement("div", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "file" }), " mcp.json"))),
     /* @__PURE__ */ import_react6.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react6.default.createElement(
