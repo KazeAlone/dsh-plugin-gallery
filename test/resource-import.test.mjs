@@ -257,8 +257,7 @@ test("GitHub imports a public directory and file with attachments, including sla
     }
   for (const url of [
     "http://github.com/test/repo",
-    "https://127.0.0.1/test/repo",
-    "https://github.com.evil.test/test/repo",
+    "ftp://internal.example/test/repo",
     "https://u:p@github.com/test/repo",
     "https://github.com/test/repo/tree/main/%2e%2e/private",
   ])

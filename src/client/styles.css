@@ -2225,3 +2225,7 @@ fieldset.gal-skill-fields {
 .gal .gal-import-preview h3 {display:flex;gap:8px;align-items:center;}.gal .gal-import-preview details p{font-size:12px;}
 .gal .gal-import-dialog .gal-error {color:var(--g-error);}
 @media(max-width:600px){.gal .gal-create-options{grid-template-columns:1fr;gap:12px;}.gal .gal-create-options>button{min-height:125px;padding:18px;}.gal .gal-import-tabs button{flex:1;white-space:nowrap;font-size:12px;}}
+
+.gal label.gal-import-remember {flex-direction:row;align-items:center;font-weight:400;font-size:12px;gap:9px;}
+.gal .gal-import-remember input {width:16px;height:16px;flex-shrink:0;}
+.gal .gal-import-connection {margin:14px 0;}.gal .gal-import-connection summary {cursor:pointer;color:var(--g-muted);font-size:12px;margin-bottom:12px;}

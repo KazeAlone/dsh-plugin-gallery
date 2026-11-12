@@ -53,7 +53,7 @@ Gallery 顶部的主题按钮可切换「跟随系统」「墨绿黄铜」「暖
 
 - **本机文件**：选择当前浏览器所在电脑的 Markdown 文件、资源文件夹，或同类型 Gallery JSON 导出包。浏览器文件与 DSH 主机工作区相互独立。
 - **DSH 工作区**：浏览宿主已登记的工作区，输入相对路径或进入目录后读取；未登记工作区时显示 DSH 启动目录。不读取工作区之外的路径或符号链接。
-- **GitHub 地址**：支持公开 `github.com` 仓库、`tree` 目录、`blob` 文件及原始文件链接，读取指定分支的文件与附件。仓库根目录须包含单个资源的主文件；多资源仓库请提供具体目录或文件地址。暂不支持私有仓库或 GitHub Enterprise 地址，受 GitHub API 访问额度与 DSH 主机网络限制。
+- **GitHub 地址**：支持公开/私有 GitHub 仓库及 GitHub Enterprise，兼容 `tree` 目录、`blob` 文件、仓库 `.git` 和公开原始文件链接。公开服务默认使用 `https://api.github.com`；企业服务默认使用同站点 `/api/v3`（例如 `https://github.xxx.net/api/v3`）。反向代理或独立 API 域名可在「API 连接设置」填写完整 API 根地址。私有仓库填写具有 Contents 读取权限的 PAT。可选择在 DSH 主机记住令牌或仅使用一次；已保存令牌按完整 API 地址隔离，留空复用，支持清除。令牌独立保存在主机 `github-import.credentials.json`（权限 0600，未额外加密），不回显、不写入导入资源或导出包，不跟随重定向转发。仓库根目录须包含单个资源的主文件；多资源仓库请提供具体目录或文件地址。需要 DSH 主机能够访问服务并信任其 TLS 证书，不关闭证书校验；非 GitHub REST 兼容的 GitLab/Gitee 等服务不在此导入方式范围内。
 
 Skill 自动识别 `SKILL.md`，带入 `references/`、`scripts/`、`assets/`。Agent 支持 `AGENT.md` 或单独选择的 Markdown 文件，带入 `references/`、`assets/` 和可选 `config.json`；外部模型配置会忽略，沿用宿主模型。缺少描述或不符合要求的调用标识会提示在向导中补充确认。每次只导入一个资源，最多 100 个文件、总计 5 MiB；编辑现有资源直接进入向导。
 
