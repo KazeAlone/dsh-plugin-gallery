@@ -21,8 +21,7 @@ const string = (name) => ({
 });
 const methods = {
   uiStatus: [],
-  uiImportWorkspace: ["payload"],
-  uiImportGithubAuth: ["payload"],
+  uiImportDirectory: ["payload"],
   uiImportResource: ["payload"],
   uiExtractWorkflowAgent: ["payload"],
   uiSkillCatalog: [],

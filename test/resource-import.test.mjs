@@ -7,18 +7,16 @@ import {
   rmSync,
   symlinkSync,
   existsSync,
+  chmodSync,
 } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createHash } from "node:crypto";
 import { importResourceFiles } from "../src/client/resource-import.mjs";
 import { readSkill, skillIssues } from "../src/client/skill-format.mjs";
 import { readAgent, agentIssues } from "../src/client/agent-format.mjs";
 import {
   importResource,
-  browseImportWorkspace,
-  importGithubResource,
-  parseGithubImportUrl,
+  browseServerDirectory,
 } from "../src/resource-import.mjs";
 const file = (path, content) => ({ path, content, encoding: "utf8" });
 const skill =
@@ -122,156 +120,129 @@ test("imports handle bare Markdown and Gallery exports and reject ambiguous or m
     /5 MiB/,
   );
 });
-test("workspace import reads only registered roots and never executes scripts or follows symlinks", async () => {
-  const root = mkdtempSync(join(tmpdir(), "gallery-import-"));
-  const outside = mkdtempSync(join(tmpdir(), "gallery-import-outside-"));
-  const ctx = {
-    get: (name) =>
-      name === "workspaceRegistry"
-        ? { list: () => [{ name: "测试工作区", path: root }] }
-        : undefined,
-  };
+
+test("server directory import accepts absolute paths outside workspaces and never executes resource scripts", async () => {
+  const root = mkdtempSync(join(tmpdir(), "gallery-server-browse-")),
+    outside = mkdtempSync(join(tmpdir(), "gallery-server-resource-"));
   try {
-    mkdirSync(join(root, "skills/review/references"), { recursive: true });
-    mkdirSync(join(root, "skills/review/scripts"));
-    writeFileSync(join(root, "skills/review/SKILL.md"), skill);
-    writeFileSync(join(root, "skills/review/references/check.md"), "Checklist");
+    mkdirSync(join(outside, "references"));
+    mkdirSync(join(outside, "scripts"));
+    writeFileSync(join(outside, "SKILL.md"), skill);
+    writeFileSync(join(outside, "references/check.md"), "Checklist");
     writeFileSync(
-      join(root, "skills/review/scripts/script.js"),
+      join(outside, "scripts/script.js"),
       `require('fs').writeFileSync('${join(root, "executed")}','bad')`,
     );
-    const browse = await browseImportWorkspace(ctx, { path: "skills" });
-    assert.equal(browse.entries[0].name, "review");
-    const result = await importResource(ctx, {
-      source: "workspace",
+    mkdirSync(join(root, ".hidden"));
+    writeFileSync(join(root, "ignore.txt"), "ignore");
+    const browse = await browseServerDirectory({ path: root });
+    assert.equal(browse.path, root);
+    assert.ok(browse.entries.some((e) => e.name === ".hidden"));
+    assert.ok(!browse.entries.some((e) => e.name === "ignore.txt"));
+    const parent = await browseServerDirectory({ path: browse.parentPath });
+    assert.ok(parent.entries.some((e) => e.path === outside));
+    const result = await importResource({
+      source: "server",
       type: "skill",
-      workspacePath: root,
-      path: "skills/review",
+      path: outside,
     });
     assert.equal(result.resource.files.length, 3);
     assert.equal(existsSync(join(root, "executed")), false);
-    const byFile = await importResource(ctx, {
-      source: "workspace",
+    const byFile = await importResource({
+      source: "server",
       type: "skill",
-      workspacePath: root,
-      path: "skills/review/SKILL.md",
+      path: join(outside, "SKILL.md"),
     });
     assert.deepEqual(byFile.resource.files, result.resource.files);
-    await assert.rejects(() =>
-      importResource(ctx, {
-        source: "workspace",
-        type: "skill",
-        workspacePath: outside,
-        path: "",
-      }),
+    const top = await browseServerDirectory({ shortcut: "root" });
+    assert.equal(top.path, top.rootPath);
+    assert.equal(top.parentPath, top.path);
+    const start = await browseServerDirectory({ shortcut: "start" });
+    assert.equal(start.path, process.cwd());
+    await assert.rejects(
+      () => browseServerDirectory({ path: "relative/path" }),
+      /绝对路径/,
     );
-    await assert.rejects(() => browseImportWorkspace(ctx, { path: "../" }));
-    symlinkSync(outside, join(root, "escape"));
-    await assert.rejects(() => browseImportWorkspace(ctx, { path: "escape" }));
-    writeFileSync(join(outside, "private.md"), "private");
-    symlinkSync(
-      join(outside, "private.md"),
-      join(root, "skills/review/references/private.md"),
+    await assert.rejects(
+      () => browseServerDirectory({ path: root + "/missing" }),
+      /不存在/,
     );
     await assert.rejects(
       () =>
-        importResource(ctx, {
-          source: "workspace",
+        importResource({
+          source: "github",
           type: "skill",
-          path: "skills/review",
+          url: "https://github.com/test/repo",
         }),
-      /符号链接/,
+      /远程仓库导入已移除/,
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
     rmSync(outside, { recursive: true, force: true });
   }
 });
-function githubMock(ref = "main") {
-  const objects = new Map(),
-    dir = new Map(),
-    calls = [];
-  const entry = (path, content) => {
-    const sha = createHash("sha1").update(content).digest("hex");
-    objects.set(sha, content);
-    return {
-      type: "file",
-      name: path.split("/").at(-1),
-      path,
-      sha,
-      size: Buffer.byteLength(content),
-    };
-  };
-  const main = entry("skills/demo/SKILL.md", skill),
-    check = entry("skills/demo/references/check.md", "Checklist");
-  dir.set("skills/demo", [
-    main,
-    { type: "dir", name: "references", path: "skills/demo/references" },
-  ]);
-  dir.set("skills/demo/SKILL.md", main);
-  dir.set("skills/demo/references", [check]);
-  return {
-    calls,
-    fetch: async (url, options) => {
-      calls.push({ url, options });
-      const u = new URL(url);
-      assert.equal(u.origin, "https://api.github.com");
-      assert.equal(options.redirect, "error");
-      assert.equal(options.headers.Authorization, undefined);
-      let value,
-        status = 200;
-      if (u.pathname === "/repos/test/repo") value = { default_branch: ref };
-      else if (u.pathname.includes("/git/blobs/"))
-        value = {
-          encoding: "base64",
-          content: Buffer.from(
-            objects.get(u.pathname.split("/").at(-1)) || "",
-          ).toString("base64"),
-        };
-      else if (u.searchParams.get("ref") === ref) {
-        const path = decodeURIComponent(
-          u.pathname.split("/contents/")[1] || "",
-        );
-        value = dir.get(path);
-        if (!value) status = 404;
-      } else status = 404;
-      return new Response(JSON.stringify(value || { message: "not found" }), {
-        status,
-        headers: { "Content-Type": "application/json" },
-      });
-    },
-  };
-}
-test("GitHub imports a public directory and file with attachments, including slash branch names", async () => {
-  for (const ref of ["main", "feature/import"])
-    for (const mode of ["tree", "blob"]) {
-      const mock = githubMock(ref);
-      const url = `https://github.com/test/repo/${mode}/${ref}/skills/demo${mode === "blob" ? "/SKILL.md" : ""}`;
-      const { resource } = await importGithubResource(
-        { type: "skill", url },
-        mock,
-      );
-      assert.equal(resource.files.length, 2);
-      assert.equal(resource.name, "资料核对");
-      assert.match(resource.files[1].path, /references\/check.md/);
-    }
-  for (const url of [
-    "http://github.com/test/repo",
-    "ftp://internal.example/test/repo",
-    "https://u:p@github.com/test/repo",
-    "https://github.com/test/repo/tree/main/%2e%2e/private",
-  ])
-    assert.throws(() => parseGithubImportUrl(url));
-  const mock = githubMock();
-  await assert.rejects(
-    () =>
-      importGithubResource(
-        {
+test("server browsing follows explicit directory links while attachment symlinks and oversized imports remain rejected", async () => {
+  const root = mkdtempSync(join(tmpdir(), "gallery-server-links-")),
+    target = mkdtempSync(join(tmpdir(), "gallery-server-target-"));
+  try {
+    writeFileSync(join(target, "SKILL.md"), skill);
+    symlinkSync(target, join(root, "resource"));
+    const list = await browseServerDirectory({ path: root });
+    assert.equal(list.entries[0].symlink, true);
+    assert.equal(list.entries[0].directory, true);
+    const linked = await browseServerDirectory({
+      path: join(root, "resource"),
+    });
+    assert.equal(linked.path, target);
+    assert.equal(
+      (
+        await importResource({
+          source: "server",
           type: "skill",
-          url: "https://github.com/test/repo/tree/main/missing",
-        },
-        mock,
-      ),
-    /无法定位/,
-  );
+          path: join(root, "resource"),
+        })
+      ).resource.name,
+      "资料核对",
+    );
+    mkdirSync(join(target, "references"));
+    symlinkSync(
+      join(root, "resource/SKILL.md"),
+      join(target, "references/link.md"),
+    );
+    await assert.rejects(
+      () => importResource({ source: "server", type: "skill", path: target }),
+      /符号链接/,
+    );
+    rmSync(join(target, "references/link.md"));
+    writeFileSync(
+      join(target, "references/huge.md"),
+      "x".repeat(5 * 1024 * 1024 + 1),
+    );
+    await assert.rejects(
+      () => importResource({ source: "server", type: "skill", path: target }),
+      /5 MiB/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(target, { recursive: true, force: true });
+  }
 });
+test(
+  "unreadable server directories report OS-account permissions without attempting escalation",
+  { skip: typeof process.getuid !== "function" || process.getuid() === 0 },
+  async () => {
+    const root = mkdtempSync(join(tmpdir(), "gallery-server-permission-"));
+    const locked = join(root, "locked");
+    mkdirSync(locked);
+    try {
+      chmodSync(locked, 0o000);
+      await assert.rejects(
+        () => browseServerDirectory({ path: locked }),
+        /系统账号无权读取/,
+      );
+    } finally {
+      chmodSync(locked, 0o700);
+      rmSync(root, { recursive: true, force: true });
+    }
+  },
+);

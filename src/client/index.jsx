@@ -635,8 +635,7 @@ function Gallery({ remote }) {
       {creation && <ResourceStart type={creation} onClose={() => setCreation(null)}
         onBlank={() => { const setter = creation === "skill" ? setSkillWizard : setAgentWizard; setter({resource:null}); setCreation(null); }}
         onImported={importedResource => { const setter = creation === "skill" ? setSkillWizard : setAgentWizard; setter({resource:null,importedResource}); setCreation(null); }}
-        onBrowse={payload => call(remote,"uiImportWorkspace",json(payload))}
-        onGithubAuth={payload => call(remote,"uiImportGithubAuth",json(payload))}
+        onBrowse={payload => call(remote,"uiImportDirectory",json(payload))}
         onRead={payload => call(remote,"uiImportResource",json(payload))} />}
       {workflowWizard && <WorkflowWizard onExtract={(resourceId) => call(remote,"uiExtractWorkflowAgent",json({resourceId}))} onGet={id => call(remote, "uiGet", id)} onList={async type => {
         const rows = [];
