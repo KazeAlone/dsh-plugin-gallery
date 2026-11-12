@@ -1,3 +1,4 @@
+import { githubToken } from "./github-import-auth.mjs";
 import { readdir, realpath, lstat, open } from "node:fs/promises";
 import { constants } from "node:fs";
 import {
@@ -281,21 +282,17 @@ export function parseGithubImportUrl(value) {
         : value,
     );
   } catch {
-    throw Error("请输入公开 GitHub 仓库、文件夹或文件地址");
+    throw Error("请输入 GitHub 或企业 GitHub 的仓库、文件夹或文件地址");
   }
   demand(
-    url.protocol === "https:" &&
-      ["github.com", "www.github.com", "raw.githubusercontent.com"].includes(
-        url.hostname,
-      ) &&
+    ["https:", "http:"].includes(url.protocol) &&
       !url.username &&
       !url.password &&
-      !url.port &&
       !url.search &&
       !url.hash,
     400,
     "INVALID_GITHUB_URL",
-    "仅支持标准公开 GitHub HTTPS 地址，请移除查询参数和锚点",
+    "请输入 GitHub HTTP/HTTPS 地址，不包含用户名、密码、查询参数或锚点",
   );
   const parts = url.pathname
     .split("/")
@@ -325,15 +322,67 @@ export function parseGithubImportUrl(value) {
     "INVALID_GITHUB_URL",
     "请选择仓库、tree 文件夹或 blob 文件链接",
   );
-  return { owner, repo, tail: raw ? parts.slice(2) : parts.slice(3) };
+  const publicGithub = [
+    "github.com",
+    "www.github.com",
+    "raw.githubusercontent.com",
+  ].includes(url.hostname);
+  demand(
+    !publicGithub || url.protocol === "https:",
+    400,
+    "INVALID_GITHUB_URL",
+    "公开 GitHub 请使用 HTTPS 地址",
+  );
+  return {
+    owner,
+    repo,
+    tail: raw ? parts.slice(2) : parts.slice(3),
+    origin: url.origin,
+    publicGithub,
+  };
+}
+
+export function githubImportConnection(input) {
+  const parsed = parseGithubImportUrl(String(input.url || ""));
+  demand(
+    input.apiBaseUrl === undefined ||
+      (typeof input.apiBaseUrl === "string" && input.apiBaseUrl.length <= 2048),
+    400,
+    "INVALID_GITHUB_API",
+    "API 地址格式无效或过长",
+  );
+  let api;
+  try {
+    api = new URL(
+      input.apiBaseUrl?.trim() ||
+        (parsed.publicGithub
+          ? "https://api.github.com"
+          : parsed.origin + "/api/v3"),
+    );
+  } catch {
+    throw Error("GitHub API 地址无效");
+  }
+  demand(
+    ["http:", "https:"].includes(api.protocol) &&
+      !api.username &&
+      !api.password &&
+      !api.search &&
+      !api.hash,
+    400,
+    "INVALID_GITHUB_API",
+    "API 地址须为 HTTP/HTTPS，不包含认证信息或查询参数",
+  );
+  const apiBaseUrl = api.href.replace(/\/+$/, "");
+  return { ...parsed, apiBaseUrl };
 }
 export async function importGithubResource(
   input,
   { fetch: request = globalThis.fetch } = {},
 ) {
   const type = selectedType(input.type),
-    { owner, repo, tail } = parseGithubImportUrl(String(input.url || ""));
-  const base = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+    { owner, repo, tail, apiBaseUrl } = githubImportConnection(input);
+  const token = githubToken(input.token);
+  const base = `${apiBaseUrl}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
   const signal = AbortSignal.timeout(25000);
   let requests = 0,
     total = 0;
@@ -350,11 +399,17 @@ export async function importGithubResource(
         headers: {
           Accept: "application/vnd.github+json",
           "User-Agent": "DSH-Gallery",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         redirect: "error",
         signal,
       });
-    } catch {
+    } catch (error) {
+      const cause = error?.cause?.code || error?.code || "";
+      if (/CERT|TLS|SELF_SIGNED|VERIFY_LEAF/.test(cause))
+        throw Error(
+          "企业 GitHub 证书未受信任，请为 DSH 主机配置 CA 信任后重试",
+        );
       throw Error(
         signal.aborted
           ? "GitHub 读取超时，请选择更具体的目录后重试"
@@ -369,11 +424,13 @@ export async function importGithubResource(
       response.ok,
       response.status,
       "GITHUB_IMPORT_FAILED",
-      response.status === 403 || response.status === 429
-        ? "GitHub 请求受限，请稍后重试"
-        : response.status === 404
-          ? "仓库或文件不存在，目前仅支持公开 GitHub 仓库"
-          : "无法读取 GitHub，请检查公开地址及网络连接",
+      response.status === 401
+        ? "GitHub 认证失败，请检查访问令牌是否正确或已过期"
+        : response.status === 403 || response.status === 429
+          ? "GitHub 拒绝访问或请求额度不足，请检查令牌权限及服务限制"
+          : response.status === 404
+            ? "仓库或文件不存在，或令牌没有读取权限，请检查地址、API 地址和授权范围"
+            : "无法读取 GitHub，请检查服务地址、API 地址及网络连接",
     );
     const reader = response.body.getReader(),
       chunks = [];
@@ -394,7 +451,11 @@ export async function importGithubResource(
     } finally {
       await reader.cancel().catch(() => {});
     }
-    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    try {
+      return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    } catch {
+      throw Error("GitHub API 未返回有效 JSON，请检查 API 地址或反向代理配置");
+    }
   };
   const contents = (path, ref, missing = false) =>
     get(
@@ -419,7 +480,7 @@ export async function importGithubResource(
     data,
     404,
     "GITHUB_IMPORT_FAILED",
-    "无法定位分支或路径，请使用具体资源文件夹或 Markdown 链接",
+    "无法定位分支或路径，请检查仓库权限、API 地址，或使用具体资源目录/文件链接",
   );
   let entries = Array.isArray(data) ? data : null,
     main = entries?.find(
@@ -514,13 +575,17 @@ export async function importGithubResource(
   }
   return importResourceFiles(type, files, repo);
 }
-export async function importResource(ctx, input) {
-  const result =
-    input.source === "workspace"
-      ? await localImport(ctx, input)
-      : input.source === "github"
-        ? await importGithubResource(input)
-        : null;
+export async function importResource(ctx, input, { authStore } = {}) {
+  let result;
+  if (input.source === "workspace") result = await localImport(ctx, input);
+  else if (input.source === "github") {
+    const connection = githubImportConnection(input);
+    const supplied = githubToken(input.token);
+    const token = supplied || authStore?.get(connection.apiBaseUrl) || "";
+    result = await importGithubResource({ ...input, token });
+    if (supplied && input.rememberToken !== false && authStore)
+      authStore.set(connection.apiBaseUrl, supplied);
+  }
   demand(result, 400, "INVALID_IMPORT", "请选择工作区或 GitHub 来源");
   return { ...result, resource: normalizeResource(result.resource) };
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
 import {
@@ -13,6 +13,7 @@ export function ResourceStart({
   onImported,
   onRead,
   onBrowse,
+  onGithubAuth,
 }) {
   const label = type === "skill" ? "Skill" : "Agent";
   const [mode, setMode] = useState("choose"),
@@ -23,6 +24,29 @@ export function ResourceStart({
   const [workspace, setWorkspace] = useState(null),
     [path, setPath] = useState(""),
     [url, setUrl] = useState("");
+  const [apiBaseUrl, setApiBaseUrl] = useState("");
+  const [token, setToken] = useState("");
+  const [rememberToken, setRememberToken] = useState(true);
+  const [authStatus, setAuthStatus] = useState(null);
+  useEffect(() => {
+    if (source !== "github" || !url.trim() || !onGithubAuth) return;
+    let live = true;
+    const timer = setTimeout(
+      () =>
+        onGithubAuth({ url: url.trim(), apiBaseUrl: apiBaseUrl.trim() })
+          .then((value) => {
+            if (live) setAuthStatus(value);
+          })
+          .catch(() => {
+            if (live) setAuthStatus(null);
+          }),
+      300,
+    );
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [source, url, apiBaseUrl, onGithubAuth]);
   const clear = () => {
     setResult(null);
     setError("");
@@ -277,35 +301,140 @@ export function ResourceStart({
               {source === "github" && (
                 <div>
                   <label>
-                    公开 GitHub 地址
+                    GitHub / 企业 GitHub 地址
                     <input
                       aria-label="GitHub 导入地址"
                       value={url}
                       disabled={busy}
                       onChange={(e) => {
-                        setUrl(e.target.value);
+                        const next = e.target.value;
+                        let serviceChanged = true;
+                        try {
+                          serviceChanged =
+                            new URL(next).origin !== new URL(url).origin;
+                        } catch {
+                          /* Incomplete URL clears credentials. */
+                        }
+                        if (serviceChanged) {
+                          setApiBaseUrl("");
+                          setToken("");
+                          setAuthStatus(null);
+                        }
+                        setUrl(next);
                         clear();
                       }}
                       placeholder="https://github.com/owner/repo/tree/main/my-skill"
                     />
                   </label>
                   <p>
-                    支持公开仓库、文件夹、Markdown 文件和 Gallery JSON
-                    包链接。多资源仓库请填写具体资源目录或文件地址。
+                    支持公开、私有和企业 GitHub
+                    仓库；私有仓库需填写有读取权限的访问令牌。多资源仓库请提供具体目录或文件链接。
                   </p>
+                  <details className="gal-import-connection">
+                    <summary>API 连接设置</summary>
+                    <label>
+                      API 地址（选填）
+                      <input
+                        aria-label="GitHub API 地址"
+                        maxLength={2048}
+                        value={apiBaseUrl}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setApiBaseUrl(e.target.value);
+                          setToken("");
+                          setAuthStatus(null);
+                          clear();
+                        }}
+                        placeholder="自动识别；企业服务通常为 https://github.company.net/api/v3"
+                      />
+                    </label>
+                    <p>
+                      {authStatus?.apiBaseUrl
+                        ? `当前 API：${authStatus.apiBaseUrl}`
+                        : "公开 GitHub 自动使用 api.github.com，企业服务默认使用同站点 /api/v3；反向代理部署可填写完整 API 根地址。"}
+                    </p>
+                  </details>
+                  <label>
+                    访问令牌（PAT，选填）
+                    <input
+                      aria-label="GitHub 访问令牌"
+                      maxLength={8192}
+                      type="password"
+                      autoComplete="new-password"
+                      value={token}
+                      disabled={busy}
+                      onChange={(e) => {
+                        setToken(e.target.value);
+                        clear();
+                      }}
+                      placeholder={
+                        authStatus?.hasToken
+                          ? "已保存，留空继续使用；填写新值替换"
+                          : "公开仓库可留空；私有仓库填写读取令牌"
+                      }
+                    />
+                  </label>
+                  <label className="gal-import-remember">
+                    <input
+                      type="checkbox"
+                      checked={rememberToken}
+                      disabled={busy}
+                      onChange={(e) => setRememberToken(e.target.checked)}
+                    />
+                    在当前 DSH 主机记住此服务的令牌
+                  </label>
+                  <p>
+                    令牌按 API
+                    地址分别保存，不回显，也不写入资源或导出包。未勾选时，填写的新令牌仅用于本次读取。
+                  </p>
+                  {authStatus?.hasToken && (
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        run(async () => {
+                          const value = await onGithubAuth({
+                            url: url.trim(),
+                            apiBaseUrl: apiBaseUrl.trim(),
+                            action: "remove",
+                          });
+                          setAuthStatus(value);
+                          setToken("");
+                        })
+                      }
+                    >
+                      清除已保存令牌
+                    </button>
+                  )}
+                  {/^http:\/\//i.test(apiBaseUrl || url) && (
+                    <p>HTTP 会明文传输认证信息，建议使用 HTTPS。</p>
+                  )}
                   <button
                     className="gal-primary"
                     disabled={busy || !url.trim()}
                     onClick={() =>
-                      run(async () =>
+                      run(async () => {
                         setResult(
                           await onRead({
                             type,
                             source: "github",
                             url: url.trim(),
+                            apiBaseUrl: apiBaseUrl.trim(),
+                            token,
+                            rememberToken,
                           }),
-                        ),
-                      )
+                        );
+                        if (onGithubAuth)
+                          try {
+                            setAuthStatus(
+                              await onGithubAuth({
+                                url: url.trim(),
+                                apiBaseUrl: apiBaseUrl.trim(),
+                              }),
+                            );
+                          } catch {
+                            /* Import result remains usable. */
+                          }
+                      })
                     }
                   >
                     <Glyph name="download" />

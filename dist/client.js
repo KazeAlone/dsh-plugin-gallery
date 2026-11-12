@@ -61,6 +61,7 @@ var string = (name) => ({
 var methods = {
   uiStatus: [],
   uiImportWorkspace: ["payload"],
+  uiImportGithubAuth: ["payload"],
   uiImportResource: ["payload"],
   uiExtractWorkflowAgent: ["payload"],
   uiSkillCatalog: [],
@@ -2133,6 +2134,10 @@ fieldset.gal-skill-fields {
 .gal .gal-import-preview h3 {display:flex;gap:8px;align-items:center;}.gal .gal-import-preview details p{font-size:12px;}
 .gal .gal-import-dialog .gal-error {color:var(--g-error);}
 @media(max-width:600px){.gal .gal-create-options{grid-template-columns:1fr;gap:12px;}.gal .gal-create-options>button{min-height:125px;padding:18px;}.gal .gal-import-tabs button{flex:1;white-space:nowrap;font-size:12px;}}
+
+.gal label.gal-import-remember {flex-direction:row;align-items:center;font-weight:400;font-size:12px;gap:9px;}
+.gal .gal-import-remember input {width:16px;height:16px;flex-shrink:0;}
+.gal .gal-import-connection {margin:14px 0;}.gal .gal-import-connection summary {cursor:pointer;color:var(--g-muted);font-size:12px;margin-bottom:12px;}
 `;
 
 // src/client/leaderboards.jsx
@@ -11099,11 +11104,32 @@ function ResourceStart({
   onBlank,
   onImported,
   onRead,
-  onBrowse
+  onBrowse,
+  onGithubAuth
 }) {
   const label = type === "skill" ? "Skill" : "Agent";
   const [mode, setMode] = (0, import_react9.useState)("choose"), [source, setSource] = (0, import_react9.useState)("browser"), [busy, setBusy] = (0, import_react9.useState)(false), [error, setError] = (0, import_react9.useState)(""), [result, setResult] = (0, import_react9.useState)(null);
   const [workspace, setWorkspace] = (0, import_react9.useState)(null), [path, setPath] = (0, import_react9.useState)(""), [url, setUrl] = (0, import_react9.useState)("");
+  const [apiBaseUrl, setApiBaseUrl] = (0, import_react9.useState)("");
+  const [token, setToken] = (0, import_react9.useState)("");
+  const [rememberToken, setRememberToken] = (0, import_react9.useState)(true);
+  const [authStatus, setAuthStatus] = (0, import_react9.useState)(null);
+  (0, import_react9.useEffect)(() => {
+    if (source !== "github" || !url.trim() || !onGithubAuth) return;
+    let live = true;
+    const timer = setTimeout(
+      () => onGithubAuth({ url: url.trim(), apiBaseUrl: apiBaseUrl.trim() }).then((value) => {
+        if (live) setAuthStatus(value);
+      }).catch(() => {
+        if (live) setAuthStatus(null);
+      }),
+      300
+    );
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [source, url, apiBaseUrl, onGithubAuth]);
   const clear = () => {
     setResult(null);
     setError("");
@@ -11261,32 +11287,109 @@ function ResourceStart({
       ),
       /* @__PURE__ */ import_react9.default.createElement("span", null, entry.name),
       entry.directory && /* @__PURE__ */ import_react9.default.createElement("span", null, "\u203A")
-    )) : /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u5B50\u76EE\u5F55\u3002")), /* @__PURE__ */ import_react9.default.createElement("small", null, "\u76EE\u5F55\uFF1A", workspace.path || "\u5DE5\u4F5C\u533A\u6839\u76EE\u5F55", "\u3002\u8FDB\u5165\u8D44\u6E90\u76EE\u5F55\u540E\u70B9\u51FB\u300C\u8BFB\u53D6\u6B64\u8DEF\u5F84\u300D\u53EF\u5E26\u5165\u9644\u4EF6\u3002")), !workspace && !busy && /* @__PURE__ */ import_react9.default.createElement("button", { onClick: () => browse() }, "\u91CD\u65B0\u8BFB\u53D6\u5DE5\u4F5C\u533A")), source === "github" && /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("label", null, "\u516C\u5F00 GitHub \u5730\u5740", /* @__PURE__ */ import_react9.default.createElement(
+    )) : /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u5B50\u76EE\u5F55\u3002")), /* @__PURE__ */ import_react9.default.createElement("small", null, "\u76EE\u5F55\uFF1A", workspace.path || "\u5DE5\u4F5C\u533A\u6839\u76EE\u5F55", "\u3002\u8FDB\u5165\u8D44\u6E90\u76EE\u5F55\u540E\u70B9\u51FB\u300C\u8BFB\u53D6\u6B64\u8DEF\u5F84\u300D\u53EF\u5E26\u5165\u9644\u4EF6\u3002")), !workspace && !busy && /* @__PURE__ */ import_react9.default.createElement("button", { onClick: () => browse() }, "\u91CD\u65B0\u8BFB\u53D6\u5DE5\u4F5C\u533A")), source === "github" && /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("label", null, "GitHub / \u4F01\u4E1A GitHub \u5730\u5740", /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         "aria-label": "GitHub \u5BFC\u5165\u5730\u5740",
         value: url,
         disabled: busy,
         onChange: (e) => {
-          setUrl(e.target.value);
+          const next = e.target.value;
+          let serviceChanged = true;
+          try {
+            serviceChanged = new URL(next).origin !== new URL(url).origin;
+          } catch {
+          }
+          if (serviceChanged) {
+            setApiBaseUrl("");
+            setToken("");
+            setAuthStatus(null);
+          }
+          setUrl(next);
           clear();
         },
         placeholder: "https://github.com/owner/repo/tree/main/my-skill"
       }
-    )), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u652F\u6301\u516C\u5F00\u4ED3\u5E93\u3001\u6587\u4EF6\u5939\u3001Markdown \u6587\u4EF6\u548C Gallery JSON \u5305\u94FE\u63A5\u3002\u591A\u8D44\u6E90\u4ED3\u5E93\u8BF7\u586B\u5199\u5177\u4F53\u8D44\u6E90\u76EE\u5F55\u6216\u6587\u4EF6\u5730\u5740\u3002"), /* @__PURE__ */ import_react9.default.createElement(
+    )), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u652F\u6301\u516C\u5F00\u3001\u79C1\u6709\u548C\u4F01\u4E1A GitHub \u4ED3\u5E93\uFF1B\u79C1\u6709\u4ED3\u5E93\u9700\u586B\u5199\u6709\u8BFB\u53D6\u6743\u9650\u7684\u8BBF\u95EE\u4EE4\u724C\u3002\u591A\u8D44\u6E90\u4ED3\u5E93\u8BF7\u63D0\u4F9B\u5177\u4F53\u76EE\u5F55\u6216\u6587\u4EF6\u94FE\u63A5\u3002"), /* @__PURE__ */ import_react9.default.createElement("details", { className: "gal-import-connection" }, /* @__PURE__ */ import_react9.default.createElement("summary", null, "API \u8FDE\u63A5\u8BBE\u7F6E"), /* @__PURE__ */ import_react9.default.createElement("label", null, "API \u5730\u5740\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react9.default.createElement(
+      "input",
+      {
+        "aria-label": "GitHub API \u5730\u5740",
+        maxLength: 2048,
+        value: apiBaseUrl,
+        disabled: busy,
+        onChange: (e) => {
+          setApiBaseUrl(e.target.value);
+          setToken("");
+          setAuthStatus(null);
+          clear();
+        },
+        placeholder: "\u81EA\u52A8\u8BC6\u522B\uFF1B\u4F01\u4E1A\u670D\u52A1\u901A\u5E38\u4E3A https://github.company.net/api/v3"
+      }
+    )), /* @__PURE__ */ import_react9.default.createElement("p", null, authStatus?.apiBaseUrl ? `\u5F53\u524D API\uFF1A${authStatus.apiBaseUrl}` : "\u516C\u5F00 GitHub \u81EA\u52A8\u4F7F\u7528 api.github.com\uFF0C\u4F01\u4E1A\u670D\u52A1\u9ED8\u8BA4\u4F7F\u7528\u540C\u7AD9\u70B9 /api/v3\uFF1B\u53CD\u5411\u4EE3\u7406\u90E8\u7F72\u53EF\u586B\u5199\u5B8C\u6574 API \u6839\u5730\u5740\u3002")), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u8BBF\u95EE\u4EE4\u724C\uFF08PAT\uFF0C\u9009\u586B\uFF09", /* @__PURE__ */ import_react9.default.createElement(
+      "input",
+      {
+        "aria-label": "GitHub \u8BBF\u95EE\u4EE4\u724C",
+        maxLength: 8192,
+        type: "password",
+        autoComplete: "new-password",
+        value: token,
+        disabled: busy,
+        onChange: (e) => {
+          setToken(e.target.value);
+          clear();
+        },
+        placeholder: authStatus?.hasToken ? "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u7EE7\u7EED\u4F7F\u7528\uFF1B\u586B\u5199\u65B0\u503C\u66FF\u6362" : "\u516C\u5F00\u4ED3\u5E93\u53EF\u7559\u7A7A\uFF1B\u79C1\u6709\u4ED3\u5E93\u586B\u5199\u8BFB\u53D6\u4EE4\u724C"
+      }
+    )), /* @__PURE__ */ import_react9.default.createElement("label", { className: "gal-import-remember" }, /* @__PURE__ */ import_react9.default.createElement(
+      "input",
+      {
+        type: "checkbox",
+        checked: rememberToken,
+        disabled: busy,
+        onChange: (e) => setRememberToken(e.target.checked)
+      }
+    ), "\u5728\u5F53\u524D DSH \u4E3B\u673A\u8BB0\u4F4F\u6B64\u670D\u52A1\u7684\u4EE4\u724C"), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u4EE4\u724C\u6309 API \u5730\u5740\u5206\u522B\u4FDD\u5B58\uFF0C\u4E0D\u56DE\u663E\uFF0C\u4E5F\u4E0D\u5199\u5165\u8D44\u6E90\u6216\u5BFC\u51FA\u5305\u3002\u672A\u52FE\u9009\u65F6\uFF0C\u586B\u5199\u7684\u65B0\u4EE4\u724C\u4EC5\u7528\u4E8E\u672C\u6B21\u8BFB\u53D6\u3002"), authStatus?.hasToken && /* @__PURE__ */ import_react9.default.createElement(
+      "button",
+      {
+        disabled: busy,
+        onClick: () => run(async () => {
+          const value = await onGithubAuth({
+            url: url.trim(),
+            apiBaseUrl: apiBaseUrl.trim(),
+            action: "remove"
+          });
+          setAuthStatus(value);
+          setToken("");
+        })
+      },
+      "\u6E05\u9664\u5DF2\u4FDD\u5B58\u4EE4\u724C"
+    ), /^http:\/\//i.test(apiBaseUrl || url) && /* @__PURE__ */ import_react9.default.createElement("p", null, "HTTP \u4F1A\u660E\u6587\u4F20\u8F93\u8BA4\u8BC1\u4FE1\u606F\uFF0C\u5EFA\u8BAE\u4F7F\u7528 HTTPS\u3002"), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || !url.trim(),
-        onClick: () => run(
-          async () => setResult(
+        onClick: () => run(async () => {
+          setResult(
             await onRead({
               type,
               source: "github",
-              url: url.trim()
+              url: url.trim(),
+              apiBaseUrl: apiBaseUrl.trim(),
+              token,
+              rememberToken
             })
-          )
-        )
+          );
+          if (onGithubAuth)
+            try {
+              setAuthStatus(
+                await onGithubAuth({
+                  url: url.trim(),
+                  apiBaseUrl: apiBaseUrl.trim()
+                })
+              );
+            } catch {
+            }
+        })
       },
       /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "download" }),
       "\u8BFB\u53D6 GitHub"
@@ -12161,6 +12264,7 @@ function Gallery({ remote }) {
         setCreation(null);
       },
       onBrowse: (payload) => call(remote, "uiImportWorkspace", json2(payload)),
+      onGithubAuth: (payload) => call(remote, "uiImportGithubAuth", json2(payload)),
       onRead: (payload) => call(remote, "uiImportResource", json2(payload))
     }
   ), workflowWizard && /* @__PURE__ */ import_react12.default.createElement(WorkflowWizard, { onExtract: (resourceId) => call(remote, "uiExtractWorkflowAgent", json2({ resourceId })), onGet: (id) => call(remote, "uiGet", id), onList: async (type2) => {
