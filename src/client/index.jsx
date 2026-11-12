@@ -7,6 +7,7 @@ import { createGalleryTrigger } from "./gallery-trigger.mjs";
 import { McpWizard } from "./mcp-wizard.jsx";
 import { WorkflowWizard } from "./workflow-wizard.jsx";
 import { AgentWizard } from "./agent-wizard.jsx";
+import { ResourceStart } from "./resource-start.jsx";
 import { SkillWizard } from "./skill-wizard.jsx";
 import { Modal } from "./modal.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
@@ -144,6 +145,7 @@ function Gallery({ remote }) {
     [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null),
     [editor, setEditor] = useState(null);
+  const [creation, setCreation] = useState(null);
   const [skillWizard, setSkillWizard] = useState(false);
   const [agentWizard, setAgentWizard] = useState(false);
   const [mcpWizard, setMcpWizard] = useState(false);
@@ -250,6 +252,10 @@ function Gallery({ remote }) {
     setError("");
     if (!r && !resourceType) return;
     setSelected(null);
+    if (!r && ["skill", "agent"].includes(resourceType)) {
+      setCreation(resourceType);
+      return;
+    }
     if ((r?.type || resourceType) === "skill") {
       setSkillWizard({ resource: r || null });
       return;
@@ -714,6 +720,11 @@ function Gallery({ remote }) {
           )}
         </>
       )}
+      {creation && <ResourceStart type={creation} onClose={() => setCreation(null)}
+        onBlank={() => { const setter = creation === "skill" ? setSkillWizard : setAgentWizard; setter({resource:null}); setCreation(null); }}
+        onImported={importedResource => { const setter = creation === "skill" ? setSkillWizard : setAgentWizard; setter({resource:null,importedResource}); setCreation(null); }}
+        onBrowse={payload => call(remote,"uiImportWorkspace",json(payload))}
+        onRead={payload => call(remote,"uiImportResource",json(payload))} />}
       {workflowWizard && <WorkflowWizard onExtract={(resourceId) => call(remote,"uiExtractWorkflowAgent",json({resourceId}))} onGet={id => call(remote, "uiGet", id)} onList={async type => {
         const rows = [];
         for (let offset = 0; ; offset += 100) {
@@ -753,6 +764,7 @@ function Gallery({ remote }) {
       )}
       {agentWizard && (
         <AgentWizard
+          importedResource={agentWizard.importedResource}
           resource={agentWizard.resource}
           onClose={async () => {
             if (await confirmAction("放弃尚未保存的 Agent？"))
@@ -777,6 +789,7 @@ function Gallery({ remote }) {
       )}
       {skillWizard && (
         <SkillWizard
+          importedResource={skillWizard.importedResource}
           resource={skillWizard.resource}
           onClose={async () => {
             if (await confirmAction("放弃尚未保存的 Skill？"))

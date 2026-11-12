@@ -2207,3 +2207,21 @@ fieldset.gal-skill-fields {
 .gal .gal-mcp-credential-row label { margin:0; min-width:0; }
 .gal .gal-mcp-credential-row > button { margin-bottom:1px; }
 @media (max-width:600px) { .gal .gal-mcp-credential-row { grid-template-columns:minmax(0,1fr) auto; } .gal .gal-mcp-credential-row label:first-child { grid-column:1/-1; } }
+
+/* Shared import entry for Skill and Agent; editors remain the existing wizards. */
+.gal .gal-import-dialog { width:min(900px,100%); }
+.gal .gal-import-dialog .gal-dialog-head p { margin-top:8px;color:var(--g-muted);font-size:12px; }
+.gal .gal-create-options {display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:15px 0;}
+.gal .gal-create-options>button {display:flex;flex-direction:column;align-items:flex-start;gap:13px;padding:25px;text-align:left;min-height:180px;border-color:var(--g-line);border-radius:12px;}
+.gal .gal-create-options strong {font-size:18px;}.gal .gal-create-options span{color:var(--g-muted);font-size:12px;}
+.gal .gal-import-tabs {display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.gal .gal-import-tabs button[aria-pressed="true"] {background:var(--g-accent);color:var(--g-on-accent);}
+.gal .gal-import-local>div,.gal .gal-import-path-actions {display:flex;gap:10px;flex-wrap:wrap;margin:16px 0;}
+.gal .gal-import-dialog p {font-size:13px;line-height:1.8;margin:12px 0;color:var(--g-muted);overflow-wrap:anywhere;}
+.gal .gal-import-files {max-height:230px;overflow:auto;border:1px solid var(--g-line);border-radius:7px;margin:15px 0;}
+.gal .gal-import-files>button,.gal .gal-import-files>div {display:flex;gap:10px;justify-content:flex-start;width:100%;border:0;border-bottom:1px solid var(--g-line);padding:10px 12px;text-align:left;border-radius:0;min-width:0;}
+.gal .gal-import-files span {overflow-wrap:anywhere;min-width:0;}.gal .gal-import-files button>span:last-child:not(:nth-child(2)) {margin-left:auto;}
+.gal .gal-import-preview {margin-top:18px;padding:18px;border:1px solid var(--g-line);border-radius:10px;background:var(--g-soft);}
+.gal .gal-import-preview h3 {display:flex;gap:8px;align-items:center;}.gal .gal-import-preview details p{font-size:12px;}
+.gal .gal-import-dialog .gal-error {color:var(--g-error);}
+@media(max-width:600px){.gal .gal-create-options{grid-template-columns:1fr;gap:12px;}.gal .gal-create-options>button{min-height:125px;padding:18px;}.gal .gal-import-tabs button{flex:1;white-space:nowrap;font-size:12px;}}
