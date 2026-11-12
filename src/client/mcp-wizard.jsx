@@ -10,14 +10,6 @@ const parseLines = (value) =>
     .split("\n")
     .map((x) => x.trim())
     .filter(Boolean);
-const parseRefs = (value) =>
-  Object.fromEntries(
-    parseLines(value).map((line) => {
-      const index = line.indexOf("=");
-      if (index < 1) throw Error("环境变量映射每行填写 KEY=环境变量名");
-      return [line.slice(0, index).trim(), line.slice(index + 1).trim()];
-    }),
-  );
 export function McpWizard({ resource, onClose, onSave, onCheck }) {
   const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const saved = resource?.metadata?.mcp || {};
@@ -32,22 +24,20 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
     [args, setArgs] = useState((saved.args || []).join("\n")),
     [cwd, setCwd] = useState(saved.cwd || ""),
     [url, setUrl] = useState(saved.url || ""),
-    [envRefs, setEnvRefs] = useState(
-      Object.entries(saved.envRefs || {})
-        .map(([a, b]) => `${a}=${b}`)
-        .join("\n"),
-    ),
-    [credentialMode, setCredentialMode] = useState(
-      Object.keys(saved.envRefs || {}).length && !saved.credentialKeys?.length
-        ? "environment"
-        : "direct",
-    ),
     [authType, setAuthType] = useState(
-      saved.authType || (saved.credentialKeys?.length ? "headers" : "none"),
+      saved.authType ||
+        (saved.credentialKeys?.length || Object.keys(saved.envRefs || {}).length
+          ? "headers"
+          : "none"),
     ),
     [token, setToken] = useState(""),
     [entries, setEntries] = useState(() =>
-      (saved.credentialKeys || [])
+      [
+        ...new Set([
+          ...(saved.credentialKeys || []),
+          ...Object.keys(saved.envRefs || {}),
+        ]),
+      ]
         .filter(
           (key) =>
             !(
@@ -63,7 +53,9 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
     ),
     [tags, setTags] = useState((resource?.tags || []).join(", ")),
     [testResult, setTestResult] = useState(
-      resource?.metadata?.mcpVerification ?? null,
+      Object.keys(saved.envRefs || {}).length
+        ? null
+        : (resource?.metadata?.mcpVerification ?? null),
     ),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -82,21 +74,20 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
         ? [{ key: "Authorization", value: token, saved: tokenSaved }]
         : entries.filter((entry) => entry.key.trim() || entry.value);
   const validCredentials =
-    credentialMode !== "direct" ||
-    (directEntries.every(
+    directEntries.every(
       (entry) =>
         (transport === "stdio"
           ? /^[A-Za-z_][A-Za-z0-9_]*$/.test(entry.key.trim())
           : /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/.test(entry.key.trim())) &&
         (entry.value.trim() || entry.saved),
     ) &&
-      new Set(
-        directEntries.map((entry) =>
-          transport === "stdio"
-            ? entry.key.trim()
-            : entry.key.trim().toLowerCase(),
-        ),
-      ).size === directEntries.length);
+    new Set(
+      directEntries.map((entry) =>
+        transport === "stdio"
+          ? entry.key.trim()
+          : entry.key.trim().toLowerCase(),
+      ),
+    ).size === directEntries.length;
   const validConnection =
     validServer &&
     validCredentials &&
@@ -104,7 +95,6 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
       ? !!command.trim()
       : /^https?:\/\/[^\s/]+/.test(url));
   function credentialValues() {
-    if (credentialMode !== "direct") return {};
     return Object.fromEntries(
       directEntries
         .filter((entry) => entry.value)
@@ -117,17 +107,12 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
     );
   }
   function config() {
-    const direct = credentialMode === "direct";
     return {
       serverName,
       transport,
-      envRefs: direct ? {} : parseRefs(envRefs),
-      ...(direct
-        ? {
-            credentialKeys: directEntries.map((entry) => entry.key.trim()),
-            ...(transport === "streamable-http" ? { authType } : {}),
-          }
-        : {}),
+      envRefs: {},
+      credentialKeys: directEntries.map((entry) => entry.key.trim()),
+      ...(transport === "streamable-http" ? { authType } : {}),
       ...(transport === "stdio"
         ? { command, args: parseLines(args), cwd }
         : { url }),
@@ -327,165 +312,127 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
                     />
                   </label>
                 )}
-                <label>
-                  认证信息
-                  <select
-                    aria-label="认证填写方式"
-                    value={credentialMode}
-                    disabled={busy}
-                    onChange={change(setCredentialMode)}
-                  >
-                    <option value="direct">在页面填写</option>
-                    <option value="environment">引用宿主环境变量</option>
-                  </select>
-                </label>
-                {credentialMode === "environment" ? (
-                  <>
+                {Object.keys(saved.envRefs || {}).length > 0 && (
+                  <p role="note">
+                    此资源原来引用宿主环境变量。字段名已保留，请填写实际认证值后保存，或移除不再使用的字段。
+                  </p>
+                )}
+                <>
+                  {transport === "streamable-http" && (
                     <label>
-                      {transport === "stdio" ? "环境变量映射" : "请求头映射"}
-                      （选填）
-                      <textarea
-                        aria-label="环境变量映射"
-                        rows={3}
-                        value={envRefs}
-                        onChange={change(setEnvRefs)}
+                      认证方式
+                      <select
+                        aria-label="HTTP 认证方式"
+                        value={authType}
+                        disabled={busy}
+                        onChange={change(setAuthType)}
+                      >
+                        <option value="none">无需认证</option>
+                        <option value="bearer">Bearer Token</option>
+                        <option value="headers">自定义请求头 / API Key</option>
+                      </select>
+                    </label>
+                  )}
+                  {transport === "streamable-http" && authType === "bearer" ? (
+                    <label>
+                      Token
+                      <input
+                        aria-label="Bearer Token"
+                        type="password"
+                        autoComplete="new-password"
+                        value={token}
+                        disabled={busy}
+                        onChange={change(setToken)}
                         placeholder={
-                          transport === "stdio"
-                            ? "API_KEY=MY_API_KEY"
-                            : "Authorization=MCP_AUTH_HEADER"
+                          tokenSaved
+                            ? "已保存，留空继续使用；填写可替换"
+                            : "粘贴 Token，无需填写 Bearer 前缀"
                         }
                       />
+                      {tokenSaved && <small>已保存 Token，原值不回显。</small>}
                     </label>
-                    <p>
-                      每行填写「服务字段=宿主环境变量名」。Authorization
-                      对应的变量值应包含 Bearer 前缀。
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    {transport === "streamable-http" && (
-                      <label>
-                        认证方式
-                        <select
-                          aria-label="HTTP 认证方式"
-                          value={authType}
-                          disabled={busy}
-                          onChange={change(setAuthType)}
-                        >
-                          <option value="none">无需认证</option>
-                          <option value="bearer">Bearer Token</option>
-                          <option value="headers">
-                            自定义请求头 / API Key
-                          </option>
-                        </select>
-                      </label>
-                    )}
-                    {transport === "streamable-http" &&
-                    authType === "bearer" ? (
-                      <label>
-                        Token
-                        <input
-                          aria-label="Bearer Token"
-                          type="password"
-                          autoComplete="new-password"
-                          value={token}
-                          disabled={busy}
-                          onChange={change(setToken)}
-                          placeholder={
-                            tokenSaved
-                              ? "已保存，留空继续使用；填写可替换"
-                              : "粘贴 Token，无需填写 Bearer 前缀"
-                          }
-                        />
-                        {tokenSaved && (
-                          <small>已保存 Token，原值不回显。</small>
-                        )}
-                      </label>
-                    ) : (
-                      (transport === "stdio" || authType === "headers") && (
-                        <div className="gal-mcp-credentials">
-                          <p>
-                            {transport === "stdio"
-                              ? "填写服务进程需要的环境变量及其实际值。"
-                              : "填写请求头名称及其完整值，例如 X-API-Key。"}
-                          </p>
-                          {entries.map((entry, index) => (
-                            <div className="gal-mcp-credential-row" key={index}>
-                              <label>
-                                {transport === "stdio"
-                                  ? "变量名"
-                                  : "请求头名称"}
-                                <input
-                                  aria-label={`认证字段 ${index + 1}`}
-                                  autoComplete="off"
-                                  value={entry.key}
-                                  disabled={busy}
-                                  onChange={(e) =>
-                                    editEntry(index, "key", e.target.value)
-                                  }
-                                  placeholder={
-                                    transport === "stdio"
-                                      ? "API_KEY"
-                                      : "X-API-Key"
-                                  }
-                                />
-                              </label>
-                              <label>
-                                值
-                                <input
-                                  aria-label={`认证值 ${index + 1}`}
-                                  type="password"
-                                  autoComplete="new-password"
-                                  value={entry.value}
-                                  disabled={busy}
-                                  onChange={(e) =>
-                                    editEntry(index, "value", e.target.value)
-                                  }
-                                  placeholder={
-                                    entry.saved
-                                      ? "已保存，留空保留"
-                                      : "填写实际值"
-                                  }
-                                />
-                              </label>
-                              <button
-                                type="button"
+                  ) : (
+                    (transport === "stdio" || authType === "headers") && (
+                      <div className="gal-mcp-credentials">
+                        <p>
+                          {transport === "stdio"
+                            ? "填写服务进程需要的环境变量及其实际值。"
+                            : "填写请求头名称及其完整值，例如 X-API-Key。"}
+                        </p>
+                        {entries.map((entry, index) => (
+                          <div className="gal-mcp-credential-row" key={index}>
+                            <label>
+                              {transport === "stdio" ? "变量名" : "请求头名称"}
+                              <input
+                                aria-label={`认证字段 ${index + 1}`}
+                                autoComplete="off"
+                                value={entry.key}
                                 disabled={busy}
-                                aria-label={`删除认证字段 ${index + 1}`}
-                                onClick={() => {
-                                  setEntries((rows) =>
-                                    rows.filter((_, i) => i !== index),
-                                  );
-                                  setTestResult(null);
-                                }}
-                              >
-                                <Glyph name="trash" size={16} />
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            type="button"
-                            disabled={busy || entries.length >= 32}
-                            onClick={() => {
-                              setEntries((rows) => [
-                                ...rows,
-                                { key: "", value: "", saved: false },
-                              ]);
-                              setTestResult(null);
-                            }}
-                          >
-                            <Glyph name="plus" size={16} />
-                            添加{transport === "stdio" ? "环境变量" : "请求头"}
-                          </button>
-                        </div>
-                      )
-                    )}
-                    <p>
-                      认证值仅保存在当前 DSH
-                      主机，不显示在资源文件、导出包和模型提示词中。编辑时留空保留已保存的值，删除字段或关闭认证将在保存后移除。
-                    </p>
-                  </>
-                )}
+                                onChange={(e) =>
+                                  editEntry(index, "key", e.target.value)
+                                }
+                                placeholder={
+                                  transport === "stdio"
+                                    ? "API_KEY"
+                                    : "X-API-Key"
+                                }
+                              />
+                            </label>
+                            <label>
+                              值
+                              <input
+                                aria-label={`认证值 ${index + 1}`}
+                                type="password"
+                                autoComplete="new-password"
+                                value={entry.value}
+                                disabled={busy}
+                                onChange={(e) =>
+                                  editEntry(index, "value", e.target.value)
+                                }
+                                placeholder={
+                                  entry.saved
+                                    ? "已保存，留空保留"
+                                    : "填写实际值"
+                                }
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              aria-label={`删除认证字段 ${index + 1}`}
+                              onClick={() => {
+                                setEntries((rows) =>
+                                  rows.filter((_, i) => i !== index),
+                                );
+                                setTestResult(null);
+                              }}
+                            >
+                              <Glyph name="trash" size={16} />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          disabled={busy || entries.length >= 32}
+                          onClick={() => {
+                            setEntries((rows) => [
+                              ...rows,
+                              { key: "", value: "", saved: false },
+                            ]);
+                            setTestResult(null);
+                          }}
+                        >
+                          <Glyph name="plus" size={16} />
+                          添加{transport === "stdio" ? "环境变量" : "请求头"}
+                        </button>
+                      </div>
+                    )
+                  )}
+                  <p>
+                    认证值仅保存在当前 DSH
+                    主机，不显示在资源文件、导出包和模型提示词中。编辑时留空保留已保存的值，删除字段或关闭认证将在保存后移除。
+                  </p>
+                </>
                 <p>
                   连接测试会尝试启动或访问该服务，并读取它提供的工具。完成后会断开测试连接。
                 </p>
