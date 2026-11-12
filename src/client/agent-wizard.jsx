@@ -11,12 +11,13 @@ import {
   agentIssues,
 } from "./agent-format.mjs";
 const steps = ["基本信息", "行为指引与附件", "检查保存"];
-export function AgentWizard({ resource, onClose, onSave }) {
-  const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
-  const [initial] = useState(() => readAgent(resource));
+export function AgentWizard({ resource, importedResource, onClose, onSave }) {
+  const draft = resource || importedResource;
+  const [cover, setCover] = useState(draft?.metadata?.cover ?? "");
+  const [initial] = useState(() => readAgent(draft));
   const [step, setStep] = useState(0),
     [slug, setSlug] = useState(() => initial.slug || createResourceIdentifier("agent")),
-    [name, setName] = useState(resource?.name || ""),
+    [name, setName] = useState(draft?.name || ""),
     [description, setDescription] = useState(initial.description),
     [instructions, setInstructions] = useState(() =>
       [
@@ -27,9 +28,9 @@ export function AgentWizard({ resource, onClose, onSave }) {
         .filter(Boolean)
         .join("\n\n"),
     ),
-    [tags, setTags] = useState((resource?.tags || []).join(", ")),
+    [tags, setTags] = useState((draft?.tags || []).join(", ")),
     [files, setFiles] = useState(
-      (resource?.files || []).filter(
+      (draft?.files || []).filter(
         (f) => !["AGENT.md", "config.json"].includes(f.path),
       ),
     ),
@@ -51,7 +52,7 @@ export function AgentWizard({ resource, onClose, onSave }) {
   ];
   const goal = "",
     boundaries = "";
-  const config = { ...(resource?.metadata?.agent?.config || {}) };
+  const config = { ...(draft?.metadata?.agent?.config || {}) };
   delete config.model;
   const hasConfig = Object.keys(config).length > 0;
   const document = agentDocument(
@@ -125,9 +126,9 @@ export function AgentWizard({ resource, onClose, onSave }) {
         description: description.trim(),
         tags: parsedTags,
         metadata: {
-          ...withResourceCover(resource?.metadata, cover),
+          ...withResourceCover(draft?.metadata, cover),
           agent: {
-            ...(resource?.metadata?.agent || {}),
+            ...(draft?.metadata?.agent || {}),
             slug: slug.trim(),
             goal,
             boundaries,

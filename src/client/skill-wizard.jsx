@@ -29,16 +29,17 @@ function Preview({ text }) {
     </div>
   );
 }
-export function SkillWizard({ resource, onClose, onSave }) {
-  const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
-  const [initial] = useState(() => readSkill(resource));
+export function SkillWizard({ resource, importedResource, onClose, onSave }) {
+  const draft = resource || importedResource;
+  const [cover, setCover] = useState(draft?.metadata?.cover ?? "");
+  const [initial] = useState(() => readSkill(draft));
   const [step, setStep] = useState(0),
     [name, setName] = useState(() => initial.name || createResourceIdentifier("skill")),
-    [displayName, setDisplayName] = useState(resource?.name || ""),
+    [displayName, setDisplayName] = useState(draft?.name || ""),
     [description, setDescription] = useState(initial.description),
     [body, setBody] = useState(initial.body),
     [files, setFiles] = useState(initial.files),
-    [tags, setTags] = useState((resource?.tags || []).join(", ")),
+    [tags, setTags] = useState((draft?.tags || []).join(", ")),
     [active, setActive] = useState(-1),
     [preview, setPreview] = useState(false),
     [error, setError] = useState(""),
@@ -140,7 +141,7 @@ export function SkillWizard({ resource, onClose, onSave }) {
         name: displayName.trim(),
         description: description.trim(),
         tags: parsedTags,
-        metadata: withResourceCover(resource?.metadata, cover),
+        metadata: withResourceCover(draft?.metadata, cover),
         references: resource?.references || [],
         files: [
           { path: "SKILL.md", encoding: "utf8", content: document },

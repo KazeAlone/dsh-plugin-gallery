@@ -1,3 +1,4 @@
+import { browseImportWorkspace, importResource } from "./resource-import.mjs";
 import { registerMemberMcpGuidance } from "./member-mcp-guidance.mjs";
 import { extractWorkflowAgent } from "./workflow-extraction.mjs";
 import {
@@ -225,6 +226,12 @@ export default class GalleryService extends TypertRemoteService {
       demand(resource.type === "workflow", 400, "INVALID_TYPE", "仅 Workflow 可以安装到 TeamFlow");
       return publishToTeamflow(resource, process.env.DSH_TEAMFLOW_TEMPLATE_DIR);
     });
+  }
+  uiImportWorkspace(payload) {
+    return this.ownerCall(() => browseImportWorkspace(this.ctx, JSON.parse(payload)));
+  }
+  uiImportResource(payload) {
+    return this.ownerCall(() => importResource(this.ctx, JSON.parse(payload)));
   }
   uiSkillCatalog() {
     return this.ownerCall(async () => {
