@@ -2318,6 +2318,26 @@ fieldset.gal-skill-fields {
 .gal .gal-import-preview h3 {display:flex;gap:8px;align-items:center;}.gal .gal-import-preview details p{font-size:12px;}
 .gal .gal-import-dialog .gal-error {color:var(--g-error);}
 @media(max-width:600px){.gal .gal-create-options{grid-template-columns:1fr;gap:12px;}.gal .gal-create-options>button{min-height:125px;padding:18px;}.gal .gal-import-tabs button{flex:1;white-space:nowrap;font-size:12px;}}
+
+/* Familiar file picker: select, double-click to open, up, and read. */
+.gal .gal-server-toolbar {display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.gal .gal-server-toolbar>button {flex-shrink:0;}
+.gal .gal-server-toolbar>button:first-child {width:38px;padding:5px;font-size:23px;}
+.gal .gal-file-location {display:flex;align-items:center;gap:9px;min-width:0;flex:1;padding:9px 12px;border:1px solid var(--g-line);border-radius:6px;background:var(--g-soft);font-size:12px;}
+.gal .gal-file-location>span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:text;}
+.gal .gal-file-location>svg {flex-shrink:0;color:var(--g-muted);}
+.gal .gal-file-columns {display:flex;justify-content:space-between;padding:8px 13px;border:1px solid var(--g-line);border-bottom:0;border-radius:6px 6px 0 0;background:var(--g-soft);font-size:11px;color:var(--g-muted);}
+.gal .gal-directory-list {height:290px;overflow:auto;border:1px solid var(--g-line);border-radius:0 0 6px 6px;background:var(--g-card);}
+.gal .gal-directory-list>button {display:flex;justify-content:flex-start;gap:10px;border:0;border-radius:0;width:100%;min-height:41px;padding:10px 13px;text-align:left;font-size:13px;user-select:none;}
+.gal .gal-directory-list>button[aria-selected="true"] {background:var(--g-soft);box-shadow:inset 3px 0 var(--g-accent);color:var(--g-ink);}
+.gal .gal-directory-list>button>svg {flex-shrink:0;color:var(--g-muted);}
+.gal .gal-directory-name {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gal .gal-directory-type {margin-left:auto;flex-shrink:0;color:var(--g-muted);font-size:11px;}
+.gal .gal-directory-empty {padding:65px 20px;text-align:center;color:var(--g-muted);font-size:12px;}
+.gal .gal-file-status {display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:11px;color:var(--g-muted);}
+.gal .gal-file-status>span:first-child {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.gal .gal-file-status>span:last-child {flex-shrink:0;}
+@media(max-width:600px){.gal .gal-file-status{flex-direction:column;gap:3px;}.gal .gal-directory-list{height:260px;}.gal .gal-server-toolbar{gap:7px;}}
 `;
 
 // src/client/leaderboards.jsx
@@ -11300,7 +11320,8 @@ function ResourceStart({
 }) {
   const label = type === "skill" ? "Skill" : "Agent";
   const [mode, setMode] = (0, import_react9.useState)("choose"), [source, setSource] = (0, import_react9.useState)("browser"), [busy, setBusy] = (0, import_react9.useState)(false), [error, setError] = (0, import_react9.useState)(""), [result, setResult] = (0, import_react9.useState)(null);
-  const [directory, setDirectory] = (0, import_react9.useState)(null), [path, setPath] = (0, import_react9.useState)("");
+  const [directory, setDirectory] = (0, import_react9.useState)(null);
+  const [selectedEntry, setSelectedEntry] = (0, import_react9.useState)(null);
   const clear = () => {
     setResult(null);
     setError("");
@@ -11322,10 +11343,9 @@ function ResourceStart({
       shortcut ? { shortcut } : next === void 0 ? {} : { path: next }
     );
     setDirectory(value);
-    setPath(value.path);
+    setSelectedEntry(null);
   });
   const read = (next) => run(async () => {
-    setPath(next);
     setResult(await onRead({ type, source: "server", path: next }));
   });
   const upload = (files) => run(
@@ -11355,7 +11375,8 @@ function ResourceStart({
         onClick: () => {
           setSource(key);
           clear();
-          if (key === "server" && !directory) browse();
+          if (key === "server" && !directory)
+            browse(void 0, "root");
         }
       },
       name
@@ -11384,84 +11405,98 @@ function ResourceStart({
           e.target.value = "";
         }
       }
-    ))), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6587\u4EF6\u6765\u81EA\u5F53\u524D\u6D4F\u89C8\u5668\u6240\u5728\u7684\u7535\u8111\uFF1B\u8BFB\u53D6 DSH \u4E3B\u673A\u4E0A\u7684\u6587\u4EF6\u8BF7\u5207\u6362\u5230\u670D\u52A1\u5668\u76EE\u5F55\u3002")), source === "server" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-server" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6D4F\u89C8\u8FD0\u884C DSH \u7684\u670D\u52A1\u5668\u76EE\u5F55\uFF0C\u4E0D\u9650\u4E8E\u5DE5\u4F5C\u533A\u3002\u8BFB\u53D6\u8303\u56F4\u7531 DSH \u8FD0\u884C\u8D26\u53F7\u7684\u7CFB\u7EDF\u6743\u9650\u51B3\u5B9A\uFF0C\u4EC5\u663E\u793A\u6587\u4EF6\u5939\u548C\u53EF\u5BFC\u5165\u7684 Markdown / JSON \u6587\u4EF6\u3002"), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u670D\u52A1\u5668\u7EDD\u5BF9\u8DEF\u5F84", /* @__PURE__ */ import_react9.default.createElement(
-      "input",
-      {
-        "aria-label": "\u670D\u52A1\u5668\u5BFC\u5165\u8DEF\u5F84",
-        value: path,
-        disabled: busy,
-        onChange: (e) => {
-          setPath(e.target.value);
-          clear();
-        },
-        placeholder: type === "skill" ? "/home/user/project/skills/my-skill" : "/home/user/project/agents/reviewer.md",
-        onKeyDown: (e) => {
-          if (e.key === "Enter" && !busy) {
-            e.preventDefault();
-            browse(path);
-          }
-        }
-      }
-    )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-path-actions" }, /* @__PURE__ */ import_react9.default.createElement(
+    ))), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6587\u4EF6\u6765\u81EA\u5F53\u524D\u6D4F\u89C8\u5668\u6240\u5728\u7684\u7535\u8111\uFF1B\u8BFB\u53D6 DSH \u4E3B\u673A\u4E0A\u7684\u6587\u4EF6\u8BF7\u5207\u6362\u5230\u670D\u52A1\u5668\u76EE\u5F55\u3002")), source === "server" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-server" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-server-toolbar" }, /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
-        disabled: busy,
-        onClick: () => browse(void 0, "root")
-      },
-      "\u6839\u76EE\u5F55"
-    ), /* @__PURE__ */ import_react9.default.createElement(
-      "button",
-      {
-        disabled: busy,
-        onClick: () => browse(void 0, "home")
-      },
-      "\u7528\u6237\u76EE\u5F55"
-    ), /* @__PURE__ */ import_react9.default.createElement(
-      "button",
-      {
-        disabled: busy,
-        onClick: () => browse(void 0, "start")
-      },
-      "\u542F\u52A8\u76EE\u5F55"
-    ), /* @__PURE__ */ import_react9.default.createElement(
-      "button",
-      {
+        "aria-label": "\u4E0A\u4E00\u7EA7",
+        title: "\u8FD4\u56DE\u4E0A\u4E00\u7EA7",
         disabled: busy || !directory || directory.path === directory.parentPath,
         onClick: () => browse(directory.parentPath)
       },
-      "\u4E0A\u4E00\u7EA7"
+      /* @__PURE__ */ import_react9.default.createElement("span", { "aria-hidden": "true" }, "\u2191")
     ), /* @__PURE__ */ import_react9.default.createElement(
-      "button",
+      "div",
       {
-        disabled: busy || !path,
-        onClick: () => browse(path)
+        className: "gal-file-location",
+        title: directory?.path || "\u670D\u52A1\u5668\u76EE\u5F55"
       },
-      "\u6D4F\u89C8\u76EE\u5F55"
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "folder", size: 17 }),
+      /* @__PURE__ */ import_react9.default.createElement("span", null, directory?.path || "\u6B63\u5728\u6253\u5F00\u670D\u52A1\u5668\u76EE\u5F55\u2026")
     ), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "gal-primary",
-        disabled: busy || !path,
-        onClick: () => read(path)
+        disabled: busy || !directory,
+        onClick: () => read(selectedEntry?.path || directory.path)
       },
-      "\u8BFB\u53D6\u6B64\u8DEF\u5F84"
-    )), directory && /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-files", "aria-label": "\u670D\u52A1\u5668\u6587\u4EF6" }, directory.entries.length ? directory.entries.map((entry) => /* @__PURE__ */ import_react9.default.createElement(
-      "button",
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "download", size: 16 }),
+      "\u8BFB\u53D6"
+    )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-file-columns", "aria-hidden": "true" }, /* @__PURE__ */ import_react9.default.createElement("span", null, "\u540D\u79F0"), /* @__PURE__ */ import_react9.default.createElement("span", null, "\u7C7B\u578B")), /* @__PURE__ */ import_react9.default.createElement(
+      "div",
       {
-        key: entry.name,
-        disabled: busy,
-        onClick: () => entry.directory ? browse(entry.path) : read(entry.path)
-      },
-      /* @__PURE__ */ import_react9.default.createElement(
-        Glyph,
-        {
-          name: entry.directory ? "folder" : "file",
-          size: 16
+        className: "gal-directory-list",
+        role: "listbox",
+        "aria-label": "\u670D\u52A1\u5668\u6587\u4EF6",
+        "aria-busy": busy,
+        onClick: (e) => {
+          if (!e.target.closest('[role="option"]')) {
+            setSelectedEntry(null);
+            clear();
+          }
         }
-      ),
-      /* @__PURE__ */ import_react9.default.createElement("span", null, entry.name, entry.symlink ? " \u2197" : ""),
-      entry.directory && /* @__PURE__ */ import_react9.default.createElement("span", null, "\u203A")
-    )) : /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u5B50\u76EE\u5F55\u3002")), /* @__PURE__ */ import_react9.default.createElement("small", null, "\u5F53\u524D\u76EE\u5F55\uFF1A", directory.path, "\u3002\u8FDB\u5165\u8D44\u6E90\u76EE\u5F55\u540E\u70B9\u51FB\u300C\u8BFB\u53D6\u6B64\u8DEF\u5F84\u300D\u53EF\u5E26\u5165\u9644\u4EF6\u3002"))), /* @__PURE__ */ import_react9.default.createElement("p", { className: "gal-import-hint" }, label, " \u4E3B\u6587\u4EF6\u4F1A\u81EA\u52A8\u8BC6\u522B\uFF1B", type === "skill" ? "references / scripts / assets" : "references / assets \u53CA config.json", " ", "\u968F\u8D44\u6E90\u5E26\u5165\u3002\u5BFC\u5165\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D\u6267\u884C\u6587\u4EF6\u3002"), busy && /* @__PURE__ */ import_react9.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u2026"), result && /* @__PURE__ */ import_react9.default.createElement("section", { className: "gal-import-preview", "aria-label": "\u5BFC\u5165\u9884\u89C8" }, /* @__PURE__ */ import_react9.default.createElement("h3", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "check" }), "\u5DF2\u8BFB\u53D6 \xB7 ", result.resource.name), /* @__PURE__ */ import_react9.default.createElement("p", null, result.resource.description || "\u63CF\u8FF0\u5C1A\u672A\u586B\u5199\uFF0C\u53EF\u5728\u4E0B\u4E00\u6B65\u8865\u5145\u3002"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-files" }, result.resource.files.map((f) => /* @__PURE__ */ import_react9.default.createElement("div", { key: f.path }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("span", null, f.path)))), result.warnings?.length > 0 && /* @__PURE__ */ import_react9.default.createElement("details", { open: true }, /* @__PURE__ */ import_react9.default.createElement("summary", null, "\u9700\u8981\u786E\u8BA4\u7684\u5185\u5BB9\uFF08", result.warnings.length, "\uFF09"), result.warnings.map((text2, i) => /* @__PURE__ */ import_react9.default.createElement("p", { key: i }, text2))))), error && /* @__PURE__ */ import_react9.default.createElement("p", { role: "alert", className: "gal-error" }, error)),
+      },
+      directory?.entries.length ? directory.entries.map((entry, index) => /* @__PURE__ */ import_react9.default.createElement(
+        "button",
+        {
+          type: "button",
+          role: "option",
+          "aria-selected": selectedEntry?.path === entry.path,
+          tabIndex: selectedEntry ? selectedEntry.path === entry.path ? 0 : -1 : index === 0 ? 0 : -1,
+          key: entry.path,
+          "data-entry-index": index,
+          disabled: busy,
+          title: entry.name,
+          onClick: () => {
+            setSelectedEntry(entry);
+            clear();
+          },
+          onDoubleClick: () => {
+            if (entry.directory) browse(entry.path);
+          },
+          onKeyDown: (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              entry.directory ? browse(entry.path) : read(entry.path);
+              return;
+            }
+            if (["ArrowDown", "ArrowUp", "Home", "End"].includes(
+              e.key
+            )) {
+              e.preventDefault();
+              const next = e.key === "Home" ? 0 : e.key === "End" ? directory.entries.length - 1 : Math.min(
+                directory.entries.length - 1,
+                Math.max(
+                  0,
+                  index + (e.key === "ArrowDown" ? 1 : -1)
+                )
+              );
+              setSelectedEntry(directory.entries[next]);
+              clear();
+              e.currentTarget.parentElement.querySelector(`[data-entry-index="${next}"]`)?.focus();
+            }
+          }
+        },
+        /* @__PURE__ */ import_react9.default.createElement(
+          Glyph,
+          {
+            name: entry.directory ? "folder" : "file",
+            size: 18
+          }
+        ),
+        /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-directory-name" }, entry.name, entry.symlink ? " \u2197" : ""),
+        /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-directory-type" }, entry.directory ? "\u6587\u4EF6\u5939" : /\.json$/i.test(entry.name) ? "\u8D44\u6E90\u5305" : "Markdown")
+      )) : /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-directory-empty" }, busy ? "\u6B63\u5728\u8BFB\u53D6\u76EE\u5F55\u2026" : "\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u6587\u4EF6\u5939")
+    ), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-file-status" }, /* @__PURE__ */ import_react9.default.createElement("span", null, selectedEntry ? `\u5DF2\u9009\u4E2D\uFF1A${selectedEntry.name}` : `${directory?.entries.length ?? 0} \u9879`), /* @__PURE__ */ import_react9.default.createElement("span", null, "\u53CC\u51FB\u6587\u4EF6\u5939\u8FDB\u5165 \xB7 \u672A\u9009\u4E2D\u65F6\u8BFB\u53D6\u5F53\u524D\u76EE\u5F55"))), /* @__PURE__ */ import_react9.default.createElement("p", { className: "gal-import-hint" }, label, " \u4E3B\u6587\u4EF6\u4F1A\u81EA\u52A8\u8BC6\u522B\uFF1B", type === "skill" ? "references / scripts / assets" : "references / assets \u53CA config.json", " ", "\u968F\u8D44\u6E90\u5E26\u5165\u3002\u5BFC\u5165\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D\u6267\u884C\u6587\u4EF6\u3002"), busy && /* @__PURE__ */ import_react9.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u2026"), result && /* @__PURE__ */ import_react9.default.createElement("section", { className: "gal-import-preview", "aria-label": "\u5BFC\u5165\u9884\u89C8" }, /* @__PURE__ */ import_react9.default.createElement("h3", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "check" }), "\u5DF2\u8BFB\u53D6 \xB7 ", result.resource.name), /* @__PURE__ */ import_react9.default.createElement("p", null, result.resource.description || "\u63CF\u8FF0\u5C1A\u672A\u586B\u5199\uFF0C\u53EF\u5728\u4E0B\u4E00\u6B65\u8865\u5145\u3002"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-files" }, result.resource.files.map((f) => /* @__PURE__ */ import_react9.default.createElement("div", { key: f.path }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("span", null, f.path)))), result.warnings?.length > 0 && /* @__PURE__ */ import_react9.default.createElement("details", { open: true }, /* @__PURE__ */ import_react9.default.createElement("summary", null, "\u9700\u8981\u786E\u8BA4\u7684\u5185\u5BB9\uFF08", result.warnings.length, "\uFF09"), result.warnings.map((text2, i) => /* @__PURE__ */ import_react9.default.createElement("p", { key: i }, text2))))), error && /* @__PURE__ */ import_react9.default.createElement("p", { role: "alert", className: "gal-error" }, error)),
     /* @__PURE__ */ import_react9.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {

@@ -20,8 +20,8 @@ export function ResourceStart({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [result, setResult] = useState(null);
-  const [directory, setDirectory] = useState(null),
-    [path, setPath] = useState("");
+  const [directory, setDirectory] = useState(null);
+  const [selectedEntry, setSelectedEntry] = useState(null);
   const clear = () => {
     setResult(null);
     setError("");
@@ -44,11 +44,10 @@ export function ResourceStart({
         shortcut ? { shortcut } : next === undefined ? {} : { path: next },
       );
       setDirectory(value);
-      setPath(value.path);
+      setSelectedEntry(null);
     });
   const read = (next) =>
     run(async () => {
-      setPath(next);
       setResult(await onRead({ type, source: "server", path: next }));
     });
   const upload = (files) =>
@@ -106,7 +105,8 @@ export function ResourceStart({
                     onClick={() => {
                       setSource(key);
                       clear();
-                      if (key === "server" && !directory) browse();
+                      if (key === "server" && !directory)
+                        browse(undefined, "root");
                     }}
                   >
                     {name}
@@ -158,54 +158,10 @@ export function ResourceStart({
               )}
               {source === "server" && (
                 <div className="gal-import-server">
-                  <p>
-                    浏览运行 DSH 的服务器目录，不限于工作区。读取范围由 DSH
-                    运行账号的系统权限决定，仅显示文件夹和可导入的 Markdown /
-                    JSON 文件。
-                  </p>
-                  <label>
-                    服务器绝对路径
-                    <input
-                      aria-label="服务器导入路径"
-                      value={path}
-                      disabled={busy}
-                      onChange={(e) => {
-                        setPath(e.target.value);
-                        clear();
-                      }}
-                      placeholder={
-                        type === "skill"
-                          ? "/home/user/project/skills/my-skill"
-                          : "/home/user/project/agents/reviewer.md"
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !busy) {
-                          e.preventDefault();
-                          browse(path);
-                        }
-                      }}
-                    />
-                  </label>
-                  <div className="gal-import-path-actions">
+                  <div className="gal-server-toolbar">
                     <button
-                      disabled={busy}
-                      onClick={() => browse(undefined, "root")}
-                    >
-                      根目录
-                    </button>
-                    <button
-                      disabled={busy}
-                      onClick={() => browse(undefined, "home")}
-                    >
-                      用户目录
-                    </button>
-                    <button
-                      disabled={busy}
-                      onClick={() => browse(undefined, "start")}
-                    >
-                      启动目录
-                    </button>
-                    <button
+                      aria-label="上一级"
+                      title="返回上一级"
                       disabled={
                         busy ||
                         !directory ||
@@ -213,57 +169,136 @@ export function ResourceStart({
                       }
                       onClick={() => browse(directory.parentPath)}
                     >
-                      上一级
+                      <span aria-hidden="true">↑</span>
                     </button>
-                    <button
-                      disabled={busy || !path}
-                      onClick={() => browse(path)}
+                    <div
+                      className="gal-file-location"
+                      title={directory?.path || "服务器目录"}
                     >
-                      浏览目录
-                    </button>
+                      <Glyph name="folder" size={17} />
+                      <span>{directory?.path || "正在打开服务器目录…"}</span>
+                    </div>
                     <button
                       className="gal-primary"
-                      disabled={busy || !path}
-                      onClick={() => read(path)}
+                      disabled={busy || !directory}
+                      onClick={() =>
+                        read(selectedEntry?.path || directory.path)
+                      }
                     >
-                      读取此路径
+                      <Glyph name="download" size={16} />
+                      读取
                     </button>
                   </div>
-                  {directory && (
-                    <>
-                      <div className="gal-import-files" aria-label="服务器文件">
-                        {directory.entries.length ? (
-                          directory.entries.map((entry) => (
-                            <button
-                              key={entry.name}
-                              disabled={busy}
-                              onClick={() =>
-                                entry.directory
-                                  ? browse(entry.path)
-                                  : read(entry.path)
-                              }
-                            >
-                              <Glyph
-                                name={entry.directory ? "folder" : "file"}
-                                size={16}
-                              />
-                              <span>
-                                {entry.name}
-                                {entry.symlink ? " ↗" : ""}
-                              </span>
-                              {entry.directory && <span>›</span>}
-                            </button>
-                          ))
-                        ) : (
-                          <p>此目录没有可导入的文件或子目录。</p>
-                        )}
+                  <div className="gal-file-columns" aria-hidden="true">
+                    <span>名称</span>
+                    <span>类型</span>
+                  </div>
+                  <div
+                    className="gal-directory-list"
+                    role="listbox"
+                    aria-label="服务器文件"
+                    aria-busy={busy}
+                    onClick={(e) => {
+                      if (!e.target.closest('[role="option"]')) {
+                        setSelectedEntry(null);
+                        clear();
+                      }
+                    }}
+                  >
+                    {directory?.entries.length ? (
+                      directory.entries.map((entry, index) => (
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={selectedEntry?.path === entry.path}
+                          tabIndex={
+                            selectedEntry
+                              ? selectedEntry.path === entry.path
+                                ? 0
+                                : -1
+                              : index === 0
+                                ? 0
+                                : -1
+                          }
+                          key={entry.path}
+                          data-entry-index={index}
+                          disabled={busy}
+                          title={entry.name}
+                          onClick={() => {
+                            setSelectedEntry(entry);
+                            clear();
+                          }}
+                          onDoubleClick={() => {
+                            if (entry.directory) browse(entry.path);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              entry.directory
+                                ? browse(entry.path)
+                                : read(entry.path);
+                              return;
+                            }
+                            if (
+                              ["ArrowDown", "ArrowUp", "Home", "End"].includes(
+                                e.key,
+                              )
+                            ) {
+                              e.preventDefault();
+                              const next =
+                                e.key === "Home"
+                                  ? 0
+                                  : e.key === "End"
+                                    ? directory.entries.length - 1
+                                    : Math.min(
+                                        directory.entries.length - 1,
+                                        Math.max(
+                                          0,
+                                          index +
+                                            (e.key === "ArrowDown" ? 1 : -1),
+                                        ),
+                                      );
+                              setSelectedEntry(directory.entries[next]);
+                              clear();
+                              e.currentTarget.parentElement
+                                .querySelector(`[data-entry-index="${next}"]`)
+                                ?.focus();
+                            }
+                          }}
+                        >
+                          <Glyph
+                            name={entry.directory ? "folder" : "file"}
+                            size={18}
+                          />
+                          <span className="gal-directory-name">
+                            {entry.name}
+                            {entry.symlink ? " ↗" : ""}
+                          </span>
+                          <span className="gal-directory-type">
+                            {entry.directory
+                              ? "文件夹"
+                              : /\.json$/i.test(entry.name)
+                                ? "资源包"
+                                : "Markdown"}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="gal-directory-empty">
+                        {busy
+                          ? "正在读取目录…"
+                          : "此目录没有可导入的文件或文件夹"}
                       </div>
-                      <small>
-                        当前目录：{directory.path}
-                        。进入资源目录后点击「读取此路径」可带入附件。
-                      </small>
-                    </>
-                  )}
+                    )}
+                  </div>
+                  <div className="gal-file-status">
+                    <span>
+                      {selectedEntry
+                        ? `已选中：${selectedEntry.name}`
+                        : `${directory?.entries.length ?? 0} 项`}
+                    </span>
+                    <span>双击文件夹进入 · 未选中时读取当前目录</span>
+                  </div>
                 </div>
               )}
               <p className="gal-import-hint">
