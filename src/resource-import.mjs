@@ -1,3 +1,4 @@
+import { importGitResource } from "./git-resource-import.mjs";
 import { githubToken } from "./github-import-auth.mjs";
 import { readdir, realpath, lstat, open } from "node:fs/promises";
 import { constants } from "node:fs";
@@ -578,6 +579,8 @@ export async function importGithubResource(
 export async function importResource(ctx, input, { authStore } = {}) {
   let result;
   if (input.source === "workspace") result = await localImport(ctx, input);
+  else if (input.source === "github" && input.method === "git")
+    result = await importGitResource(input);
   else if (input.source === "github") {
     const connection = githubImportConnection(input);
     const supplied = githubToken(input.token);
