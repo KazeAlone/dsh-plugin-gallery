@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
 import {
@@ -13,7 +13,6 @@ export function ResourceStart({
   onImported,
   onRead,
   onBrowse,
-  onGithubAuth,
 }) {
   const label = type === "skill" ? "Skill" : "Agent";
   const [mode, setMode] = useState("choose"),
@@ -21,41 +20,8 @@ export function ResourceStart({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [result, setResult] = useState(null);
-  const [workspace, setWorkspace] = useState(null),
-    [path, setPath] = useState(""),
-    [url, setUrl] = useState("");
-  const [gitMethod, setGitMethod] = useState("git");
-  const [gitRef, setGitRef] = useState("");
-  const [gitPath, setGitPath] = useState("");
-  const [apiBaseUrl, setApiBaseUrl] = useState("");
-  const [token, setToken] = useState("");
-  const [rememberToken, setRememberToken] = useState(true);
-  const [authStatus, setAuthStatus] = useState(null);
-  useEffect(() => {
-    if (
-      source !== "github" ||
-      gitMethod !== "api" ||
-      !url.trim() ||
-      !onGithubAuth
-    )
-      return;
-    let live = true;
-    const timer = setTimeout(
-      () =>
-        onGithubAuth({ url: url.trim(), apiBaseUrl: apiBaseUrl.trim() })
-          .then((value) => {
-            if (live) setAuthStatus(value);
-          })
-          .catch(() => {
-            if (live) setAuthStatus(null);
-          }),
-      300,
-    );
-    return () => {
-      live = false;
-      clearTimeout(timer);
-    };
-  }, [source, gitMethod, url, apiBaseUrl, onGithubAuth]);
+  const [directory, setDirectory] = useState(null),
+    [path, setPath] = useState("");
   const clear = () => {
     setResult(null);
     setError("");
@@ -72,11 +38,18 @@ export function ResourceStart({
       setBusy(false);
     }
   };
-  const browse = (next = "", root = workspace?.workspacePath) =>
+  const browse = (next, shortcut) =>
     run(async () => {
-      const value = await onBrowse({ workspacePath: root, path: next });
-      setWorkspace(value);
+      const value = await onBrowse(
+        shortcut ? { shortcut } : next === undefined ? {} : { path: next },
+      );
+      setDirectory(value);
       setPath(value.path);
+    });
+  const read = (next) =>
+    run(async () => {
+      setPath(next);
+      setResult(await onRead({ type, source: "server", path: next }));
     });
   const upload = (files) =>
     run(async () =>
@@ -116,7 +89,7 @@ export function ResourceStart({
               <button disabled={busy} onClick={() => setMode("import")}>
                 <Glyph name="folder" size={32} />
                 <strong>导入已有</strong>
-                <span>从本机文件、DSH 工作区或 GitHub 读取。</span>
+                <span>从本机文件或服务器目录读取。</span>
               </button>
             </div>
           ) : (
@@ -124,8 +97,7 @@ export function ResourceStart({
               <nav className="gal-import-tabs" aria-label="导入来源">
                 {[
                   ["browser", "本机文件"],
-                  ["workspace", "DSH 工作区"],
-                  ["github", "GitHub 地址"],
+                  ["server", "服务器目录"],
                 ].map(([key, name]) => (
                   <button
                     key={key}
@@ -134,7 +106,7 @@ export function ResourceStart({
                     onClick={() => {
                       setSource(key);
                       clear();
-                      if (key === "workspace" && !workspace) browse();
+                      if (key === "server" && !directory) browse();
                     }}
                   >
                     {name}
@@ -179,116 +151,106 @@ export function ResourceStart({
                     </label>
                   </div>
                   <p>
-                    文件来自当前浏览器所在的电脑；读取服务器文件请切换到 DSH
-                    工作区。
+                    文件来自当前浏览器所在的电脑；读取 DSH
+                    主机上的文件请切换到服务器目录。
                   </p>
                 </div>
               )}
-              {source === "workspace" && (
-                <div className="gal-import-workspace">
+              {source === "server" && (
+                <div className="gal-import-server">
                   <p>
-                    读取 DSH
-                    主机已登记的工作区（未登记时为启动目录）。可选择资源文件夹，或单个
-                    Markdown / Gallery JSON 文件。
+                    浏览运行 DSH 的服务器目录，不限于工作区。读取范围由 DSH
+                    运行账号的系统权限决定，仅显示文件夹和可导入的 Markdown /
+                    JSON 文件。
                   </p>
-                  {workspace && (
+                  <label>
+                    服务器绝对路径
+                    <input
+                      aria-label="服务器导入路径"
+                      value={path}
+                      disabled={busy}
+                      onChange={(e) => {
+                        setPath(e.target.value);
+                        clear();
+                      }}
+                      placeholder={
+                        type === "skill"
+                          ? "/home/user/project/skills/my-skill"
+                          : "/home/user/project/agents/reviewer.md"
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !busy) {
+                          e.preventDefault();
+                          browse(path);
+                        }
+                      }}
+                    />
+                  </label>
+                  <div className="gal-import-path-actions">
+                    <button
+                      disabled={busy}
+                      onClick={() => browse(undefined, "root")}
+                    >
+                      根目录
+                    </button>
+                    <button
+                      disabled={busy}
+                      onClick={() => browse(undefined, "home")}
+                    >
+                      用户目录
+                    </button>
+                    <button
+                      disabled={busy}
+                      onClick={() => browse(undefined, "start")}
+                    >
+                      启动目录
+                    </button>
+                    <button
+                      disabled={
+                        busy ||
+                        !directory ||
+                        directory.path === directory.parentPath
+                      }
+                      onClick={() => browse(directory.parentPath)}
+                    >
+                      上一级
+                    </button>
+                    <button
+                      disabled={busy || !path}
+                      onClick={() => browse(path)}
+                    >
+                      浏览目录
+                    </button>
+                    <button
+                      className="gal-primary"
+                      disabled={busy || !path}
+                      onClick={() => read(path)}
+                    >
+                      读取此路径
+                    </button>
+                  </div>
+                  {directory && (
                     <>
-                      <label>
-                        工作区
-                        <select
-                          aria-label="导入工作区"
-                          value={workspace.workspacePath}
-                          disabled={busy}
-                          onChange={(e) => browse("", e.target.value)}
-                        >
-                          {workspace.workspaces.map((w) => (
-                            <option key={w.path} value={w.path}>
-                              {w.name} · {w.path}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        相对路径
-                        <input
-                          aria-label="工作区导入路径"
-                          value={path}
-                          disabled={busy}
-                          placeholder={
-                            type === "skill"
-                              ? ".agents/skills/my-skill"
-                              : "agents/research.md"
-                          }
-                          onChange={(e) => {
-                            setPath(e.target.value);
-                            clear();
-                          }}
-                        />
-                      </label>
-                      <div className="gal-import-path-actions">
-                        <button disabled={busy} onClick={() => browse(path)}>
-                          浏览目录
-                        </button>
-                        <button
-                          disabled={busy || !workspace.path}
-                          onClick={() =>
-                            browse(
-                              workspace.path.split("/").slice(0, -1).join("/"),
-                            )
-                          }
-                        >
-                          上一级
-                        </button>
-                        <button
-                          className="gal-primary"
-                          disabled={busy}
-                          onClick={() =>
-                            run(async () =>
-                              setResult(
-                                await onRead({
-                                  type,
-                                  source: "workspace",
-                                  workspacePath: workspace.workspacePath,
-                                  path,
-                                }),
-                              ),
-                            )
-                          }
-                        >
-                          读取此路径
-                        </button>
-                      </div>
-                      <div className="gal-import-files" aria-label="工作区文件">
-                        {workspace.entries.length ? (
-                          workspace.entries.map((entry) => (
+                      <div className="gal-import-files" aria-label="服务器文件">
+                        {directory.entries.length ? (
+                          directory.entries.map((entry) => (
                             <button
                               key={entry.name}
                               disabled={busy}
-                              onClick={() => {
-                                const next = [workspace.path, entry.name]
-                                  .filter(Boolean)
-                                  .join("/");
-                                if (entry.directory) browse(next);
-                                else {
-                                  setPath(next);
-                                  run(async () =>
-                                    setResult(
-                                      await onRead({
-                                        type,
-                                        source: "workspace",
-                                        workspacePath: workspace.workspacePath,
-                                        path: next,
-                                      }),
-                                    ),
-                                  );
-                                }
-                              }}
+                              onClick={() =>
+                                entry.directory
+                                  ? browse(entry.path)
+                                  : read(entry.path)
+                              }
                             >
                               <Glyph
                                 name={entry.directory ? "folder" : "file"}
                                 size={16}
                               />
-                              <span>{entry.name}</span>
+                              <span>
+                                {entry.name}
+                                {entry.symlink ? " ↗" : ""}
+                              </span>
                               {entry.directory && <span>›</span>}
                             </button>
                           ))
@@ -297,224 +259,11 @@ export function ResourceStart({
                         )}
                       </div>
                       <small>
-                        目录：{workspace.path || "工作区根目录"}
+                        当前目录：{directory.path}
                         。进入资源目录后点击「读取此路径」可带入附件。
                       </small>
                     </>
                   )}
-                  {!workspace && !busy && (
-                    <button onClick={() => browse()}>重新读取工作区</button>
-                  )}
-                </div>
-              )}
-              {source === "github" && (
-                <div>
-                  <label>
-                    读取方式
-                    <select
-                      aria-label="Git 读取方式"
-                      value={gitMethod}
-                      disabled={busy}
-                      onChange={(e) => {
-                        setGitMethod(e.target.value);
-                        setToken("");
-                        clear();
-                      }}
-                    >
-                      <option value="git">DSH 主机 Git（使用已有凭据）</option>
-                      <option value="api">GitHub API（访问令牌）</option>
-                    </select>
-                  </label>
-                  <label>
-                    Git / GitHub 仓库或资源地址
-                    <input
-                      aria-label="GitHub 导入地址"
-                      value={url}
-                      disabled={busy}
-                      onChange={(e) => {
-                        const next = e.target.value;
-                        let serviceChanged = true;
-                        try {
-                          serviceChanged =
-                            new URL(next).origin !== new URL(url).origin;
-                        } catch {
-                          /* Incomplete URL clears credentials. */
-                        }
-                        if (serviceChanged) {
-                          setApiBaseUrl("");
-                          setToken("");
-                          setAuthStatus(null);
-                        }
-                        setUrl(next);
-                        clear();
-                      }}
-                      placeholder="https://github.com/owner/repo/tree/main/my-skill"
-                    />
-                  </label>
-                  {gitMethod === "git" ? (
-                    <>
-                      <p>
-                        直接调用运行 DSH 的系统账号的 Git，使用已有凭据助手、SSH
-                        密钥或 agent。无需填写
-                        PAT；如需登录，请先在该系统账号下完成。
-                      </p>
-                      <label>
-                        分支或 Tag（选填）
-                        <input
-                          aria-label="Git 分支"
-                          value={gitRef}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setGitRef(e.target.value);
-                            clear();
-                          }}
-                          placeholder="留空使用默认分支，或从目录/文件链接识别"
-                        />
-                      </label>
-                      <label>
-                        资源路径（选填）
-                        <input
-                          aria-label="Git 资源路径"
-                          value={gitPath}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setGitPath(e.target.value);
-                            clear();
-                          }}
-                          placeholder={
-                            type === "skill"
-                              ? "例如 skills/my-skill 或 skills/my-skill/SKILL.md"
-                              : "例如 agents/reviewer.md"
-                          }
-                        />
-                      </label>
-                      <p>
-                        多资源仓库请填写单个资源的路径；支持 HTTPS、SSH 以及
-                        tree/blob 链接。只读取内容，不 checkout
-                        工作区或执行仓库脚本。
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p>
-                        通过 GitHub / 企业 GitHub API
-                        读取。私有仓库可填写读取令牌，多资源仓库请提供具体目录或文件链接。
-                      </p>
-                      <details className="gal-import-connection">
-                        <summary>API 连接设置</summary>
-                        <label>
-                          API 地址（选填）
-                          <input
-                            aria-label="GitHub API 地址"
-                            maxLength={2048}
-                            value={apiBaseUrl}
-                            disabled={busy}
-                            onChange={(e) => {
-                              setApiBaseUrl(e.target.value);
-                              setToken("");
-                              setAuthStatus(null);
-                              clear();
-                            }}
-                            placeholder="自动识别；企业服务通常为 https://github.company.net/api/v3"
-                          />
-                        </label>
-                        <p>
-                          {authStatus?.apiBaseUrl
-                            ? `当前 API：${authStatus.apiBaseUrl}`
-                            : "公开 GitHub 自动使用 api.github.com，企业服务默认使用同站点 /api/v3；反向代理部署可填写完整 API 根地址。"}
-                        </p>
-                      </details>
-                      <label>
-                        访问令牌（PAT，选填）
-                        <input
-                          aria-label="GitHub 访问令牌"
-                          maxLength={8192}
-                          type="password"
-                          autoComplete="new-password"
-                          value={token}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setToken(e.target.value);
-                            clear();
-                          }}
-                          placeholder={
-                            authStatus?.hasToken
-                              ? "已保存，留空继续使用；填写新值替换"
-                              : "公开仓库可留空；私有仓库填写读取令牌"
-                          }
-                        />
-                      </label>
-                      <label className="gal-import-remember">
-                        <input
-                          type="checkbox"
-                          checked={rememberToken}
-                          disabled={busy}
-                          onChange={(e) => setRememberToken(e.target.checked)}
-                        />
-                        在当前 DSH 主机记住此服务的令牌
-                      </label>
-                      <p>
-                        令牌按 API
-                        地址分别保存，不回显，也不写入资源或导出包。未勾选时，填写的新令牌仅用于本次读取。
-                      </p>
-                      {authStatus?.hasToken && (
-                        <button
-                          disabled={busy}
-                          onClick={() =>
-                            run(async () => {
-                              const value = await onGithubAuth({
-                                url: url.trim(),
-                                apiBaseUrl: apiBaseUrl.trim(),
-                                action: "remove",
-                              });
-                              setAuthStatus(value);
-                              setToken("");
-                            })
-                          }
-                        >
-                          清除已保存令牌
-                        </button>
-                      )}
-                      {/^http:\/\//i.test(apiBaseUrl || url) && (
-                        <p>HTTP 会明文传输认证信息，建议使用 HTTPS。</p>
-                      )}
-                    </>
-                  )}
-                  <button
-                    className="gal-primary"
-                    disabled={busy || !url.trim()}
-                    onClick={() =>
-                      run(async () => {
-                        setResult(
-                          await onRead({
-                            type,
-                            source: "github",
-                            method: gitMethod,
-                            gitRef: gitRef.trim(),
-                            gitPath: gitPath.trim(),
-                            url: url.trim(),
-                            apiBaseUrl: apiBaseUrl.trim(),
-                            token,
-                            rememberToken,
-                          }),
-                        );
-                        if (gitMethod === "api" && onGithubAuth)
-                          try {
-                            setAuthStatus(
-                              await onGithubAuth({
-                                url: url.trim(),
-                                apiBaseUrl: apiBaseUrl.trim(),
-                              }),
-                            );
-                          } catch {
-                            /* Import result remains usable. */
-                          }
-                      })
-                    }
-                  >
-                    <Glyph name="download" />
-                    读取 GitHub
-                  </button>
                 </div>
               )}
               <p className="gal-import-hint">

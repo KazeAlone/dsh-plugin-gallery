@@ -1,5 +1,4 @@
-import { GithubImportAuth } from "./github-import-auth.mjs";
-import { browseImportWorkspace, importResource, githubImportConnection } from "./resource-import.mjs";
+import { browseServerDirectory, importResource } from "./resource-import.mjs";
 import { registerMemberMcpGuidance } from "./member-mcp-guidance.mjs";
 import { extractWorkflowAgent } from "./workflow-extraction.mjs";
 import {
@@ -34,7 +33,6 @@ export default class GalleryService extends TypertRemoteService {
     this.store = new StorageManager(
       join(process.env.DSH_HOME ?? join(homedir(), ".dsh"), "gallery"),
     );
-    this.githubImportAuth = new GithubImportAuth(join(this.store.directory,"github-import.credentials.json"));
     installReferenceExamples(this.store.adapter());
     this.memberAccess = new WeakMap();
     this.skillProvider = createSkillProvider(this.store, (scope) => this.memberAccess.get(scope)?.gallerySkill !== false);
@@ -229,18 +227,11 @@ export default class GalleryService extends TypertRemoteService {
       return publishToTeamflow(resource, process.env.DSH_TEAMFLOW_TEMPLATE_DIR);
     });
   }
-  uiImportGithubAuth(payload) {
-    return this.ownerCall(() => {
-      const input=JSON.parse(payload), {apiBaseUrl}=githubImportConnection(input);
-      demand(!input.action || ["status","remove"].includes(input.action),400,"INVALID_GITHUB_AUTH","认证操作无效");
-      return input.action === "remove" ? this.githubImportAuth.set(apiBaseUrl,"") : this.githubImportAuth.status(apiBaseUrl);
-    });
-  }
-  uiImportWorkspace(payload) {
-    return this.ownerCall(() => browseImportWorkspace(this.ctx, JSON.parse(payload)));
+  uiImportDirectory(payload) {
+    return this.ownerCall(() => browseServerDirectory(JSON.parse(payload)));
   }
   uiImportResource(payload) {
-    return this.ownerCall(() => importResource(this.ctx, JSON.parse(payload), {authStore:this.githubImportAuth}));
+    return this.ownerCall(() => importResource(JSON.parse(payload)));
   }
   uiSkillCatalog() {
     return this.ownerCall(async () => {

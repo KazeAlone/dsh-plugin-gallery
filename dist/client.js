@@ -60,8 +60,7 @@ var string = (name) => ({
 });
 var methods = {
   uiStatus: [],
-  uiImportWorkspace: ["payload"],
-  uiImportGithubAuth: ["payload"],
+  uiImportDirectory: ["payload"],
   uiImportResource: ["payload"],
   uiExtractWorkflowAgent: ["payload"],
   uiSkillCatalog: [],
@@ -2319,10 +2318,6 @@ fieldset.gal-skill-fields {
 .gal .gal-import-preview h3 {display:flex;gap:8px;align-items:center;}.gal .gal-import-preview details p{font-size:12px;}
 .gal .gal-import-dialog .gal-error {color:var(--g-error);}
 @media(max-width:600px){.gal .gal-create-options{grid-template-columns:1fr;gap:12px;}.gal .gal-create-options>button{min-height:125px;padding:18px;}.gal .gal-import-tabs button{flex:1;white-space:nowrap;font-size:12px;}}
-
-.gal label.gal-import-remember {flex-direction:row;align-items:center;font-weight:400;font-size:12px;gap:9px;}
-.gal .gal-import-remember input {width:16px;height:16px;flex-shrink:0;}
-.gal .gal-import-connection {margin:14px 0;}.gal .gal-import-connection summary {cursor:pointer;color:var(--g-muted);font-size:12px;margin-bottom:12px;}
 `;
 
 // src/client/leaderboards.jsx
@@ -11301,36 +11296,11 @@ function ResourceStart({
   onBlank,
   onImported,
   onRead,
-  onBrowse,
-  onGithubAuth
+  onBrowse
 }) {
   const label = type === "skill" ? "Skill" : "Agent";
   const [mode, setMode] = (0, import_react9.useState)("choose"), [source, setSource] = (0, import_react9.useState)("browser"), [busy, setBusy] = (0, import_react9.useState)(false), [error, setError] = (0, import_react9.useState)(""), [result, setResult] = (0, import_react9.useState)(null);
-  const [workspace, setWorkspace] = (0, import_react9.useState)(null), [path, setPath] = (0, import_react9.useState)(""), [url, setUrl] = (0, import_react9.useState)("");
-  const [gitMethod, setGitMethod] = (0, import_react9.useState)("git");
-  const [gitRef, setGitRef] = (0, import_react9.useState)("");
-  const [gitPath, setGitPath] = (0, import_react9.useState)("");
-  const [apiBaseUrl, setApiBaseUrl] = (0, import_react9.useState)("");
-  const [token, setToken] = (0, import_react9.useState)("");
-  const [rememberToken, setRememberToken] = (0, import_react9.useState)(true);
-  const [authStatus, setAuthStatus] = (0, import_react9.useState)(null);
-  (0, import_react9.useEffect)(() => {
-    if (source !== "github" || gitMethod !== "api" || !url.trim() || !onGithubAuth)
-      return;
-    let live = true;
-    const timer = setTimeout(
-      () => onGithubAuth({ url: url.trim(), apiBaseUrl: apiBaseUrl.trim() }).then((value) => {
-        if (live) setAuthStatus(value);
-      }).catch(() => {
-        if (live) setAuthStatus(null);
-      }),
-      300
-    );
-    return () => {
-      live = false;
-      clearTimeout(timer);
-    };
-  }, [source, gitMethod, url, apiBaseUrl, onGithubAuth]);
+  const [directory, setDirectory] = (0, import_react9.useState)(null), [path, setPath] = (0, import_react9.useState)("");
   const clear = () => {
     setResult(null);
     setError("");
@@ -11347,10 +11317,16 @@ function ResourceStart({
       setBusy(false);
     }
   };
-  const browse = (next = "", root = workspace?.workspacePath) => run(async () => {
-    const value = await onBrowse({ workspacePath: root, path: next });
-    setWorkspace(value);
+  const browse = (next, shortcut) => run(async () => {
+    const value = await onBrowse(
+      shortcut ? { shortcut } : next === void 0 ? {} : { path: next }
+    );
+    setDirectory(value);
     setPath(value.path);
+  });
+  const read = (next) => run(async () => {
+    setPath(next);
+    setResult(await onRead({ type, source: "server", path: next }));
   });
   const upload = (files) => run(
     async () => setResult(
@@ -11367,10 +11343,9 @@ function ResourceStart({
       tabIndex: -1
     },
     /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h2", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: type }), mode === "choose" ? `\u521B\u5EFA ${label}` : `\u5BFC\u5165\u5DF2\u6709 ${label}`), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u5BFC\u5165\u540E\u53EF\u68C0\u67E5\u548C\u7F16\u8F91\uFF0C\u786E\u8BA4\u4FDD\u5B58\u540E\u624D\u52A0\u5165\u8D44\u6E90\u5E93\u3002")), /* @__PURE__ */ import_react9.default.createElement("button", { "aria-label": "\u5173\u95ED\u521B\u5EFA", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-body" }, mode === "choose" ? /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-create-options" }, /* @__PURE__ */ import_react9.default.createElement("button", { disabled: busy, onClick: onBlank }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "plus", size: 32 }), /* @__PURE__ */ import_react9.default.createElement("strong", null, "\u4ECE\u96F6\u521B\u5EFA"), /* @__PURE__ */ import_react9.default.createElement("span", null, "\u586B\u5199\u57FA\u672C\u4FE1\u606F\uFF0C\u7F16\u5199\u6307\u5F15\u5E76\u6DFB\u52A0\u9644\u4EF6\u3002")), /* @__PURE__ */ import_react9.default.createElement("button", { disabled: busy, onClick: () => setMode("import") }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "folder", size: 32 }), /* @__PURE__ */ import_react9.default.createElement("strong", null, "\u5BFC\u5165\u5DF2\u6709"), /* @__PURE__ */ import_react9.default.createElement("span", null, "\u4ECE\u672C\u673A\u6587\u4EF6\u3001DSH \u5DE5\u4F5C\u533A\u6216 GitHub \u8BFB\u53D6\u3002"))) : /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("nav", { className: "gal-import-tabs", "aria-label": "\u5BFC\u5165\u6765\u6E90" }, [
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-body" }, mode === "choose" ? /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-create-options" }, /* @__PURE__ */ import_react9.default.createElement("button", { disabled: busy, onClick: onBlank }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "plus", size: 32 }), /* @__PURE__ */ import_react9.default.createElement("strong", null, "\u4ECE\u96F6\u521B\u5EFA"), /* @__PURE__ */ import_react9.default.createElement("span", null, "\u586B\u5199\u57FA\u672C\u4FE1\u606F\uFF0C\u7F16\u5199\u6307\u5F15\u5E76\u6DFB\u52A0\u9644\u4EF6\u3002")), /* @__PURE__ */ import_react9.default.createElement("button", { disabled: busy, onClick: () => setMode("import") }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "folder", size: 32 }), /* @__PURE__ */ import_react9.default.createElement("strong", null, "\u5BFC\u5165\u5DF2\u6709"), /* @__PURE__ */ import_react9.default.createElement("span", null, "\u4ECE\u672C\u673A\u6587\u4EF6\u6216\u670D\u52A1\u5668\u76EE\u5F55\u8BFB\u53D6\u3002"))) : /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("nav", { className: "gal-import-tabs", "aria-label": "\u5BFC\u5165\u6765\u6E90" }, [
       ["browser", "\u672C\u673A\u6587\u4EF6"],
-      ["workspace", "DSH \u5DE5\u4F5C\u533A"],
-      ["github", "GitHub \u5730\u5740"]
+      ["server", "\u670D\u52A1\u5668\u76EE\u5F55"]
     ].map(([key, name]) => /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
@@ -11380,7 +11355,7 @@ function ResourceStart({
         onClick: () => {
           setSource(key);
           clear();
-          if (key === "workspace" && !workspace) browse();
+          if (key === "server" && !directory) browse();
         }
       },
       name
@@ -11409,75 +11384,73 @@ function ResourceStart({
           e.target.value = "";
         }
       }
-    ))), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6587\u4EF6\u6765\u81EA\u5F53\u524D\u6D4F\u89C8\u5668\u6240\u5728\u7684\u7535\u8111\uFF1B\u8BFB\u53D6\u670D\u52A1\u5668\u6587\u4EF6\u8BF7\u5207\u6362\u5230 DSH \u5DE5\u4F5C\u533A\u3002")), source === "workspace" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-workspace" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "\u8BFB\u53D6 DSH \u4E3B\u673A\u5DF2\u767B\u8BB0\u7684\u5DE5\u4F5C\u533A\uFF08\u672A\u767B\u8BB0\u65F6\u4E3A\u542F\u52A8\u76EE\u5F55\uFF09\u3002\u53EF\u9009\u62E9\u8D44\u6E90\u6587\u4EF6\u5939\uFF0C\u6216\u5355\u4E2A Markdown / Gallery JSON \u6587\u4EF6\u3002"), workspace && /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("label", null, "\u5DE5\u4F5C\u533A", /* @__PURE__ */ import_react9.default.createElement(
-      "select",
-      {
-        "aria-label": "\u5BFC\u5165\u5DE5\u4F5C\u533A",
-        value: workspace.workspacePath,
-        disabled: busy,
-        onChange: (e) => browse("", e.target.value)
-      },
-      workspace.workspaces.map((w) => /* @__PURE__ */ import_react9.default.createElement("option", { key: w.path, value: w.path }, w.name, " \xB7 ", w.path))
-    )), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u76F8\u5BF9\u8DEF\u5F84", /* @__PURE__ */ import_react9.default.createElement(
+    ))), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6587\u4EF6\u6765\u81EA\u5F53\u524D\u6D4F\u89C8\u5668\u6240\u5728\u7684\u7535\u8111\uFF1B\u8BFB\u53D6 DSH \u4E3B\u673A\u4E0A\u7684\u6587\u4EF6\u8BF7\u5207\u6362\u5230\u670D\u52A1\u5668\u76EE\u5F55\u3002")), source === "server" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-server" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6D4F\u89C8\u8FD0\u884C DSH \u7684\u670D\u52A1\u5668\u76EE\u5F55\uFF0C\u4E0D\u9650\u4E8E\u5DE5\u4F5C\u533A\u3002\u8BFB\u53D6\u8303\u56F4\u7531 DSH \u8FD0\u884C\u8D26\u53F7\u7684\u7CFB\u7EDF\u6743\u9650\u51B3\u5B9A\uFF0C\u4EC5\u663E\u793A\u6587\u4EF6\u5939\u548C\u53EF\u5BFC\u5165\u7684 Markdown / JSON \u6587\u4EF6\u3002"), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u670D\u52A1\u5668\u7EDD\u5BF9\u8DEF\u5F84", /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
-        "aria-label": "\u5DE5\u4F5C\u533A\u5BFC\u5165\u8DEF\u5F84",
+        "aria-label": "\u670D\u52A1\u5668\u5BFC\u5165\u8DEF\u5F84",
         value: path,
         disabled: busy,
-        placeholder: type === "skill" ? ".agents/skills/my-skill" : "agents/research.md",
         onChange: (e) => {
           setPath(e.target.value);
           clear();
+        },
+        placeholder: type === "skill" ? "/home/user/project/skills/my-skill" : "/home/user/project/agents/reviewer.md",
+        onKeyDown: (e) => {
+          if (e.key === "Enter" && !busy) {
+            e.preventDefault();
+            browse(path);
+          }
         }
       }
-    )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-path-actions" }, /* @__PURE__ */ import_react9.default.createElement("button", { disabled: busy, onClick: () => browse(path) }, "\u6D4F\u89C8\u76EE\u5F55"), /* @__PURE__ */ import_react9.default.createElement(
+    )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-path-actions" }, /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
-        disabled: busy || !workspace.path,
-        onClick: () => browse(
-          workspace.path.split("/").slice(0, -1).join("/")
-        )
+        disabled: busy,
+        onClick: () => browse(void 0, "root")
+      },
+      "\u6839\u76EE\u5F55"
+    ), /* @__PURE__ */ import_react9.default.createElement(
+      "button",
+      {
+        disabled: busy,
+        onClick: () => browse(void 0, "home")
+      },
+      "\u7528\u6237\u76EE\u5F55"
+    ), /* @__PURE__ */ import_react9.default.createElement(
+      "button",
+      {
+        disabled: busy,
+        onClick: () => browse(void 0, "start")
+      },
+      "\u542F\u52A8\u76EE\u5F55"
+    ), /* @__PURE__ */ import_react9.default.createElement(
+      "button",
+      {
+        disabled: busy || !directory || directory.path === directory.parentPath,
+        onClick: () => browse(directory.parentPath)
       },
       "\u4E0A\u4E00\u7EA7"
     ), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
+        disabled: busy || !path,
+        onClick: () => browse(path)
+      },
+      "\u6D4F\u89C8\u76EE\u5F55"
+    ), /* @__PURE__ */ import_react9.default.createElement(
+      "button",
+      {
         className: "gal-primary",
-        disabled: busy,
-        onClick: () => run(
-          async () => setResult(
-            await onRead({
-              type,
-              source: "workspace",
-              workspacePath: workspace.workspacePath,
-              path
-            })
-          )
-        )
+        disabled: busy || !path,
+        onClick: () => read(path)
       },
       "\u8BFB\u53D6\u6B64\u8DEF\u5F84"
-    )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-files", "aria-label": "\u5DE5\u4F5C\u533A\u6587\u4EF6" }, workspace.entries.length ? workspace.entries.map((entry) => /* @__PURE__ */ import_react9.default.createElement(
+    )), directory && /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-files", "aria-label": "\u670D\u52A1\u5668\u6587\u4EF6" }, directory.entries.length ? directory.entries.map((entry) => /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         key: entry.name,
         disabled: busy,
-        onClick: () => {
-          const next = [workspace.path, entry.name].filter(Boolean).join("/");
-          if (entry.directory) browse(next);
-          else {
-            setPath(next);
-            run(
-              async () => setResult(
-                await onRead({
-                  type,
-                  source: "workspace",
-                  workspacePath: workspace.workspacePath,
-                  path: next
-                })
-              )
-            );
-          }
-        }
+        onClick: () => entry.directory ? browse(entry.path) : read(entry.path)
       },
       /* @__PURE__ */ import_react9.default.createElement(
         Glyph,
@@ -11486,156 +11459,9 @@ function ResourceStart({
           size: 16
         }
       ),
-      /* @__PURE__ */ import_react9.default.createElement("span", null, entry.name),
+      /* @__PURE__ */ import_react9.default.createElement("span", null, entry.name, entry.symlink ? " \u2197" : ""),
       entry.directory && /* @__PURE__ */ import_react9.default.createElement("span", null, "\u203A")
-    )) : /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u5B50\u76EE\u5F55\u3002")), /* @__PURE__ */ import_react9.default.createElement("small", null, "\u76EE\u5F55\uFF1A", workspace.path || "\u5DE5\u4F5C\u533A\u6839\u76EE\u5F55", "\u3002\u8FDB\u5165\u8D44\u6E90\u76EE\u5F55\u540E\u70B9\u51FB\u300C\u8BFB\u53D6\u6B64\u8DEF\u5F84\u300D\u53EF\u5E26\u5165\u9644\u4EF6\u3002")), !workspace && !busy && /* @__PURE__ */ import_react9.default.createElement("button", { onClick: () => browse() }, "\u91CD\u65B0\u8BFB\u53D6\u5DE5\u4F5C\u533A")), source === "github" && /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("label", null, "\u8BFB\u53D6\u65B9\u5F0F", /* @__PURE__ */ import_react9.default.createElement(
-      "select",
-      {
-        "aria-label": "Git \u8BFB\u53D6\u65B9\u5F0F",
-        value: gitMethod,
-        disabled: busy,
-        onChange: (e) => {
-          setGitMethod(e.target.value);
-          setToken("");
-          clear();
-        }
-      },
-      /* @__PURE__ */ import_react9.default.createElement("option", { value: "git" }, "DSH \u4E3B\u673A Git\uFF08\u4F7F\u7528\u5DF2\u6709\u51ED\u636E\uFF09"),
-      /* @__PURE__ */ import_react9.default.createElement("option", { value: "api" }, "GitHub API\uFF08\u8BBF\u95EE\u4EE4\u724C\uFF09")
-    )), /* @__PURE__ */ import_react9.default.createElement("label", null, "Git / GitHub \u4ED3\u5E93\u6216\u8D44\u6E90\u5730\u5740", /* @__PURE__ */ import_react9.default.createElement(
-      "input",
-      {
-        "aria-label": "GitHub \u5BFC\u5165\u5730\u5740",
-        value: url,
-        disabled: busy,
-        onChange: (e) => {
-          const next = e.target.value;
-          let serviceChanged = true;
-          try {
-            serviceChanged = new URL(next).origin !== new URL(url).origin;
-          } catch {
-          }
-          if (serviceChanged) {
-            setApiBaseUrl("");
-            setToken("");
-            setAuthStatus(null);
-          }
-          setUrl(next);
-          clear();
-        },
-        placeholder: "https://github.com/owner/repo/tree/main/my-skill"
-      }
-    )), gitMethod === "git" ? /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("p", null, "\u76F4\u63A5\u8C03\u7528\u8FD0\u884C DSH \u7684\u7CFB\u7EDF\u8D26\u53F7\u7684 Git\uFF0C\u4F7F\u7528\u5DF2\u6709\u51ED\u636E\u52A9\u624B\u3001SSH \u5BC6\u94A5\u6216 agent\u3002\u65E0\u9700\u586B\u5199 PAT\uFF1B\u5982\u9700\u767B\u5F55\uFF0C\u8BF7\u5148\u5728\u8BE5\u7CFB\u7EDF\u8D26\u53F7\u4E0B\u5B8C\u6210\u3002"), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u5206\u652F\u6216 Tag\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react9.default.createElement(
-      "input",
-      {
-        "aria-label": "Git \u5206\u652F",
-        value: gitRef,
-        disabled: busy,
-        onChange: (e) => {
-          setGitRef(e.target.value);
-          clear();
-        },
-        placeholder: "\u7559\u7A7A\u4F7F\u7528\u9ED8\u8BA4\u5206\u652F\uFF0C\u6216\u4ECE\u76EE\u5F55/\u6587\u4EF6\u94FE\u63A5\u8BC6\u522B"
-      }
-    )), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u8D44\u6E90\u8DEF\u5F84\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react9.default.createElement(
-      "input",
-      {
-        "aria-label": "Git \u8D44\u6E90\u8DEF\u5F84",
-        value: gitPath,
-        disabled: busy,
-        onChange: (e) => {
-          setGitPath(e.target.value);
-          clear();
-        },
-        placeholder: type === "skill" ? "\u4F8B\u5982 skills/my-skill \u6216 skills/my-skill/SKILL.md" : "\u4F8B\u5982 agents/reviewer.md"
-      }
-    )), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u591A\u8D44\u6E90\u4ED3\u5E93\u8BF7\u586B\u5199\u5355\u4E2A\u8D44\u6E90\u7684\u8DEF\u5F84\uFF1B\u652F\u6301 HTTPS\u3001SSH \u4EE5\u53CA tree/blob \u94FE\u63A5\u3002\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D checkout \u5DE5\u4F5C\u533A\u6216\u6267\u884C\u4ED3\u5E93\u811A\u672C\u3002")) : /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("p", null, "\u901A\u8FC7 GitHub / \u4F01\u4E1A GitHub API \u8BFB\u53D6\u3002\u79C1\u6709\u4ED3\u5E93\u53EF\u586B\u5199\u8BFB\u53D6\u4EE4\u724C\uFF0C\u591A\u8D44\u6E90\u4ED3\u5E93\u8BF7\u63D0\u4F9B\u5177\u4F53\u76EE\u5F55\u6216\u6587\u4EF6\u94FE\u63A5\u3002"), /* @__PURE__ */ import_react9.default.createElement("details", { className: "gal-import-connection" }, /* @__PURE__ */ import_react9.default.createElement("summary", null, "API \u8FDE\u63A5\u8BBE\u7F6E"), /* @__PURE__ */ import_react9.default.createElement("label", null, "API \u5730\u5740\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react9.default.createElement(
-      "input",
-      {
-        "aria-label": "GitHub API \u5730\u5740",
-        maxLength: 2048,
-        value: apiBaseUrl,
-        disabled: busy,
-        onChange: (e) => {
-          setApiBaseUrl(e.target.value);
-          setToken("");
-          setAuthStatus(null);
-          clear();
-        },
-        placeholder: "\u81EA\u52A8\u8BC6\u522B\uFF1B\u4F01\u4E1A\u670D\u52A1\u901A\u5E38\u4E3A https://github.company.net/api/v3"
-      }
-    )), /* @__PURE__ */ import_react9.default.createElement("p", null, authStatus?.apiBaseUrl ? `\u5F53\u524D API\uFF1A${authStatus.apiBaseUrl}` : "\u516C\u5F00 GitHub \u81EA\u52A8\u4F7F\u7528 api.github.com\uFF0C\u4F01\u4E1A\u670D\u52A1\u9ED8\u8BA4\u4F7F\u7528\u540C\u7AD9\u70B9 /api/v3\uFF1B\u53CD\u5411\u4EE3\u7406\u90E8\u7F72\u53EF\u586B\u5199\u5B8C\u6574 API \u6839\u5730\u5740\u3002")), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u8BBF\u95EE\u4EE4\u724C\uFF08PAT\uFF0C\u9009\u586B\uFF09", /* @__PURE__ */ import_react9.default.createElement(
-      "input",
-      {
-        "aria-label": "GitHub \u8BBF\u95EE\u4EE4\u724C",
-        maxLength: 8192,
-        type: "password",
-        autoComplete: "new-password",
-        value: token,
-        disabled: busy,
-        onChange: (e) => {
-          setToken(e.target.value);
-          clear();
-        },
-        placeholder: authStatus?.hasToken ? "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u7EE7\u7EED\u4F7F\u7528\uFF1B\u586B\u5199\u65B0\u503C\u66FF\u6362" : "\u516C\u5F00\u4ED3\u5E93\u53EF\u7559\u7A7A\uFF1B\u79C1\u6709\u4ED3\u5E93\u586B\u5199\u8BFB\u53D6\u4EE4\u724C"
-      }
-    )), /* @__PURE__ */ import_react9.default.createElement("label", { className: "gal-import-remember" }, /* @__PURE__ */ import_react9.default.createElement(
-      "input",
-      {
-        type: "checkbox",
-        checked: rememberToken,
-        disabled: busy,
-        onChange: (e) => setRememberToken(e.target.checked)
-      }
-    ), "\u5728\u5F53\u524D DSH \u4E3B\u673A\u8BB0\u4F4F\u6B64\u670D\u52A1\u7684\u4EE4\u724C"), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u4EE4\u724C\u6309 API \u5730\u5740\u5206\u522B\u4FDD\u5B58\uFF0C\u4E0D\u56DE\u663E\uFF0C\u4E5F\u4E0D\u5199\u5165\u8D44\u6E90\u6216\u5BFC\u51FA\u5305\u3002\u672A\u52FE\u9009\u65F6\uFF0C\u586B\u5199\u7684\u65B0\u4EE4\u724C\u4EC5\u7528\u4E8E\u672C\u6B21\u8BFB\u53D6\u3002"), authStatus?.hasToken && /* @__PURE__ */ import_react9.default.createElement(
-      "button",
-      {
-        disabled: busy,
-        onClick: () => run(async () => {
-          const value = await onGithubAuth({
-            url: url.trim(),
-            apiBaseUrl: apiBaseUrl.trim(),
-            action: "remove"
-          });
-          setAuthStatus(value);
-          setToken("");
-        })
-      },
-      "\u6E05\u9664\u5DF2\u4FDD\u5B58\u4EE4\u724C"
-    ), /^http:\/\//i.test(apiBaseUrl || url) && /* @__PURE__ */ import_react9.default.createElement("p", null, "HTTP \u4F1A\u660E\u6587\u4F20\u8F93\u8BA4\u8BC1\u4FE1\u606F\uFF0C\u5EFA\u8BAE\u4F7F\u7528 HTTPS\u3002")), /* @__PURE__ */ import_react9.default.createElement(
-      "button",
-      {
-        className: "gal-primary",
-        disabled: busy || !url.trim(),
-        onClick: () => run(async () => {
-          setResult(
-            await onRead({
-              type,
-              source: "github",
-              method: gitMethod,
-              gitRef: gitRef.trim(),
-              gitPath: gitPath.trim(),
-              url: url.trim(),
-              apiBaseUrl: apiBaseUrl.trim(),
-              token,
-              rememberToken
-            })
-          );
-          if (gitMethod === "api" && onGithubAuth)
-            try {
-              setAuthStatus(
-                await onGithubAuth({
-                  url: url.trim(),
-                  apiBaseUrl: apiBaseUrl.trim()
-                })
-              );
-            } catch {
-            }
-        })
-      },
-      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "download" }),
-      "\u8BFB\u53D6 GitHub"
-    )), /* @__PURE__ */ import_react9.default.createElement("p", { className: "gal-import-hint" }, label, " \u4E3B\u6587\u4EF6\u4F1A\u81EA\u52A8\u8BC6\u522B\uFF1B", type === "skill" ? "references / scripts / assets" : "references / assets \u53CA config.json", " ", "\u968F\u8D44\u6E90\u5E26\u5165\u3002\u5BFC\u5165\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D\u6267\u884C\u6587\u4EF6\u3002"), busy && /* @__PURE__ */ import_react9.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u2026"), result && /* @__PURE__ */ import_react9.default.createElement("section", { className: "gal-import-preview", "aria-label": "\u5BFC\u5165\u9884\u89C8" }, /* @__PURE__ */ import_react9.default.createElement("h3", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "check" }), "\u5DF2\u8BFB\u53D6 \xB7 ", result.resource.name), /* @__PURE__ */ import_react9.default.createElement("p", null, result.resource.description || "\u63CF\u8FF0\u5C1A\u672A\u586B\u5199\uFF0C\u53EF\u5728\u4E0B\u4E00\u6B65\u8865\u5145\u3002"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-files" }, result.resource.files.map((f) => /* @__PURE__ */ import_react9.default.createElement("div", { key: f.path }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("span", null, f.path)))), result.warnings?.length > 0 && /* @__PURE__ */ import_react9.default.createElement("details", { open: true }, /* @__PURE__ */ import_react9.default.createElement("summary", null, "\u9700\u8981\u786E\u8BA4\u7684\u5185\u5BB9\uFF08", result.warnings.length, "\uFF09"), result.warnings.map((text2, i) => /* @__PURE__ */ import_react9.default.createElement("p", { key: i }, text2))))), error && /* @__PURE__ */ import_react9.default.createElement("p", { role: "alert", className: "gal-error" }, error)),
+    )) : /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u5B50\u76EE\u5F55\u3002")), /* @__PURE__ */ import_react9.default.createElement("small", null, "\u5F53\u524D\u76EE\u5F55\uFF1A", directory.path, "\u3002\u8FDB\u5165\u8D44\u6E90\u76EE\u5F55\u540E\u70B9\u51FB\u300C\u8BFB\u53D6\u6B64\u8DEF\u5F84\u300D\u53EF\u5E26\u5165\u9644\u4EF6\u3002"))), /* @__PURE__ */ import_react9.default.createElement("p", { className: "gal-import-hint" }, label, " \u4E3B\u6587\u4EF6\u4F1A\u81EA\u52A8\u8BC6\u522B\uFF1B", type === "skill" ? "references / scripts / assets" : "references / assets \u53CA config.json", " ", "\u968F\u8D44\u6E90\u5E26\u5165\u3002\u5BFC\u5165\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D\u6267\u884C\u6587\u4EF6\u3002"), busy && /* @__PURE__ */ import_react9.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u2026"), result && /* @__PURE__ */ import_react9.default.createElement("section", { className: "gal-import-preview", "aria-label": "\u5BFC\u5165\u9884\u89C8" }, /* @__PURE__ */ import_react9.default.createElement("h3", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "check" }), "\u5DF2\u8BFB\u53D6 \xB7 ", result.resource.name), /* @__PURE__ */ import_react9.default.createElement("p", null, result.resource.description || "\u63CF\u8FF0\u5C1A\u672A\u586B\u5199\uFF0C\u53EF\u5728\u4E0B\u4E00\u6B65\u8865\u5145\u3002"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-files" }, result.resource.files.map((f) => /* @__PURE__ */ import_react9.default.createElement("div", { key: f.path }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("span", null, f.path)))), result.warnings?.length > 0 && /* @__PURE__ */ import_react9.default.createElement("details", { open: true }, /* @__PURE__ */ import_react9.default.createElement("summary", null, "\u9700\u8981\u786E\u8BA4\u7684\u5185\u5BB9\uFF08", result.warnings.length, "\uFF09"), result.warnings.map((text2, i) => /* @__PURE__ */ import_react9.default.createElement("p", { key: i }, text2))))), error && /* @__PURE__ */ import_react9.default.createElement("p", { role: "alert", className: "gal-error" }, error)),
     /* @__PURE__ */ import_react9.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
@@ -13110,8 +12936,7 @@ function Gallery({ remote }) {
         setter({ resource: null, importedResource });
         setCreation(null);
       },
-      onBrowse: (payload) => call(remote, "uiImportWorkspace", json2(payload)),
-      onGithubAuth: (payload) => call(remote, "uiImportGithubAuth", json2(payload)),
+      onBrowse: (payload) => call(remote, "uiImportDirectory", json2(payload)),
       onRead: (payload) => call(remote, "uiImportResource", json2(payload))
     }
   ), workflowWizard && /* @__PURE__ */ import_react14.default.createElement(WorkflowWizard, { onExtract: (resourceId) => call(remote, "uiExtractWorkflowAgent", json2({ resourceId })), onGet: (id) => call(remote, "uiGet", id), onList: async (type2) => {
