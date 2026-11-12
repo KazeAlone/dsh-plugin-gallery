@@ -2201,3 +2201,9 @@ fieldset.gal-skill-fields {
   padding: 8px 12px;
   white-space: nowrap;
 }
+
+/* Write-only MCP credentials share the existing connection step. */
+.gal .gal-mcp-credential-row { display:grid; grid-template-columns:minmax(100px,1fr) minmax(120px,1.5fr) auto; gap:10px; align-items:end; margin:12px 0; }
+.gal .gal-mcp-credential-row label { margin:0; min-width:0; }
+.gal .gal-mcp-credential-row > button { margin-bottom:1px; }
+@media (max-width:600px) { .gal .gal-mcp-credential-row { grid-template-columns:minmax(0,1fr) auto; } .gal .gal-mcp-credential-row label:first-child { grid-column:1/-1; } }

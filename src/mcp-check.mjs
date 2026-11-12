@@ -3,10 +3,10 @@ import {
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
-import { resolveMcpConfig } from "./mcp-config.mjs";
+import { resolveMcpConfig, redactMcpError } from "./mcp-config.mjs";
 /** Owner-initiated probe only; always closes the connection and child process. */
-export async function checkMcpConnection(input) {
-  const config = resolveMcpConfig(input);
+export async function checkMcpConnection(input, credentials = {}) {
+  const config = resolveMcpConfig(input, process.env, credentials);
   const client = new Client(
     { name: "dsh-plugin-gallery", version: "0.1.0" },
     { capabilities: {}, versionNegotiation: { mode: "auto" } },
@@ -44,6 +44,8 @@ export async function checkMcpConnection(input) {
         description: tool.description || "",
       })),
     };
+  } catch (error) {
+    throw new Error(redactMcpError(error, config.env || config.headers));
   } finally {
     await client.close().catch(() => {});
   }

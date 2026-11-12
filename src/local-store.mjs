@@ -5,9 +5,19 @@ import {
   renameSync,
   rmSync,
 } from "node:fs";
+import { mergeMcpCredentials } from "./mcp-config.mjs";
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 import { demand, digest, normalizeResource, revision } from "./model.mjs";
+
+function credentialState(resource, input, previous) {
+  if (resource.type !== "mcp") return {};
+  return {
+    privateMcpCredentials: resource.metadata?.mcp || input.mcpCredentials
+      ? mergeMcpCredentials(resource.metadata.mcp, input.mcpCredentials, previous)
+      : {},
+  };
+}
 
 /** Local file adapter; the host-facing resource API stays independent of storage. */
 export class LocalGalleryStore {
@@ -31,9 +41,10 @@ export class LocalGalleryStore {
     return data;
   }
   detail(row) {
-    const { usageEventIds, usageCount, ...resource } = row;
+    const { usageEventIds, usageCount, privateMcpCredentials, ...resource } = row;
     return structuredClone({
       ...resource,
+      ...(row.type === "mcp" ? { mcpCredentialKeys: Object.keys(privateMcpCredentials || {}) } : {}),
       usageCount: usageCount ?? 0,
       canEdit: true,
       canDelete: true,
@@ -131,6 +142,7 @@ export class LocalGalleryStore {
       const now = new Date().toISOString();
       const row = {
         ...resource,
+        ...credentialState(resource, input),
         ...(creator ? { creator: { username: creator.username } } : {}),
         id: randomUUID(),
         digest: digest(JSON.stringify(resource)),
@@ -164,6 +176,7 @@ export class LocalGalleryStore {
       return (rows[index] = {
         ...old,
         ...resource,
+        ...credentialState(resource, input, old.privateMcpCredentials),
         digest: digest(JSON.stringify(resource)),
         revision: old.revision + 1,
         updatedAt: new Date().toISOString(),

@@ -649,7 +649,7 @@ export function PaperDetail({
   const instructions = {
     skill: "在 DSH 会话输入 /gallery，选择此 Skill，补充任务并发送。",
     agent: `在会话中请求使用 Gallery Agent「${r.name}」执行任务。宿主需启用 gallery_agent_list、gallery_agent_run 及子 Agent 功能。`,
-    mcp: "MCP 通过宿主注册为 mcp__<serverName>__<tool> 工具；连接所需的环境变量须在启动 DSH 时设置。",
+    mcp: "MCP 通过宿主注册为 mcp__<serverName>__<tool> 工具；认证信息可在编辑向导中直接填写；也可继续引用宿主环境变量。",
   };
   return (
     <Modal variant="paper-detail" onClose={() => !busy && onClose()}>

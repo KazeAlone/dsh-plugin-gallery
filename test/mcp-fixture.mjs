@@ -1,3 +1,4 @@
+if (process.argv.includes("--require-key") && process.env.GALLERY_API_KEY !== "page-local-key") process.exit(1);
 import {McpServer} from '@modelcontextprotocol/server';
 import {StdioServerTransport} from '@modelcontextprotocol/server/stdio';
 const server=new McpServer({name:'gallery-test',version:'1.0.0'});

@@ -1,5 +1,5 @@
 import * as mcpClient from '@deepseek-ai/dsh-mcp-client';
-import { resolveMcpConfig } from './mcp-config.mjs';
+import { resolveMcpConfig, redactMcpError } from './mcp-config.mjs';
 
 /** Keep official DSH MCP plugin instances in sync with Gallery's saved resources. */
 export class GalleryMcpRuntime {
@@ -19,15 +19,15 @@ export class GalleryMcpRuntime {
     const wanted = new Map(resources.map(r => [r.id, r]));
     for (const [id, current] of this.active) {
       const resource = wanted.get(id);
-      if (resource && JSON.stringify(resource.metadata?.mcp) === current.serialized) continue;
+      if (resource && JSON.stringify([resource.metadata?.mcp, resource.privateMcpCredentials]) === current.serialized) continue;
       await current.fiber.dispose();
       this.active.delete(id);
     }
     for (const resource of resources) {
       if (this.active.has(resource.id)) continue;
-      const serialized = JSON.stringify(resource.metadata?.mcp);
+      const serialized = JSON.stringify([resource.metadata?.mcp, resource.privateMcpCredentials]);
       try {
-        const safe = resolveMcpConfig(resource.metadata?.mcp);
+        const safe = resolveMcpConfig(resource.metadata?.mcp, process.env, resource.privateMcpCredentials);
         const config = safe.transport === 'stdio'
           ? { transport: safe.transport, serverName: safe.serverName, command: safe.command, args: safe.args, cwd: safe.cwd, env: safe.env }
           : { transport: safe.transport, serverName: safe.serverName, url: safe.url, headers: safe.headers };
@@ -39,7 +39,7 @@ export class GalleryMcpRuntime {
           this.connecting.delete(safe.serverName);
         }
       } catch (error) {
-        this.ctx.logger?.warn?.(`gallery: MCP ${resource.id} could not activate: ${error.message}`);
+        this.ctx.logger?.warn?.(`gallery: MCP ${resource.id} could not activate: ${redactMcpError(error, resource.privateMcpCredentials)}`);
       }
     }
   }

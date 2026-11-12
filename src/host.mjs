@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 import { StorageManager } from "./storage-manager.mjs";
 import { demand } from "./model.mjs";
-import { validateMcpConfig } from "./mcp-config.mjs";
+import { validateMcpConfig, mergeMcpCredentials } from "./mcp-config.mjs";
 import { checkMcpConnection } from "./mcp-check.mjs";
 import { GalleryMcpRuntime } from "./mcp-runtime.mjs";
 import { registerGalleryAgentListTool, registerGalleryAgentRunTool } from "./agent-runtime.mjs";
@@ -206,7 +206,12 @@ export default class GalleryService extends TypertRemoteService {
     );
   }
   uiCheckMcp(payload) {
-    return this.ownerCall(() => checkMcpConnection(JSON.parse(payload)));
+    return this.ownerCall(() => {
+      const { resourceId, credentials, ...config } = JSON.parse(payload);
+      const row = resourceId ? this.store.adapter().read().resources.find(r => r.id === resourceId && r.type === "mcp") : undefined;
+      demand(!resourceId || row, 404, "NOT_FOUND", "MCP 资源不存在");
+      return checkMcpConnection(config, mergeMcpCredentials(config, credentials, row?.privateMcpCredentials));
+    });
   }
   uiExtractWorkflowAgent(payload) {
     return this.ownerCall(() => {
