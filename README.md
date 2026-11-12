@@ -15,7 +15,7 @@ Workflow 画布原型支持添加和拖动 Agent、任务、人工节点，配�
 rc.3 与 rc.5 的 Gallery 所用核心接口已完成静态对比；rc.3 的完整运行验证尚未完成。开发依赖仍固定 rc.5，安装时通过 peer 依赖复用宿主对应版本，避免混用运行时。TeamFlow 的宿主兼容范围以该插件自身声明为准。
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.23.1.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.23.2.tgz --ignore-scripts
 ```
 
 将内部发布的安装包放到本机，用实际绝对路径替换上述示例。更新后重启 DSH 并刷新浏览器。安装包包含构建好的客户端。
@@ -53,7 +53,9 @@ Gallery 顶部的主题按钮提供「跟随系统」「墨绿黄铜」「暖纸
 
 - **本机文件**：选择当前浏览器所在电脑的 Markdown 文件、资源文件夹，或同类型 Gallery JSON 导出包。浏览器文件与 DSH 主机工作区相互独立。
 - **DSH 工作区**：浏览宿主已登记的工作区，输入相对路径或进入目录后读取；未登记工作区时显示 DSH 启动目录。不读取工作区之外的路径或符号链接。
-- **GitHub 地址**：支持公开/私有 GitHub 仓库及 GitHub Enterprise，兼容 `tree` 目录、`blob` 文件、仓库 `.git` 和公开原始文件链接。公开服务默认使用 `https://api.github.com`；企业服务默认使用同站点 `/api/v3`（例如 `https://github.xxx.net/api/v3`）。反向代理或独立 API 域名可在「API 连接设置」填写完整 API 根地址。私有仓库填写具有 Contents 读取权限的 PAT。可选择在 DSH 主机记住令牌或仅使用一次；已保存令牌按完整 API 地址隔离，留空复用，支持清除。令牌独立保存在主机 `github-import.credentials.json`（权限 0600，未额外加密），不回显、不写入导入资源或导出包，不跟随重定向转发。仓库根目录须包含单个资源的主文件；多资源仓库请提供具体目录或文件地址。需要 DSH 主机能够访问服务并信任其 TLS 证书，不关闭证书校验；非 GitHub REST 兼容的 GitLab/Gitee 等服务不在此导入方式范围内。
+- **GitHub 地址**：默认选择「DSH 主机 Git（使用已有凭据）」，复用运行 DSH 的系统账号已有的 credential helper、SSH 配置和 agent，不需要再填写 PAT。支持 HTTP/HTTPS、`ssh://`、`git@host:owner/repo.git` 以及 GitHub 风格的 tree/blob 链接；可单独填写分支/Tag 和资源相对路径，多资源仓库需指定单个资源。Git 的凭据属于 DSH 主机及其运行账号，与浏览器电脑的 Git 配置不同。导入使用临时裸仓库，不 checkout、不执行 hooks、过滤器或资源脚本，不拉取子模块和 LFS 实际对象；读取超时或临时下载过大时，可先手动克隆并从工作区导入。主机须安装 Git，并已完成所需的非交互认证及 SSH 主机信任配置。
+
+可选切换到「GitHub API（访问令牌）」：支持公开/私有 GitHub 仓库及 GitHub Enterprise。公开服务默认使用 `https://api.github.com`，企业服务默认使用同站点 `/api/v3`；独立 API 域名或反向代理可在连接设置中指定完整 API 根地址。私有仓库填具有读取权限的 PAT，可记住或仅用一次。令牌按 API 地址隔离，独立存于主机 `github-import.credentials.json`（权限 0600，未额外加密），不回显、不写入资源或导出包、不跟随重定向转发。API 方式不读取 Git 凭据缓存；需要主机能访问 API 并信任其 TLS 证书。
 
 Skill 自动识别 `SKILL.md`，带入 `references/`、`scripts/`、`assets/`。Agent 支持 `AGENT.md` 或单独选择的 Markdown 文件，带入 `references/`、`assets/` 和可选 `config.json`；外部模型配置会忽略，沿用宿主模型。缺少描述或不符合要求的调用标识会提示在向导中补充确认。每次只导入一个资源，最多 100 个文件、总计 5 MiB；编辑现有资源直接进入向导。
 

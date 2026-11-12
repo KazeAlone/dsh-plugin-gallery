@@ -11110,12 +11110,16 @@ function ResourceStart({
   const label = type === "skill" ? "Skill" : "Agent";
   const [mode, setMode] = (0, import_react9.useState)("choose"), [source, setSource] = (0, import_react9.useState)("browser"), [busy, setBusy] = (0, import_react9.useState)(false), [error, setError] = (0, import_react9.useState)(""), [result, setResult] = (0, import_react9.useState)(null);
   const [workspace, setWorkspace] = (0, import_react9.useState)(null), [path, setPath] = (0, import_react9.useState)(""), [url, setUrl] = (0, import_react9.useState)("");
+  const [gitMethod, setGitMethod] = (0, import_react9.useState)("git");
+  const [gitRef, setGitRef] = (0, import_react9.useState)("");
+  const [gitPath, setGitPath] = (0, import_react9.useState)("");
   const [apiBaseUrl, setApiBaseUrl] = (0, import_react9.useState)("");
   const [token, setToken] = (0, import_react9.useState)("");
   const [rememberToken, setRememberToken] = (0, import_react9.useState)(true);
   const [authStatus, setAuthStatus] = (0, import_react9.useState)(null);
   (0, import_react9.useEffect)(() => {
-    if (source !== "github" || !url.trim() || !onGithubAuth) return;
+    if (source !== "github" || gitMethod !== "api" || !url.trim() || !onGithubAuth)
+      return;
     let live = true;
     const timer = setTimeout(
       () => onGithubAuth({ url: url.trim(), apiBaseUrl: apiBaseUrl.trim() }).then((value) => {
@@ -11129,7 +11133,7 @@ function ResourceStart({
       live = false;
       clearTimeout(timer);
     };
-  }, [source, url, apiBaseUrl, onGithubAuth]);
+  }, [source, gitMethod, url, apiBaseUrl, onGithubAuth]);
   const clear = () => {
     setResult(null);
     setError("");
@@ -11287,7 +11291,21 @@ function ResourceStart({
       ),
       /* @__PURE__ */ import_react9.default.createElement("span", null, entry.name),
       entry.directory && /* @__PURE__ */ import_react9.default.createElement("span", null, "\u203A")
-    )) : /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u5B50\u76EE\u5F55\u3002")), /* @__PURE__ */ import_react9.default.createElement("small", null, "\u76EE\u5F55\uFF1A", workspace.path || "\u5DE5\u4F5C\u533A\u6839\u76EE\u5F55", "\u3002\u8FDB\u5165\u8D44\u6E90\u76EE\u5F55\u540E\u70B9\u51FB\u300C\u8BFB\u53D6\u6B64\u8DEF\u5F84\u300D\u53EF\u5E26\u5165\u9644\u4EF6\u3002")), !workspace && !busy && /* @__PURE__ */ import_react9.default.createElement("button", { onClick: () => browse() }, "\u91CD\u65B0\u8BFB\u53D6\u5DE5\u4F5C\u533A")), source === "github" && /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("label", null, "GitHub / \u4F01\u4E1A GitHub \u5730\u5740", /* @__PURE__ */ import_react9.default.createElement(
+    )) : /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u5B50\u76EE\u5F55\u3002")), /* @__PURE__ */ import_react9.default.createElement("small", null, "\u76EE\u5F55\uFF1A", workspace.path || "\u5DE5\u4F5C\u533A\u6839\u76EE\u5F55", "\u3002\u8FDB\u5165\u8D44\u6E90\u76EE\u5F55\u540E\u70B9\u51FB\u300C\u8BFB\u53D6\u6B64\u8DEF\u5F84\u300D\u53EF\u5E26\u5165\u9644\u4EF6\u3002")), !workspace && !busy && /* @__PURE__ */ import_react9.default.createElement("button", { onClick: () => browse() }, "\u91CD\u65B0\u8BFB\u53D6\u5DE5\u4F5C\u533A")), source === "github" && /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("label", null, "\u8BFB\u53D6\u65B9\u5F0F", /* @__PURE__ */ import_react9.default.createElement(
+      "select",
+      {
+        "aria-label": "Git \u8BFB\u53D6\u65B9\u5F0F",
+        value: gitMethod,
+        disabled: busy,
+        onChange: (e) => {
+          setGitMethod(e.target.value);
+          setToken("");
+          clear();
+        }
+      },
+      /* @__PURE__ */ import_react9.default.createElement("option", { value: "git" }, "DSH \u4E3B\u673A Git\uFF08\u4F7F\u7528\u5DF2\u6709\u51ED\u636E\uFF09"),
+      /* @__PURE__ */ import_react9.default.createElement("option", { value: "api" }, "GitHub API\uFF08\u8BBF\u95EE\u4EE4\u724C\uFF09")
+    )), /* @__PURE__ */ import_react9.default.createElement("label", null, "Git / GitHub \u4ED3\u5E93\u6216\u8D44\u6E90\u5730\u5740", /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         "aria-label": "GitHub \u5BFC\u5165\u5730\u5740",
@@ -11310,7 +11328,31 @@ function ResourceStart({
         },
         placeholder: "https://github.com/owner/repo/tree/main/my-skill"
       }
-    )), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u652F\u6301\u516C\u5F00\u3001\u79C1\u6709\u548C\u4F01\u4E1A GitHub \u4ED3\u5E93\uFF1B\u79C1\u6709\u4ED3\u5E93\u9700\u586B\u5199\u6709\u8BFB\u53D6\u6743\u9650\u7684\u8BBF\u95EE\u4EE4\u724C\u3002\u591A\u8D44\u6E90\u4ED3\u5E93\u8BF7\u63D0\u4F9B\u5177\u4F53\u76EE\u5F55\u6216\u6587\u4EF6\u94FE\u63A5\u3002"), /* @__PURE__ */ import_react9.default.createElement("details", { className: "gal-import-connection" }, /* @__PURE__ */ import_react9.default.createElement("summary", null, "API \u8FDE\u63A5\u8BBE\u7F6E"), /* @__PURE__ */ import_react9.default.createElement("label", null, "API \u5730\u5740\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react9.default.createElement(
+    )), gitMethod === "git" ? /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("p", null, "\u76F4\u63A5\u8C03\u7528\u8FD0\u884C DSH \u7684\u7CFB\u7EDF\u8D26\u53F7\u7684 Git\uFF0C\u4F7F\u7528\u5DF2\u6709\u51ED\u636E\u52A9\u624B\u3001SSH \u5BC6\u94A5\u6216 agent\u3002\u65E0\u9700\u586B\u5199 PAT\uFF1B\u5982\u9700\u767B\u5F55\uFF0C\u8BF7\u5148\u5728\u8BE5\u7CFB\u7EDF\u8D26\u53F7\u4E0B\u5B8C\u6210\u3002"), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u5206\u652F\u6216 Tag\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react9.default.createElement(
+      "input",
+      {
+        "aria-label": "Git \u5206\u652F",
+        value: gitRef,
+        disabled: busy,
+        onChange: (e) => {
+          setGitRef(e.target.value);
+          clear();
+        },
+        placeholder: "\u7559\u7A7A\u4F7F\u7528\u9ED8\u8BA4\u5206\u652F\uFF0C\u6216\u4ECE\u76EE\u5F55/\u6587\u4EF6\u94FE\u63A5\u8BC6\u522B"
+      }
+    )), /* @__PURE__ */ import_react9.default.createElement("label", null, "\u8D44\u6E90\u8DEF\u5F84\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react9.default.createElement(
+      "input",
+      {
+        "aria-label": "Git \u8D44\u6E90\u8DEF\u5F84",
+        value: gitPath,
+        disabled: busy,
+        onChange: (e) => {
+          setGitPath(e.target.value);
+          clear();
+        },
+        placeholder: type === "skill" ? "\u4F8B\u5982 skills/my-skill \u6216 skills/my-skill/SKILL.md" : "\u4F8B\u5982 agents/reviewer.md"
+      }
+    )), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u591A\u8D44\u6E90\u4ED3\u5E93\u8BF7\u586B\u5199\u5355\u4E2A\u8D44\u6E90\u7684\u8DEF\u5F84\uFF1B\u652F\u6301 HTTPS\u3001SSH \u4EE5\u53CA tree/blob \u94FE\u63A5\u3002\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D checkout \u5DE5\u4F5C\u533A\u6216\u6267\u884C\u4ED3\u5E93\u811A\u672C\u3002")) : /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("p", null, "\u901A\u8FC7 GitHub / \u4F01\u4E1A GitHub API \u8BFB\u53D6\u3002\u79C1\u6709\u4ED3\u5E93\u53EF\u586B\u5199\u8BFB\u53D6\u4EE4\u724C\uFF0C\u591A\u8D44\u6E90\u4ED3\u5E93\u8BF7\u63D0\u4F9B\u5177\u4F53\u76EE\u5F55\u6216\u6587\u4EF6\u94FE\u63A5\u3002"), /* @__PURE__ */ import_react9.default.createElement("details", { className: "gal-import-connection" }, /* @__PURE__ */ import_react9.default.createElement("summary", null, "API \u8FDE\u63A5\u8BBE\u7F6E"), /* @__PURE__ */ import_react9.default.createElement("label", null, "API \u5730\u5740\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
         "aria-label": "GitHub API \u5730\u5740",
@@ -11363,7 +11405,7 @@ function ResourceStart({
         })
       },
       "\u6E05\u9664\u5DF2\u4FDD\u5B58\u4EE4\u724C"
-    ), /^http:\/\//i.test(apiBaseUrl || url) && /* @__PURE__ */ import_react9.default.createElement("p", null, "HTTP \u4F1A\u660E\u6587\u4F20\u8F93\u8BA4\u8BC1\u4FE1\u606F\uFF0C\u5EFA\u8BAE\u4F7F\u7528 HTTPS\u3002"), /* @__PURE__ */ import_react9.default.createElement(
+    ), /^http:\/\//i.test(apiBaseUrl || url) && /* @__PURE__ */ import_react9.default.createElement("p", null, "HTTP \u4F1A\u660E\u6587\u4F20\u8F93\u8BA4\u8BC1\u4FE1\u606F\uFF0C\u5EFA\u8BAE\u4F7F\u7528 HTTPS\u3002")), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "gal-primary",
@@ -11373,13 +11415,16 @@ function ResourceStart({
             await onRead({
               type,
               source: "github",
+              method: gitMethod,
+              gitRef: gitRef.trim(),
+              gitPath: gitPath.trim(),
               url: url.trim(),
               apiBaseUrl: apiBaseUrl.trim(),
               token,
               rememberToken
             })
           );
-          if (onGithubAuth)
+          if (gitMethod === "api" && onGithubAuth)
             try {
               setAuthStatus(
                 await onGithubAuth({

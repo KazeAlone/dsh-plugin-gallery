@@ -24,12 +24,21 @@ export function ResourceStart({
   const [workspace, setWorkspace] = useState(null),
     [path, setPath] = useState(""),
     [url, setUrl] = useState("");
+  const [gitMethod, setGitMethod] = useState("git");
+  const [gitRef, setGitRef] = useState("");
+  const [gitPath, setGitPath] = useState("");
   const [apiBaseUrl, setApiBaseUrl] = useState("");
   const [token, setToken] = useState("");
   const [rememberToken, setRememberToken] = useState(true);
   const [authStatus, setAuthStatus] = useState(null);
   useEffect(() => {
-    if (source !== "github" || !url.trim() || !onGithubAuth) return;
+    if (
+      source !== "github" ||
+      gitMethod !== "api" ||
+      !url.trim() ||
+      !onGithubAuth
+    )
+      return;
     let live = true;
     const timer = setTimeout(
       () =>
@@ -46,7 +55,7 @@ export function ResourceStart({
       live = false;
       clearTimeout(timer);
     };
-  }, [source, url, apiBaseUrl, onGithubAuth]);
+  }, [source, gitMethod, url, apiBaseUrl, onGithubAuth]);
   const clear = () => {
     setResult(null);
     setError("");
@@ -301,7 +310,23 @@ export function ResourceStart({
               {source === "github" && (
                 <div>
                   <label>
-                    GitHub / 企业 GitHub 地址
+                    读取方式
+                    <select
+                      aria-label="Git 读取方式"
+                      value={gitMethod}
+                      disabled={busy}
+                      onChange={(e) => {
+                        setGitMethod(e.target.value);
+                        setToken("");
+                        clear();
+                      }}
+                    >
+                      <option value="git">DSH 主机 Git（使用已有凭据）</option>
+                      <option value="api">GitHub API（访问令牌）</option>
+                    </select>
+                  </label>
+                  <label>
+                    Git / GitHub 仓库或资源地址
                     <input
                       aria-label="GitHub 导入地址"
                       value={url}
@@ -326,87 +351,134 @@ export function ResourceStart({
                       placeholder="https://github.com/owner/repo/tree/main/my-skill"
                     />
                   </label>
-                  <p>
-                    支持公开、私有和企业 GitHub
-                    仓库；私有仓库需填写有读取权限的访问令牌。多资源仓库请提供具体目录或文件链接。
-                  </p>
-                  <details className="gal-import-connection">
-                    <summary>API 连接设置</summary>
-                    <label>
-                      API 地址（选填）
-                      <input
-                        aria-label="GitHub API 地址"
-                        maxLength={2048}
-                        value={apiBaseUrl}
-                        disabled={busy}
-                        onChange={(e) => {
-                          setApiBaseUrl(e.target.value);
-                          setToken("");
-                          setAuthStatus(null);
-                          clear();
-                        }}
-                        placeholder="自动识别；企业服务通常为 https://github.company.net/api/v3"
-                      />
-                    </label>
-                    <p>
-                      {authStatus?.apiBaseUrl
-                        ? `当前 API：${authStatus.apiBaseUrl}`
-                        : "公开 GitHub 自动使用 api.github.com，企业服务默认使用同站点 /api/v3；反向代理部署可填写完整 API 根地址。"}
-                    </p>
-                  </details>
-                  <label>
-                    访问令牌（PAT，选填）
-                    <input
-                      aria-label="GitHub 访问令牌"
-                      maxLength={8192}
-                      type="password"
-                      autoComplete="new-password"
-                      value={token}
-                      disabled={busy}
-                      onChange={(e) => {
-                        setToken(e.target.value);
-                        clear();
-                      }}
-                      placeholder={
-                        authStatus?.hasToken
-                          ? "已保存，留空继续使用；填写新值替换"
-                          : "公开仓库可留空；私有仓库填写读取令牌"
-                      }
-                    />
-                  </label>
-                  <label className="gal-import-remember">
-                    <input
-                      type="checkbox"
-                      checked={rememberToken}
-                      disabled={busy}
-                      onChange={(e) => setRememberToken(e.target.checked)}
-                    />
-                    在当前 DSH 主机记住此服务的令牌
-                  </label>
-                  <p>
-                    令牌按 API
-                    地址分别保存，不回显，也不写入资源或导出包。未勾选时，填写的新令牌仅用于本次读取。
-                  </p>
-                  {authStatus?.hasToken && (
-                    <button
-                      disabled={busy}
-                      onClick={() =>
-                        run(async () => {
-                          const value = await onGithubAuth({
-                            url: url.trim(),
-                            apiBaseUrl: apiBaseUrl.trim(),
-                            action: "remove",
-                          });
-                          setAuthStatus(value);
-                          setToken("");
-                        })
-                      }
-                    >
-                      清除已保存令牌
-                    </button>
-                  )}
-                  {/^http:\/\//i.test(apiBaseUrl || url) && (
-                    <p>HTTP 会明文传输认证信息，建议使用 HTTPS。</p>
+                  {gitMethod === "git" ? (
+                    <>
+                      <p>
+                        直接调用运行 DSH 的系统账号的 Git，使用已有凭据助手、SSH
+                        密钥或 agent。无需填写
+                        PAT；如需登录，请先在该系统账号下完成。
+                      </p>
+                      <label>
+                        分支或 Tag（选填）
+                        <input
+                          aria-label="Git 分支"
+                          value={gitRef}
+                          disabled={busy}
+                          onChange={(e) => {
+                            setGitRef(e.target.value);
+                            clear();
+                          }}
+                          placeholder="留空使用默认分支，或从目录/文件链接识别"
+                        />
+                      </label>
+                      <label>
+                        资源路径（选填）
+                        <input
+                          aria-label="Git 资源路径"
+                          value={gitPath}
+                          disabled={busy}
+                          onChange={(e) => {
+                            setGitPath(e.target.value);
+                            clear();
+                          }}
+                          placeholder={
+                            type === "skill"
+                              ? "例如 skills/my-skill 或 skills/my-skill/SKILL.md"
+                              : "例如 agents/reviewer.md"
+                          }
+                        />
+                      </label>
+                      <p>
+                        多资源仓库请填写单个资源的路径；支持 HTTPS、SSH 以及
+                        tree/blob 链接。只读取内容，不 checkout
+                        工作区或执行仓库脚本。
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        通过 GitHub / 企业 GitHub API
+                        读取。私有仓库可填写读取令牌，多资源仓库请提供具体目录或文件链接。
+                      </p>
+                      <details className="gal-import-connection">
+                        <summary>API 连接设置</summary>
+                        <label>
+                          API 地址（选填）
+                          <input
+                            aria-label="GitHub API 地址"
+                            maxLength={2048}
+                            value={apiBaseUrl}
+                            disabled={busy}
+                            onChange={(e) => {
+                              setApiBaseUrl(e.target.value);
+                              setToken("");
+                              setAuthStatus(null);
+                              clear();
+                            }}
+                            placeholder="自动识别；企业服务通常为 https://github.company.net/api/v3"
+                          />
+                        </label>
+                        <p>
+                          {authStatus?.apiBaseUrl
+                            ? `当前 API：${authStatus.apiBaseUrl}`
+                            : "公开 GitHub 自动使用 api.github.com，企业服务默认使用同站点 /api/v3；反向代理部署可填写完整 API 根地址。"}
+                        </p>
+                      </details>
+                      <label>
+                        访问令牌（PAT，选填）
+                        <input
+                          aria-label="GitHub 访问令牌"
+                          maxLength={8192}
+                          type="password"
+                          autoComplete="new-password"
+                          value={token}
+                          disabled={busy}
+                          onChange={(e) => {
+                            setToken(e.target.value);
+                            clear();
+                          }}
+                          placeholder={
+                            authStatus?.hasToken
+                              ? "已保存，留空继续使用；填写新值替换"
+                              : "公开仓库可留空；私有仓库填写读取令牌"
+                          }
+                        />
+                      </label>
+                      <label className="gal-import-remember">
+                        <input
+                          type="checkbox"
+                          checked={rememberToken}
+                          disabled={busy}
+                          onChange={(e) => setRememberToken(e.target.checked)}
+                        />
+                        在当前 DSH 主机记住此服务的令牌
+                      </label>
+                      <p>
+                        令牌按 API
+                        地址分别保存，不回显，也不写入资源或导出包。未勾选时，填写的新令牌仅用于本次读取。
+                      </p>
+                      {authStatus?.hasToken && (
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            run(async () => {
+                              const value = await onGithubAuth({
+                                url: url.trim(),
+                                apiBaseUrl: apiBaseUrl.trim(),
+                                action: "remove",
+                              });
+                              setAuthStatus(value);
+                              setToken("");
+                            })
+                          }
+                        >
+                          清除已保存令牌
+                        </button>
+                      )}
+                      {/^http:\/\//i.test(apiBaseUrl || url) && (
+                        <p>HTTP 会明文传输认证信息，建议使用 HTTPS。</p>
+                      )}
+                    </>
                   )}
                   <button
                     className="gal-primary"
@@ -417,13 +489,16 @@ export function ResourceStart({
                           await onRead({
                             type,
                             source: "github",
+                            method: gitMethod,
+                            gitRef: gitRef.trim(),
+                            gitPath: gitPath.trim(),
                             url: url.trim(),
                             apiBaseUrl: apiBaseUrl.trim(),
                             token,
                             rememberToken,
                           }),
                         );
-                        if (onGithubAuth)
+                        if (gitMethod === "api" && onGithubAuth)
                           try {
                             setAuthStatus(
                               await onGithubAuth({
