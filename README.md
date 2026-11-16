@@ -19,6 +19,8 @@ Built on [AgentTeams](https://github.com/NanmiCoder/dsh-agent-teams), TeamFlow n
 
 ## Start here
 
+**Lightweight OpenCode export**: Click **Export OpenCode** on the canvas, merge the ZIP's `.opencode/` and `teamflow/` directories into your project, then run the `/teamflow-xxxxxxxx` command in its README. Supports ordinary dependencies, human/AI loops, acceptance and archive instructions without another plugin. Save drafts and resolve pending proposals first. Exports saved task contracts and member instructions for a fresh run, excluding sessions, results, approvals, model routes and tool permissions. Execution relies on AI instructions, with no reliable timer or automatic checkpoint recovery. See [format and usage](./docs/opencode-export.md).
+
 When configuring an IF gate, select the return target to preview the loop and see which tasks each ineligible reviewer owns. During human review, open the materials to compare the previous and current results. Reruns, changed acceptance checks and failures open first. Reused results show their execution round. When an interrupted archive task retries, it clears that attempt’s unpublished files and keeps earlier published archives.
 
 **Continue and rerun**: Start all resumes unfinished, paused, or interrupted work and preserves completed results. Run through a node resumes its required ancestors and pauses later descendants; human checkpoints still require approval. Continuing needs no new input. An explicit rerun requires a reason in the card editor. Reconnection reads current state without replaying mutations. Blockers and recovery explains configuration, dependencies, review, and execution issues with next actions.
