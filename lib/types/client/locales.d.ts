@@ -79,6 +79,8 @@ export declare const zh: {
     'card.memberCount': string;
     'card.progress': string;
     'card.completedCount': string;
+    'activity.minimize': string;
+    'activity.restore': string;
     'activity.badgeAria': string;
     'team.stop': string;
     'team.stopped': string;
@@ -352,6 +354,8 @@ export declare const en: {
     'card.memberCount': string;
     'card.progress': string;
     'card.completedCount': string;
+    'activity.minimize': string;
+    'activity.restore': string;
     'activity.badgeAria': string;
     'team.stop': string;
     'team.stopped': string;

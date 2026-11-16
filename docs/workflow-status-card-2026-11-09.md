@@ -17,3 +17,18 @@ regenerated separately on dev and main to keep development-only loop features
 out of this stable card update. No interactive browser visual verification.
 
 画布节点使用 294 × 230 像素的卡片。顶部显示成员与状态，中间展示任务名称和要求，底部显示实际记录、阻塞信息或待处理事项。悬停、聚焦或选中节点时可使用节点控制。画布显示坐标与持久化布局通过比例换算。
+
+## Movable and minimized status card (2026-11-16)
+
+The outer Workflow card now has a minimize button. Minimizing replaces it with a
+28px dot; clicking the dot restores the card. Both forms can be dragged with a
+mouse, pen, or touch. A 5px movement threshold preserves ordinary clicks and
+suppresses canvas opening after a drag. The full card still opens the canvas.
+Position is local to the mounted surface; resizing its container or restoring the
+card clamps it inside the container. Keyboard users can minimize and restore via
+the same focused button. Labels are available in Chinese and English.
+
+Validation: server/client TypeScript compilation and browser bundle; 35 existing
+activity, locale and workspace regressions; 3 floating-status interaction tests
+using production handlers and simulated host geometry. No interactive browser
+visual verification. Build artifacts are regenerated independently on each branch.

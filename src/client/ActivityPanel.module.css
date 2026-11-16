@@ -2129,3 +2129,13 @@
 .statusRing svg { transform:rotate(-90deg); overflow:visible; }.ringTrack,.ringValue { fill:none; stroke-width:1.6; }.ringTrack { stroke:currentColor; opacity:.16; }.ringValue { stroke:currentColor; stroke-linecap:round; transition:stroke-dasharray .55s ease; }.statusRing i { position:absolute; font-style:normal; font-size:10px; line-height:1; }
 .statusLabel { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.statusPercent { font-variant-numeric:tabular-nums; color:var(--dsw-alias-label-secondary,light-dark(#7c8797,#a4afbd)); min-width:29px; text-align:right; }.statusPercent small { font-size:9px; margin-left:1px; }.statusCount { min-width:15px; height:15px; padding:0 3px; box-sizing:border-box; display:grid; place-items:center; border-radius:5px; color:var(--capsule-accent); background:color-mix(in srgb,var(--capsule-accent) 11%,transparent); font-size:9px; font-variant-numeric:tabular-nums; }
 @media(prefers-reduced-motion:reduce) { .ringValue { transition:none; } }
+
+/* One movable surface owns both the full card and its minimized dot. */
+.floatingStatus { position:absolute; width:300px; max-width:calc(100% - 16px); touch-action:none; user-select:none; }
+.floatingStatus .badge { position:relative; inset:auto; width:100%; max-width:100%; cursor:grab; padding-top:40px; }
+.floatingStatus .badge:active { cursor:grabbing; transform:none; }
+.statusToggle { position:absolute; top:8px; right:8px; width:28px; height:28px; display:grid; place-items:center; padding:0; border:1px solid var(--dsw-alias-border-l2); border-radius:50%; background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-label-secondary); cursor:pointer; font:inherit; }
+.statusToggle:hover { background:var(--dsw-alias-bg-module-platform); }
+.statusToggle:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:2px; }
+.floatingStatus[data-minimized=true] { width:28px; height:28px; }
+.floatingStatus[data-minimized=true] .statusToggle { inset:0; color:var(--dsw-alias-state-business-primary); box-shadow:0 2px 8px #0002; }
