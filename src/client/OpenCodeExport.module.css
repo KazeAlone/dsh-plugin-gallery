@@ -1,0 +1,9 @@
+.dialog { width:min(560px, calc(100vw - 48px)); max-height:calc(100vh - 48px); overflow:auto; box-sizing:border-box; padding:24px; border:1px solid var(--dsw-alias-border-l2); border-radius:16px; background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-label-primary); box-shadow:0 16px 64px #0003; font-size:14px; line-height:1.7; }
+.dialog::backdrop { background:#0006; }
+.dialog h2 { margin:0 0 12px; font-size:18px; }
+.dialog p,.dialog li { overflow-wrap:anywhere; }
+.dialog code { user-select:text; overflow-wrap:anywhere; font-size:13px; }
+.actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; margin-top:20px; }
+.dialog button { padding:7px 12px; border:1px solid var(--dsw-alias-border-l2); border-radius:8px; background:var(--dsw-alias-bg-module-platform); color:inherit; cursor:pointer; }
+.dialog button:disabled { opacity:.5; cursor:default; }
+.dialog button:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:2px; }

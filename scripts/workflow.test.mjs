@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createHash } from 'node:crypto'
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { applyWorkflowOperations, applyWorkflowProposal, checkpointReady, decideCheckpoint, parseWorkflowOperations, proposeWorkflow, workflowFingerprint, workflowState } from '../lib/workflow.js'
@@ -1622,4 +1622,17 @@ test('force end archives a clearly attributed task record if captain reporting f
   assert.equal(result.team.closeout.source, 'snapshot')
   assert.match(result.team.closeout.report, /Partial result from worker/)
   assert.equal(await f.read(), undefined)
+})
+
+test('OpenCode project generation uses the owning workspace and rejects stale/foreign requests', async t => {
+ const f=await lifecycleFixture(t,team())
+ const current=await f.read(), base=workflowFingerprint(current)
+ const stale=await f.call('opencode_project',{base:'stale'})
+ assert.notEqual(stale.code,200);assert.match(stale.error,/流程已变化/)
+ const other=await f.call('opencode_project',{base,sessionId:'foreign'})
+ assert.notEqual(other.code,200)
+ const result=await f.call('opencode_project',{base,workspace:'ignored-client-path',files:{'ignored.txt':'ignore'}})
+ assert.equal(result.code,200);assert.equal(result.workspace,realpathSync.native(f.workspace))
+ assert.ok(result.readme.endsWith('/README.md'))
+ const retry=await f.call('opencode_project',{base});assert.equal(retry.code,200)
 })

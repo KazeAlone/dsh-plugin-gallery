@@ -1,3 +1,5 @@
+import { registerHooks } from 'node:module'
+registerHooks({ resolve(specifier, context, next) { return specifier.endsWith('.module.css') ? { url:'data:text/javascript,export default {}',shortCircuit:true } : next(specifier, context) } })
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs'
@@ -8,7 +10,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { openCodeFiles } from '../lib/opencode-export.js'
 import { textZip, downloadTextZip } from '../lib/client/export-zip.js'
-import { OpenCodeExport } from '../lib/client/OpenCodeExport.js'
+const { OpenCodeExport } = await import('../lib/client/OpenCodeExport.js')
 import { WorkflowLocale } from '../lib/client/workflow-i18n.js'
 import { en } from '../lib/client/locales.js'
 import { deriveLoop } from '../lib/workflow-loop-config.js'
@@ -115,7 +117,7 @@ test('download creates a ZIP attachment and cleans up the link and object URL', 
 test('canvas export control renders accessible localized label and blocks unsaved/empty/busy exports', () => {
   const render = props => renderToStaticMarkup(React.createElement(OpenCodeExport, { team: fixture(), disabled: false, unsaved: false, ...props }))
   assert.match(render({}), /导出 OpenCode/)
-  assert.doesNotMatch(render({}), /disabled=""/)
+  assert.doesNotMatch(render({}).split('<dialog')[0], /disabled=""/)
   for (const props of [{ disabled: true }, { unsaved: true }, { team: { ...fixture(), tasks: [] } }]) assert.match(render(props), /disabled=""/)
   assert.match(render({ unsaved: true }), /请先保存属性草稿/)
   const english = renderToStaticMarkup(React.createElement(WorkflowLocale, { t: key => en[key] ?? key }, React.createElement(OpenCodeExport, { team: fixture(), disabled: false, unsaved: false })))

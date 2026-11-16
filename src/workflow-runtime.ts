@@ -1,3 +1,4 @@
+import { writeOpenCodeProject } from './opencode-project.ts'
 import { canRetryLoopTask, canStartLoopWithFlow, canToggleLoopTask } from './workflow-loop-types.ts'
 import { MAX_WORKFLOW_TEXT_LENGTH, MAX_WORKFLOW_REQUEST_BYTES } from './workflow-types.ts'
 import { recentUserRequirements, partialRequirementsNotice } from './discussion-history.ts'
@@ -199,6 +200,15 @@ export function installWorkflowWorkbench(ctx: Context, config: ToolsConfig, runt
         const source = archived ? await readArchivedTeam(root, teamId) : await readTeam(root, teamId)
         if (address || !source || !(await sessionLeadsTeamAsync(ctx, source, captain.id))) throw new Error('当前会话不能查看循环历史')
         reply(200, await readLoopHistory(archived ? join(root, 'archive') : root, source, string(body['loopId'], 'loopId'), typeof body['cursor'] === 'string' ? body['cursor'] : undefined)); return
+      }
+      if (action === 'opencode_project') {
+        await withTeamLock(lock, async () => {
+          const source = body['archived'] === true ? await readArchivedTeam(root, teamId) : await readTeam(root, teamId)
+          if (address || !source || !(await sessionLeadsTeamAsync(ctx, source, captain.id))) throw new Error('当前会话不能读取此流程')
+          if (body['base'] !== workflowFingerprint(source)) throw new Error('流程已变化，请刷新后再导出')
+          reply(200, await writeOpenCodeProject(workspace, source))
+        })
+        return
       }
       if(action==='template_seed'){
         const source=await readTeam(root,teamId)??await readArchivedTeam(root,teamId)

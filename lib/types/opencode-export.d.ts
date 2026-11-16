@@ -50,3 +50,5 @@ export declare function openCodeFiles(team: TeamState): {
         }[];
     };
 };
+/** Shared README template for ZIP downloads and project generation. */
+export declare function openCodeReadme(name: string, teamName: string): string;

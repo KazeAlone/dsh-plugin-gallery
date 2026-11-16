@@ -43,3 +43,14 @@ Both loop and ordinary execution are prompt-driven. This package does not provid
 `node --test scripts/opencode-export.test.mjs` covers DAG order and contracts, both review modes and return policies, fresh-state isolation, malformed graphs, unsafe names/interpolation, ZIP round-trip through an independent reader, attachment lifecycle, and localized export controls. Existing workflow, loop, template and locale regressions are also run for this change. These checks validate generation and UI contracts, not an actual model completing a workflow inside OpenCode.
 
 Format references checked 2026-11-15: [OpenCode Commands](https://opencode.ai/docs/commands), [OpenCode Agents](https://opencode.ai/docs/agents).
+
+## Project generation and shared instructions
+
+The export dialog offers **Download ZIP** and **Generate in project**. Both use
+`openCodeFiles` and the same `openCodeReadme` template. The completion dialog
+shows the destination, exact slash command and human-review instructions.
+Project generation resolves the workspace from the authenticated owning session,
+loads the saved live/archive workflow, and checks the canvas revision before
+writing. It never accepts a browser-supplied destination or arbitrary file map.
+Identical files are reusable; different existing contents and symlink paths are
+rejected. Existing progress records are not exported or overwritten.
