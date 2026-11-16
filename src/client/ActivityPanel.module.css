@@ -2132,9 +2132,11 @@
 
 /* One movable surface owns both the full card and its minimized dot. */
 .floatingStatus { position:absolute; width:300px; max-width:calc(100% - 16px); touch-action:none; user-select:none; }
-.floatingStatus .badge { position:relative; inset:auto; width:100%; max-width:100%; cursor:grab; padding-top:40px; }
+.floatingStatus .badge { position:relative; inset:auto; width:100%; max-width:100%; cursor:grab; }
 .floatingStatus .badge:active { cursor:grabbing; transform:none; }
 .statusToggle { position:absolute; top:8px; right:8px; width:28px; height:28px; display:grid; place-items:center; padding:0; border:1px solid var(--dsw-alias-border-l2); border-radius:50%; background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-label-secondary); cursor:pointer; font:inherit; }
+.floatingStatus[data-minimized=false] .statusHeading { padding-right:28px; }
+.floatingStatus[data-minimized=false] .statusToggle { top:12px; right:12px; width:24px; height:24px; border:0; border-radius:6px; background:transparent; }
 .statusToggle:hover { background:var(--dsw-alias-bg-module-platform); }
 .statusToggle:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:2px; }
 .floatingStatus[data-minimized=true] { width:28px; height:28px; }
