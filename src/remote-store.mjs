@@ -3,10 +3,11 @@ import { GalleryClient } from "./client-api.mjs";
 
 /** Only the DSH host contacts the center; its token is never returned to the UI. */
 export class RemoteGalleryStore {
-  constructor({ url, token }) {
+  constructor({ url, token, caCertificate }) {
     this.client = new GalleryClient({
       url,
       credential: token,
+      caCertificate,
       timeoutMs: 30000,
     });
   }
@@ -16,12 +17,47 @@ export class RemoteGalleryStore {
   async health() {
     const status = await this.client.request("/v2/health");
     demand(
-      status.ready && status.protocol === 2 && status.storage === "postgres",
+      status.ready &&
+        status.protocol === 3 &&
+        status.ownership === true &&
+        status.storage === "postgres",
       400,
       "INVALID_CENTER",
-      "服务地址不是兼容的 Gallery 中心服务",
+      "请将 Gallery 插件和中心服务更新到支持独立身份的版本",
     );
     return status;
+  }
+  async connect(username, previous) {
+    const status = await this.health();
+    if (status.identity?.kind === "member")
+      return { token: this.client.credential, userId: status.identity.user.id };
+    demand(
+      status.identity?.kind === "enrollment",
+      400,
+      "INVALID_IDENTITY",
+      "中心服务身份响应无效",
+    );
+    // Re-entering the shared enrollment key must not replace an existing identity.
+    if (previous?.userId && previous.url === this.client.url) {
+      return new RemoteGalleryStore({
+        ...previous,
+        caCertificate: this.client.caCertificate,
+      }).connect(username);
+    }
+    const result = await this.client.request("/v2/enroll", {
+      method: "POST",
+      body: { username },
+    });
+    demand(
+      result.user?.id && typeof result.token === "string",
+      500,
+      "INVALID_IDENTITY",
+      "中心服务未返回有效身份",
+    );
+    return { token: result.token, userId: result.user.id };
+  }
+  updateProfile(username) {
+    return this.client.request("/v2/me", { method: "PUT", body: { username } });
   }
   listResources(query = {}) {
     return this.client.request(
@@ -34,7 +70,8 @@ export class RemoteGalleryStore {
   getResource(id) {
     return this.client.request("/v2/resources/" + encodeURIComponent(id));
   }
-  createResource(resource, creator) {
+  async createResource(resource, creator) {
+    if (creator?.username) await this.updateProfile(creator.username);
     return this.client.request("/v2/resources", {
       method: "POST",
       body: { resource, creator },

@@ -7,7 +7,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { userInfo } from "node:os";
-import { randomUUID } from "node:crypto";
+import { randomUUID, X509Certificate } from "node:crypto";
 import { RemoteGalleryStore } from "./remote-store.mjs";
 import { serviceUrl } from "./client-api.mjs";
 import { LocalGalleryStore } from "./local-store.mjs";
@@ -77,6 +77,8 @@ export class StorageManager {
               url: service.url,
               hasToken: Boolean(service.token),
               allowStdio: Boolean(service.allowStdio),
+              userId: service.userId,
+              caCertificate: service.caCertificate || "",
             },
           }
         : {}),
@@ -113,9 +115,11 @@ export class StorageManager {
       "INVALID_USERNAME",
       "用户名须为 1–80 个字符",
     );
-    return this.change((config) => {
-      config.username = value.trim();
-    });
+    const save = () =>
+      this.change((config) => {
+        config.username = value.trim();
+      });
+    return save();
   }
   library(id = this.read().activeLibraryId) {
     const library = this.read().libraries.find((l) => l.id === id);
@@ -169,9 +173,35 @@ export class StorageManager {
       "INVALID_SERVICE_TOKEN",
       "请填写中心服务访问密钥（至少 16 位）",
     );
+    const caCertificate =
+      input.caCertificate === undefined
+        ? url === previous?.url
+          ? previous?.caCertificate || ""
+          : ""
+        : input.caCertificate;
+    demand(
+      typeof caCertificate === "string" && caCertificate.length <= 32768,
+      400,
+      "INVALID_CA",
+      "服务器证书内容无效",
+    );
+    if (caCertificate) {
+      let certificate;
+      try {
+        certificate = new X509Certificate(caCertificate);
+      } catch {}
+      demand(
+        certificate?.ca &&
+          caCertificate.includes("-----BEGIN CERTIFICATE-----"),
+        400,
+        "INVALID_CA",
+        "请选择有效的 PEM 格式 CA 根证书",
+      );
+    }
     return {
       url,
       token,
+      caCertificate,
       allowStdio:
         input.allowStdio === undefined
           ? Boolean(previous?.allowStdio)
@@ -203,12 +233,14 @@ export class StorageManager {
     );
     if (input.type === "service") {
       const connection = this.connection(input);
-      return new RemoteGalleryStore(connection).health().then(() =>
-        this.change((config) => {
-          config.service = connection;
-          config.activeLibraryId = "center";
-        }),
-      );
+      return new RemoteGalleryStore(connection)
+        .connect(this.username(), this.read().service)
+        .then((identity) =>
+          this.change((config) => {
+            config.service = { ...connection, ...identity };
+            config.activeLibraryId = "center";
+          }),
+        );
     }
     this.testConnection({ type: "internal" });
     return this.change((config) => {

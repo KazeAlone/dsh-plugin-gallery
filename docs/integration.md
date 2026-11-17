@@ -25,9 +25,9 @@
 
 - `uiStorageSettings()`：读取连接列表、当前库、后端可用性和能力。
 - `uiTestStorage(payload)`：type=internal 检查本地格式；type=service 使用 url/token 检查中心服务认证和数据库就绪，不修改当前选择。
-- `uiConfigureStorage(payload)`：保存 type=internal 或 type=service。中心配置接受 url/token/allowStdio，验证连接成功后切换；已有同址 token 留空可保留。
+- `uiConfigureStorage(payload)`：保存 type=internal 或 type=service。中心配置接受 url/token/allowStdio/caCertificate，验证连接成功后切换；已有同址 token 留空可保留。
 
-当前支持读取、新建、编辑、删除和中心共享，不支持历史与自动迁移。两种后端遵循同一资源结构及 revision 冲突语义；访问密钥写入宿主 0600 配置，不由设置接口返回浏览器。
+当前支持读取、新建、编辑、删除和中心共享，不支持历史与自动迁移。两种后端遵循同一资源结构及 revision 冲突语义；首次接入密钥仅用于注册，中心签发的独立用户凭证写入宿主 0600 配置，不由设置接口返回浏览器；资源修改/删除在服务端按 creator.userId 检查。显示用户名不是权限依据。
 
 ## Skill 实际使用计数
 

@@ -1170,16 +1170,33 @@ function Gallery({ remote }) {
               </div>
               {(storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === "service" && <>
                 <label className="gal-username-setting">服务地址
-                  <input type="url" placeholder="http://127.0.0.1:8090" value={storageSettings.service?.url || ""}
+                  <input type="url" placeholder="https://109.105.132.53:8088" value={storageSettings.service?.url || ""}
                     onChange={e => { setStorageSettings(x => ({ ...x, service: { ...x.service, url: e.target.value } })); setConnectionResult(""); }} />
                 </label>
                 <label className="gal-username-setting">访问密钥
                   <input type="password" autoComplete="new-password" value={storageSettings.service?.token || ""}
-                    placeholder={storageSettings.service?.hasToken ? "已保存，留空保留原密钥" : "填写中心服务访问密钥"}
+                    placeholder={storageSettings.service?.hasToken ? "已保存，留空保留原密钥" : "首次填写中心服务接入密钥"}
                     onChange={e => { setStorageSettings(x => ({ ...x, service: { ...x.service, token: e.target.value } })); setConnectionResult(""); }} />
                 </label>
                 <p>填写 Gallery 中心服务地址，不是数据库端口。远程连接使用 HTTPS。</p>
-                <p>共享此密钥的 DSH 可以读取、编辑和删除中心资源，包括使用已保存的 MCP 认证。仅发给可信成员。</p>
+                <p>首次接入后自动保存此 DSH 的独立身份。所有成员可查看和使用资源，仅创建者可编辑和删除。</p>
+                {storageSettings.service?.userId && <p>当前身份：{storageSettings.service.userId}</p>}
+                <label className="gal-username-setting">服务器证书（可选）
+                  <input type="file" accept=".crt,.pem" onChange={e => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!file) return;
+                    run(async () => {
+                      if (file.size > 32768) throw new Error("证书文件不能超过 32 KiB");
+                      const caCertificate = await file.text();
+                      setStorageSettings(x => ({ ...x, service: { ...x.service, caCertificate } }));
+                      setConnectionResult("证书已选取，检查连接后点击完成保存");
+                    });
+                  }} />
+                </label>
+                {storageSettings.service?.caCertificate && <button type="button" disabled={busy}
+                  onClick={() => setStorageSettings(x => ({ ...x, service: { ...x.service, caCertificate: "" } }))}>移除已选证书</button>}
+                <p>IP 地址部署时，上传管理员提供的 gallery-center-ca.crt；使用受信任的公司证书时可留空。</p>
                 <label className="gal-storage-consent"><input type="checkbox" checked={Boolean(storageSettings.service?.allowStdio)}
                   onChange={e => setStorageSettings(x => ({ ...x, service: { ...x.service, allowStdio: e.target.checked } }))} />
                   允许中心 stdio MCP 在此 DSH 执行本机命令（仅信任资源作者时开启）
@@ -1221,7 +1238,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.25.0</span>
+              <span className="gal-local">v0.26.0</span>
               <button
                 disabled={busy}
                 onClick={() =>

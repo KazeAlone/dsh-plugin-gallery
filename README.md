@@ -22,7 +22,7 @@ npx dsh plugin --profile web add github:KazeAlone/dsh-plugin-gallery --ignore-sc
 
 本地目录链接与安装包的依赖行为不同，详见[安装说明](docs/installation.md)。
 
-中心存储先使用[PostgreSQL 一键部署脚本](docs/database-setup.md)，再按照[中心服务连接说明](docs/center-storage.md)启动服务。在存储设置选择「中心服务」即可连接；默认仍使用 DSH 内部存储。
+中心存储先使用[PostgreSQL 一键部署脚本](docs/database-setup.md)，再按照[中心服务连接说明](docs/center-storage.md)启动服务。在存储设置选择「中心服务」即可连接；默认仍使用 DSH 内部存储。0.26.0 中心连接自动建立各 DSH 的独立身份：全员可读可用，仅作者可编辑/删除。支持 HTTPS IP 入口及页面上传服务器根证书。
 
 ## 本地存储
 

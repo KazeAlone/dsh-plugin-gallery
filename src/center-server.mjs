@@ -3,6 +3,18 @@ import { timingSafeEqual, createHash } from "node:crypto";
 import { demand } from "./model.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest();
+function validUsername(value) {
+  demand(
+    typeof value === "string" &&
+      value.trim().length > 0 &&
+      value.trim().length <= 80 &&
+      !/[\x00-\x1f]/.test(value),
+    400,
+    "INVALID_USERNAME",
+    "用户名须为 1–80 个字符",
+  );
+  return value.trim();
+}
 export function createCenterServer({ store, token, logger = console }) {
   demand(
     typeof token === "string" && token.length >= 32 && !/\s/.test(token),
@@ -22,15 +34,19 @@ export function createCenterServer({ store, token, logger = console }) {
         res.end(JSON.stringify(value));
       };
       try {
-        demand(
-          timingSafeEqual(
-            hash(req.headers.authorization || ""),
-            hash("Bearer " + token),
-          ),
-          401,
-          "UNAUTHORIZED",
-          "中心服务访问密钥无效",
+        const authorization = req.headers.authorization || "";
+        const bootstrap = timingSafeEqual(
+          hash(authorization),
+          hash("Bearer " + token),
         );
+        const credential = authorization.startsWith("Bearer ")
+          ? authorization.slice(7)
+          : "";
+        const actor =
+          !bootstrap && credential
+            ? await store.authenticate(credential)
+            : undefined;
+        demand(bootstrap || actor, 401, "UNAUTHORIZED", "中心服务访问密钥无效");
         const url = new URL(req.url, "http://localhost");
         const parts = url.pathname.split("/").filter(Boolean);
         let body = {};
@@ -66,7 +82,27 @@ export function createCenterServer({ store, token, logger = console }) {
           );
         }
         if (url.pathname === "/v2/health" && req.method === "GET")
-          return send(200, await store.health());
+          return send(200, {
+            ...(await store.health()),
+            identity: actor
+              ? { kind: "member", user: actor }
+              : { kind: "enrollment" },
+          });
+        if (url.pathname === "/v2/enroll" && req.method === "POST") {
+          demand(bootstrap, 403, "ENROLLMENT_REQUIRED", "需要中心服务接入密钥");
+          return send(201, await store.enroll(validUsername(body.username)));
+        }
+        demand(
+          actor,
+          403,
+          "USER_REQUIRED",
+          "请更新 Gallery 插件并保存中心连接，以建立独立身份",
+        );
+        if (url.pathname === "/v2/me" && req.method === "PUT")
+          return send(
+            200,
+            await store.updateProfile(actor, validUsername(body.username)),
+          );
         if (url.pathname === "/v2/runtime" && req.method === "GET")
           return send(
             200,
@@ -79,25 +115,10 @@ export function createCenterServer({ store, token, logger = console }) {
             const query = Object.fromEntries(url.searchParams);
             for (const key of ["limit", "offset"])
               if (query[key] !== undefined) query[key] = Number(query[key]);
-            return send(200, await store.listResources(query));
+            return send(200, await store.listResources(query, actor));
           }
           if (req.method === "POST") {
-            const username = body.creator?.username;
-            demand(
-              typeof username === "string" &&
-                username.trim().length > 0 &&
-                username.length <= 80 &&
-                !/[\x00-\x1f]/.test(username),
-              400,
-              "INVALID_USERNAME",
-              "创建者名称无效",
-            );
-            return send(
-              201,
-              await store.createResource(body.resource, {
-                username: username.trim(),
-              }),
-            );
+            return send(201, await store.createResource(body.resource, actor));
           }
         }
         if (
@@ -107,7 +128,7 @@ export function createCenterServer({ store, token, logger = console }) {
         ) {
           const id = decodeURIComponent(parts[2]);
           if (req.method === "GET")
-            return send(200, await store.getResource(id));
+            return send(200, await store.getResource(id, actor));
           if (req.method === "PUT")
             return send(
               200,
@@ -115,12 +136,13 @@ export function createCenterServer({ store, token, logger = console }) {
                 id,
                 body.resource,
                 body.expectedRevision,
+                actor,
               ),
             );
           if (req.method === "DELETE")
             return send(
               200,
-              await store.deleteResource(id, body.expectedRevision),
+              await store.deleteResource(id, body.expectedRevision, actor),
             );
         }
         send(404, { error: { code: "NOT_FOUND", message: "接口不存在" } });

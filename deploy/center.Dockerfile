@@ -3,7 +3,7 @@ WORKDIR /app
 COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci --omit=dev --omit=peer --ignore-scripts
 COPY --chown=node:node src ./src
-COPY --chown=node:node scripts/center.mjs ./scripts/center.mjs
+COPY --chown=node:node scripts/center.mjs scripts/center-users.mjs ./scripts/
 ENV HOST=0.0.0.0 PORT=8090
 USER node
 EXPOSE 8090

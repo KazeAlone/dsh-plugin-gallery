@@ -13307,7 +13307,7 @@ function Gallery({ remote }) {
       "input",
       {
         type: "url",
-        placeholder: "http://127.0.0.1:8090",
+        placeholder: "https://109.105.132.53:8088",
         value: storageSettings.service?.url || "",
         onChange: (e) => {
           setStorageSettings((x) => ({ ...x, service: { ...x.service, url: e.target.value } }));
@@ -13320,13 +13320,31 @@ function Gallery({ remote }) {
         type: "password",
         autoComplete: "new-password",
         value: storageSettings.service?.token || "",
-        placeholder: storageSettings.service?.hasToken ? "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u4FDD\u7559\u539F\u5BC6\u94A5" : "\u586B\u5199\u4E2D\u5FC3\u670D\u52A1\u8BBF\u95EE\u5BC6\u94A5",
+        placeholder: storageSettings.service?.hasToken ? "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u4FDD\u7559\u539F\u5BC6\u94A5" : "\u9996\u6B21\u586B\u5199\u4E2D\u5FC3\u670D\u52A1\u63A5\u5165\u5BC6\u94A5",
         onChange: (e) => {
           setStorageSettings((x) => ({ ...x, service: { ...x.service, token: e.target.value } }));
           setConnectionResult("");
         }
       }
-    )), /* @__PURE__ */ import_react14.default.createElement("p", null, "\u586B\u5199 Gallery \u4E2D\u5FC3\u670D\u52A1\u5730\u5740\uFF0C\u4E0D\u662F\u6570\u636E\u5E93\u7AEF\u53E3\u3002\u8FDC\u7A0B\u8FDE\u63A5\u4F7F\u7528 HTTPS\u3002"), /* @__PURE__ */ import_react14.default.createElement("p", null, "\u5171\u4EAB\u6B64\u5BC6\u94A5\u7684 DSH \u53EF\u4EE5\u8BFB\u53D6\u3001\u7F16\u8F91\u548C\u5220\u9664\u4E2D\u5FC3\u8D44\u6E90\uFF0C\u5305\u62EC\u4F7F\u7528\u5DF2\u4FDD\u5B58\u7684 MCP \u8BA4\u8BC1\u3002\u4EC5\u53D1\u7ED9\u53EF\u4FE1\u6210\u5458\u3002"), /* @__PURE__ */ import_react14.default.createElement("label", { className: "gal-storage-consent" }, /* @__PURE__ */ import_react14.default.createElement(
+    )), /* @__PURE__ */ import_react14.default.createElement("p", null, "\u586B\u5199 Gallery \u4E2D\u5FC3\u670D\u52A1\u5730\u5740\uFF0C\u4E0D\u662F\u6570\u636E\u5E93\u7AEF\u53E3\u3002\u8FDC\u7A0B\u8FDE\u63A5\u4F7F\u7528 HTTPS\u3002"), /* @__PURE__ */ import_react14.default.createElement("p", null, "\u9996\u6B21\u63A5\u5165\u540E\u81EA\u52A8\u4FDD\u5B58\u6B64 DSH \u7684\u72EC\u7ACB\u8EAB\u4EFD\u3002\u6240\u6709\u6210\u5458\u53EF\u67E5\u770B\u548C\u4F7F\u7528\u8D44\u6E90\uFF0C\u4EC5\u521B\u5EFA\u8005\u53EF\u7F16\u8F91\u548C\u5220\u9664\u3002"), storageSettings.service?.userId && /* @__PURE__ */ import_react14.default.createElement("p", null, "\u5F53\u524D\u8EAB\u4EFD\uFF1A", storageSettings.service.userId), /* @__PURE__ */ import_react14.default.createElement("label", { className: "gal-username-setting" }, "\u670D\u52A1\u5668\u8BC1\u4E66\uFF08\u53EF\u9009\uFF09", /* @__PURE__ */ import_react14.default.createElement("input", { type: "file", accept: ".crt,.pem", onChange: (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file) return;
+      run(async () => {
+        if (file.size > 32768) throw new Error("\u8BC1\u4E66\u6587\u4EF6\u4E0D\u80FD\u8D85\u8FC7 32 KiB");
+        const caCertificate = await file.text();
+        setStorageSettings((x) => ({ ...x, service: { ...x.service, caCertificate } }));
+        setConnectionResult("\u8BC1\u4E66\u5DF2\u9009\u53D6\uFF0C\u68C0\u67E5\u8FDE\u63A5\u540E\u70B9\u51FB\u5B8C\u6210\u4FDD\u5B58");
+      });
+    } })), storageSettings.service?.caCertificate && /* @__PURE__ */ import_react14.default.createElement(
+      "button",
+      {
+        type: "button",
+        disabled: busy,
+        onClick: () => setStorageSettings((x) => ({ ...x, service: { ...x.service, caCertificate: "" } }))
+      },
+      "\u79FB\u9664\u5DF2\u9009\u8BC1\u4E66"
+    ), /* @__PURE__ */ import_react14.default.createElement("p", null, "IP \u5730\u5740\u90E8\u7F72\u65F6\uFF0C\u4E0A\u4F20\u7BA1\u7406\u5458\u63D0\u4F9B\u7684 gallery-center-ca.crt\uFF1B\u4F7F\u7528\u53D7\u4FE1\u4EFB\u7684\u516C\u53F8\u8BC1\u4E66\u65F6\u53EF\u7559\u7A7A\u3002"), /* @__PURE__ */ import_react14.default.createElement("label", { className: "gal-storage-consent" }, /* @__PURE__ */ import_react14.default.createElement(
       "input",
       {
         type: "checkbox",
@@ -13361,7 +13379,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react14.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react14.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react14.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "gal-local" }, "v0.25.0"), /* @__PURE__ */ import_react14.default.createElement(
+    /* @__PURE__ */ import_react14.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "gal-local" }, "v0.26.0"), /* @__PURE__ */ import_react14.default.createElement(
       "button",
       {
         disabled: busy,

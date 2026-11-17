@@ -1,3 +1,4 @@
+import { Agent } from "undici";
 import { demand, GalleryError } from "./model.mjs";
 export function serviceUrl(value) {
   let url;
@@ -26,11 +27,29 @@ export function serviceUrl(value) {
   );
   return url.origin;
 }
+const certificateDispatchers = new Map();
+function certificateDispatcher(ca) {
+  if (!ca) return undefined;
+  if (!certificateDispatchers.has(ca)) {
+    if (certificateDispatchers.size >= 16) {
+      const oldest = certificateDispatchers.keys().next().value;
+      void certificateDispatchers
+        .get(oldest)
+        .close()
+        .catch(() => {});
+      certificateDispatchers.delete(oldest);
+    }
+    certificateDispatchers.set(ca, new Agent({ connect: { ca } }));
+  }
+  return certificateDispatchers.get(ca);
+}
 /** Host-side SDK. Credentials must never be sent to the browser UI. */
 export class GalleryClient {
-  constructor({ url, credential, timeoutMs = 15000 }) {
+  constructor({ url, credential, timeoutMs = 15000, caCertificate = "" }) {
     this.url = serviceUrl(url);
     this.credential = credential;
+    this.caCertificate = caCertificate;
+    this.dispatcher = certificateDispatcher(caCertificate);
     this.timeoutMs = timeoutMs;
   }
   async request(
@@ -39,6 +58,7 @@ export class GalleryClient {
   ) {
     const response = await fetch(this.url + path, {
       method,
+      ...(this.dispatcher ? { dispatcher: this.dispatcher } : {}),
       redirect: "error",
       signal: signal
         ? AbortSignal.any([signal, AbortSignal.timeout(this.timeoutMs)])
@@ -51,7 +71,16 @@ export class GalleryClient {
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
-    const value = await response.json();
+    let value;
+    try {
+      value = await response.json();
+    } catch {
+      throw new GalleryError(
+        response.ok ? 502 : response.status,
+        "INVALID_SERVICE_RESPONSE",
+        "中心服务未返回 JSON，请检查服务地址和 HTTPS 反向代理配置",
+      );
+    }
     if (!response.ok)
       throw new GalleryError(
         response.status,
