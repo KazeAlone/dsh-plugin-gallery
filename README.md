@@ -1,6 +1,6 @@
 # Gallery
 
-Workflow 画布原型支持添加和拖动 Agent、任务、人工节点，配置 Gallery Agent 及其 Skill/MCP 引用，连接任务依赖并保存后继续编辑。按住前置节点右侧圆点，拖到后续节点左侧圆点后松开。可从资源详情注册到 TeamFlow 个人模板库。Agent 节点可分别允许使用 Gallery Skill 和 MCP。旧的逐项引用保留在 Gallery 中，支持开关的 TeamFlow 按成员权限提供资源。
+Workflow 画布支持 Agent、任务、门控判断、验收和成果归档。门控提供 PASS 后续路径与 REJECT 拖拽返回线，可配置人工/独立 AI 审核、有限循环、返工范围和超时；保存、重新编辑及注册到 TeamFlow 保留原生门控、循环和归档字段。支持框选拖动、右键平移、鼠标中心缩放、全屏和右键删除连线。详见[画布操作说明](docs/workflow-canvas.md)。
 
 内置 `gallery-skill-reference` 参考 Skill，包含完整文件头、执行指引、输入输出示例、三类附件、标签和封面。升级首次启动时添加，可查看、编辑和调用；修改或删除后不会在重启时恢复。
 

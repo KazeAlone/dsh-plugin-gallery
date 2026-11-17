@@ -287,26 +287,12 @@ test(
         .Authorization,
       "Bearer example-secret",
     );
-    const workflow = {
-      name: "Review",
-      description: "",
-      inputs: "",
-      tags: [],
-      members: [
-        { name: "reviewer", summary: "", role: "", executionPrompt: "" },
-      ],
-      tasks: [
-        {
-          id: "t1",
-          subject: "Review",
-          assignee: "reviewer",
-          dependencies: [],
-          checkpoint: false,
-          general: { requirements: "Review", deliverables: "", acceptance: "" },
-        },
-      ],
-      positions: {},
-    };
+    const workflow = JSON.parse(
+      readFileSync(
+        new URL("./fixtures/workflow-gated.json", import.meta.url),
+        "utf8",
+      ),
+    );
     const flow = await a.createResource({
       type: "workflow",
       name: "Review",
@@ -316,6 +302,13 @@ test(
       (await b.listResources({ type: "workflow" })).items[0].id,
       flow.id,
     );
+    const sharedWorkflow = JSON.parse(
+      (await b.getResource(flow.id)).files.find(
+        (f) => f.path === "workflow.json",
+      ).content,
+    );
+    assert.deepEqual(sharedWorkflow.loops, workflow.loops);
+    assert.deepEqual(sharedWorkflow.tasks, workflow.tasks);
     for (const row of [agent, mcp, flow]) {
       const current = await b.getResource(row.id);
       assert.equal(current.canEdit, false);

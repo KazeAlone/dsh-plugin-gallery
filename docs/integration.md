@@ -112,3 +112,10 @@ uiExtractWorkflowAgent 仅向 owner 开放，通过宿主的 agentDefaultModel �
 TeamFlow 在成员激活时调用 setMemberAccess；当 galleryMcp 明确为 true，Gallery 在该成员的 systemPrompt 作用域注册一段提示词。每次组装时读取成员有效工具列表与当前 Gallery 服务描述，仅包含可见的 Gallery MCP 工具，建议相关调研优先检索知识库，覆盖不足或调用失败再说明并补充外部资料。不包含环境变量映射或密钥，不读取对话内容。开关关闭、权限记录更换或成员清理后，不再提供该指引；工具限制保持原有执行检查。
 
 这是模型选择引导，不是强制执行顺序；没有相关工具时不注入，也不自动执行写操作。已通过开关、有效工具过滤、提示清理和完整测试套件；尚未进行真实模型调研行为的端到端验证。
+
+
+## 门控、循环与归档（0.27.0）
+
+模板验证与注册保留 checkpointKind、reviewMode、archive 和顶层 loops。普通依赖无环；返工关系由 loops 指定，上游执行区域按入口与门控推导，不保存运行时 bodyIds/status/runId。规则与 TeamFlow main 0.2.12 对齐：最多 16 个独立循环、轮次 1–20、超时 1–1440 分钟；禁止共享或嵌套、环内审核/归档、绕过门控的输出及审核人执行环内任务。
+
+保存时按 Agent 内部 ID 转换 loops.reviewer 与任务 assignee 为模板成员名，重开时反向还原。发布仍通过 workflowFromResource 统一验证，归档配置和循环关系不会因再次注册丢失。操作见[Workflow 画布](workflow-canvas.md)。

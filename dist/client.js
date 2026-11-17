@@ -2347,6 +2347,25 @@ fieldset.gal-skill-fields {
 .gal .gal-storage-providers > button.active { border-color: var(--g-accent); color: var(--g-ink); background: var(--g-soft); }
 .gal label.gal-storage-consent { flex-direction: row; align-items: flex-start; font-weight: 400; font-size: 13px; }
 .gal .gal-storage-consent input { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 3px; padding: 0; }
+
+/* TeamFlow gate/acceptance/archive nodes keep the same drag and port geometry. */
+.gal-flow-node.gate { isolation: isolate; border: 0; background: transparent; box-shadow: none; text-align: center; padding: 8px 32px; }
+.gal-flow-node.gate::before { content: ''; position: absolute; inset: 0; z-index: -1; background: color-mix(in srgb, var(--g-card) 90%, #c1963d); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); filter: drop-shadow(0 2px 2px #0003); }
+.gal .gal-flow-node.gate .gal-flow-grip { justify-content: center; min-height: 24px; font-size: 11px; }
+.gal .gal-flow-node.gate .gal-flow-node-title { text-align: center; }
+.gal-flow-node.gate > p { margin: 2px 0; }
+.gal-flow-node.archive { border-top-color: #477f9c; border-radius: 6px 6px 18px 18px; }
+.gal .gal-flow-ports .gal-flow-port-reject { left: 50%; top: auto; bottom: -7px; transform: translateX(-50%); border-color: #ba625e; }
+.gal .gal-flow-port-reject span { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); color: var(--g-ink); font-size: 10px; font-weight: 700; white-space: nowrap; }
+.gal-flow-edges path.gal-flow-reject-edge { stroke: #ba625e; stroke-dasharray: 7 5; }
+.gal-flow-edges path.gal-flow-pass-edge { stroke: #498f7e; }
+.gal-flow-edges text { fill: var(--g-ink); font-size: 11px; font-weight: 700; paint-order: stroke; stroke: var(--g-bg); stroke-width: 4px; stroke-linejoin: round; }
+.gal .gal-flow-inspector label.gal-flow-check { flex-direction: row; align-items: flex-start; font-weight: 400; gap: 8px; }
+.gal .gal-flow-check input { width: 16px; height: 16px; flex: 0 0 16px; padding: 0; margin-top: 3px; }
+.gal-flow-loop-settings { padding: 12px; margin-bottom: 16px; border: 1px solid var(--g-line); border-radius: 8px; }
+.gal-flow-loop-settings h4 { margin: 0 0 12px; }
+.gal-flow-loop-settings p { font-size: 12px; color: var(--g-muted); overflow-wrap: anywhere; }
+.gal-flow-pass-targets { max-height: 160px; overflow: auto; }
 `;
 
 // src/client/leaderboards.jsx
@@ -2860,7 +2879,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
       tags.split(/[,，]/).map((x) => x.trim()).filter(Boolean)
     )
   ];
-  async function check() {
+  async function check2() {
     setBusy(true);
     setError("");
     try {
@@ -3077,7 +3096,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
       {
         className: "gal-primary",
         disabled: busy || !validConnection,
-        onClick: check
+        onClick: check2
       },
       /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "refresh" }),
       busy ? "\u68C0\u67E5\u4E2D\u2026" : "\u68C0\u67E5\u8FDE\u63A5"
@@ -3139,20 +3158,161 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
 // src/client/workflow-wizard.jsx
 var import_react7 = __toESM(require("react"), 1);
 
+// src/workflow-loops.mjs
+var check = (ok, message) => {
+  if (!ok)
+    throw Object.assign(new Error(message), {
+      status: 400,
+      code: "INVALID_WORKFLOW"
+    });
+};
+function workflowNodeKind(task, loops = []) {
+  return task.kind === "archive" ? "archive" : task.checkpoint ? task.checkpointKind === "gate" || loops.some((loop) => loop.gateId === task.id) ? "gate" : "human" : "task";
+}
+function workflowAncestors(tasks, id) {
+  const found = /* @__PURE__ */ new Set();
+  const visit3 = (id2) => {
+    if (found.has(id2)) return;
+    found.add(id2);
+    tasks.find((t) => t.id === id2)?.dependencies.forEach(visit3);
+  };
+  tasks.find((t) => t.id === id)?.dependencies.forEach(visit3);
+  return found;
+}
+function assertWorkflowDag(tasks) {
+  const ids = new Set(tasks.map((t) => t.id)), done = /* @__PURE__ */ new Set(), visiting = /* @__PURE__ */ new Set();
+  const visit3 = (id) => {
+    check(!visiting.has(id), "\u666E\u901A\u4F9D\u8D56\u4E0D\u80FD\u5F62\u6210\u5FAA\u73AF\uFF0C\u8BF7\u4F7F\u7528\u95E8\u63A7 REJECT \u8FD4\u56DE\u7EBF");
+    if (done.has(id)) return;
+    check(ids.has(id), "\u8282\u70B9\u4F9D\u8D56\u7F3A\u5931");
+    visiting.add(id);
+    tasks.find((t) => t.id === id).dependencies.forEach(visit3);
+    visiting.delete(id);
+    done.add(id);
+  };
+  tasks.forEach((t) => {
+    check(
+      new Set(t.dependencies).size === t.dependencies.length,
+      "\u8282\u70B9\u4F9D\u8D56\u91CD\u590D"
+    );
+    visit3(t.id);
+  });
+}
+function workflowLoopBody(tasks, { gateId, entryId }) {
+  const ancestors = workflowAncestors(tasks, gateId);
+  check(ancestors.has(entryId), "\u5FAA\u73AF\u5165\u53E3\u5FC5\u987B\u4F4D\u4E8E\u95E8\u63A7\u4E0A\u6E38");
+  const body = /* @__PURE__ */ new Set([entryId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const t of tasks)
+      if (ancestors.has(t.id) && !body.has(t.id) && t.dependencies.some((id) => body.has(id))) {
+        body.add(t.id);
+        changed = true;
+      }
+  }
+  return [...body];
+}
+function validateWorkflowLoops(value, tasks, members) {
+  if (value === void 0) return void 0;
+  check(Array.isArray(value) && value.length <= 16, "\u6700\u591A\u914D\u7F6E 16 \u4E2A\u5FAA\u73AF");
+  const occupied = /* @__PURE__ */ new Set();
+  const loops = value.map((raw) => {
+    check(
+      raw && typeof raw === "object" && typeof raw.gateId === "string" && typeof raw.entryId === "string" && ["human", "ai"].includes(raw.mode),
+      "\u8BF7\u914D\u7F6E\u5FAA\u73AF\u5165\u53E3\u3001\u95E8\u63A7\u548C\u5BA1\u6838\u65B9\u5F0F"
+    );
+    const maxRounds = Number(raw.maxRounds), timeoutMinutes = Number(raw.timeoutMinutes);
+    check(
+      Number.isSafeInteger(maxRounds) && maxRounds >= 1 && maxRounds <= 20,
+      "\u8F6E\u6B21\u4E0A\u9650\u5FC5\u987B\u4E3A 1\u201320\uFF0C\u5305\u542B\u9996\u6B21\u6267\u884C"
+    );
+    check(
+      Number.isSafeInteger(timeoutMinutes) && timeoutMinutes >= 1 && timeoutMinutes <= 1440,
+      "\u6267\u884C\u8D85\u65F6\u5FC5\u987B\u4E3A 1\u20131440 \u5206\u949F"
+    );
+    const loop = {
+      gateId: raw.gateId,
+      entryId: raw.entryId,
+      mode: raw.mode,
+      maxRounds,
+      timeoutMinutes,
+      ...raw.rejectToEntry === true ? { rejectToEntry: true } : {},
+      ...typeof raw.reviewer === "string" && raw.reviewer.trim() ? { reviewer: raw.reviewer.trim() } : {}
+    };
+    const gate = tasks.find((t) => t.id === loop.gateId);
+    check(
+      gate?.checkpoint && gate.checkpointKind !== "acceptance",
+      "\u5FAA\u73AF\u9700\u8981\u72EC\u7ACB\u95E8\u63A7\uFF0C\u9A8C\u6536\u8282\u70B9\u4E0D\u80FD\u4F5C\u4E3A\u5FAA\u73AF\u95E8\u63A7"
+    );
+    const body = new Set(workflowLoopBody(tasks, loop));
+    check(
+      body.size > 0 && body.size <= 32 && !body.has(gate.id),
+      "\u5FAA\u73AF\u533A\u57DF\u65E0\u6548"
+    );
+    for (const id of [...body, gate.id]) {
+      check(!occupied.has(id), "\u4E0D\u652F\u6301\u5D4C\u5957\u6216\u5171\u4EAB\u8282\u70B9\u7684\u5FAA\u73AF");
+      occupied.add(id);
+    }
+    for (const id of body) {
+      const task = tasks.find((t) => t.id === id);
+      check(task.kind !== "archive", "\u6210\u679C\u5F52\u6863\u8282\u70B9\u5E94\u653E\u5728\u95E8\u63A7\u7684 PASS \u8DEF\u5F84\u4E4B\u540E");
+      check(
+        task.assignee && members.some((m) => m.name === task.assignee),
+        "\u8BF7\u5148\u4E3A\u5FAA\u73AF\u5185\u4EFB\u52A1\u6307\u5B9A\u6709\u6548\u8D1F\u8D23\u4EBA"
+      );
+      check(!task.checkpoint, "\u5FAA\u73AF\u533A\u57DF\u5FC5\u987B\u7531\u6267\u884C\u4EFB\u52A1\u7EC4\u6210\u5E76\u6C47\u5408\u5230\u552F\u4E00\u95E8\u63A7");
+      check(
+        !tasks.some(
+          (t) => !body.has(t.id) && t.id !== gate.id && t.dependencies.includes(id)
+        ),
+        "\u5FAA\u73AF\u5185\u7684\u8F93\u51FA\u5FC5\u987B\u7ECF\u8FC7\u95E8\u63A7\u624D\u80FD\u8FDE\u63A5\u73AF\u5916"
+      );
+    }
+    if (loop.mode === "ai") {
+      check(
+        loop.reviewer && members.some((m) => m.name === loop.reviewer),
+        "\u8BF7\u9009\u62E9\u6709\u6548\u7684 AI \u5BA1\u6838\u6210\u5458"
+      );
+      check(
+        !tasks.some((t) => body.has(t.id) && t.assignee === loop.reviewer),
+        "AI \u5BA1\u6838\u6210\u5458\u4E0D\u80FD\u8D1F\u8D23\u5FAA\u73AF\u5185\u4EFB\u52A1\uFF0C\u8BF7\u9009\u62E9\u72EC\u7ACB\u5BA1\u6838\u6210\u5458"
+      );
+    }
+    return loop;
+  });
+  return loops.length ? loops : void 0;
+}
+
 // src/workflow-template.mjs
 function demand(ok, status, code, message) {
   if (!ok) throw Object.assign(new Error(message), { status, code });
 }
 var object = (v, label) => {
-  demand(v && typeof v === "object" && !Array.isArray(v), 400, "INVALID_WORKFLOW", `${label} \u683C\u5F0F\u65E0\u6548`);
+  demand(
+    v && typeof v === "object" && !Array.isArray(v),
+    400,
+    "INVALID_WORKFLOW",
+    `${label} \u683C\u5F0F\u65E0\u6548`
+  );
   return v;
 };
 var text = (v, label, max, required = false) => {
-  demand(typeof v === "string" && v.length <= max && (!required || v.trim()), 400, "INVALID_WORKFLOW", `${label} \u4E0D\u80FD\u4E3A\u7A7A\u6216\u8D85\u8FC7 ${max} \u5B57\u7B26`);
+  demand(
+    typeof v === "string" && v.length <= max && (!required || v.trim()),
+    400,
+    "INVALID_WORKFLOW",
+    `${label} \u4E0D\u80FD\u4E3A\u7A7A\u6216\u8D85\u8FC7 ${max} \u5B57\u7B26`
+  );
   return v.trim();
 };
 var array = (v, label, max) => {
-  demand(Array.isArray(v) && v.length <= max, 400, "INVALID_WORKFLOW", `${label} \u683C\u5F0F\u65E0\u6548\u6216\u8FC7\u957F`);
+  demand(
+    Array.isArray(v) && v.length <= max,
+    400,
+    "INVALID_WORKFLOW",
+    `${label} \u683C\u5F0F\u65E0\u6548\u6216\u8FC7\u957F`
+  );
   return v;
 };
 function validateWorkflowTemplate(input) {
@@ -3162,48 +3322,169 @@ function validateWorkflowTemplate(input) {
     const access = {};
     for (const key of ["gallerySkill", "galleryMcp"]) {
       if (m[key] === void 0) continue;
-      demand(typeof m[key] === "boolean", 400, "INVALID_WORKFLOW", `${key} \u5FC5\u987B\u662F\u5E03\u5C14\u503C`);
+      demand(
+        typeof m[key] === "boolean",
+        400,
+        "INVALID_WORKFLOW",
+        `${key} \u5FC5\u987B\u662F\u5E03\u5C14\u503C`
+      );
       access[key] = m[key];
     }
-    return { ...access, name: text(m.name, "\u6210\u5458\u540D\u79F0", 80, true), summary: text(m.summary, "\u7B80\u4ECB", 16e3), role: text(m.role, "\u89D2\u8272", 16e3), executionPrompt: text(m.executionPrompt, "\u6267\u884C\u6307\u4EE4", 16e3) };
+    return {
+      ...access,
+      name: text(m.name, "\u6210\u5458\u540D\u79F0", 80, true),
+      summary: text(m.summary, "\u7B80\u4ECB", 16e3),
+      role: text(m.role, "\u89D2\u8272", 16e3),
+      executionPrompt: text(m.executionPrompt, "\u6267\u884C\u6307\u4EE4", 64e3)
+    };
   });
-  demand(members.every((m) => /^[\p{L}\p{N}_-]+$/u.test(m.name) && m.name.toLowerCase() !== "captain") && new Set(members.map((m) => m.name.toLowerCase())).size === members.length, 400, "INVALID_WORKFLOW", "\u6210\u5458\u540D\u79F0\u91CD\u590D\u6216\u65E0\u6548");
+  demand(
+    members.every(
+      (m) => /^[\p{L}\p{N}_-]+$/u.test(m.name) && m.name.toLowerCase() !== "captain"
+    ) && new Set(members.map((m) => m.name.toLowerCase())).size === members.length,
+    400,
+    "INVALID_WORKFLOW",
+    "\u6210\u5458\u540D\u79F0\u91CD\u590D\u6216\u65E0\u6548"
+  );
   const tasks = array(v.tasks, "\u8282\u70B9", 32).map((raw) => {
     const t = object(raw, "\u8282\u70B9"), g = object(t.general, "\u4EFB\u52A1\u8981\u6C42");
     const id = text(t.id, "\u8282\u70B9 ID", 80, true);
-    demand(/^[a-zA-Z0-9_-]+$/.test(id) && typeof t.checkpoint === "boolean", 400, "INVALID_WORKFLOW", "\u8282\u70B9 ID \u6216\u7C7B\u578B\u65E0\u6548");
-    demand(!/^t\d+$/.test(id) || Number.isSafeInteger(Number(id.slice(1))) && Number(id.slice(1)) < Number.MAX_SAFE_INTEGER, 400, "INVALID_WORKFLOW", "\u8282\u70B9\u5E8F\u53F7\u8D85\u51FA\u8303\u56F4");
-    return { id, subject: text(t.subject, "\u8282\u70B9\u540D\u79F0", 200, true), assignee: text(t.assignee, "\u8D1F\u8D23\u4EBA", 80), dependencies: array(t.dependencies, "\u4F9D\u8D56", 32).map((d) => text(d, "\u4F9D\u8D56 ID", 80, true)), checkpoint: t.checkpoint, general: { requirements: text(g.requirements, "\u4EFB\u52A1\u8981\u6C42", 16e3), deliverables: text(g.deliverables, "\u4EA4\u4ED8\u7269", 16e3), acceptance: text(g.acceptance, "\u9A8C\u6536\u6807\u51C6", 16e3) } };
+    demand(
+      /^[a-zA-Z0-9_-]+$/.test(id) && typeof t.checkpoint === "boolean",
+      400,
+      "INVALID_WORKFLOW",
+      "\u8282\u70B9 ID \u6216\u7C7B\u578B\u65E0\u6548"
+    );
+    demand(
+      !/^t\d+$/.test(id) || Number.isSafeInteger(Number(id.slice(1))) && Number(id.slice(1)) < Number.MAX_SAFE_INTEGER,
+      400,
+      "INVALID_WORKFLOW",
+      "\u8282\u70B9\u5E8F\u53F7\u8D85\u51FA\u8303\u56F4"
+    );
+    demand(
+      t.reviewMode === void 0 || t.checkpoint && ["human", "ai"].includes(t.reviewMode),
+      400,
+      "INVALID_WORKFLOW",
+      "\u6A21\u677F\u5BA1\u6838\u65B9\u5F0F\u65E0\u6548"
+    );
+    demand(
+      t.checkpointKind === void 0 || t.checkpoint && ["gate", "acceptance"].includes(t.checkpointKind),
+      400,
+      "INVALID_WORKFLOW",
+      "\u6A21\u677F\u5BA1\u6838\u8282\u70B9\u7C7B\u578B\u65E0\u6548"
+    );
+    demand(
+      t.kind === void 0 || ["work", "archive"].includes(t.kind),
+      400,
+      "INVALID_WORKFLOW",
+      "\u6A21\u677F\u4EFB\u52A1\u7C7B\u578B\u65E0\u6548"
+    );
+    let archive;
+    if (t.kind === "archive") {
+      demand(
+        !t.checkpoint && !t.assignee,
+        400,
+        "INVALID_WORKFLOW",
+        "\u5F52\u6863\u8282\u70B9\u4E0D\u80FD\u8BBE\u7F6E\u8D1F\u8D23\u4EBA\u6216\u95E8\u63A7"
+      );
+      const config = t.archive === void 0 ? {} : object(t.archive, "\u5F52\u6863\u914D\u7F6E");
+      demand(
+        config.copyFiles === void 0 || typeof config.copyFiles === "boolean",
+        400,
+        "INVALID_WORKFLOW",
+        "copyFiles \u5FC5\u987B\u662F\u5E03\u5C14\u503C"
+      );
+      archive = {
+        copyFiles: config.copyFiles === true,
+        paths: [
+          ...new Set(
+            array(config.paths ?? [], "\u5F52\u6863\u8DEF\u5F84", 100).map(
+              (p) => text(p, "\u5F52\u6863\u8DEF\u5F84", 1e3, true)
+            )
+          )
+        ]
+      };
+    }
+    return {
+      id,
+      subject: text(t.subject, "\u8282\u70B9\u540D\u79F0", 200, true),
+      assignee: text(t.assignee, "\u8D1F\u8D23\u4EBA", 80),
+      dependencies: array(t.dependencies, "\u4F9D\u8D56", 32).map(
+        (d) => text(d, "\u4F9D\u8D56 ID", 80, true)
+      ),
+      checkpoint: t.checkpoint,
+      ...t.checkpointKind ? { checkpointKind: t.checkpointKind } : {},
+      ...t.reviewMode ? { reviewMode: t.reviewMode } : {},
+      ...archive ? { kind: "archive", archive } : {},
+      general: {
+        requirements: text(g.requirements, "\u4EFB\u52A1\u8981\u6C42", 64e3),
+        deliverables: text(g.deliverables, "\u4EA4\u4ED8\u7269", 64e3),
+        acceptance: text(g.acceptance, "\u9A8C\u6536\u6807\u51C6", 64e3)
+      }
+    };
   });
-  demand(tasks.length > 0 && new Set(tasks.map((t) => t.id)).size === tasks.length, 400, "INVALID_WORKFLOW", "\u9700\u8981 1\u201332 \u4E2A\u4E0D\u540C\u7684\u8282\u70B9");
+  demand(
+    tasks.length > 0 && new Set(tasks.map((t) => t.id)).size === tasks.length,
+    400,
+    "INVALID_WORKFLOW",
+    "\u9700\u8981 1\u201332 \u4E2A\u4E0D\u540C\u7684\u8282\u70B9"
+  );
   const ids = new Set(tasks.map((t) => t.id)), names2 = new Set(members.map((m) => m.name));
   for (const t of tasks) {
-    demand(!(t.checkpoint && t.assignee) && (!t.assignee || t.assignee === "captain" || names2.has(t.assignee)), 400, "INVALID_WORKFLOW", "\u8282\u70B9\u8D1F\u8D23\u4EBA\u4E0D\u5B58\u5728\u6216\u4EBA\u5DE5\u8282\u70B9\u5206\u914D\u4E86\u8D1F\u8D23\u4EBA");
-    demand(t.dependencies.every((id) => ids.has(id)) && new Set(t.dependencies).size === t.dependencies.length, 400, "INVALID_WORKFLOW", "\u8282\u70B9\u4F9D\u8D56\u7F3A\u5931\u6216\u91CD\u590D");
+    demand(
+      !(t.checkpoint && t.assignee) && (!t.assignee || t.assignee === "captain" || names2.has(t.assignee)),
+      400,
+      "INVALID_WORKFLOW",
+      "\u8282\u70B9\u8D1F\u8D23\u4EBA\u4E0D\u5B58\u5728\u6216\u4EBA\u5DE5\u8282\u70B9\u5206\u914D\u4E86\u8D1F\u8D23\u4EBA"
+    );
+    demand(
+      t.dependencies.every((id) => ids.has(id)) && new Set(t.dependencies).size === t.dependencies.length,
+      400,
+      "INVALID_WORKFLOW",
+      "\u8282\u70B9\u4F9D\u8D56\u7F3A\u5931\u6216\u91CD\u590D"
+    );
   }
-  const done = /* @__PURE__ */ new Set(), visiting = /* @__PURE__ */ new Set();
-  function visit3(id) {
-    demand(!visiting.has(id), 400, "INVALID_WORKFLOW", "\u8282\u70B9\u4F9D\u8D56\u4EA7\u751F\u5FAA\u73AF");
-    if (done.has(id)) return;
-    visiting.add(id);
-    tasks.find((t) => t.id === id).dependencies.forEach(visit3);
-    visiting.delete(id);
-    done.add(id);
-  }
-  tasks.forEach((t) => visit3(t.id));
+  assertWorkflowDag(tasks);
+  const loops = validateWorkflowLoops(v.loops, tasks, members);
   const positions = {};
-  for (const [key, raw] of Object.entries(object(v.positions ?? {}, "\u753B\u5E03\u4F4D\u7F6E"))) {
+  for (const [key, raw] of Object.entries(
+    object(v.positions ?? {}, "\u753B\u5E03\u4F4D\u7F6E")
+  )) {
     const p = object(raw, "\u4F4D\u7F6E");
-    demand(key.startsWith("task:") && ids.has(key.slice(5)) && ["x", "y"].every((k) => typeof p[k] === "number" && Number.isFinite(p[k]) && p[k] >= 0 && p[k] <= 1e4), 400, "INVALID_WORKFLOW", "\u753B\u5E03\u4F4D\u7F6E\u65E0\u6548");
+    demand(
+      key.startsWith("task:") && ids.has(key.slice(5)) && ["x", "y"].every(
+        (k) => typeof p[k] === "number" && Number.isFinite(p[k]) && p[k] >= 0 && p[k] <= 1e4
+      ),
+      400,
+      "INVALID_WORKFLOW",
+      "\u753B\u5E03\u4F4D\u7F6E\u65E0\u6548"
+    );
     positions[key] = { x: p.x, y: p.y };
   }
-  return { name: text(v.name, "\u540D\u79F0", 120, true), description: text(v.description, "\u63CF\u8FF0", 2e3), inputs: text(v.inputs, "\u8F93\u5165", 4e3), tags: [...new Set(array(v.tags, "\u6807\u7B7E", 12).map((t) => text(t, "\u6807\u7B7E", 40, true)))], members, tasks, positions };
+  return {
+    name: text(v.name, "\u540D\u79F0", 120, true),
+    description: text(v.description, "\u63CF\u8FF0", 2e3),
+    inputs: text(v.inputs, "\u8F93\u5165", 4e3),
+    tags: [
+      ...new Set(
+        array(v.tags, "\u6807\u7B7E", 12).map((t) => text(t, "\u6807\u7B7E", 40, true))
+      )
+    ],
+    members,
+    tasks,
+    positions,
+    ...loops ? { loops } : {}
+  };
 }
 
 // src/client/workflow-wizard.jsx
 var nodeWidth = 220;
 var nodeHeight = 110;
 var portY = nodeHeight / 2;
+var nodeTypes = [["agent", "Agent"], ["task", "\u4EFB\u52A1"], ["gate", "\u95E8\u63A7"], ["human", "\u9A8C\u6536"], ["archive", "\u5F52\u6863"]];
+var nodeLabel = (kind) => ({ task: "\u4EFB\u52A1\u8282\u70B9", gate: "\u95E8\u63A7\u5224\u65AD", human: "\u9A8C\u6536\u8282\u70B9", archive: "\u6210\u679C\u5F52\u6863" })[kind];
+var nodeIcon = (kind) => ({ agent: "agent", task: "file", gate: "workflow", human: "user", archive: "download" })[kind];
+var portPoint = (position, side) => side === "reject" ? { x: position.x + nodeWidth / 2, y: position.y + nodeHeight } : { x: position.x + (side === "out" ? nodeWidth : 0), y: position.y + portY };
 var galleryAccess = [
   ["gallerySkill", "\u5141\u8BB8\u4F7F\u7528 Gallery Skill"],
   ["galleryMcp", "\u5141\u8BB8\u4F7F\u7528 Gallery MCP"]
@@ -3249,6 +3530,7 @@ function initial(resource) {
   return {
     definition: {
       ...definition,
+      loops: definition.loops?.map((loop) => ({ ...loop, reviewer: agents.find((a) => (a.memberName || a.id) === loop.reviewer)?.id || loop.reviewer })),
       tasks: definition.tasks.map((t) => ({
         ...t,
         assignee: saved ? agents.find((a) => (a.memberName || a.id) === t.assignee)?.id || t.assignee : t.assignee
@@ -3402,6 +3684,40 @@ function WorkflowWizard({
   const updateAgent = (patch) => setAgents(
     (rows) => rows.map((a) => a.id === selected.id ? { ...a, ...patch } : a)
   );
+  const selectedKind = task ? workflowNodeKind(task, draft.loops) : null;
+  const selectedLoop = task && draft.loops?.find((loop) => loop.gateId === task.id);
+  function setLoop(gateId, patch) {
+    setDraft((d) => {
+      const gate = d.tasks.find((t) => t.id === gateId);
+      const previous = d.loops?.find((loop) => loop.gateId === gateId);
+      const next = { gateId, entryId: "", mode: gate?.reviewMode || "human", maxRounds: 3, timeoutMinutes: 30, rejectToEntry: previous ? Boolean(previous.rejectToEntry) : true, ...previous, ...patch };
+      return { ...d, loops: [...(d.loops || []).filter((loop) => loop.gateId !== gateId), next] };
+    });
+  }
+  function setReturn(gateId, entryId) {
+    if (!entryId) {
+      update({ loops: (draft.loops || []).filter((loop) => loop.gateId !== gateId) });
+      return;
+    }
+    const entry = draft.tasks.find((t) => t.id === entryId);
+    if (!entry || entry.checkpoint || entry.kind === "archive" || !workflowAncestors(draft.tasks, gateId).has(entryId)) {
+      setError("REJECT \u9700\u8981\u8FD4\u56DE\u95E8\u63A7\u4E0A\u6E38\u7684\u6267\u884C\u4EFB\u52A1\uFF1B\u8BF7\u5148\u8FDE\u63A5\u4EFB\u52A1\u5230\u95E8\u63A7\u7684\u6B63\u5411\u8DEF\u5F84");
+      return;
+    }
+    setLoop(gateId, { entryId });
+    setSelected({ kind: "task", id: gateId });
+    setSelection([gateId]);
+    setError("");
+  }
+  let loopBody = [], loopIssue = "";
+  if (selectedLoop) {
+    try {
+      loopBody = workflowLoopBody(draft.tasks, selectedLoop);
+      validateWorkflowLoops(draft.loops, draft.tasks, agents.map((a) => ({ name: a.id })));
+    } catch (error2) {
+      loopIssue = error2.message;
+    }
+  }
   function add(kind, point) {
     if (busy) return;
     setError("");
@@ -3429,18 +3745,20 @@ function WorkflowWizard({
       setSelection([id]);
     } else {
       if (draft.tasks.length >= 32)
-        return setError("\u6700\u591A\u6DFB\u52A0 32 \u4E2A\u4EFB\u52A1\u6216\u4EBA\u5DE5\u8282\u70B9");
+        return setError("\u6700\u591A\u6DFB\u52A0 32 \u4E2A\u6D41\u7A0B\u8282\u70B9");
       const id = createResourceIdentifier("t");
       update({
         tasks: [
           ...draft.tasks,
           {
             id,
-            subject: kind === "human" ? "\u4EBA\u5DE5\u786E\u8BA4" : "\u65B0\u4EFB\u52A1",
+            subject: kind === "human" ? "\u9A8C\u6536\u786E\u8BA4" : kind === "gate" ? "\u5BA1\u6838\u5224\u65AD" : kind === "archive" ? "\u6210\u679C\u5F52\u6863" : "\u65B0\u4EFB\u52A1",
             assignee: "",
             dependencies: [],
-            checkpoint: kind === "human",
-            general: { requirements: "", deliverables: "", acceptance: "" }
+            checkpoint: kind === "human" || kind === "gate",
+            ...["human", "gate"].includes(kind) ? { checkpointKind: kind === "gate" ? "gate" : "acceptance", reviewMode: "human" } : {},
+            ...kind === "archive" ? { kind: "archive", archive: { copyFiles: false, paths: [] } } : {},
+            general: { requirements: kind === "archive" ? "\u6574\u7406\u5E76\u5F52\u6863\u4E0A\u6E38\u4EFB\u52A1\u7684\u6210\u679C\u548C\u8BC1\u636E\u3002" : "", deliverables: "", acceptance: "" }
           }
         ]
       });
@@ -3507,23 +3825,12 @@ function WorkflowWizard({
   }
   function connect(to, from = linkFrom) {
     if (!from)
-      return setError("\u5148\u70B9\u51FB\u524D\u7F6E\u8282\u70B9\u53F3\u4FA7\u5706\u70B9\uFF0C\u518D\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u5DE6\u4FA7\u5706\u70B9");
+      return setError("\u4ECE\u524D\u7F6E\u8282\u70B9\u7684\u8F93\u51FA\u5706\u70B9\u62D6\u52A8\u5230\u540E\u7EED\u8282\u70B9\u7684\u8F93\u5165\u5706\u70B9");
     try {
       const tasks = draft.tasks.map(
         (t) => t.id === to ? { ...t, dependencies: [.../* @__PURE__ */ new Set([...t.dependencies, from])] } : t
       );
-      validateWorkflowTemplate({
-        ...draft,
-        name: draft.name || "\u8349\u7A3F",
-        members: agents.map((a) => ({
-          name: a.id,
-          summary: "",
-          role: "",
-          executionPrompt: ""
-        })),
-        tasks: tasks.map((t) => ({ ...t, subject: t.subject || "\u8282\u70B9" })),
-        positions: {}
-      });
+      assertWorkflowDag(tasks);
       update({ tasks });
       setError("");
       setLinkFrom(null);
@@ -3545,7 +3852,8 @@ function WorkflowWizard({
     const port = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-flow-port]");
     if (!port || !view.current?.contains(port)) return null;
     const { flowPort, node } = port.dataset;
-    return flowPort !== start2.side && node !== start2.id ? port.dataset : null;
+    const compatible = start2.side === "in" ? ["out", "reject"].includes(flowPort) : flowPort === "in";
+    return compatible && node !== start2.id ? port.dataset : null;
   }
   function moveWire(event) {
     const start2 = connection.current;
@@ -3553,8 +3861,7 @@ function WorkflowWizard({
     const target = wireTarget(event, start2);
     const position = positions[target?.node];
     setWire(position ? {
-      x: position.x + (target.flowPort === "out" ? nodeWidth : 0),
-      y: position.y + portY,
+      ...portPoint(position, target.flowPort),
       target: target.node,
       side: target.flowPort
     } : worldPoint(event));
@@ -3563,10 +3870,9 @@ function WorkflowWizard({
     const start2 = connection.current;
     const target = wireTarget(event, start2);
     if (target) {
-      connect(
-        start2.side === "out" ? target.node : start2.id,
-        start2.side === "out" ? start2.id : target.node
-      );
+      if (start2.side === "reject" || target.flowPort === "reject") {
+        setReturn(start2.side === "reject" ? start2.id : target.node, start2.side === "reject" ? target.node : start2.id);
+      } else connect(start2.side === "out" ? target.node : start2.id, start2.side === "out" ? start2.id : target.node);
     }
     connection.current = null;
     setWire(null);
@@ -3627,6 +3933,7 @@ function WorkflowWizard({
     setAgents((rows) => rows.filter((a) => !deleted.has(a.id)));
     setDraft((d) => ({
       ...d,
+      loops: d.loops?.filter((loop) => !deleted.has(loop.gateId) && !deleted.has(loop.entryId)).map((loop) => ({ ...loop, ...deleted.has(loop.reviewer) ? { reviewer: void 0 } : {} })),
       tasks: d.tasks.filter((t) => !deleted.has(t.id)).map((t) => ({
         ...t,
         assignee: deleted.has(t.assignee) ? "" : t.assignee,
@@ -3684,9 +3991,11 @@ function WorkflowWizard({
         throw Error("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u901A\u7528\u4EFB\u52A1\u8981\u6C42\u6216\u901A\u7528\u68C0\u67E5\u8981\u6C42");
       const value = validateWorkflowTemplate({
         ...draft,
+        loops: draft.loops?.map((loop) => ({ ...loop, reviewer: agents.find((a) => a.id === loop.reviewer)?.snapshot?.name || loop.reviewer })),
         members: agents.map((a) => ({ ...a.snapshot, gallerySkill: a.gallerySkill, galleryMcp: a.galleryMcp })),
         tasks: draft.tasks.map((t) => ({
           ...t,
+          ...t.kind === "archive" ? { archive: { ...t.archive, paths: (t.archive?.paths || []).map((p) => p.trim()).filter(Boolean) } } : {},
           assignee: t.assignee ? agents.find((a) => a.id === t.assignee)?.snapshot?.name || t.assignee : ""
         })),
         positions: {}
@@ -3723,21 +4032,24 @@ function WorkflowWizard({
       setBusy(false);
     }
   }
-  function edge(from, to, key, { fromId, toId, assignment = false }) {
+  const taskActor = (task2) => task2.assignee || draft.loops?.find((loop) => loop.gateId === task2.id && loop.mode === "ai")?.reviewer;
+  function edge(from, to, key, { fromId, toId, assignment = false, returning = false }) {
     if (!from || !to) return null;
-    const path = `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
+    const path = returning ? `M${from.x + nodeWidth / 2},${from.y + nodeHeight} C${from.x + nodeWidth / 2},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x - 80},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x},${to.y + portY}` : `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
+    const pass = !assignment && !returning && workflowNodeKind(draft.tasks.find((t) => t.id === fromId) || {}, draft.loops) === "gate";
     return /* @__PURE__ */ import_react7.default.createElement("g", { key }, /* @__PURE__ */ import_react7.default.createElement(
       "path",
       {
-        className: assignment ? "assignment" : "",
+        className: assignment ? "assignment" : returning ? "gal-flow-reject-edge" : pass ? "gal-flow-pass-edge" : "",
         markerEnd: assignment ? void 0 : `url(#${arrow})`,
         d: path
       }
-    ), /* @__PURE__ */ import_react7.default.createElement(
+    ), (pass || returning) && /* @__PURE__ */ import_react7.default.createElement("text", { className: returning ? "gal-flow-reject-label" : "gal-flow-pass-label", x: returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2, y: returning ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10 }, returning ? "REJECT \xB7 \u8FD4\u5DE5" : "PASS"), /* @__PURE__ */ import_react7.default.createElement(
       "path",
       {
         className: "gal-flow-edge-hit",
         d: path,
+        "data-edge-return": returning ? "true" : void 0,
         "data-edge-from": fromId,
         "data-edge-to": toId,
         "data-edge-assignment": assignment ? "true" : void 0
@@ -3765,7 +4077,7 @@ function WorkflowWizard({
         "aria-label": resource ? "\u7F16\u8F91 Workflow" : "\u65B0\u5EFA Workflow",
         tabIndex: -1
       },
-      /* @__PURE__ */ import_react7.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react7.default.createElement("h2", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow" }), " Workflow \u753B\u5E03"), /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-flow-status" }, "\u7F16\u6392\u8349\u7A3F \xB7 \u6267\u884C\u5BF9\u63A5\u5F85\u63A5\u5165"), /* @__PURE__ */ import_react7.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react7.default.createElement("h2", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow" }), " Workflow \u753B\u5E03"), /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-flow-status" }, "TeamFlow \u6A21\u677F \xB7 \u4FDD\u5B58\u540E\u53EF\u6CE8\u518C\u4F7F\u7528"), /* @__PURE__ */ import_react7.default.createElement(
         "button",
         {
           "aria-label": "\u5173\u95ED\u7F16\u8F91",
@@ -3777,11 +4089,7 @@ function WorkflowWizard({
         },
         /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" })
       )),
-      /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-toolbar" }, /* @__PURE__ */ import_react7.default.createElement("div", null, [
-        ["agent", "Agent"],
-        ["task", "\u4EFB\u52A1"],
-        ["human", "\u4EBA\u5DE5"]
-      ].map(([kind, label]) => /* @__PURE__ */ import_react7.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-toolbar" }, /* @__PURE__ */ import_react7.default.createElement("div", null, nodeTypes.map(([kind, label]) => /* @__PURE__ */ import_react7.default.createElement(
         "button",
         {
           key: kind,
@@ -3793,7 +4101,7 @@ function WorkflowWizard({
         /* @__PURE__ */ import_react7.default.createElement(
           Glyph,
           {
-            name: kind === "human" ? "user" : kind === "task" ? "file" : "agent"
+            name: nodeIcon(kind)
           }
         ),
         "\u6DFB\u52A0",
@@ -3935,7 +4243,7 @@ function WorkflowWizard({
           onDrop: (e) => {
             e.preventDefault();
             const kind = e.dataTransfer.getData("application/gallery-node");
-            if (!["agent", "task", "human"].includes(kind)) return;
+            if (!nodeTypes.some(([type]) => type === kind)) return;
             add(kind, worldPoint(e));
           }
         },
@@ -3979,8 +4287,8 @@ function WorkflowWizard({
             )),
             wire && connection.current && (() => {
               const start2 = positions[connection.current.id];
-              const from = connection.current.side === "out" ? { x: start2.x + nodeWidth, y: start2.y + portY } : wire;
-              const to = connection.current.side === "out" ? wire : { x: start2.x, y: start2.y + portY };
+              const from = connection.current.side !== "in" ? portPoint(start2, connection.current.side) : wire;
+              const to = connection.current.side !== "in" ? wire : { x: start2.x, y: start2.y + portY };
               return /* @__PURE__ */ import_react7.default.createElement(
                 "path",
                 {
@@ -3993,15 +4301,16 @@ function WorkflowWizard({
               ...t.dependencies.map(
                 (id) => edge(positions[id], positions[t.id], id + ":" + t.id, { fromId: id, toId: t.id })
               ),
-              ...t.assignee ? [
+              ...taskActor(t) ? [
                 edge(
-                  agents.find((a) => a.id === t.assignee)?.position,
+                  agents.find((a) => a.id === taskActor(t))?.position,
                   positions[t.id],
                   "a:" + t.id,
-                  { fromId: t.assignee, toId: t.id, assignment: true }
+                  { fromId: taskActor(t), toId: t.id, assignment: true }
                 )
               ] : []
-            ])
+            ]),
+            (draft.loops || []).map((loop) => edge(positions[loop.gateId], positions[loop.entryId], "reject:" + loop.gateId, { fromId: loop.gateId, toId: loop.entryId, returning: true }))
           ),
           marquee && /* @__PURE__ */ import_react7.default.createElement(
             "div",
@@ -4029,12 +4338,13 @@ function WorkflowWizard({
               title: t.subject,
               position: positions[t.id],
               human: t.checkpoint,
-              subtitle: t.checkpoint ? "\u7B49\u5F85\u4EBA\u5DE5\u786E\u8BA4" : agents.find((a) => a.id === t.assignee)?.label || "\u672A\u6307\u5B9A Agent"
+              nodeType: workflowNodeKind(t, draft.loops),
+              subtitle: t.kind === "archive" ? t.archive?.copyFiles ? "\u5F52\u6863\u6210\u679C\u4E0E\u6587\u4EF6" : "\u5F52\u6863\u8BC1\u636E\u4E0E\u6458\u8981" : t.checkpoint ? (draft.loops?.find((loop) => loop.gateId === t.id)?.mode || t.reviewMode) === "ai" ? "AI \u5BA1\u6838" : "\u4EBA\u5DE5\u5BA1\u6838" : agents.find((a) => a.id === t.assignee)?.label || "\u672A\u6307\u5B9A Agent"
             }))
           ].map((n) => /* @__PURE__ */ import_react7.default.createElement(
             "article",
             {
-              className: `gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selection.includes(n.id) ? "selected" : ""}`,
+              className: `gal-flow-node ${n.kind} ${n.nodeType || ""} ${selection.includes(n.id) ? "selected" : ""}`,
               style: { left: n.position.x, top: n.position.y },
               key: n.id,
               "data-flow-node": n.id,
@@ -4056,10 +4366,10 @@ function WorkflowWizard({
               /* @__PURE__ */ import_react7.default.createElement(
                 Glyph,
                 {
-                  name: n.kind === "agent" ? "agent" : n.human ? "user" : "file"
+                  name: nodeIcon(n.nodeType || n.kind)
                 }
               ),
-              n.kind === "agent" ? "AGENT" : n.human ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"
+              n.kind === "agent" ? "AGENT" : nodeLabel(n.nodeType)
             ),
             /* @__PURE__ */ import_react7.default.createElement(
               "button",
@@ -4098,7 +4408,7 @@ function WorkflowWizard({
               "button",
               {
                 "aria-label": "\u8FDE\u51FA",
-                title: "\u8F93\u51FA\uFF1A\u8FDE\u63A5\u540E\u7EED\u8282\u70B9",
+                title: n.nodeType === "gate" ? "PASS\uFF1A\u8FDE\u63A5\u901A\u8FC7\u540E\u6267\u884C\u7684\u8282\u70B9" : "\u8F93\u51FA\uFF1A\u8FDE\u63A5\u540E\u7EED\u8282\u70B9",
                 className: "gal-flow-port-out",
                 "aria-pressed": linkFrom === n.id,
                 "data-flow-port": "out",
@@ -4114,6 +4424,24 @@ function WorkflowWizard({
                 }
               },
               /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-sr-only" }, "\u8FDE\u51FA")
+            ), n.nodeType === "gate" && /* @__PURE__ */ import_react7.default.createElement(
+              "button",
+              {
+                className: "gal-flow-port-reject",
+                "aria-label": "REJECT \u8FD4\u56DE",
+                title: "REJECT\uFF1A\u62D6\u5230\u4E0A\u6E38\u4EFB\u52A1\u7684\u8F93\u5165\u70B9",
+                "data-flow-port": "reject",
+                "data-node": n.id,
+                onPointerDown: (e) => startWire(e, n.id, "reject"),
+                onPointerMove: moveWire,
+                onPointerUp: finishWire,
+                onPointerCancel: () => {
+                  connection.current = null;
+                  setWire(null);
+                  setLinkFrom(null);
+                }
+              },
+              /* @__PURE__ */ import_react7.default.createElement("span", null, "REJECT")
             ))
           ))
         ))
@@ -4148,7 +4476,7 @@ function WorkflowWizard({
             tags: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean)
           })
         }
-      )), /* @__PURE__ */ import_react7.default.createElement(ResourceCoverPicker, { resource: { ...draft, type: "workflow", cover }, onChange: setCover }), /* @__PURE__ */ import_react7.default.createElement("p", null, "Agent \u7528\u865A\u7EBF\u5173\u8054\u8D1F\u8D23\u4EBA\uFF1B\u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9\u7528\u5B9E\u7EBF\u8868\u793A\u5148\u540E\u4F9D\u8D56\uFF0C\u53F3\u952E\u5355\u51FB\u5B9E\u7EBF\u53EF\u5220\u9664\u4F9D\u8D56\u3002")), agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Agent \u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u914D\u7F6E\u957F\u671F\u804C\u8D23\u4E0E\u901A\u7528\u6307\u4EE4\uFF1B\u672C\u6B21\u8865\u5145\u6307\u4EE4\u5728\u5E94\u7528\u6A21\u677F\u65F6\u586B\u5199\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D44\u6E90\u5E93 Agent", /* @__PURE__ */ import_react7.default.createElement(
+      )), /* @__PURE__ */ import_react7.default.createElement(ResourceCoverPicker, { resource: { ...draft, type: "workflow", cover }, onChange: setCover }), /* @__PURE__ */ import_react7.default.createElement("p", null, "Agent \u7528\u865A\u7EBF\u5173\u8054\u6267\u884C\u6216\u5BA1\u6838\u8D1F\u8D23\u4EBA\uFF1B\u5B9E\u7EBF\u8868\u793A\u5148\u540E\u4F9D\u8D56\uFF0CREJECT \u865A\u7EBF\u8868\u793A\u8FD4\u5DE5\u3002\u53F3\u952E\u5355\u51FB\u8FDE\u7EBF\u53EF\u5220\u9664\u3002")), agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Agent \u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u914D\u7F6E\u957F\u671F\u804C\u8D23\u4E0E\u901A\u7528\u6307\u4EE4\uFF1B\u672C\u6B21\u8865\u5145\u6307\u4EE4\u5728\u5E94\u7528\u6A21\u677F\u65F6\u586B\u5199\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D44\u6E90\u5E93 Agent", /* @__PURE__ */ import_react7.default.createElement(
         "select",
         {
           "aria-label": "\u8D44\u6E90\u5E93 Agent",
@@ -4192,7 +4520,7 @@ function WorkflowWizard({
           "aria-label": `Agent ${label}`,
           disabled: busy,
           rows: 3,
-          maxLength: 16e3,
+          maxLength: key === "executionPrompt" ? 64e3 : 16e3,
           value: agent.snapshot?.[key] || "",
           onChange: (e) => updateAgent({
             snapshot: {
@@ -4208,7 +4536,7 @@ function WorkflowWizard({
           checked: agent[key] !== false,
           onChange: (e) => updateAgent({ [key]: e.target.checked })
         }
-      ), label))), task && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, task.checkpoint ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u586B\u5199\u53EF\u590D\u7528\u7684\u901A\u7528\u8981\u6C42\uFF1B\u5177\u4F53\u9879\u76EE\u7684\u4EFB\u52A1\u8BF4\u660E\u5728\u5E94\u7528\u6A21\u677F\u540E\u751F\u6210\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u901A\u7528\u8282\u70B9\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
+      ), label))), task && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, nodeLabel(selectedKind)), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u586B\u5199\u53EF\u590D\u7528\u7684\u901A\u7528\u8981\u6C42\uFF1B\u5177\u4F53\u9879\u76EE\u7684\u4EFB\u52A1\u8BF4\u660E\u5728\u5E94\u7528\u6A21\u677F\u540E\u751F\u6210\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u901A\u7528\u8282\u70B9\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
         "input",
         {
           "aria-label": "\u901A\u7528\u8282\u70B9\u540D\u79F0",
@@ -4216,7 +4544,22 @@ function WorkflowWizard({
           value: task.subject,
           onChange: (e) => updateTask({ subject: e.target.value })
         }
-      )), !task.checkpoint && /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D1F\u8D23 Agent", /* @__PURE__ */ import_react7.default.createElement(
+      )), task.checkpoint && /* @__PURE__ */ import_react7.default.createElement("label", null, "\u5BA1\u6838\u65B9\u5F0F", /* @__PURE__ */ import_react7.default.createElement(
+        "select",
+        {
+          "aria-label": "\u5BA1\u6838\u65B9\u5F0F",
+          value: selectedLoop?.mode || task.reviewMode || "human",
+          onChange: (e) => {
+            updateTask({ reviewMode: e.target.value });
+            if (selectedLoop) setLoop(task.id, { mode: e.target.value, ...e.target.value === "human" ? { reviewer: void 0 } : {} });
+          }
+        },
+        /* @__PURE__ */ import_react7.default.createElement("option", { value: "human" }, "\u4EBA\u5DE5\u5BA1\u6838"),
+        /* @__PURE__ */ import_react7.default.createElement("option", { value: "ai" }, "AI \u5BA1\u6838")
+      )), selectedKind === "gate" && /* @__PURE__ */ import_react7.default.createElement("section", { className: "gal-flow-loop-settings", "aria-label": "\u95E8\u63A7\u8DEF\u5F84\u4E0E\u5FAA\u73AF" }, /* @__PURE__ */ import_react7.default.createElement("h4", null, "PASS \xB7 \u901A\u8FC7\u540E\u7EE7\u7EED"), /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-pass-targets" }, draft.tasks.filter((t) => t.id !== task.id && !workflowAncestors(draft.tasks, task.id).has(t.id)).map((t) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key: t.id }, /* @__PURE__ */ import_react7.default.createElement("input", { type: "checkbox", checked: t.dependencies.includes(task.id), onChange: (e) => {
+        if (e.target.checked) connect(t.id, task.id);
+        else update({ tasks: draft.tasks.map((row) => row.id === t.id ? { ...row, dependencies: row.dependencies.filter((id) => id !== task.id) } : row) });
+      } }), t.subject || "\u672A\u547D\u540D\u8282\u70B9"))), !draft.tasks.some((t) => t.dependencies.includes(task.id)) && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u901A\u8FC7\u540E\u7ED3\u675F\u6B64\u8DEF\u5F84"), /* @__PURE__ */ import_react7.default.createElement("label", null, "REJECT \xB7 \u8FD4\u56DE\u5165\u53E3", /* @__PURE__ */ import_react7.default.createElement("select", { "aria-label": "REJECT \u8FD4\u56DE\u5165\u53E3", value: selectedLoop?.entryId || "", onChange: (e) => setReturn(task.id, e.target.value) }, /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u672A\u8BBE\u7F6E\u5FAA\u73AF\u8FD4\u56DE\u7EBF"), draft.tasks.filter((t) => !t.checkpoint && t.kind !== "archive" && workflowAncestors(draft.tasks, task.id).has(t.id)).map((t) => /* @__PURE__ */ import_react7.default.createElement("option", { key: t.id, value: t.id }, t.subject || "\u672A\u547D\u540D\u8282\u70B9")))), !selectedLoop && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u5148\u8FDE\u63A5\u4E0A\u6E38\u4EFB\u52A1\uFF0C\u518D\u4ECE\u95E8\u63A7\u5E95\u90E8 REJECT \u70B9\u62D6\u56DE\u5165\u53E3\uFF0C\u6216\u5728\u4E0A\u65B9\u9009\u62E9\u5165\u53E3\u3002"), selectedLoop && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, selectedLoop.mode === "ai" && /* @__PURE__ */ import_react7.default.createElement("label", null, "\u72EC\u7ACB\u5BA1\u6838 Agent", /* @__PURE__ */ import_react7.default.createElement("select", { "aria-label": "\u72EC\u7ACB\u5BA1\u6838 Agent", value: selectedLoop.reviewer || "", onChange: (e) => setLoop(task.id, { reviewer: e.target.value }) }, /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u9009\u62E9\u72EC\u7ACB\u5BA1\u6838 Agent"), agents.map((a) => /* @__PURE__ */ import_react7.default.createElement("option", { key: a.id, value: a.id, disabled: draft.tasks.some((t) => loopBody.includes(t.id) && t.assignee === a.id) }, a.label)))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09", /* @__PURE__ */ import_react7.default.createElement("input", { "aria-label": "\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09", type: "number", min: 1, max: 20, value: selectedLoop.maxRounds, onChange: (e) => setLoop(task.id, { maxRounds: Number(e.target.value) }) })), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09", /* @__PURE__ */ import_react7.default.createElement("input", { "aria-label": "\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09", type: "number", min: 1, max: 1440, value: selectedLoop.timeoutMinutes, onChange: (e) => setLoop(task.id, { timeoutMinutes: Number(e.target.value) }) })), /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react7.default.createElement("input", { type: "checkbox", checked: Boolean(selectedLoop.rejectToEntry), onChange: (e) => setLoop(task.id, { rejectToEntry: e.target.checked }) }), "\u9000\u56DE\u65F6\u4ECE\u5165\u53E3\u91CD\u8DD1"), !selectedLoop.rejectToEntry && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u5BA1\u6838\u65F6\u7531 TeamFlow \u6307\u5B9A\u8FD4\u5DE5\u4EFB\u52A1\u53CA\u5176\u4E0B\u6E38\u3002"), !!loopBody.length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u5FAA\u73AF\u5185\u4EFB\u52A1\uFF1A", loopBody.map((id) => draft.tasks.find((t) => t.id === id)?.subject).join(" \u2192 ")), loopIssue && /* @__PURE__ */ import_react7.default.createElement("p", { role: "status", className: "gal-error" }, loopIssue), /* @__PURE__ */ import_react7.default.createElement("button", { type: "button", onClick: () => setReturn(task.id, "") }, "\u5220\u9664 REJECT \u8FD4\u56DE\u7EBF"))), selectedKind === "archive" && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react7.default.createElement("input", { type: "checkbox", checked: Boolean(task.archive?.copyFiles), onChange: (e) => updateTask({ archive: { ...task.archive, copyFiles: e.target.checked } }) }), "\u590D\u5236\u6210\u679C\u6587\u4EF6"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u9ED8\u8BA4\u8BB0\u5F55\u8BC1\u636E\u548C\u6587\u4EF6\u6458\u8981\uFF1B\u5F00\u542F\u540E\u7531 TeamFlow \u6309\u5F52\u6863\u7B56\u7565\u590D\u5236\u6587\u4EF6\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09", /* @__PURE__ */ import_react7.default.createElement("textarea", { "aria-label": "\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09", rows: 4, value: (task.archive?.paths || []).join("\n"), onChange: (e) => updateTask({ archive: { ...task.archive, paths: e.target.value.split("\n") } }), placeholder: "\u7559\u7A7A\u4F7F\u7528\u4E0A\u6E38\u4EA4\u4ED8\u7269\u4E0E\u53D8\u66F4\u6587\u4EF6" }))), !task.checkpoint && task.kind !== "archive" && /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D1F\u8D23 Agent", /* @__PURE__ */ import_react7.default.createElement(
         "select",
         {
           "aria-label": "\u8D1F\u8D23 Agent",
@@ -4238,7 +4581,7 @@ function WorkflowWizard({
         {
           "aria-label": label,
           rows: 3,
-          maxLength: 16e3,
+          maxLength: 64e3,
           value: task.general[key],
           onChange: (e) => updateTask({
             general: { ...task.general, [key]: e.target.value }
@@ -4255,7 +4598,17 @@ function WorkflowWizard({
           onPointerDown: (e) => e.stopPropagation()
         },
         contextMenu.edge ? /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => {
-          const { edgeFrom, edgeTo, edgeAssignment } = contextMenu.edge;
+          const { edgeFrom, edgeTo, edgeAssignment, edgeReturn } = contextMenu.edge;
+          if (edgeReturn) {
+            update({ loops: (draft.loops || []).filter((loop) => loop.gateId !== edgeFrom) });
+            setContextMenu(null);
+            return;
+          }
+          if (edgeAssignment && draft.loops?.some((loop) => loop.gateId === edgeTo && loop.reviewer === edgeFrom)) {
+            setLoop(edgeTo, { reviewer: void 0 });
+            setContextMenu(null);
+            return;
+          }
           setDraft((value) => ({
             ...value,
             tasks: value.tasks.map((node) => {
@@ -4278,11 +4631,7 @@ function WorkflowWizard({
           contextMenu.ids.length > 1 ? ` ${contextMenu.ids.length} \u4E2A` : "",
           "\u8282\u70B9",
           /* @__PURE__ */ import_react7.default.createElement("span", null, "Del")
-        ) : [
-          ["agent", "Agent"],
-          ["task", "\u4EFB\u52A1"],
-          ["human", "\u4EBA\u5DE5"]
-        ].map(([kind, label]) => /* @__PURE__ */ import_react7.default.createElement(
+        ) : nodeTypes.map(([kind, label]) => /* @__PURE__ */ import_react7.default.createElement(
           "button",
           {
             key: kind,
@@ -4294,7 +4643,7 @@ function WorkflowWizard({
           /* @__PURE__ */ import_react7.default.createElement(
             Glyph,
             {
-              name: kind === "agent" ? "agent" : kind === "human" ? "user" : "file"
+              name: nodeIcon(kind)
             }
           ),
           "\u6DFB\u52A0",
@@ -4302,7 +4651,7 @@ function WorkflowWizard({
           "\u8282\u70B9"
         ))
       ),
-      /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u62D6\u52A8\u8FDE\u7EBF\uFF1A\u677E\u5F00\u5230\u53E6\u4E00\u8282\u70B9\u7684\u5706\u70B9" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u62D6\u52A8\u8FDE\u7EBF\uFF1A\u677E\u5F00\u5230\u53E6\u4E00\u8282\u70B9\u7684\u5706\u70B9" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u6D41\u7A0B\u8282\u70B9 \xB7 ${draft.loops?.length || 0} \u5FAA\u73AF`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
         "button",
         {
           className: "gal-primary",
@@ -13379,7 +13728,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react14.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react14.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react14.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "gal-local" }, "v0.26.0"), /* @__PURE__ */ import_react14.default.createElement(
+    /* @__PURE__ */ import_react14.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "gal-local" }, "v0.27.0"), /* @__PURE__ */ import_react14.default.createElement(
       "button",
       {
         disabled: busy,
