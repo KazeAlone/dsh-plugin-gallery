@@ -22,6 +22,8 @@ npx dsh plugin --profile web add github:KazeAlone/dsh-plugin-gallery --ignore-sc
 
 本地目录链接与安装包的依赖行为不同，详见[安装说明](docs/installation.md)。
 
+准备中心存储数据库可使用[PostgreSQL 一键部署脚本](docs/database-setup.md)。这仅部署数据库，当前插件尚未接入中心数据库。
+
 ## 本地存储
 
 无需启动 `gallery.mjs serve`，无需配置服务地址，也不连接 SQLite 或统一数据库。默认数据文件：
