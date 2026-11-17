@@ -2273,3 +2273,37 @@ fieldset.gal-skill-fields {
 .gal-flow-loop-settings h4 { margin: 0 0 12px; }
 .gal-flow-loop-settings p { font-size: 12px; color: var(--g-muted); overflow-wrap: anywhere; }
 .gal-flow-pass-targets { max-height: 160px; overflow: auto; }
+
+/* Agent roster mirrors TeamFlow: members are separate from the task graph. */
+.gal-flow-body { grid-template-columns: 190px minmax(0, 1fr) 300px; }
+.gal-flow-roster { min-width: 0; min-height: 0; overflow-y: auto; border-right: 1px solid var(--g-line); background: var(--g-card); padding: 14px 10px; }
+.gal-flow-roster > header { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 12px; font-size: 13px; }
+.gal-flow-roster > header > span { color: var(--g-muted); font-variant-numeric: tabular-nums; }
+.gal-flow-roster-list { display: flex; flex-direction: column; gap: 8px; }
+.gal .gal-flow-member { width: 100%; align-items: flex-start; justify-content: flex-start; padding: 10px 8px; gap: 9px; text-align: left; border-color: transparent; border-radius: 9px; min-width: 0; }
+.gal .gal-flow-member[aria-pressed="true"] { background: var(--g-soft); border-color: var(--g-ring); color: var(--g-ink); }
+.gal-flow-avatar { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex: 0 0 28px; border-radius: 9px; color: var(--g-ink); background: var(--g-soft); font-weight: 700; font-size: 12px; }
+.gal-flow-member-copy { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+.gal-flow-member-copy > strong, .gal-flow-member-copy > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gal-flow-member-copy > strong { font-size: 13px; }
+.gal-flow-member-copy > small, .gal-flow-roster-list > p { color: var(--g-muted); font-size: 12px; }
+.gal-flow-member-meta { display: flex; align-items: center; gap: 6px; color: var(--g-muted); font-size: 11px; }
+.gal-flow-member-meta > span:first-child { margin-right: auto; }
+.gal-flow-member-meta [data-enabled="false"] { opacity: .3; }
+.gal-flow-member-meta [data-enabled="true"] { color: var(--g-ink); }
+.gal .gal-flow-assignee { display: flex; width: 100%; min-height: 24px; padding: 0; gap: 6px; justify-content: flex-start; border: 0; background: transparent; color: var(--g-muted); font-size: 12px; }
+.gal .gal-flow-assignee > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gal .gal-flow-assignee .gal-flow-avatar { width: 20px; height: 20px; flex-basis: 20px; border-radius: 6px; font-size: 10px; }
+.gal .gal-flow-assignee small { margin-left: auto; font-size: 10px; }
+.gal .gal-flow-node.gate .gal-flow-assignee { justify-content: center; }
+.gal .gal-flow-node.gate .gal-flow-assignee small { margin-left: 0; }
+.gal-flow-node[data-member-match="true"] { outline: 2px solid #4b9985; outline-offset: 3px; }
+@media (min-width: 761px) and (max-width: 1100px) { .gal-flow-body { grid-template-columns: 150px minmax(0, 1fr) 270px; } }
+@media (max-width: 760px) {
+  .gal-flow-body { grid-template-columns: 1fr; grid-template-rows: auto minmax(220px, 1fr) minmax(150px, .8fr); }
+  .gal-flow-roster { overflow: hidden; padding: 8px; border-right: 0; border-bottom: 1px solid var(--g-line); }
+  .gal-flow-roster > header { display: none; }
+  .gal-flow-roster-list { flex-direction: row; overflow-x: auto; gap: 6px; }
+  .gal .gal-flow-member { width: 160px; flex: 0 0 160px; padding: 6px; }
+  .gal-flow-member-copy > small { display: none; }
+}

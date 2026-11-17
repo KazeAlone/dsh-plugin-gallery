@@ -2366,6 +2366,40 @@ fieldset.gal-skill-fields {
 .gal-flow-loop-settings h4 { margin: 0 0 12px; }
 .gal-flow-loop-settings p { font-size: 12px; color: var(--g-muted); overflow-wrap: anywhere; }
 .gal-flow-pass-targets { max-height: 160px; overflow: auto; }
+
+/* Agent roster mirrors TeamFlow: members are separate from the task graph. */
+.gal-flow-body { grid-template-columns: 190px minmax(0, 1fr) 300px; }
+.gal-flow-roster { min-width: 0; min-height: 0; overflow-y: auto; border-right: 1px solid var(--g-line); background: var(--g-card); padding: 14px 10px; }
+.gal-flow-roster > header { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 12px; font-size: 13px; }
+.gal-flow-roster > header > span { color: var(--g-muted); font-variant-numeric: tabular-nums; }
+.gal-flow-roster-list { display: flex; flex-direction: column; gap: 8px; }
+.gal .gal-flow-member { width: 100%; align-items: flex-start; justify-content: flex-start; padding: 10px 8px; gap: 9px; text-align: left; border-color: transparent; border-radius: 9px; min-width: 0; }
+.gal .gal-flow-member[aria-pressed="true"] { background: var(--g-soft); border-color: var(--g-ring); color: var(--g-ink); }
+.gal-flow-avatar { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex: 0 0 28px; border-radius: 9px; color: var(--g-ink); background: var(--g-soft); font-weight: 700; font-size: 12px; }
+.gal-flow-member-copy { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+.gal-flow-member-copy > strong, .gal-flow-member-copy > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gal-flow-member-copy > strong { font-size: 13px; }
+.gal-flow-member-copy > small, .gal-flow-roster-list > p { color: var(--g-muted); font-size: 12px; }
+.gal-flow-member-meta { display: flex; align-items: center; gap: 6px; color: var(--g-muted); font-size: 11px; }
+.gal-flow-member-meta > span:first-child { margin-right: auto; }
+.gal-flow-member-meta [data-enabled="false"] { opacity: .3; }
+.gal-flow-member-meta [data-enabled="true"] { color: var(--g-ink); }
+.gal .gal-flow-assignee { display: flex; width: 100%; min-height: 24px; padding: 0; gap: 6px; justify-content: flex-start; border: 0; background: transparent; color: var(--g-muted); font-size: 12px; }
+.gal .gal-flow-assignee > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gal .gal-flow-assignee .gal-flow-avatar { width: 20px; height: 20px; flex-basis: 20px; border-radius: 6px; font-size: 10px; }
+.gal .gal-flow-assignee small { margin-left: auto; font-size: 10px; }
+.gal .gal-flow-node.gate .gal-flow-assignee { justify-content: center; }
+.gal .gal-flow-node.gate .gal-flow-assignee small { margin-left: 0; }
+.gal-flow-node[data-member-match="true"] { outline: 2px solid #4b9985; outline-offset: 3px; }
+@media (min-width: 761px) and (max-width: 1100px) { .gal-flow-body { grid-template-columns: 150px minmax(0, 1fr) 270px; } }
+@media (max-width: 760px) {
+  .gal-flow-body { grid-template-columns: 1fr; grid-template-rows: auto minmax(220px, 1fr) minmax(150px, .8fr); }
+  .gal-flow-roster { overflow: hidden; padding: 8px; border-right: 0; border-bottom: 1px solid var(--g-line); }
+  .gal-flow-roster > header { display: none; }
+  .gal-flow-roster-list { flex-direction: row; overflow-x: auto; gap: 6px; }
+  .gal .gal-flow-member { width: 160px; flex: 0 0 160px; padding: 6px; }
+  .gal-flow-member-copy > small { display: none; }
+}
 `;
 
 // src/client/leaderboards.jsx
@@ -3483,6 +3517,7 @@ var nodeHeight = 110;
 var portY = nodeHeight / 2;
 var nodeTypes = [["agent", "Agent"], ["task", "\u4EFB\u52A1"], ["gate", "\u95E8\u63A7"], ["human", "\u9A8C\u6536"], ["archive", "\u5F52\u6863"]];
 var nodeLabel = (kind) => ({ task: "\u4EFB\u52A1\u8282\u70B9", gate: "\u95E8\u63A7\u5224\u65AD", human: "\u9A8C\u6536\u8282\u70B9", archive: "\u6210\u679C\u5F52\u6863" })[kind];
+var memberInitial = (member) => [...member.snapshot?.name || member.label || "A"][0].toUpperCase();
 var nodeIcon = (kind) => ({ agent: "agent", task: "file", gate: "workflow", human: "user", archive: "download" })[kind];
 var portPoint = (position, side) => side === "reject" ? { x: position.x + nodeWidth / 2, y: position.y + nodeHeight } : { x: position.x + (side === "out" ? nodeWidth : 0), y: position.y + portY };
 var galleryAccess = [
@@ -3600,10 +3635,7 @@ function WorkflowWizard({
     setZoom(next);
   }
   function fitView() {
-    const points = [
-      ...Object.values(positions),
-      ...agents.map((a) => a.position)
-    ];
+    const points = Object.values(positions);
     if (!points.length || !view.current) {
       cameraTo({ x: 0, y: 0 });
       zoomValue.current = 1;
@@ -3742,7 +3774,7 @@ function WorkflowWizard({
         }
       ]);
       setSelected({ kind: "agent", id });
-      setSelection([id]);
+      setSelection([]);
     } else {
       if (draft.tasks.length >= 32)
         return setError("\u6700\u591A\u6DFB\u52A0 32 \u4E2A\u6D41\u7A0B\u8282\u70B9");
@@ -3789,10 +3821,7 @@ function WorkflowWizard({
       x: event.clientX,
       y: event.clientY,
       ids,
-      positions: {
-        ...positions,
-        ...Object.fromEntries(agents.map((a) => [a.id, a.position]))
-      }
+      positions: { ...positions }
     };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -3803,11 +3832,6 @@ function WorkflowWizard({
       x: Math.round(d.positions[id].x + dx),
       y: Math.round(d.positions[id].y + dy)
     });
-    setAgents(
-      (rows) => rows.map(
-        (a) => d.ids.includes(a.id) ? { ...a, position: point(a.id) } : a
-      )
-    );
     setPositions(
       (p) => Object.fromEntries(
         Object.entries(p).map(([id, value]) => [
@@ -3964,13 +3988,13 @@ function WorkflowWizard({
       }
       if (event.key !== "Delete" || event.isComposing || event.target.closest(
         'input,textarea,select,[contenteditable="true"]'
-      ) || !selection.length || busy)
+      ) || !selection.length && selected?.kind !== "agent" || busy)
         return;
       const overlays = document.querySelectorAll("[data-gallery-modal]");
       if (overlays.length && !overlays[overlays.length - 1].contains(editor.current))
         return;
       event.preventDefault();
-      remove();
+      remove(selected?.kind === "agent" ? [selected.id] : selection);
     };
     const outside = (event) => {
       if (!event.target.closest(".gal-flow-context-menu")) setContextMenu(null);
@@ -3981,12 +4005,12 @@ function WorkflowWizard({
       document.removeEventListener("keydown", key, true);
       document.removeEventListener("pointerdown", outside);
     };
-  }, [contextMenu, selection, busy, linkFrom]);
+  }, [contextMenu, selection, selected, busy, linkFrom]);
   async function save() {
     setError("");
     try {
       if (agents.some((a) => !a.resourceId && !a.snapshot))
-        throw Error("\u8BF7\u4E3A\u6BCF\u4E2A Agent \u8282\u70B9\u9009\u62E9\u8D44\u6E90\u5E93\u4E2D\u7684 Agent");
+        throw Error("\u8BF7\u4E3A\u6BCF\u4E2A\u6210\u5458\u9009\u62E9\u8D44\u6E90\u5E93\u4E2D\u7684 Agent");
       if (draft.tasks.some((t) => !t.general.requirements.trim()))
         throw Error("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u901A\u7528\u4EFB\u52A1\u8981\u6C42\u6216\u901A\u7528\u68C0\u67E5\u8981\u6C42");
       const value = validateWorkflowTemplate({
@@ -4033,15 +4057,15 @@ function WorkflowWizard({
     }
   }
   const taskActor = (task2) => task2.assignee || draft.loops?.find((loop) => loop.gateId === task2.id && loop.mode === "ai")?.reviewer;
-  function edge(from, to, key, { fromId, toId, assignment = false, returning = false }) {
+  function edge(from, to, key, { fromId, toId, returning = false }) {
     if (!from || !to) return null;
     const path = returning ? `M${from.x + nodeWidth / 2},${from.y + nodeHeight} C${from.x + nodeWidth / 2},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x - 80},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x},${to.y + portY}` : `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
-    const pass = !assignment && !returning && workflowNodeKind(draft.tasks.find((t) => t.id === fromId) || {}, draft.loops) === "gate";
+    const pass = !returning && workflowNodeKind(draft.tasks.find((t) => t.id === fromId) || {}, draft.loops) === "gate";
     return /* @__PURE__ */ import_react7.default.createElement("g", { key }, /* @__PURE__ */ import_react7.default.createElement(
       "path",
       {
-        className: assignment ? "assignment" : returning ? "gal-flow-reject-edge" : pass ? "gal-flow-pass-edge" : "",
-        markerEnd: assignment ? void 0 : `url(#${arrow})`,
+        className: returning ? "gal-flow-reject-edge" : pass ? "gal-flow-pass-edge" : "",
+        markerEnd: `url(#${arrow})`,
         d: path
       }
     ), (pass || returning) && /* @__PURE__ */ import_react7.default.createElement("text", { className: returning ? "gal-flow-reject-label" : "gal-flow-pass-label", x: returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2, y: returning ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10 }, returning ? "REJECT \xB7 \u8FD4\u5DE5" : "PASS"), /* @__PURE__ */ import_react7.default.createElement(
@@ -4051,8 +4075,7 @@ function WorkflowWizard({
         d: path,
         "data-edge-return": returning ? "true" : void 0,
         "data-edge-from": fromId,
-        "data-edge-to": toId,
-        "data-edge-assignment": assignment ? "true" : void 0
+        "data-edge-to": toId
       }
     ));
   }
@@ -4094,7 +4117,7 @@ function WorkflowWizard({
         {
           key: kind,
           disabled: busy,
-          draggable: !busy,
+          draggable: !busy && kind !== "agent",
           onDragStart: (e) => e.dataTransfer.setData("application/gallery-node", kind),
           onClick: () => add(kind)
         },
@@ -4104,9 +4127,7 @@ function WorkflowWizard({
             name: nodeIcon(kind)
           }
         ),
-        "\u6DFB\u52A0",
-        label,
-        "\u8282\u70B9"
+        kind === "agent" ? "\u6DFB\u52A0Agent\u6210\u5458" : `\u6DFB\u52A0${label}\u8282\u70B9`
       ))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u7F29\u653E", /* @__PURE__ */ import_react7.default.createElement(
         "select",
         {
@@ -4145,7 +4166,28 @@ function WorkflowWizard({
         fullscreen ? "\u9000\u51FA\u5168\u5C4F" : "\u5168\u5C4F\u753B\u5E03"
       )),
       error && /* @__PURE__ */ import_react7.default.createElement("p", { role: "alert", className: "gal-flow-error" }, error, /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": "\u5173\u95ED\u9519\u8BEF", onClick: () => setError("") }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))),
-      /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-body" }, /* @__PURE__ */ import_react7.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-body" }, /* @__PURE__ */ import_react7.default.createElement("aside", { className: "gal-flow-roster", "aria-label": "Agent \u6210\u5458\u5217\u8868" }, /* @__PURE__ */ import_react7.default.createElement("header", null, /* @__PURE__ */ import_react7.default.createElement("strong", null, "Agent \u6210\u5458"), /* @__PURE__ */ import_react7.default.createElement("span", null, agents.length)), /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-roster-list" }, agents.map((a) => {
+        const owned = draft.tasks.filter((t) => taskActor(t) === a.id);
+        const active = selected?.kind === "agent" && selected.id === a.id;
+        return /* @__PURE__ */ import_react7.default.createElement(
+          "button",
+          {
+            key: a.id,
+            type: "button",
+            className: "gal-flow-member",
+            "data-flow-member": a.id,
+            "aria-pressed": active,
+            "aria-label": `\u7F16\u8F91 Agent \xB7 ${a.label}`,
+            title: a.snapshot?.summary || a.label,
+            onClick: () => {
+              setSelected({ kind: "agent", id: a.id });
+              setSelection([]);
+            }
+          },
+          /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-flow-avatar", "aria-hidden": "true" }, memberInitial(a)),
+          /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-flow-member-copy" }, /* @__PURE__ */ import_react7.default.createElement("strong", null, a.label), /* @__PURE__ */ import_react7.default.createElement("small", null, a.snapshot?.summary || "\u9009\u62E9\u8D44\u6E90\u5E76\u914D\u7F6E\u6210\u5458"), /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-flow-member-meta" }, /* @__PURE__ */ import_react7.default.createElement("span", null, owned.length, " \u4E2A\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("span", { title: `Skill ${a.gallerySkill === false ? "\u5173\u95ED" : "\u5F00\u542F"}`, "aria-label": `Skill ${a.gallerySkill === false ? "\u5173\u95ED" : "\u5F00\u542F"}`, "data-enabled": a.gallerySkill !== false }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "skill", size: 12 })), /* @__PURE__ */ import_react7.default.createElement("span", { title: `MCP ${a.galleryMcp === false ? "\u5173\u95ED" : "\u5F00\u542F"}`, "aria-label": `MCP ${a.galleryMcp === false ? "\u5173\u95ED" : "\u5F00\u542F"}`, "data-enabled": a.galleryMcp !== false }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "mcp", size: 12 }))))
+        );
+      }), !agents.length && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u6DFB\u52A0\u6210\u5458\uFF0C\u518D\u4E3A\u4EFB\u52A1\u5206\u914D\u8D1F\u8D23\u4EBA\u3002"))), /* @__PURE__ */ import_react7.default.createElement(
         "div",
         {
           className: "gal-flow-view",
@@ -4200,7 +4242,6 @@ function WorkflowWizard({
               };
               setMarquee(r);
               const nodes = [
-                ...agents.map((a) => ({ id: a.id, p: a.position })),
                 ...Object.entries(positions).map(([id, p]) => ({ id, p }))
               ];
               setSelection([
@@ -4300,15 +4341,7 @@ function WorkflowWizard({
             draft.tasks.flatMap((t) => [
               ...t.dependencies.map(
                 (id) => edge(positions[id], positions[t.id], id + ":" + t.id, { fromId: id, toId: t.id })
-              ),
-              ...taskActor(t) ? [
-                edge(
-                  agents.find((a) => a.id === taskActor(t))?.position,
-                  positions[t.id],
-                  "a:" + t.id,
-                  { fromId: taskActor(t), toId: t.id, assignment: true }
-                )
-              ] : []
+              )
             ]),
             (draft.loops || []).map((loop) => edge(positions[loop.gateId], positions[loop.entryId], "reject:" + loop.gateId, { fromId: loop.gateId, toId: loop.entryId, returning: true }))
           ),
@@ -4325,13 +4358,6 @@ function WorkflowWizard({
             }
           ),
           [
-            ...agents.map((a) => ({
-              kind: "agent",
-              id: a.id,
-              title: a.label,
-              position: a.position,
-              subtitle: `Skill ${a.gallerySkill === false ? "\u5173\u95ED" : "\u53EF\u7528"} \xB7 MCP ${a.galleryMcp === false ? "\u5173\u95ED" : "\u53EF\u7528"}`
-            })),
             ...draft.tasks.map((t) => ({
               kind: "task",
               id: t.id,
@@ -4348,6 +4374,7 @@ function WorkflowWizard({
               style: { left: n.position.x, top: n.position.y },
               key: n.id,
               "data-flow-node": n.id,
+              "data-member-match": selected?.kind === "agent" && taskActor(draft.tasks.find((t) => t.id === n.id)) === selected.id ? "true" : void 0,
               onPointerDown: (e) => pointerDown(e, n.kind, n.id),
               onPointerMove: move,
               onPointerUp: () => {
@@ -4384,7 +4411,26 @@ function WorkflowWizard({
               },
               n.title || "\u672A\u547D\u540D\u8282\u70B9"
             ),
-            /* @__PURE__ */ import_react7.default.createElement("p", null, n.subtitle),
+            agents.find((a) => a.id === taskActor(draft.tasks.find((t) => t.id === n.id))) ? (() => {
+              const owner = agents.find((a) => a.id === taskActor(draft.tasks.find((t) => t.id === n.id)));
+              return /* @__PURE__ */ import_react7.default.createElement(
+                "button",
+                {
+                  type: "button",
+                  className: "gal-flow-assignee",
+                  "aria-label": `\u7F16\u8F91\u8D1F\u8D23\u4EBA \xB7 ${owner.label}`,
+                  title: owner.snapshot?.summary || owner.label,
+                  onPointerDown: (e) => e.stopPropagation(),
+                  onClick: () => {
+                    setSelected({ kind: "agent", id: owner.id });
+                    setSelection([]);
+                  }
+                },
+                /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-flow-avatar", "aria-hidden": "true" }, memberInitial(owner)),
+                /* @__PURE__ */ import_react7.default.createElement("span", null, owner.label),
+                n.nodeType === "gate" && /* @__PURE__ */ import_react7.default.createElement("small", null, "\u5BA1\u6838")
+              );
+            })() : /* @__PURE__ */ import_react7.default.createElement("p", null, n.subtitle),
             n.kind === "task" && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-ports" }, /* @__PURE__ */ import_react7.default.createElement(
               "button",
               {
@@ -4476,7 +4522,7 @@ function WorkflowWizard({
             tags: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean)
           })
         }
-      )), /* @__PURE__ */ import_react7.default.createElement(ResourceCoverPicker, { resource: { ...draft, type: "workflow", cover }, onChange: setCover }), /* @__PURE__ */ import_react7.default.createElement("p", null, "Agent \u7528\u865A\u7EBF\u5173\u8054\u6267\u884C\u6216\u5BA1\u6838\u8D1F\u8D23\u4EBA\uFF1B\u5B9E\u7EBF\u8868\u793A\u5148\u540E\u4F9D\u8D56\uFF0CREJECT \u865A\u7EBF\u8868\u793A\u8FD4\u5DE5\u3002\u53F3\u952E\u5355\u51FB\u8FDE\u7EBF\u53EF\u5220\u9664\u3002")), agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Agent \u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u914D\u7F6E\u957F\u671F\u804C\u8D23\u4E0E\u901A\u7528\u6307\u4EE4\uFF1B\u672C\u6B21\u8865\u5145\u6307\u4EE4\u5728\u5E94\u7528\u6A21\u677F\u65F6\u586B\u5199\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D44\u6E90\u5E93 Agent", /* @__PURE__ */ import_react7.default.createElement(
+      )), /* @__PURE__ */ import_react7.default.createElement(ResourceCoverPicker, { resource: { ...draft, type: "workflow", cover }, onChange: setCover }), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u4ECE\u5DE6\u4FA7\u6210\u5458\u5217\u8868\u914D\u7F6E Agent\uFF0C\u70B9\u51FB\u4EFB\u52A1\u4E0A\u7684\u8D1F\u8D23\u4EBA\u4E5F\u53EF\u7F16\u8F91\u6210\u5458\u3002\u753B\u5E03\u8FDE\u7EBF\u8868\u793A\u4F9D\u8D56\u548C REJECT \u8FD4\u5DE5\u8DEF\u5F84\u3002")), agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Agent \u6210\u5458"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u914D\u7F6E\u957F\u671F\u804C\u8D23\u4E0E\u901A\u7528\u6307\u4EE4\uFF1B\u672C\u6B21\u8865\u5145\u6307\u4EE4\u5728\u5E94\u7528\u6A21\u677F\u65F6\u586B\u5199\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D44\u6E90\u5E93 Agent", /* @__PURE__ */ import_react7.default.createElement(
         "select",
         {
           "aria-label": "\u8D44\u6E90\u5E93 Agent",
@@ -4587,7 +4633,7 @@ function WorkflowWizard({
             general: { ...task.general, [key]: e.target.value }
           })
         }
-      )))), (task || agent) && /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-delete", disabled: busy, onClick: remove }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }), "\u5220\u9664\u8282\u70B9"))),
+      )))), (task || agent) && /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-delete", disabled: busy, onClick: () => remove(agent ? [agent.id] : selection) }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }), agent ? "\u5220\u9664\u6210\u5458" : "\u5220\u9664\u8282\u70B9"))),
       contextMenu && /* @__PURE__ */ import_react7.default.createElement(
         "div",
         {
@@ -4598,14 +4644,9 @@ function WorkflowWizard({
           onPointerDown: (e) => e.stopPropagation()
         },
         contextMenu.edge ? /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => {
-          const { edgeFrom, edgeTo, edgeAssignment, edgeReturn } = contextMenu.edge;
+          const { edgeFrom, edgeTo, edgeReturn } = contextMenu.edge;
           if (edgeReturn) {
             update({ loops: (draft.loops || []).filter((loop) => loop.gateId !== edgeFrom) });
-            setContextMenu(null);
-            return;
-          }
-          if (edgeAssignment && draft.loops?.some((loop) => loop.gateId === edgeTo && loop.reviewer === edgeFrom)) {
-            setLoop(edgeTo, { reviewer: void 0 });
             setContextMenu(null);
             return;
           }
@@ -4613,9 +4654,6 @@ function WorkflowWizard({
             ...value,
             tasks: value.tasks.map((node) => {
               if (node.id !== edgeTo) return node;
-              if (edgeAssignment) {
-                return node.assignee === edgeFrom ? { ...node, assignee: "" } : node;
-              }
               return { ...node, dependencies: node.dependencies.filter((id) => id !== edgeFrom) };
             })
           }));
@@ -4646,9 +4684,7 @@ function WorkflowWizard({
               name: nodeIcon(kind)
             }
           ),
-          "\u6DFB\u52A0",
-          label,
-          "\u8282\u70B9"
+          kind === "agent" ? "\u6DFB\u52A0Agent\u6210\u5458" : `\u6DFB\u52A0${label}\u8282\u70B9`
         ))
       ),
       /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u62D6\u52A8\u8FDE\u7EBF\uFF1A\u677E\u5F00\u5230\u53E6\u4E00\u8282\u70B9\u7684\u5706\u70B9" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u6D41\u7A0B\u8282\u70B9 \xB7 ${draft.loops?.length || 0} \u5FAA\u73AF`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
@@ -13728,7 +13764,7 @@ function Gallery({ remote }) {
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react14.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react14.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react14.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "gal-local" }, "v0.27.0"), /* @__PURE__ */ import_react14.default.createElement(
+    /* @__PURE__ */ import_react14.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "gal-local" }, "v0.27.1"), /* @__PURE__ */ import_react14.default.createElement(
       "button",
       {
         disabled: busy,
