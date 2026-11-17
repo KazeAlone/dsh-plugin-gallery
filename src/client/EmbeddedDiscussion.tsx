@@ -3,16 +3,33 @@ import { workflowRequest } from './workflow-request.ts'
 import { workflowMessage } from './workflow-text.ts'
 import { useWorkflowText } from './workflow-i18n.tsx'
 /** A compact view over the same isolated native discussion session. */
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
+import { OutcomeMarkdown } from './OutcomeShowcase.tsx'
+import { discussionMarkdown } from './discussion-json.ts'
 import { BrandIcon } from './BrandIcon.tsx'
 import css from './WorkflowWorkbench.module.css'
 import { remainingMessage } from './workbench-drafts.ts'
 
 type Chat = { revision?:string; messages: { id: string; role: string; text: string; streaming?:boolean }[]; busy: boolean }
 const discussionCache=createWorkflowCache<Chat>(4,2*1024*1024)
-export function EmbeddedDiscussion({ sessionId, teamId, discussion }: { sessionId: string; teamId: string; discussion: string }) {
+export const AssistantReply = memo(function AssistantReply({ text, streaming }: { text: string; streaming: boolean }) {
   const l = useWorkflowText()
+  const labels = useMemo(() => ({
+    code: {
+      copyLabel: l("复制代码"), copiedLabel: l("已复制"),
+      toolbarLabels: { codeLabel: l("代码"), wrapLabel: l("自动换行"), unwrapLabel: l("取消自动换行") },
+    },
+    footnotes: l("脚注"),
+  }), [l])
+  const source = useMemo(() => streaming ? text : discussionMarkdown(text), [text, streaming])
+  return <div className={css.replyBody}>
+    {MarkdownText ? <MarkdownText text={source} streaming={streaming} labels={labels} /> : <OutcomeMarkdown text={source} />}
+    {streaming && <span className={css.streamCaret} aria-hidden="true" />}
+  </div>
+})
 
+export function EmbeddedDiscussion({ sessionId, teamId, discussion }: { sessionId: string; teamId: string; discussion: string }) {
   return <Discussion key={JSON.stringify([sessionId,teamId,discussion])} sessionId={sessionId} teamId={teamId} discussion={discussion} />
 }
 function Discussion({ sessionId, teamId, discussion }: { sessionId: string; teamId: string; discussion: string }) {
@@ -86,7 +103,7 @@ function Discussion({ sessionId, teamId, discussion }: { sessionId: string; team
   }
   const generating = !error && (sending || chat.busy)
   return <div className={css.embeddedChat}>
-    <div ref={transcript} tabIndex={0} className={css.embeddedTranscript} aria-busy={generating} onScroll={()=>{const el=transcript.current;if(el){followBottom.current=el.scrollHeight-el.scrollTop-el.clientHeight<48;if(followBottom.current)setUnread(false)}}} aria-label={l("独立讨论记录")}>{chat.messages.map(message => <div key={message.id} data-streaming={!!message.streaming && generating} className={message.role === 'user' ? css.userMessage : css.assistantMessage}><strong>{message.role === 'user' ? l("你") : 'AI'}</strong><p>{message.text}{message.streaming&&generating&&<span className={css.streamCaret} aria-hidden="true"/>}</p></div>)}
+    <div ref={transcript} tabIndex={0} className={css.embeddedTranscript} aria-busy={generating} onScroll={()=>{const el=transcript.current;if(el){followBottom.current=el.scrollHeight-el.scrollTop-el.clientHeight<48;if(followBottom.current)setUnread(false)}}} aria-label={l("独立讨论记录")}>{chat.messages.map(message => <div key={message.id} data-streaming={!!message.streaming && generating} className={message.role === 'user' ? css.userMessage : css.assistantMessage}><strong>{message.role === 'user' ? l("你") : 'AI'}</strong>{message.role === 'user' ? <p>{message.text}</p> : <AssistantReply text={message.text} streaming={!!message.streaming && generating} />}</div>)}
       {loading && <p role="status">{l("正在读取讨论记录…")}</p>}{error && <p role="alert" className={css.error}>{workflowMessage(error, l)}</p>}
     </div>
     {(generating||unread)&&<div className={css.discussionStatus}>{generating && <div className={css.discussionGenerating} role="status"><span className={css.discussionLogo} aria-hidden="true"><BrandIcon size={26}/></span><span>{tail?.streaming ? l("正在回复…") : l("AI 正在思考…")}</span></div>}{unread&&<button type="button" className={css.latestReply} onClick={latest}>{l("查看最新回复")} ↓</button>}</div>}
@@ -97,6 +114,6 @@ function Discussion({ sessionId, teamId, discussion }: { sessionId: string; team
         event.preventDefault()
         if (!event.repeat) void send()
       }}
-      placeholder={discussion.startsWith('task:') ? l("例如：帮我细化这个任务的要求，或分析失败原因…") : discussion.startsWith('member:') ? l("例如：让这个 Agent 更专注于需求分析…") : l("输入你想讨论的问题…")} /></label><small role={storageError ? 'alert' : undefined}>{workflowMessage(storageError,l) || [l("Enter 发送 · Shift+Enter 换行"), text ? l("草稿保存在此标签页，切换讨论或刷新可恢复。") : ""].filter(Boolean).join(" · ")}</small><button type="submit" disabled={!text.trim() || loading || chat.busy || sending}>{sending ? l("发送中…") : l("发送")}</button></form>
+      placeholder={discussion.startsWith('task:') ? l("例如：帮我细化这个任务的要求，或分析失败原因…") : discussion.startsWith('member:') ? l("例如：让这个 Agent 更专注于需求分析…") : l("输入你想讨论的问题…")} /></label><small role={storageError ? 'alert' : undefined}>{workflowMessage(storageError,l) || [l("Enter 发送 · Shift+Enter 换行"), text ? l("草稿保存在此标签页，切换讨论或刷新可恢复。") : ""].filter(Boolean).join(" · ")}</small><button type="submit" className={css.primary} disabled={!text.trim() || loading || chat.busy || sending}>{sending ? l("发送中…") : l("发送")}</button></form>
   </div>
 }

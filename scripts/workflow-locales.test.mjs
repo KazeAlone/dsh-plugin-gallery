@@ -6,6 +6,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { zh, en } from '../lib/client/locales.js';
 import { workflowEnglish } from '../lib/client/workflow-messages.js';
+import { discussionMarkdown } from '../lib/client/discussion-json.js';
 import { workflowText, workflowMessage, briefDisplay } from '../lib/client/workflow-text.js';
 import { WorkflowLocale } from '../lib/client/workflow-i18n.js';
 import { taskReadiness } from '../lib/client/task-readiness.js';
@@ -13,14 +14,28 @@ import { builtinTemplates } from '../lib/builtin-templates.js';
 import { localizeBuiltinTemplate } from '../lib/builtin-template-locales.js';
 import { instantiateTemplate } from '../lib/templates.js';
 const hook=registerHooks({resolve(specifier,context,next){
+ if(specifier==='@deepseek-ai/dsh-client-ui-primitives')return {url:'data:text/javascript,export const MarkdownText = undefined',shortCircuit:true};
  if(specifier.endsWith('.module.css'))return {url:'data:text/javascript,export default new Proxy({}, {get: (_, key) => key})',shortCircuit:true};
  return next(specifier,context);
 }});
 const {WorkflowContext,TaskRecord}=await import('../lib/client/WorkflowContext.js');
 const {ProposalReview}=await import('../lib/client/ProposalReview.js');
 const {TaskRerunImpact}=await import('../lib/client/TaskRerunPicker.js');
-const {EmbeddedDiscussion}=await import('../lib/client/EmbeddedDiscussion.js');
+const {EmbeddedDiscussion,AssistantReply}=await import('../lib/client/EmbeddedDiscussion.js');
 hook.deregister();
+test('discussion JSON layout preserves literals and formats complete JSON fences in mixed Markdown', () => {
+ const source = '{"id":9007199254740993,"id":1e-7,"items":[{},[],", : { }"]}';
+ const formatted = '{\n  "id": 9007199254740993,\n  "id": 1e-7,\n  "items": [\n    {},\n    [],\n    ", : { }"\n  ]\n}';
+ const block = '```json\n' + source + '\n```';
+ const pretty = '```json\n' + formatted + '\n```';
+ assert.equal(discussionMarkdown(source), pretty);
+ assert.equal(discussionMarkdown(block), pretty);
+ const mixed = '# Results\n' + block + '\n\nNext\n' + block;
+ assert.equal(discussionMarkdown(mixed), mixed.replaceAll(block, pretty));
+ for (const unchanged of ['{"items":[', block.slice(0,-3), '````md\n' + block + '\n````', block.replace(source, '{broken}')]) {
+   assert.equal(discussionMarkdown(unchanged), unchanged);
+ }
+});
 const translate=dict=>(key,params={})=>dict[key]?.replace(/\{(\w+)\}/g,(_,name)=>String(params[name]))??key;
 const layers={general:{requirements:'Reusable method',deliverables:'Evidence',acceptance:'Verified'},specific:{requirements:'Current contract',deliverables:'Files',acceptance:'Tests pass'}};
 const team={id:'sample',name:'Sample',phase:'staged',captainSessionId:'captain',members:[{id:'',name:'builder',summary:'Build',status:'idle'}],tasks:[{id:'task',subject:'Implement',description:'Current contract with deliverables and acceptance criteria',dependencies:[],assignee:'builder',status:'pending',attempt:0}]};
@@ -67,4 +82,13 @@ test('built-ins translate both ways without mutating identities, structure or pe
  }
  assert.deepEqual(builtinTemplates(),originals);
  const personal={...originals[0],id:'personal-template'};assert.equal(localizeBuiltinTemplate(personal,'en'),personal);
+});
+
+test('AI discussion fallback renders headings and JSON code blocks instead of plain paragraphs', () => {
+ const html=renderToStaticMarkup(React.createElement(AssistantReply,{text:'# Result\n\n'+JSON.stringify({ok:true}),streaming:false}));
+ assert.match(html,/<h3[^>]*>Result<\/h3>/);
+ const json=renderToStaticMarkup(React.createElement(AssistantReply,{text:JSON.stringify({ok:true}),streaming:false}));
+ assert.match(json,/<pre><code>/);assert.match(json,/\n  &quot;ok&quot;: true/);
+ const stream=renderToStaticMarkup(React.createElement(AssistantReply,{text:'{"ok":',streaming:true}));
+ assert.match(stream,/streamCaret/);assert.doesNotMatch(stream,/<pre><code>/);
 });
