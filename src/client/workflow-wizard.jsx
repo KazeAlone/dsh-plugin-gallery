@@ -1,3 +1,4 @@
+import { useGalleryText } from "./i18n.jsx";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
@@ -94,6 +95,7 @@ export function WorkflowWizard({
   onGet,
   onExtract,
 }) {
+  const l = useGalleryText();
   const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
   const [fullscreen, setFullscreen] = useState(false);
   const editor = useRef(null),
@@ -262,7 +264,7 @@ export function WorkflowWizard({
     if (!entryId) { update({ loops: (draft.loops || []).filter(loop => loop.gateId !== gateId) }); return; }
     const entry = draft.tasks.find(t => t.id === entryId);
     if (!entry || entry.checkpoint || entry.kind === "archive" || !workflowAncestors(draft.tasks, gateId).has(entryId)) {
-      setError("REJECT 需要返回门控上游的执行任务；请先连接任务到门控的正向路径"); return;
+      setError(l("REJECT 需要返回门控上游的执行任务；请先连接任务到门控的正向路径")); return;
     }
     setLoop(gateId, { entryId });
     setSelected({ kind: "task", id: gateId }); setSelection([gateId]); setError("");
@@ -286,13 +288,13 @@ export function WorkflowWizard({
         ((draft.tasks.length + agents.length) % 4) * 45,
     };
     if (kind === "agent") {
-      if (agents.length >= 32) return setError("最多添加 32 个 Agent");
+      if (agents.length >= 32) return setError(l("最多添加 32 个 Agent"));
       const id = createResourceIdentifier("a");
       setAgents((rows) => [
         ...rows,
         {
           id,
-          label: "选择 Agent",
+          label: l("选择 Agent"),
           resourceId: "",
           skills: [],
           mcps: [],
@@ -305,20 +307,20 @@ export function WorkflowWizard({
       setSelection([]);
     } else {
       if (draft.tasks.length >= 32)
-        return setError("最多添加 32 个流程节点");
+        return setError(l("最多添加 32 个流程节点"));
       const id = createResourceIdentifier("t");
       update({
         tasks: [
           ...draft.tasks,
           {
             id,
-            subject: kind === "human" ? "验收确认" : kind === "gate" ? "审核判断" : kind === "archive" ? "成果归档" : "新任务",
+            subject: kind === "human" ? l("验收确认") : kind === "gate" ? l("审核判断") : kind === "archive" ? l("成果归档") : l("新任务"),
             assignee: "",
             dependencies: [],
             checkpoint: kind === "human" || kind === "gate",
             ...(["human", "gate"].includes(kind) ? { checkpointKind: kind === "gate" ? "gate" : "acceptance", reviewMode: "human" } : {}),
             ...(kind === "archive" ? { kind: "archive", archive: { copyFiles: false, paths: [] } } : {}),
-            general: { requirements: kind === "archive" ? "整理并归档上游任务的成果和证据。" : "", deliverables: "", acceptance: "" },
+            general: { requirements: kind === "archive" ? l("整理并归档上游任务的成果和证据。") : "", deliverables: "", acceptance: "" },
           },
         ],
       });
@@ -383,7 +385,7 @@ export function WorkflowWizard({
   }
   function connect(to, from = linkFrom) {
     if (!from)
-      return setError("从前置节点的输出圆点拖动到后续节点的输入圆点");
+      return setError(l("从前置节点的输出圆点拖动到后续节点的输入圆点"));
     try {
       const tasks = draft.tasks.map((t) =>
         t.id === to
@@ -458,7 +460,7 @@ export function WorkflowWizard({
     const ticket = ++pendingAgent.current,
       nodeId = selected.id;
     if (!id) {
-      updateAgent({ resourceId: "", label: "选择 Agent", snapshot: null });
+      updateAgent({ resourceId: "", label: l("选择 Agent"), snapshot: null });
       return;
     }
     setBusy(true);
@@ -565,9 +567,9 @@ export function WorkflowWizard({
     setError("");
     try {
       if (agents.some((a) => !a.resourceId && !a.snapshot))
-        throw Error("请为每个成员选择资源库中的 Agent");
+        throw Error(l("请为每个成员选择资源库中的 Agent"));
       if (draft.tasks.some((t) => !t.general.requirements.trim()))
-        throw Error("请填写每个节点的通用任务要求或通用检查要求");
+        throw Error(l("请填写每个节点的通用任务要求或通用检查要求"));
       const value = validateWorkflowTemplate({
         ...draft,
         loops: draft.loops?.map(loop => ({ ...loop, reviewer: agents.find(a => a.id === loop.reviewer)?.snapshot?.name || loop.reviewer })),
@@ -626,7 +628,7 @@ export function WorkflowWizard({
           markerEnd={`url(#${arrow})`}
           d={path}
         />
-        {(pass || returning) && <text className={returning ? "gal-flow-reject-label" : "gal-flow-pass-label"} x={returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2} y={returning ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10}>{returning ? "REJECT · 返工" : "PASS"}</text>}
+        {(pass || returning) && <text className={returning ? "gal-flow-reject-label" : "gal-flow-pass-label"} x={returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2} y={returning ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10}>{returning ? l("REJECT · 返工") : "PASS"}</text>}
         <path className="gal-flow-edge-hit" d={path}
           data-edge-return={returning ? "true" : undefined}
           data-edge-from={fromId} data-edge-to={toId}
@@ -649,16 +651,15 @@ export function WorkflowWizard({
         className={`gal-dialog gal-flow-editor ${fullscreen ? "gal-flow-fullscreen" : ""}`}
         role="dialog"
         aria-modal="true"
-        aria-label={resource ? "编辑 Workflow" : "新建 Workflow"}
+        aria-label={resource ? l("编辑 Workflow") : l("新建 Workflow")}
         tabIndex={-1}
       >
         <header className="gal-dialog-head">
           <h2>
-            <Glyph name="workflow" /> Workflow 画布
-          </h2>
-          <span className="gal-flow-status">TeamFlow 模板 · 保存后可注册使用</span>
+            <Glyph name="workflow" />{l(" Workflow 画布")}</h2>
+          <span className="gal-flow-status">{l("TeamFlow 模板 · 保存后可注册使用")}</span>
           <button
-            aria-label="关闭编辑"
+            aria-label={l("关闭编辑")}
             disabled={busy}
             onClick={async () => {
               if (fullscreen) await toggleFullscreen();
@@ -683,14 +684,12 @@ export function WorkflowWizard({
                 <Glyph
                   name={nodeIcon(kind)}
                 />
-                {kind === "agent" ? "添加Agent成员" : `添加${label}节点`}
+                {kind === "agent" ? l("添加Agent成员") : l("添加{0}节点", l(label))}
               </button>
             ))}
           </div>
-          <label>
-            缩放
-            <select
-              aria-label="画布缩放"
+          <label>{l("缩放")}<select
+              aria-label={l("画布缩放")}
               value={zoom}
               onChange={(e) =>
                 zoomAt(
@@ -714,48 +713,44 @@ export function WorkflowWizard({
               setSelected(null);
               setSelection([]);
             }}
-          >
-            流程信息
-          </button>
+          >{l("流程信息")}</button>
           <button
             onClick={() => {
               fitView();
             }}
-          >
-            重置视图
-          </button>
+          >{l("重置视图")}</button>
           <button
-            aria-label={fullscreen ? "退出全屏" : "全屏画布"}
+            aria-label={fullscreen ? l("退出全屏") : l("全屏画布")}
             onClick={toggleFullscreen}
           >
-            {fullscreen ? "退出全屏" : "全屏画布"}
+            {fullscreen ? l("退出全屏") : l("全屏画布")}
           </button>
         </div>
         {error && (
           <p role="alert" className="gal-flow-error">
-            {error}
-            <button aria-label="关闭错误" onClick={() => setError("")}>
+            {l(error)}
+            <button aria-label={l("关闭错误")} onClick={() => setError("")}>
               <Glyph name="close" />
             </button>
           </p>
         )}
         <div className="gal-flow-body">
-          <aside className="gal-flow-roster" aria-label="Agent 成员列表">
-            <header><strong>Agent 成员</strong><span>{agents.length}</span></header>
+          <aside className="gal-flow-roster" aria-label={l("Agent 成员列表")}>
+            <header><strong>{l("Agent 成员")}</strong><span>{agents.length}</span></header>
             <div className="gal-flow-roster-list">
               {agents.map(a => {
                 const owned = draft.tasks.filter(t => taskActor(t) === a.id);
                 const active = selected?.kind === "agent" && selected.id === a.id;
                 return <button key={a.id} type="button" className="gal-flow-member" data-flow-member={a.id} aria-pressed={active}
-                  aria-label={`编辑 Agent · ${a.label}`} title={a.snapshot?.summary || a.label}
+                  aria-label={l("编辑 Agent · {0}", a.label)} title={a.snapshot?.summary || a.label}
                   onClick={() => { setSelected({ kind: "agent", id: a.id }); setSelection([]); }}>
                   <span className="gal-flow-avatar" aria-hidden="true">{memberInitial(a)}</span>
-                  <span className="gal-flow-member-copy"><strong>{a.label}</strong><small>{a.snapshot?.summary || "选择资源并配置成员"}</small>
-                    <span className="gal-flow-member-meta"><span>{owned.length} 个节点</span><span title={`Skill ${a.gallerySkill === false ? "关闭" : "开启"}`} aria-label={`Skill ${a.gallerySkill === false ? "关闭" : "开启"}`} data-enabled={a.gallerySkill !== false}><Glyph name="skill" size={12}/></span><span title={`MCP ${a.galleryMcp === false ? "关闭" : "开启"}`} aria-label={`MCP ${a.galleryMcp === false ? "关闭" : "开启"}`} data-enabled={a.galleryMcp !== false}><Glyph name="mcp" size={12}/></span></span>
+                  <span className="gal-flow-member-copy"><strong>{a.label}</strong><small>{a.snapshot?.summary || l("选择资源并配置成员")}</small>
+                    <span className="gal-flow-member-meta"><span>{owned.length}{l(" 个节点")}</span><span title={`Skill ${a.gallerySkill === false ? l("关闭") : l("开启")}`} aria-label={`Skill ${a.gallerySkill === false ? l("关闭") : l("开启")}`} data-enabled={a.gallerySkill !== false}><Glyph name="skill" size={12}/></span><span title={`MCP ${a.galleryMcp === false ? l("关闭") : l("开启")}`} aria-label={`MCP ${a.galleryMcp === false ? l("关闭") : l("开启")}`} data-enabled={a.galleryMcp !== false}><Glyph name="mcp" size={12}/></span></span>
                   </span>
                 </button>;
               })}
-              {!agents.length && <p>添加成员，再为任务分配负责人。</p>}
+              {!agents.length && <p>{l("添加成员，再为任务分配负责人。")}</p>}
             </div>
           </aside>
           <div
@@ -951,10 +946,10 @@ export function WorkflowWizard({
                     position: positions[t.id],
                     human: t.checkpoint,
                     nodeType: workflowNodeKind(t, draft.loops),
-                    subtitle: t.kind === "archive" ? (t.archive?.copyFiles ? "归档成果与文件" : "归档证据与摘要") : t.checkpoint
-                      ? ((draft.loops?.find(loop => loop.gateId === t.id)?.mode || t.reviewMode) === "ai" ? "AI 审核" : "人工审核")
+                    subtitle: t.kind === "archive" ? (t.archive?.copyFiles ? l("归档成果与文件") : l("归档证据与摘要")) : t.checkpoint
+                      ? ((draft.loops?.find(loop => loop.gateId === t.id)?.mode || t.reviewMode) === "ai" ? l("AI 审核") : l("人工审核"))
                       : agents.find((a) => a.id === t.assignee)?.label ||
-                        "未指定 Agent",
+                        l("未指定 Agent"),
                   })),
                 ].map((n) => (
                   <article
@@ -974,12 +969,12 @@ export function WorkflowWizard({
                   >
                     <button
                       className="gal-flow-grip"
-                      aria-label={`移动 ${n.title}`}
+                      aria-label={l("移动 {0}", n.title)}
                     >
                       <Glyph
                         name={nodeIcon(n.nodeType || n.kind)}
                       />
-                      {n.kind === "agent" ? "AGENT" : nodeLabel(n.nodeType)}
+                      {n.kind === "agent" ? "AGENT" : l(nodeLabel(n.nodeType))}
                     </button>
                     <button
                       className="gal-flow-node-title"
@@ -990,20 +985,20 @@ export function WorkflowWizard({
                         }
                       }}
                     >
-                      {n.title || "未命名节点"}
+                      {n.title || l("未命名节点")}
                     </button>
                     {agents.find(a => a.id === taskActor(draft.tasks.find(t => t.id === n.id))) ? (() => {
                       const owner = agents.find(a => a.id === taskActor(draft.tasks.find(t => t.id === n.id)));
-                      return <button type="button" className="gal-flow-assignee" aria-label={`编辑负责人 · ${owner.label}`} title={owner.snapshot?.summary || owner.label}
+                      return <button type="button" className="gal-flow-assignee" aria-label={l("编辑负责人 · {0}", owner.label)} title={owner.snapshot?.summary || owner.label}
                         onPointerDown={e => e.stopPropagation()} onClick={() => { setSelected({ kind: "agent", id: owner.id }); setSelection([]); }}>
-                        <span className="gal-flow-avatar" aria-hidden="true">{memberInitial(owner)}</span><span>{owner.label}</span>{n.nodeType === "gate" && <small>审核</small>}
+                        <span className="gal-flow-avatar" aria-hidden="true">{memberInitial(owner)}</span><span>{owner.label}</span>{n.nodeType === "gate" && <small>{l("审核")}</small>}
                       </button>;
                     })() : <p>{n.subtitle}</p>}
                     {n.kind === "task" && (
                       <div className="gal-flow-ports">
                         <button
-                          aria-label="连入"
-                          title="输入：连接前置节点"
+                          aria-label={l("连入")}
+                          title={l("输入：连接前置节点")}
                           className="gal-flow-port-in"
                           data-flow-port="in"
                           data-snap={wire?.target === n.id && wire.side === "in" ? "true" : undefined}
@@ -1017,11 +1012,11 @@ export function WorkflowWizard({
                             setLinkFrom(null);
                           }}
                         >
-                          <span className="gal-sr-only">连入</span>
+                          <span className="gal-sr-only">{l("连入")}</span>
                         </button>
                         <button
-                          aria-label="连出"
-                          title={n.nodeType === "gate" ? "PASS：连接通过后执行的节点" : "输出：连接后续节点"}
+                          aria-label={l("连出")}
+                          title={n.nodeType === "gate" ? l("PASS：连接通过后执行的节点") : l("输出：连接后续节点")}
                           className="gal-flow-port-out"
                           aria-pressed={linkFrom === n.id}
                           data-flow-port="out"
@@ -1036,9 +1031,9 @@ export function WorkflowWizard({
                             setLinkFrom(null);
                           }}
                         >
-                          <span className="gal-sr-only">连出</span>
+                          <span className="gal-sr-only">{l("连出")}</span>
                         </button>
-                        {n.nodeType === "gate" && <button className="gal-flow-port-reject" aria-label="REJECT 返回" title="REJECT：拖到上游任务的输入点"
+                        {n.nodeType === "gate" && <button className="gal-flow-port-reject" aria-label={l("REJECT 返回")} title={l("REJECT：拖到上游任务的输入点")}
                           data-flow-port="reject" data-node={n.id} onPointerDown={e => startWire(e, n.id, "reject")} onPointerMove={moveWire} onPointerUp={finishWire}
                           onPointerCancel={() => { connection.current = null; setWire(null); setLinkFrom(null); }}><span>REJECT</span></button>}
                       </div>
@@ -1049,45 +1044,34 @@ export function WorkflowWizard({
             </div>
           </div>
           <aside className="gal-flow-inspector">
-            {loading && <p role="status">正在读取资源库…</p>}
+            {loading && <p role="status">{l("正在读取资源库…")}</p>}
             {!task && !agent && (
               <>
                 {selection.length > 1 && (
-                  <p>
-                    已选择 {selection.length}{" "}
-                    个节点，拖动任一选中节点可一起移动。
-                  </p>
+                  <p>{l("已选择 ")}{selection.length}{" "}{l("个节点，拖动任一选中节点可一起移动。")}</p>
                 )}
-                <h3>流程信息</h3>
-                <label>
-                  名称
-                  <input
-                    aria-label="流程名称"
+                <h3>{l("流程信息")}</h3>
+                <label>{l("名称")}<input
+                    aria-label={l("流程名称")}
                     maxLength={120}
                     value={draft.name}
                     onChange={(e) => update({ name: e.target.value })}
                   />
                 </label>
-                <label>
-                  描述
-                  <textarea
+                <label>{l("描述")}<textarea
                     rows={3}
                     maxLength={2000}
                     value={draft.description}
                     onChange={(e) => update({ description: e.target.value })}
                   />
                 </label>
-                <label>
-                  适用输入
-                  <textarea
+                <label>{l("适用输入")}<textarea
                     maxLength={4000}
                     value={draft.inputs}
                     onChange={(e) => update({ inputs: e.target.value })}
                   />
                 </label>
-                <label>
-                  标签
-                  <input
+                <label>{l("标签")}<input
                     value={draft.tags.join(", ")}
                     onChange={(e) =>
                       update({
@@ -1100,29 +1084,24 @@ export function WorkflowWizard({
                   />
                 </label>
                 <ResourceCoverPicker resource={{ ...draft, type: "workflow", cover }} onChange={setCover} />
-                <p>
-                  从左侧成员列表配置 Agent，点击任务上的负责人也可编辑成员。画布连线表示依赖和 REJECT 返工路径。
-                </p>
+                <p>{l("从左侧成员列表配置 Agent，点击任务上的负责人也可编辑成员。画布连线表示依赖和 REJECT 返工路径。")}</p>
               </>
             )}
             {agent && (
               <>
-                <h3>Agent 成员</h3>
-                <p>配置长期职责与通用指令；本次补充指令在应用模板时填写。</p>
-                <label>
-                  资源库 Agent
-                  <select
-                    aria-label="资源库 Agent"
+                <h3>{l("Agent 成员")}</h3>
+                <p>{l("配置长期职责与通用指令；本次补充指令在应用模板时填写。")}</p>
+                <label>{l("资源库 Agent")}<select
+                    aria-label={l("资源库 Agent")}
                     value={agent.resourceId}
                     disabled={busy || loading}
                     onChange={(e) => chooseAgent(e.target.value)}
                   >
-                    <option value="">请选择 Agent</option>
+                    <option value="">{l("请选择 Agent")}</option>
                     {agent.resourceId &&
                       !catalog.some((r) => r.id === agent.resourceId) && (
                         <option value={agent.resourceId}>
-                          {agent.label}（资源已不可用）
-                        </option>
+                          {agent.label}{l("（资源已不可用）")}</option>
                       )}
                     {catalog.map((r) => (
                       <option key={r.id} value={r.id}>
@@ -1132,26 +1111,24 @@ export function WorkflowWizard({
                   </select>
                 </label>
                 {!catalog.length && !loading && (
-                  <p>资源库暂无 Agent，请先在 Agent 分类创建。</p>
+                  <p>{l("资源库暂无 Agent，请先在 Agent 分类创建。")}</p>
                 )}
                 <button
                   type="button"
                   disabled={busy || !agent.resourceId}
                   onClick={extractMember}
-                >
-                  提取字段
-                </button>
+                >{l("提取字段")}</button>
                 {[
-                  ["name", "名称"],
-                  ["summary", "功能概述"],
-                  ["role", "长期职责"],
-                  ["executionPrompt", "通用执行指令 PE"],
+                  ["name", l("名称")],
+                  ["summary", l("功能概述")],
+                  ["role", l("长期职责")],
+                  ["executionPrompt", l("通用执行指令 PE")],
                 ].map(([key, label]) => (
                   <label key={key}>
-                    {label}
+                    {l(label)}
                     {key === "name" ? (
                       <input
-                        aria-label={`Agent ${label}`}
+                        aria-label={`Agent ${l(label)}`}
                         disabled={busy}
                         maxLength={80}
                         value={agent.snapshot?.[key] || ""}
@@ -1166,7 +1143,7 @@ export function WorkflowWizard({
                       />
                     ) : (
                       <textarea
-                        aria-label={`Agent ${label}`}
+                        aria-label={`Agent ${l(label)}`}
                         disabled={busy}
                         rows={3}
                         maxLength={key === "executionPrompt" ? 64000 : 16000}
@@ -1187,81 +1164,72 @@ export function WorkflowWizard({
                   <label className="gal-flow-check" key={key}>
                     <input type="checkbox" checked={agent[key] !== false}
                       onChange={(e) => updateAgent({ [key]: e.target.checked })} />
-                    {label}
+                    {l(label)}
                   </label>
                 ))}
               </>
             )}
             {task && (
               <>
-                <h3>{nodeLabel(selectedKind)}</h3>
-                <p>
-                  填写可复用的通用要求；具体项目的任务说明在应用模板后生成。
-                </p>
-                <label>
-                  通用节点名称
-                  <input
-                    aria-label="通用节点名称"
+                <h3>{l(nodeLabel(selectedKind))}</h3>
+                <p>{l("填写可复用的通用要求；具体项目的任务说明在应用模板后生成。")}</p>
+                <label>{l("通用节点名称")}<input
+                    aria-label={l("通用节点名称")}
                     maxLength={200}
                     value={task.subject}
                     onChange={(e) => updateTask({ subject: e.target.value })}
                   />
                 </label>
-                {task.checkpoint && <label>审核方式
-                  <select aria-label="审核方式" value={selectedLoop?.mode || task.reviewMode || "human"}
+                {task.checkpoint && <label>{l("审核方式")}<select aria-label={l("审核方式")} value={selectedLoop?.mode || task.reviewMode || "human"}
                     onChange={e => { updateTask({ reviewMode: e.target.value }); if (selectedLoop) setLoop(task.id, { mode: e.target.value, ...(e.target.value === "human" ? { reviewer: undefined } : {}) }); }}>
-                    <option value="human">人工审核</option><option value="ai">AI 审核</option>
+                    <option value="human">{l("人工审核")}</option><option value="ai">{l("AI 审核")}</option>
                   </select>
                 </label>}
-                {selectedKind === "gate" && <section className="gal-flow-loop-settings" aria-label="门控路径与循环">
-                  <h4>PASS · 通过后继续</h4>
+                {selectedKind === "gate" && <section className="gal-flow-loop-settings" aria-label={l("门控路径与循环")}>
+                  <h4>{l("PASS · 通过后继续")}</h4>
                   <div className="gal-flow-pass-targets">
                     {draft.tasks.filter(t => t.id !== task.id && !workflowAncestors(draft.tasks, task.id).has(t.id)).map(t => <label className="gal-flow-check" key={t.id}>
                       <input type="checkbox" checked={t.dependencies.includes(task.id)} onChange={e => {
                         if (e.target.checked) connect(t.id, task.id);
                         else update({ tasks: draft.tasks.map(row => row.id === t.id ? { ...row, dependencies: row.dependencies.filter(id => id !== task.id) } : row) });
-                      }} />{t.subject || "未命名节点"}
+                      }} />{t.subject || l("未命名节点")}
                     </label>)}
                   </div>
-                  {!draft.tasks.some(t => t.dependencies.includes(task.id)) && <p>通过后结束此路径</p>}
-                  <label>REJECT · 返回入口
-                    <select aria-label="REJECT 返回入口" value={selectedLoop?.entryId || ""} onChange={e => setReturn(task.id, e.target.value)}>
-                      <option value="">未设置循环返回线</option>
-                      {draft.tasks.filter(t => !t.checkpoint && t.kind !== "archive" && workflowAncestors(draft.tasks, task.id).has(t.id)).map(t => <option key={t.id} value={t.id}>{t.subject || "未命名节点"}</option>)}
+                  {!draft.tasks.some(t => t.dependencies.includes(task.id)) && <p>{l("通过后结束此路径")}</p>}
+                  <label>{l("REJECT · 返回入口")}<select aria-label={l("REJECT 返回入口")} value={selectedLoop?.entryId || ""} onChange={e => setReturn(task.id, e.target.value)}>
+                      <option value="">{l("未设置循环返回线")}</option>
+                      {draft.tasks.filter(t => !t.checkpoint && t.kind !== "archive" && workflowAncestors(draft.tasks, task.id).has(t.id)).map(t => <option key={t.id} value={t.id}>{t.subject || l("未命名节点")}</option>)}
                     </select>
                   </label>
-                  {!selectedLoop && <p>先连接上游任务，再从门控底部 REJECT 点拖回入口，或在上方选择入口。</p>}
+                  {!selectedLoop && <p>{l("先连接上游任务，再从门控底部 REJECT 点拖回入口，或在上方选择入口。")}</p>}
                   {selectedLoop && <>
-                    {selectedLoop.mode === "ai" && <label>独立审核 Agent
-                      <select aria-label="独立审核 Agent" value={selectedLoop.reviewer || ""} onChange={e => setLoop(task.id, { reviewer: e.target.value })}>
-                        <option value="">选择独立审核 Agent</option>
+                    {selectedLoop.mode === "ai" && <label>{l("独立审核 Agent")}<select aria-label={l("独立审核 Agent")} value={selectedLoop.reviewer || ""} onChange={e => setLoop(task.id, { reviewer: e.target.value })}>
+                        <option value="">{l("选择独立审核 Agent")}</option>
                         {agents.map(a => <option key={a.id} value={a.id} disabled={draft.tasks.some(t => loopBody.includes(t.id) && t.assignee === a.id)}>{a.label}</option>)}
                       </select>
                     </label>}
-                    <label>轮次上限（包含首次）<input aria-label="轮次上限（包含首次）" type="number" min={1} max={20} value={selectedLoop.maxRounds} onChange={e => setLoop(task.id, { maxRounds: Number(e.target.value) })} /></label>
-                    <label>每轮超时（分钟）<input aria-label="每轮超时（分钟）" type="number" min={1} max={1440} value={selectedLoop.timeoutMinutes} onChange={e => setLoop(task.id, { timeoutMinutes: Number(e.target.value) })} /></label>
-                    <label className="gal-flow-check"><input type="checkbox" checked={Boolean(selectedLoop.rejectToEntry)} onChange={e => setLoop(task.id, { rejectToEntry: e.target.checked })} />退回时从入口重跑</label>
-                    {!selectedLoop.rejectToEntry && <p>审核时由 TeamFlow 指定返工任务及其下游。</p>}
-                    {!!loopBody.length && <p>循环内任务：{loopBody.map(id => draft.tasks.find(t => t.id === id)?.subject).join(" → ")}</p>}
-                    {loopIssue && <p role="status" className="gal-error">{loopIssue}</p>}
-                    <button type="button" onClick={() => setReturn(task.id, "")}>删除 REJECT 返回线</button>
+                    <label>{l("轮次上限（包含首次）")}<input aria-label={l("轮次上限（包含首次）")} type="number" min={1} max={20} value={selectedLoop.maxRounds} onChange={e => setLoop(task.id, { maxRounds: Number(e.target.value) })} /></label>
+                    <label>{l("每轮超时（分钟）")}<input aria-label={l("每轮超时（分钟）")} type="number" min={1} max={1440} value={selectedLoop.timeoutMinutes} onChange={e => setLoop(task.id, { timeoutMinutes: Number(e.target.value) })} /></label>
+                    <label className="gal-flow-check"><input type="checkbox" checked={Boolean(selectedLoop.rejectToEntry)} onChange={e => setLoop(task.id, { rejectToEntry: e.target.checked })} />{l("退回时从入口重跑")}</label>
+                    {!selectedLoop.rejectToEntry && <p>{l("审核时由 TeamFlow 指定返工任务及其下游。")}</p>}
+                    {!!loopBody.length && <p>{l("循环内任务：")}{loopBody.map(id => draft.tasks.find(t => t.id === id)?.subject).join(" → ")}</p>}
+                    {loopIssue && <p role="status" className="gal-error">{l(loopIssue)}</p>}
+                    <button type="button" onClick={() => setReturn(task.id, "")}>{l("删除 REJECT 返回线")}</button>
                   </>}
                 </section>}
                 {selectedKind === "archive" && <>
-                  <label className="gal-flow-check"><input type="checkbox" checked={Boolean(task.archive?.copyFiles)} onChange={e => updateTask({ archive: { ...task.archive, copyFiles: e.target.checked } })} />复制成果文件</label>
-                  <p>默认记录证据和文件摘要；开启后由 TeamFlow 按归档策略复制文件。</p>
-                  <label>归档路径（每行一个）<textarea aria-label="归档路径（每行一个）" rows={4} value={(task.archive?.paths || []).join("\n")} onChange={e => updateTask({ archive: { ...task.archive, paths: e.target.value.split("\n") } })} placeholder="留空使用上游交付物与变更文件" /></label>
+                  <label className="gal-flow-check"><input type="checkbox" checked={Boolean(task.archive?.copyFiles)} onChange={e => updateTask({ archive: { ...task.archive, copyFiles: e.target.checked } })} />{l("复制成果文件")}</label>
+                  <p>{l("默认记录证据和文件摘要；开启后由 TeamFlow 按归档策略复制文件。")}</p>
+                  <label>{l("归档路径（每行一个）")}<textarea aria-label={l("归档路径（每行一个）")} rows={4} value={(task.archive?.paths || []).join("\n")} onChange={e => updateTask({ archive: { ...task.archive, paths: e.target.value.split("\n") } })} placeholder={l("留空使用上游交付物与变更文件")} /></label>
                 </>}
                 {!task.checkpoint && task.kind !== "archive" && (
-                  <label>
-                    负责 Agent
-                    <select
-                      aria-label="负责 Agent"
+                  <label>{l("负责 Agent")}<select
+                      aria-label={l("负责 Agent")}
                       value={task.assignee}
                       onChange={(e) => updateTask({ assignee: e.target.value })}
                     >
-                      <option value="">由空闲成员领取</option>
-                      <option value="captain">Captain（主会话）</option>
+                      <option value="">{l("由空闲成员领取")}</option>
+                      <option value="captain">{l("Captain（主会话）")}</option>
                       {agents.map((a) => (
                         <option key={a.id} value={a.id}>
                           {a.label}
@@ -1273,15 +1241,15 @@ export function WorkflowWizard({
                 {[
                   [
                     "requirements",
-                    task.checkpoint ? "通用检查要求" : "通用任务要求",
+                    task.checkpoint ? l("通用检查要求") : l("通用任务要求"),
                   ],
-                  ["deliverables", "通用交付物"],
-                  ["acceptance", "通用验收要求"],
+                  ["deliverables", l("通用交付物")],
+                  ["acceptance", l("通用验收要求")],
                 ].map(([key, label]) => (
                   <label key={key}>
-                    {label}
+                    {l(label)}
                     <textarea
-                      aria-label={label}
+                      aria-label={l(label)}
                       rows={3}
                       maxLength={64000}
                       value={task.general[key]}
@@ -1298,7 +1266,7 @@ export function WorkflowWizard({
             {(task || agent) && (
               <button className="gal-delete" disabled={busy} onClick={() => remove(agent ? [agent.id] : selection)}>
                 <Glyph name="trash" />
-                {agent ? "删除成员" : "删除节点"}
+                {agent ? l("删除成员") : l("删除节点")}
               </button>
             )}
           </aside>
@@ -1307,7 +1275,7 @@ export function WorkflowWizard({
           <div
             className="gal-flow-context-menu"
             role="group"
-            aria-label="画布右键菜单"
+            aria-label={l("画布右键菜单")}
             style={{ left: contextMenu.x, top: contextMenu.y }}
             onPointerDown={(e) => e.stopPropagation()}
           >
@@ -1324,19 +1292,13 @@ export function WorkflowWizard({
                 }));
                 setContextMenu(null);
               }}>
-                <Glyph name="trash" />删除连线
-              </button>
+                <Glyph name="trash" />{l("删除连线")}</button>
             ) : contextMenu.ids.length ? (
               <button
                 className="gal-delete"
                 onClick={() => remove(contextMenu.ids)}
               >
-                <Glyph name="trash" />
-                删除
-                {contextMenu.ids.length > 1
-                  ? ` ${contextMenu.ids.length} 个`
-                  : ""}
-                节点<span>Del</span>
+                <Glyph name="trash" />{contextMenu.ids.length > 1 ? l("删除 {0} 个节点", contextMenu.ids.length) : l("删除节点")}<span>Del</span>
               </button>
             ) : (
               nodeTypes.map(([kind, label]) => (
@@ -1350,7 +1312,7 @@ export function WorkflowWizard({
                   <Glyph
                     name={nodeIcon(kind)}
                   />
-                  {kind === "agent" ? "添加Agent成员" : `添加${label}节点`}
+                  {kind === "agent" ? l("添加Agent成员") : l("添加{0}节点", l(label))}
                 </button>
               ))
             )}
@@ -1359,18 +1321,18 @@ export function WorkflowWizard({
         <footer className="gal-flow-footer">
           <span aria-live="polite">
             {linkFrom
-              ? "拖动连线：松开到另一节点的圆点"
-              : `${agents.length} Agent · ${draft.tasks.length} 流程节点 · ${draft.loops?.length || 0} 循环`}
+              ? l("拖动连线：松开到另一节点的圆点")
+              : l("{0} Agent · {1} 流程节点 · {2} 循环", agents.length, draft.tasks.length, draft.loops?.length || 0)}
           </span>
           {linkFrom && (
-            <button onClick={() => setLinkFrom(null)}>取消连线</button>
+            <button onClick={() => setLinkFrom(null)}>{l("取消连线")}</button>
           )}
           <button
             className="gal-primary"
             disabled={busy || loading}
             onClick={save}
           >
-            {busy ? "保存中…" : "保存 Workflow"}
+            {busy ? l("保存中…") : l("保存 Workflow")}
           </button>
         </footer>
       </section>

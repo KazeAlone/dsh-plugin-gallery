@@ -1,3 +1,4 @@
+import { useGalleryText } from "./i18n.jsx";
 import React from "react";
 import { Glyph, ResourceVisual } from "./icons.jsx";
 
@@ -45,13 +46,13 @@ export function ResourceCover({ resource }) {
 }
 
 export function ResourceCoverPicker({ resource, onChange }) {
+  const l = useGalleryText();
   const value = covers.some(({ id }) => id === resource.cover) ? resource.cover : "";
   return (
     <div className="gal-cover-picker">
-      <label>封面
-        <select value={value} onChange={(event) => onChange(event.target.value)}>
-          <option value="">按用途自动选择</option>
-          {covers.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}
+      <label>{l("封面")}<select value={value} onChange={(event) => onChange(event.target.value)}>
+          <option value="">{l("按用途自动选择")}</option>
+          {covers.map(({ id, label }) => <option key={id} value={id}>{l(label)}</option>)}
         </select>
       </label>
       <ResourceCover resource={resource} />

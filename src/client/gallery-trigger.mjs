@@ -1,5 +1,6 @@
+import { createGalleryText } from "./locale.mjs";
 /** Native slash suggestions; choosing a row only inserts a skill token, never submits. */
-export function createGalleryTrigger(remote, icon) {
+export function createGalleryTrigger(remote, icon, getText = () => createGalleryText("zh")) {
   return {
     trigger: "/",
     name: "Gallery",
@@ -12,7 +13,7 @@ export function createGalleryTrigger(remote, icon) {
               {
                 name: "gallery",
                 label: "Gallery",
-                description: "选择 Gallery Skill",
+                description: getText()("选择 Gallery Skill"),
                 icon,
                 value: "open",
                 drill: true,
@@ -23,7 +24,7 @@ export function createGalleryTrigger(remote, icon) {
       const result = await remote.uiSkillCatalog();
       signal?.throwIfAborted();
       if (result?.ok === false)
-        throw new Error(result.error?.message || "无法读取 Gallery Skill");
+        throw new Error(getText()(result.error?.message || "无法读取 Gallery Skill"));
       const rows = result?.ok === true ? result.value : result;
       const search = key.startsWith("gallery/") ? key.slice(8) : "";
       return rows
