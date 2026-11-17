@@ -397,7 +397,7 @@ function Gallery({ remote }) {
     if (busy) return;
     return run(async () => {
       if (!storageSettings.configured) {
-        const storage = await call(remote, "uiConfigureStorage");
+        const storage = await call(remote, "uiConfigureStorage", json({ type: "internal" }));
         setStatus((x) => ({ ...x, storage }));
       }
       setStorageSettings(null);
@@ -1156,15 +1156,36 @@ function Gallery({ remote }) {
             <div className="gal-dialog-body">
               <div className="gal-storage-providers">
                 {storageSettings.providers.map((provider) => (
-                  <div
+                  <button
+                    type="button"
                     key={provider.type}
-                    className={provider.available ? "active" : ""}
+                    className={(storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === provider.type ? "active" : ""}
+                    aria-pressed={(storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === provider.type}
+                    disabled={busy}
+                    onClick={() => { setStorageSettings(x => ({ ...x, type: provider.type })); setConnectionResult(""); }}
                   >
                     <strong>{provider.name}</strong>
-                    <span>{provider.available ? "可用" : "后续接入"}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
+              {(storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === "service" && <>
+                <label className="gal-username-setting">服务地址
+                  <input type="url" placeholder="http://127.0.0.1:8090" value={storageSettings.service?.url || ""}
+                    onChange={e => { setStorageSettings(x => ({ ...x, service: { ...x.service, url: e.target.value } })); setConnectionResult(""); }} />
+                </label>
+                <label className="gal-username-setting">访问密钥
+                  <input type="password" autoComplete="new-password" value={storageSettings.service?.token || ""}
+                    placeholder={storageSettings.service?.hasToken ? "已保存，留空保留原密钥" : "填写中心服务访问密钥"}
+                    onChange={e => { setStorageSettings(x => ({ ...x, service: { ...x.service, token: e.target.value } })); setConnectionResult(""); }} />
+                </label>
+                <p>填写 Gallery 中心服务地址，不是数据库端口。远程连接使用 HTTPS。</p>
+                <p>共享此密钥的 DSH 可以读取、编辑和删除中心资源，包括使用已保存的 MCP 认证。仅发给可信成员。</p>
+                <label className="gal-storage-consent"><input type="checkbox" checked={Boolean(storageSettings.service?.allowStdio)}
+                  onChange={e => setStorageSettings(x => ({ ...x, service: { ...x.service, allowStdio: e.target.checked } }))} />
+                  允许中心 stdio MCP 在此 DSH 执行本机命令（仅信任资源作者时开启）
+                </label>
+              </>}
+              <p>切换后显示对应资源库；已有资源保留在原处，不自动迁移。</p>
               <label className="gal-username-setting">
                 用户名
                 <input
@@ -1188,7 +1209,7 @@ function Gallery({ remote }) {
                       "uiSetUsername",
                       json({ username: storageSettings.username }),
                     );
-                    setStorageSettings(storage);
+                    setStorageSettings(x => ({ ...storage, type: x.type, service: x.service || storage.service }));
                     setStatus((x) => ({ ...x, storage }));
                     setConnectionResult("用户名已保存，用于之后创建的资源。");
                   })
@@ -1200,7 +1221,7 @@ function Gallery({ remote }) {
               {error && <p role="alert">{error}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.20.8</span>
+              <span className="gal-local">v0.25.0</span>
               <button
                 disabled={busy}
                 onClick={() =>
@@ -1208,7 +1229,7 @@ function Gallery({ remote }) {
                     await call(
                       remote,
                       "uiTestStorage",
-                      json({ libraryId: "local" }),
+                      json({ type: storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal"), ...storageSettings.service }),
                     );
                     setConnectionResult("资源库可用");
                   })
@@ -1219,7 +1240,20 @@ function Gallery({ remote }) {
               <button
                 className="gal-primary"
                 disabled={busy}
-                onClick={closeStorage}
+                onClick={() => run(async () => {
+                  await call(remote, "uiSetUsername", json({ username: storageSettings.username }));
+                  const storage = await call(remote, "uiConfigureStorage", json({
+                    type: storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal"),
+                    ...storageSettings.service,
+                  }));
+                  setStatus(x => ({ ...x, storage }));
+                  setSelected(null);
+                  setEditor(null);
+                  setStorageSettings(null);
+                  setOffset(0);
+                  setRefresh(x => x + 1);
+                  setNotice("存储设置已保存");
+                })}
               >
                 {busy ? "处理中…" : "完成"}
               </button>

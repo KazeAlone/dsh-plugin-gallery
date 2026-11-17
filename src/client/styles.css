@@ -665,7 +665,7 @@
 .gal-storage-providers {
   margin-bottom: 24px;
 }
-.gal-storage-providers > div {
+.gal-storage-providers > :is(div, button) {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -677,7 +677,7 @@
   font-weight: 500;
 }
 .gal-storage-providers span,
-.gal-storage-providers > div:not(.active) {
+.gal-storage-providers > :is(div, button):not(.active) {
   color: var(--g-muted);
 }
 .gal-storage .gal-dialog-body > p {
@@ -2245,3 +2245,12 @@ fieldset.gal-skill-fields {
 .gal .gal-file-status>span:first-child {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
 .gal .gal-file-status>span:last-child {flex-shrink:0;}
 @media(max-width:600px){.gal .gal-file-status{flex-direction:column;gap:3px;}.gal .gal-directory-list{height:260px;}.gal .gal-server-toolbar{gap:7px;}}
+
+.gal-storage-providers > button { text-align: left; cursor: pointer; font: inherit; }
+.gal-storage-providers > button.active { border-color: var(--g-accent); }
+
+.gal .gal-storage-providers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.gal .gal-storage-providers > button { width: 100%; min-height: 56px; padding: 12px; border: 1px solid var(--g-line); white-space: normal; }
+.gal .gal-storage-providers > button.active { border-color: var(--g-accent); color: var(--g-ink); background: var(--g-soft); }
+.gal label.gal-storage-consent { flex-direction: row; align-items: flex-start; font-weight: 400; font-size: 13px; }
+.gal .gal-storage-consent input { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 3px; padding: 0; }

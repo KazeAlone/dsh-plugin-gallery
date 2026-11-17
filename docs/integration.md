@@ -13,21 +13,21 @@
 
 `revision` 用于防止多窗口覆盖，不是历史版本。Gallery 不执行资源内容；消费方自行管理转换与执行生命周期。
 
-原 `GalleryClient` 及 HTTP 服务模块暂时保留供后续统一存储扩展，不用于默认宿主运行链路。
+原 v1 HTTP/SQLite 服务模块保留但不用于默认链路；中心服务使用独立 v2 API，详见[中心存储](center-storage.md)。
 
 ## 存储适配边界
 
-宿主经 `StorageManager` 将资源操作委托给具体适配器。当前仅注册内部文件适配器；中心服务尚不可启用。内部存储固定使用一个默认库，不再提供新增连接接口。不再读取或切换旧版额外资源库；activeLibraryId 固定为 local。
+宿主经 `StorageManager` 将资源操作委托给具体适配器。注册内部文件适配器及 PostgreSQL 中心服务适配器。内部存储固定一个默认库，不读取旧版额外资源库；activeLibraryId 为 local 或 center。宿主方法始终返回 Promise；直接使用 StorageManager 时，内部资源操作同步、中心操作异步，消费者统一 await。
 
 资源详情和列表项增加 `libraryId`。`resolveReference` 与 `getSnapshot` 接受 `{libraryId?,id,digest?}`，指定库时不会退回当前库；`getResource(id,{libraryId})` 也可读取指定库。未指定库的旧调用仍使用当前库。metadata 中的业务引用格式由消费插件解释；标准 references 数组现在保留 libraryId。
 
 浏览器通过 owner RPC 调用：
 
 - `uiStorageSettings()`：读取连接列表、当前库、后端可用性和能力。
-- `uiTestStorage(payload)`：检查指定本地库文件格式；这是读取检查，不保证后续写入权限或磁盘空间。
-- `uiConfigureStorage()`：确认使用默认内部存储，并保存单库配置。
+- `uiTestStorage(payload)`：type=internal 检查本地格式；type=service 使用 url/token 检查中心服务认证和数据库就绪，不修改当前选择。
+- `uiConfigureStorage(payload)`：保存 type=internal 或 type=service。中心配置接受 url/token/allowStdio，验证连接成功后切换；已有同址 token 留空可保留。
 
-当前支持读取、新建、编辑，不支持历史、共享和自动迁移。后续后端必须遵循同一资源数据结构及 revision 冲突语义；中心服务凭据不得返回浏览器或写入普通连接配置。
+当前支持读取、新建、编辑、删除和中心共享，不支持历史与自动迁移。两种后端遵循同一资源结构及 revision 冲突语义；访问密钥写入宿主 0600 配置，不由设置接口返回浏览器。
 
 ## Skill 实际使用计数
 

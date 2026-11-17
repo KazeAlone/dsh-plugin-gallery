@@ -26,7 +26,7 @@ async function readRecord(path) {
 export async function syncWorkflowUsage(ctx, store) {
   try {
     const adapter = store.adapter();
-    const rows = adapter.read().resources.filter((row) => row.type === "workflow");
+    const rows = (await adapter.read("workflow")).resources.filter((row) => row.type === "workflow");
     if (!rows.length) return;
     const byResource = new Map(rows.map((row) => [row.id, row]));
     const templateRoot = process.env.DSH_TEAMFLOW_TEMPLATE_DIR ?? join(homedir(), ".dsh-teamflow", "templates");
@@ -52,7 +52,7 @@ export async function syncWorkflowUsage(ctx, store) {
           const usageId = digest(JSON.stringify(["workflow", "teamflow", path, team.id]));
           const eventId = digest(usageId);
           if (row.usageEventIds?.includes(eventId)) continue;
-          adapter.recordResourceUse({ id: row.id, type: "workflow", usageId });
+          await adapter.recordResourceUse({ id: row.id, type: "workflow", usageId });
           (row.usageEventIds ??= []).push(eventId);
         }
       }

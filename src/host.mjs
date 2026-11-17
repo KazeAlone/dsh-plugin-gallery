@@ -33,7 +33,7 @@ export default class GalleryService extends TypertRemoteService {
     this.store = new StorageManager(
       join(process.env.DSH_HOME ?? join(homedir(), ".dsh"), "gallery"),
     );
-    installReferenceExamples(this.store.adapter());
+    installReferenceExamples(this.store.adapter("local"));
     this.memberAccess = new WeakMap();
     this.skillProvider = createSkillProvider(this.store, (scope) => this.memberAccess.get(scope)?.gallerySkill !== false);
     this.invalidateSkills = () => {};
@@ -59,8 +59,19 @@ export default class GalleryService extends TypertRemoteService {
       }));
       scope.effect(() => registerGalleryAgentListTool(scope, this.store));
       scope.effect(() => {
-        void runtime.refresh();
+        void runtime.refresh().catch(error => this.ctx.logger?.warn?.(`Gallery MCP refresh failed: ${error.message}`));
+        const timer = setInterval(() => {
+          try {
+            if (this.store.read().activeLibraryId !== "center") return;
+            this.invalidateSkills();
+            void runtime.refresh().catch(error => this.ctx.logger?.warn?.(`Gallery center refresh failed: ${error.message}`));
+          } catch (error) {
+            this.ctx.logger?.warn?.(`Gallery storage configuration error: ${error.message}`);
+          }
+        }, 30000);
+        timer.unref?.();
         return async () => {
+          clearInterval(timer);
           if (this.mcpRuntime === runtime) this.mcpRuntime = null;
           await runtime.dispose();
         };
@@ -158,8 +169,8 @@ export default class GalleryService extends TypertRemoteService {
   }
   uiStatus() {
     return this.ownerCall(() => {
-      this.store.adapter().read();
-      return { ready: true, mode: "local", storage: this.store.settings() };
+      if (this.store.read().activeLibraryId === "local") this.store.adapter().read();
+      return { ready: true, mode: this.store.read().activeLibraryId, storage: this.store.settings() };
     });
   }
   uiList(payload) {
@@ -171,7 +182,7 @@ export default class GalleryService extends TypertRemoteService {
   }
   uiGet(id) {
     return this.ownerCall(async () => {
-      const resource = this.store.getResource(id);
+      const resource = await this.store.getResource(id);
       if (resource.type !== "workflow") return resource;
       await syncWorkflowUsage(this.ctx, this.store);
       return this.store.getResource(id);
@@ -180,25 +191,17 @@ export default class GalleryService extends TypertRemoteService {
   uiCreate(payload) {
     return this.ownerCall(async () => {
       const input = JSON.parse(payload);
-      if (input.type === "mcp") this.validateMcpName(input);
+      if (input.type === "mcp") await this.validateMcpName(input);
       if (input.type === "workflow") workflowFromResource(input);
-      const r = this.store.createResource(input);
+      const r = await this.store.createResource(input);
       this.invalidateSkills();
       if (input.type === "mcp") await this.mcpRuntime?.refresh();
       return r;
     });
   }
-  validateMcpName(resource, excludeId) {
+  async validateMcpName(resource, excludeId) {
     const config = validateMcpConfig(resource.metadata?.mcp);
-    const duplicate = this.store
-      .adapter()
-      .read()
-      .resources.some(
-        (row) =>
-          row.type === "mcp" &&
-          row.id !== excludeId &&
-          row.metadata?.mcp?.serverName === config.serverName,
-      );
+    const duplicate = (await this.store.adapter().read("mcp")).resources.some(row => row.type === "mcp" && row.id !== excludeId && row.metadata?.mcp?.serverName === config.serverName);
     demand(
       !duplicate,
       409,
@@ -207,22 +210,22 @@ export default class GalleryService extends TypertRemoteService {
     );
   }
   uiCheckMcp(payload) {
-    return this.ownerCall(() => {
+    return this.ownerCall(async () => {
       const { resourceId, credentials, ...config } = JSON.parse(payload);
-      const row = resourceId ? this.store.adapter().read().resources.find(r => r.id === resourceId && r.type === "mcp") : undefined;
+      const row = resourceId ? (await this.store.adapter().read("mcp")).resources.find(r => r.id === resourceId && r.type === "mcp") : undefined;
       demand(!resourceId || row, 404, "NOT_FOUND", "MCP 资源不存在");
       return checkMcpConnection(config, mergeMcpCredentials(config, credentials, row?.privateMcpCredentials));
     });
   }
   uiExtractWorkflowAgent(payload) {
-    return this.ownerCall(() => {
+    return this.ownerCall(async () => {
       const { resourceId } = JSON.parse(payload);
-      return extractWorkflowAgent(this.ctx, this.store.getResource(resourceId));
+      return extractWorkflowAgent(this.ctx, await this.store.getResource(resourceId));
     });
   }
   uiPublishWorkflow(id) {
     return this.ownerCall(async () => {
-      const resource = this.store.getResource(id);
+      const resource = await this.store.getResource(id);
       demand(resource.type === "workflow", 400, "INVALID_TYPE", "仅 Workflow 可以安装到 TeamFlow");
       return publishToTeamflow(resource, process.env.DSH_TEAMFLOW_TEMPLATE_DIR);
     });
@@ -238,21 +241,21 @@ export default class GalleryService extends TypertRemoteService {
       if (!this.ctx.get("skills"))
         throw new Error("DSH Skill 服务未启用，请使用支持 Skill 的预设。");
       const candidates = await this.skillProvider.list();
-      return candidates
+      return Promise.all(candidates
         .filter((c) => c.invocation.userInvocable)
-        .map((c) => ({
+        .map(async (c) => ({
           name: c.name,
-          label: this.store.getResource(c.locator).name,
+          label: (await this.store.getResource(c.locator)).name,
           description: c.description,
-        }));
+        })));
     });
   }
   uiUpdate(id, payload) {
     return this.ownerCall(async () => {
       const p = JSON.parse(payload);
-      if (p.resource?.type === "mcp") this.validateMcpName(p.resource, id);
+      if (p.resource?.type === "mcp") await this.validateMcpName(p.resource, id);
       if (p.resource?.type === "workflow") workflowFromResource(p.resource);
-      const r = this.store.updateResource(id, p.resource, p.expectedRevision);
+      const r = await this.store.updateResource(id, p.resource, p.expectedRevision);
       this.invalidateSkills();
       if (r.type === "mcp") await this.mcpRuntime?.refresh();
       return r;
@@ -260,13 +263,13 @@ export default class GalleryService extends TypertRemoteService {
   }
   uiDelete(id, payload) {
     return this.ownerCall(async () => {
-      const before = this.store.getResource(id);
-      const result = this.store.deleteResource(
+      const before = await this.store.getResource(id);
+      const result = await this.store.deleteResource(
         id,
         JSON.parse(payload).expectedRevision,
       );
       this.invalidateSkills();
-      if (before.type === "mcp") await this.mcpRuntime?.refresh();
+      if (before.type === "mcp") await this.mcpRuntime?.refresh().catch(error => this.ctx.logger?.warn?.(`Gallery MCP refresh failed: ${error.message}`));
       return result;
     });
   }
@@ -281,7 +284,16 @@ export default class GalleryService extends TypertRemoteService {
   uiTestStorage(payload) {
     return this.ownerCall(() => this.store.testConnection(JSON.parse(payload)));
   }
-  uiConfigureStorage() {
-    return this.ownerCall(() => this.store.configure());
+  uiConfigureStorage(payload = "{}") {
+    return this.ownerCall(async () => {
+      const before = this.store.read();
+      const result = await this.store.configure(JSON.parse(payload));
+      if (before.activeLibraryId !== result.activeLibraryId || before.service?.url !== result.service?.url) {
+        await this.mcpRuntime?.dispose();
+      }
+      this.invalidateSkills();
+      await this.mcpRuntime?.refresh().catch(error => this.ctx.logger?.warn?.(`Gallery MCP refresh failed: ${error.message}`));
+      return result;
+    });
   }
 }

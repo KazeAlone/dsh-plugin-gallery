@@ -1,6 +1,6 @@
 # 一键部署 PostgreSQL
 
-这是独立的数据库准备脚本。当前 Gallery 仍使用 DSH 内部存储；执行脚本不会迁移资源，也不会让插件自动连接数据库。后续需通过中心服务接口接入。
+这是独立的数据库准备脚本。执行脚本不会迁移资源，也不会让插件自动连接数据库。安装成功后，按照[中心服务连接说明](center-storage.md)再执行 `scripts/install-center.sh`，然后在插件中选择中心服务。
 
 适用于带有 systemd 的 Ubuntu / Debian 服务器，需要 sudo 权限和外网访问。脚本会在缺少 Docker 时使用 Docker 官方安装脚本安装，并启用 Docker 开机启动。
 

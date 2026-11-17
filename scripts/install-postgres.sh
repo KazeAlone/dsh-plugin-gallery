@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Standalone database preparation; Gallery does not connect to it yet.
+# Database preparation; run install-center.sh next to connect Gallery.
 set -euo pipefail
 
 if [ "$(id -u)" -ne 0 ]; then

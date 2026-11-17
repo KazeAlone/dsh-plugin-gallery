@@ -86,16 +86,13 @@ export function createSkillProvider(store, allowed = () => true) {
     async list({ signal, scope } = {}) {
       signal?.throwIfAborted();
       if (!allowed(scope)) return [];
-      return store
-        .adapter()
-        .read()
-        .resources.map(skillCandidate)
+      return (await store.adapter().read("skill")).resources.map(skillCandidate)
         .filter(Boolean);
     },
     async get(candidate, { signal, scope } = {}) {
       signal?.throwIfAborted();
       if (!allowed(scope)) return undefined;
-      const resource = store.getResource(candidate.locator);
+      const resource = await store.getResource(candidate.locator);
       const current = skillCandidate(resource);
       if (!current || current.name !== candidate.name) return undefined;
       const path = materializeSkill(store.directory, resource);

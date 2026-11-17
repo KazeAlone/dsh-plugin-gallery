@@ -8,13 +8,18 @@ import {
 import { join } from "node:path";
 import { userInfo } from "node:os";
 import { randomUUID } from "node:crypto";
+import { RemoteGalleryStore } from "./remote-store.mjs";
+import { serviceUrl } from "./client-api.mjs";
 import { LocalGalleryStore } from "./local-store.mjs";
 import { demand } from "./model.mjs";
 
 export const STORAGE_PROVIDERS = [
   { type: "internal", name: "DSH 内部存储", available: true },
-  { type: "service", name: "中心服务", available: false },
+  { type: "service", name: "中心服务", available: true },
 ];
+
+const mapResult = (value, fn) =>
+  value instanceof Promise ? value.then(fn) : fn(value);
 
 /** Connection registry; resource operations are delegated to storage adapters. */
 export class StorageManager {
@@ -48,14 +53,33 @@ export class StorageManager {
       ...(typeof config.username === "string" && config.username.trim()
         ? { username: config.username }
         : {}),
-      activeLibraryId: "local",
-      libraries: [{ id: "local", type: "internal", name: "本地资源库" }],
+      ...(config.service ? { service: config.service } : {}),
+      activeLibraryId:
+        config.activeLibraryId === "center" && config.service
+          ? "center"
+          : "local",
+      libraries: [
+        { id: "local", type: "internal", name: "本地资源库" },
+        ...(config.service
+          ? [{ id: "center", type: "service", name: "中心资源库" }]
+          : []),
+      ],
     };
   }
 
   settings() {
+    const { service, ...config } = this.read();
     return {
-      ...this.read(),
+      ...config,
+      ...(service
+        ? {
+            service: {
+              url: service.url,
+              hasToken: Boolean(service.token),
+              allowStdio: Boolean(service.allowStdio),
+            },
+          }
+        : {}),
       username: this.username(),
       providers: STORAGE_PROVIDERS,
       capabilities: {
@@ -65,7 +89,7 @@ export class StorageManager {
         update: true,
         delete: true,
         history: false,
-        sharing: false,
+        sharing: config.activeLibraryId === "center",
         migration: false,
       },
     };
@@ -99,7 +123,9 @@ export class StorageManager {
     return library;
   }
   adapter(id) {
-    this.library(id);
+    const library = this.library(id);
+    if (library.type === "service")
+      return new RemoteGalleryStore(this.read().service);
     return new LocalGalleryStore(join(this.directory, "resources.json"));
   }
 
@@ -129,75 +155,119 @@ export class StorageManager {
       rmSync(lock, { recursive: true, force: true });
     }
   }
-  testConnection({ libraryId, type = "internal" } = {}) {
+  connection(input = {}) {
+    const previous = this.read().service;
+    const url = serviceUrl(input.url || previous?.url);
+    const token =
+      input.token || (url === previous?.url ? previous?.token : undefined);
     demand(
-      type === "internal",
+      typeof token === "string" &&
+        token.length >= 16 &&
+        token.length <= 512 &&
+        !/\s/.test(token),
+      400,
+      "INVALID_SERVICE_TOKEN",
+      "请填写中心服务访问密钥（至少 16 位）",
+    );
+    return {
+      url,
+      token,
+      allowStdio:
+        input.allowStdio === undefined
+          ? Boolean(previous?.allowStdio)
+          : input.allowStdio === true,
+    };
+  }
+  testConnection(input = {}) {
+    if (input.type === "service") {
+      const adapter = new RemoteGalleryStore(this.connection(input));
+      return adapter.health().then(() => ({ ready: true, type: "service" }));
+    }
+    demand(
+      !input.type || input.type === "internal",
       400,
       "PROVIDER_UNAVAILABLE",
       "此存储方式尚未接入",
     );
-    const library = this.library(libraryId);
-    this.adapter(library.id).read();
-    return { ready: true, libraryId: library.id, type: library.type };
+    const adapter = input.libraryId
+      ? this.adapter(input.libraryId)
+      : new LocalGalleryStore(join(this.directory, "resources.json"));
+    return mapResult(adapter.read(), () => ({ ready: true, type: "internal" }));
   }
-  configure() {
-    this.testConnection();
-    return this.change(() => {});
+  configure(input = {}) {
+    demand(
+      !input.type || ["internal", "service"].includes(input.type),
+      400,
+      "PROVIDER_UNAVAILABLE",
+      "此存储方式尚未接入",
+    );
+    if (input.type === "service") {
+      const connection = this.connection(input);
+      return new RemoteGalleryStore(connection).health().then(() =>
+        this.change((config) => {
+          config.service = connection;
+          config.activeLibraryId = "center";
+        }),
+      );
+    }
+    this.testConnection({ type: "internal" });
+    return this.change((config) => {
+      config.activeLibraryId = "local";
+    });
   }
   listResources(query) {
     const libraryId = this.read().activeLibraryId;
-    const page = this.adapter(libraryId).listResources(query);
-    return {
+    return mapResult(this.adapter(libraryId).listResources(query), (page) => ({
       ...page,
       libraryId,
       items: page.items.map((r) => ({ ...r, libraryId })),
-    };
+    }));
   }
   getResource(id, libraryId) {
     const library = this.library(libraryId);
-    return {
-      ...this.adapter(library.id).getResource(id),
+    return mapResult(this.adapter(library.id).getResource(id), (row) => ({
+      ...row,
       libraryId: library.id,
-    };
+    }));
   }
   createResource(input) {
     const libraryId = this.read().activeLibraryId;
-    return {
-      ...this.adapter(libraryId).createResource(input, {
+    return mapResult(
+      this.adapter(libraryId).createResource(input, {
         username: this.username(),
       }),
-      libraryId,
-    };
+      (row) => ({ ...row, libraryId }),
+    );
   }
   updateResource(id, input, expectedRevision) {
     const libraryId = this.read().activeLibraryId;
-    return {
-      ...this.adapter(libraryId).updateResource(id, input, expectedRevision),
-      libraryId,
-    };
+    return mapResult(
+      this.adapter(libraryId).updateResource(id, input, expectedRevision),
+      (row) => ({ ...row, libraryId }),
+    );
   }
   deleteResource(id, expectedRevision) {
     return this.adapter().deleteResource(id, expectedRevision);
   }
   recordSkillUse({ libraryId, ...input } = {}) {
     const library = this.library(libraryId);
-    return {
-      ...this.adapter(library.id).recordSkillUse(input),
+    return mapResult(this.adapter(library.id).recordSkillUse(input), (row) => ({
+      ...row,
       libraryId: library.id,
-    };
+    }));
   }
   resolveReference(ref) {
     const library = this.library(ref.libraryId);
-    return {
-      ...this.adapter(library.id).resolveReference(ref),
+    return mapResult(this.adapter(library.id).resolveReference(ref), (row) => ({
+      ...row,
       libraryId: library.id,
-    };
+    }));
   }
   getSnapshot(ref) {
     const library = this.library(ref.libraryId);
-    return {
-      ...this.adapter(library.id).getSnapshot(ref),
+    return mapResult(this.adapter(library.id).getSnapshot(ref), (row) => ({
+      ...row,
       libraryId: library.id,
-    };
+    }));
   }
 }

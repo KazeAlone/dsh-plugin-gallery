@@ -74,7 +74,7 @@ var methods = {
   uiSetUsername: ["payload"],
   uiStorageSettings: [],
   uiTestStorage: ["payload"],
-  uiConfigureStorage: []
+  uiConfigureStorage: ["payload"]
 };
 var DESCRIPTORS = Object.entries(methods).map(([method, names2]) => ({
   id: `dsh-plugin-gallery#gallery/${method}`,
@@ -758,7 +758,7 @@ var styles_default = `.gal {
 .gal-storage-providers {
   margin-bottom: 24px;
 }
-.gal-storage-providers > div {
+.gal-storage-providers > :is(div, button) {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -770,7 +770,7 @@ var styles_default = `.gal {
   font-weight: 500;
 }
 .gal-storage-providers span,
-.gal-storage-providers > div:not(.active) {
+.gal-storage-providers > :is(div, button):not(.active) {
   color: var(--g-muted);
 }
 .gal-storage .gal-dialog-body > p {
@@ -2338,6 +2338,15 @@ fieldset.gal-skill-fields {
 .gal .gal-file-status>span:first-child {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
 .gal .gal-file-status>span:last-child {flex-shrink:0;}
 @media(max-width:600px){.gal .gal-file-status{flex-direction:column;gap:3px;}.gal .gal-directory-list{height:260px;}.gal .gal-server-toolbar{gap:7px;}}
+
+.gal-storage-providers > button { text-align: left; cursor: pointer; font: inherit; }
+.gal-storage-providers > button.active { border-color: var(--g-accent); }
+
+.gal .gal-storage-providers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.gal .gal-storage-providers > button { width: 100%; min-height: 56px; padding: 12px; border: 1px solid var(--g-line); white-space: normal; }
+.gal .gal-storage-providers > button.active { border-color: var(--g-accent); color: var(--g-ink); background: var(--g-soft); }
+.gal label.gal-storage-consent { flex-direction: row; align-items: flex-start; font-weight: 400; font-size: 13px; }
+.gal .gal-storage-consent input { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 3px; padding: 0; }
 `;
 
 // src/client/leaderboards.jsx
@@ -12725,7 +12734,7 @@ function Gallery({ remote }) {
     if (busy) return;
     return run(async () => {
       if (!storageSettings.configured) {
-        const storage = await call(remote, "uiConfigureStorage");
+        const storage = await call(remote, "uiConfigureStorage", json2({ type: "internal" }));
         setStatus((x) => ({ ...x, storage }));
       }
       setStorageSettings(null);
@@ -13281,14 +13290,50 @@ function Gallery({ remote }) {
       /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: "close" })
     )),
     /* @__PURE__ */ import_react14.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "gal-storage-providers" }, storageSettings.providers.map((provider) => /* @__PURE__ */ import_react14.default.createElement(
-      "div",
+      "button",
       {
+        type: "button",
         key: provider.type,
-        className: provider.available ? "active" : ""
+        className: (storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === provider.type ? "active" : "",
+        "aria-pressed": (storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === provider.type,
+        disabled: busy,
+        onClick: () => {
+          setStorageSettings((x) => ({ ...x, type: provider.type }));
+          setConnectionResult("");
+        }
       },
-      /* @__PURE__ */ import_react14.default.createElement("strong", null, provider.name),
-      /* @__PURE__ */ import_react14.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
-    ))), /* @__PURE__ */ import_react14.default.createElement("label", { className: "gal-username-setting" }, "\u7528\u6237\u540D", /* @__PURE__ */ import_react14.default.createElement(
+      /* @__PURE__ */ import_react14.default.createElement("strong", null, provider.name)
+    ))), (storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === "service" && /* @__PURE__ */ import_react14.default.createElement(import_react14.default.Fragment, null, /* @__PURE__ */ import_react14.default.createElement("label", { className: "gal-username-setting" }, "\u670D\u52A1\u5730\u5740", /* @__PURE__ */ import_react14.default.createElement(
+      "input",
+      {
+        type: "url",
+        placeholder: "http://127.0.0.1:8090",
+        value: storageSettings.service?.url || "",
+        onChange: (e) => {
+          setStorageSettings((x) => ({ ...x, service: { ...x.service, url: e.target.value } }));
+          setConnectionResult("");
+        }
+      }
+    )), /* @__PURE__ */ import_react14.default.createElement("label", { className: "gal-username-setting" }, "\u8BBF\u95EE\u5BC6\u94A5", /* @__PURE__ */ import_react14.default.createElement(
+      "input",
+      {
+        type: "password",
+        autoComplete: "new-password",
+        value: storageSettings.service?.token || "",
+        placeholder: storageSettings.service?.hasToken ? "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u4FDD\u7559\u539F\u5BC6\u94A5" : "\u586B\u5199\u4E2D\u5FC3\u670D\u52A1\u8BBF\u95EE\u5BC6\u94A5",
+        onChange: (e) => {
+          setStorageSettings((x) => ({ ...x, service: { ...x.service, token: e.target.value } }));
+          setConnectionResult("");
+        }
+      }
+    )), /* @__PURE__ */ import_react14.default.createElement("p", null, "\u586B\u5199 Gallery \u4E2D\u5FC3\u670D\u52A1\u5730\u5740\uFF0C\u4E0D\u662F\u6570\u636E\u5E93\u7AEF\u53E3\u3002\u8FDC\u7A0B\u8FDE\u63A5\u4F7F\u7528 HTTPS\u3002"), /* @__PURE__ */ import_react14.default.createElement("p", null, "\u5171\u4EAB\u6B64\u5BC6\u94A5\u7684 DSH \u53EF\u4EE5\u8BFB\u53D6\u3001\u7F16\u8F91\u548C\u5220\u9664\u4E2D\u5FC3\u8D44\u6E90\uFF0C\u5305\u62EC\u4F7F\u7528\u5DF2\u4FDD\u5B58\u7684 MCP \u8BA4\u8BC1\u3002\u4EC5\u53D1\u7ED9\u53EF\u4FE1\u6210\u5458\u3002"), /* @__PURE__ */ import_react14.default.createElement("label", { className: "gal-storage-consent" }, /* @__PURE__ */ import_react14.default.createElement(
+      "input",
+      {
+        type: "checkbox",
+        checked: Boolean(storageSettings.service?.allowStdio),
+        onChange: (e) => setStorageSettings((x) => ({ ...x, service: { ...x.service, allowStdio: e.target.checked } }))
+      }
+    ), "\u5141\u8BB8\u4E2D\u5FC3 stdio MCP \u5728\u6B64 DSH \u6267\u884C\u672C\u673A\u547D\u4EE4\uFF08\u4EC5\u4FE1\u4EFB\u8D44\u6E90\u4F5C\u8005\u65F6\u5F00\u542F\uFF09")), /* @__PURE__ */ import_react14.default.createElement("p", null, "\u5207\u6362\u540E\u663E\u793A\u5BF9\u5E94\u8D44\u6E90\u5E93\uFF1B\u5DF2\u6709\u8D44\u6E90\u4FDD\u7559\u5728\u539F\u5904\uFF0C\u4E0D\u81EA\u52A8\u8FC1\u79FB\u3002"), /* @__PURE__ */ import_react14.default.createElement("label", { className: "gal-username-setting" }, "\u7528\u6237\u540D", /* @__PURE__ */ import_react14.default.createElement(
       "input",
       {
         value: storageSettings.username || "",
@@ -13309,14 +13354,14 @@ function Gallery({ remote }) {
             "uiSetUsername",
             json2({ username: storageSettings.username })
           );
-          setStorageSettings(storage);
+          setStorageSettings((x) => ({ ...storage, type: x.type, service: x.service || storage.service }));
           setStatus((x) => ({ ...x, storage }));
           setConnectionResult("\u7528\u6237\u540D\u5DF2\u4FDD\u5B58\uFF0C\u7528\u4E8E\u4E4B\u540E\u521B\u5EFA\u7684\u8D44\u6E90\u3002");
         })
       },
       "\u4FDD\u5B58\u7528\u6237\u540D"
     ), connectionResult && /* @__PURE__ */ import_react14.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react14.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react14.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "gal-local" }, "v0.20.8"), /* @__PURE__ */ import_react14.default.createElement(
+    /* @__PURE__ */ import_react14.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "gal-local" }, "v0.25.0"), /* @__PURE__ */ import_react14.default.createElement(
       "button",
       {
         disabled: busy,
@@ -13324,7 +13369,7 @@ function Gallery({ remote }) {
           await call(
             remote,
             "uiTestStorage",
-            json2({ libraryId: "local" })
+            json2({ type: storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal"), ...storageSettings.service })
           );
           setConnectionResult("\u8D44\u6E90\u5E93\u53EF\u7528");
         })
@@ -13335,7 +13380,20 @@ function Gallery({ remote }) {
       {
         className: "gal-primary",
         disabled: busy,
-        onClick: closeStorage
+        onClick: () => run(async () => {
+          await call(remote, "uiSetUsername", json2({ username: storageSettings.username }));
+          const storage = await call(remote, "uiConfigureStorage", json2({
+            type: storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal"),
+            ...storageSettings.service
+          }));
+          setStatus((x) => ({ ...x, storage }));
+          setSelected(null);
+          setEditor(null);
+          setStorageSettings(null);
+          setOffset(0);
+          setRefresh((x) => x + 1);
+          setNotice("\u5B58\u50A8\u8BBE\u7F6E\u5DF2\u4FDD\u5B58");
+        })
       },
       busy ? "\u5904\u7406\u4E2D\u2026" : "\u5B8C\u6210"
     ))

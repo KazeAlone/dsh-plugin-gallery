@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-gallery",
-  "version": "0.24.1",
+  "version": "0.25.0",
   "description": "Local DSH resource gallery for skills, agents, MCP and workflows",
   "type": "module",
   "main": "./src/host.mjs",
@@ -19,7 +19,8 @@
     "docs",
     "cordis.patch.yml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "deploy"
   ],
   "engines": {
     "node": ">=24.9.0",
@@ -44,10 +45,10 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.0.5",
-    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.3 || 0.2.1-rc.5",
-    "react": ">=18 <20",
+    "@deepseek-ai/dsh-mcp-client": "0.2.1-rc.3 || 0.2.1-rc.5",
     "@deepseek-ai/dsh-tools": "0.2.1-rc.3 || 0.2.1-rc.5",
-    "@deepseek-ai/dsh-mcp-client": "0.2.1-rc.3 || 0.2.1-rc.5"
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.3 || 0.2.1-rc.5",
+    "react": ">=18 <20"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {
@@ -67,19 +68,20 @@
     }
   },
   "devDependencies": {
+    "@deepseek-ai/dsh-mcp-client": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.5",
     "@modelcontextprotocol/server": "^2.2.0",
     "esbuild": "0.25.12",
     "prettier": "3.6.2",
-    "react": "18.3.1",
-    "@deepseek-ai/dsh-tools": "0.2.1-rc.5",
-    "@deepseek-ai/dsh-mcp-client": "0.2.1-rc.5"
+    "react": "18.3.1"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test test/*.test.mjs",
     "check": "node scripts/check.mjs",
     "prepack": "npm run build && npm run check && npm test",
-    "format": "prettier --write src scripts test"
+    "format": "prettier --write src scripts test",
+    "center": "node scripts/center.mjs"
   },
   "license": "MIT",
   "repository": {
@@ -95,6 +97,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/client": "^2.2.0",
+    "pg": "^8.23.1",
     "yaml": "^2.9.1"
   }
 }

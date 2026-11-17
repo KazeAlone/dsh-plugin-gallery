@@ -4,7 +4,7 @@ Workflow 画布原型支持添加和拖动 Agent、任务、人工节点，配�
 
 内置 `gallery-skill-reference` 参考 Skill，包含完整文件头、执行指引、输入输出示例、三类附件、标签和封面。升级首次启动时添加，可查看、编辑和调用；修改或删除后不会在重启时恢复。
 
-运行在 DSH 内的本地资源库，用于管理 **Skill、Agent 描述、MCP 配置和 Workflow 模板**。Workflow 使用 TeamFlow 的原生模板结构，可从资源详情安装到 TeamFlow 个人模板库。
+运行在 DSH 内的资源库，用于管理 **Skill、Agent 描述、MCP 配置和 Workflow 模板**。Workflow 使用 TeamFlow 的原生模板结构，可从资源详情安装到 TeamFlow 个人模板库。
 
 打开「Gallery」即可使用，**无需填写姓名、接入码或 Gallery 身份凭证**。沿用 DSH 自身的宿主访问认证，不增加插件登录流程。
 
@@ -22,11 +22,11 @@ npx dsh plugin --profile web add github:KazeAlone/dsh-plugin-gallery --ignore-sc
 
 本地目录链接与安装包的依赖行为不同，详见[安装说明](docs/installation.md)。
 
-准备中心存储数据库可使用[PostgreSQL 一键部署脚本](docs/database-setup.md)。这仅部署数据库，当前插件尚未接入中心数据库。
+中心存储先使用[PostgreSQL 一键部署脚本](docs/database-setup.md)，再按照[中心服务连接说明](docs/center-storage.md)启动服务。在存储设置选择「中心服务」即可连接；默认仍使用 DSH 内部存储。
 
 ## 本地存储
 
-无需启动 `gallery.mjs serve`，无需配置服务地址，也不连接 SQLite 或统一数据库。默认数据文件：
+默认内部存储无需启动 `gallery.mjs serve` 或数据库；如需共享资源，可切换到 PostgreSQL 中心服务。默认内部存储的数据文件：
 
 ```text
 $DSH_HOME/gallery/resources.json
@@ -45,7 +45,7 @@ $DSH_HOME/gallery/resources.json
 - 每个资源最多 100 个文件，总计 5 MiB；资源类型创建后固定。
 - `metadata` 保存扩展配置，`references` 保存 `{id,digest?}` 引用。
 
-Gallery 保存和读取资源。有效的 Agent 可通过会话工具 `gallery_agent_list`、`gallery_agent_run` 交给 DSH `spawn` 子 Agent 执行；需要启用 DSH tools、subagents 和 spawn 提供方。保存的 MCP 服务通过 DSH 官方 MCP 客户端注册为 `mcp__<serverName>__<tool>` 会话工具，认证值直接在 MCP 配置页面填写，无需预先设置宿主环境变量。Workflow 可以安装到 TeamFlow 模板库，再从 TeamFlow 模板库应用到会话；Gallery 本身不执行 Workflow。默认模板目录为 `~/.dsh-teamflow/templates`，如 TeamFlow 配置了其他 `templateDirectory`，请给 Gallery 进程设置 `DSH_TEAMFLOW_TEMPLATE_DIR` 为相同路径。当前不提供发布版本、历史回滚和远程同步。
+Gallery 保存和读取资源。有效的 Agent 可通过会话工具 `gallery_agent_list`、`gallery_agent_run` 交给 DSH `spawn` 子 Agent 执行；需要启用 DSH tools、subagents 和 spawn 提供方。保存的 MCP 服务通过 DSH 官方 MCP 客户端注册为 `mcp__<serverName>__<tool>` 会话工具，认证值直接在 MCP 配置页面填写，无需预先设置宿主环境变量。Workflow 可以安装到 TeamFlow 模板库，再从 TeamFlow 模板库应用到会话；Gallery 本身不执行 Workflow。默认模板目录为 `~/.dsh-teamflow/templates`，如 TeamFlow 配置了其他 `templateDirectory`，请给 Gallery 进程设置 `DSH_TEAMFLOW_TEMPLATE_DIR` 为相同路径。当前不提供发布版本或历史回滚。中心服务提供共享存取，不自动迁移或镜像内部资源。
 
 Gallery 顶部的主题按钮可切换「跟随系统」「墨绿黄铜」「暖纸」「漫画印刷」「鎏金星穹」「霓虹玻璃」「次元放映室」「原神 · 冒险手册」和「纸境 · Paper」。纸境提供独立的侧边导航、四类 TOP 3 调用榜、插画资源卡片、标签筛选、排序和右侧详情抽屉；顶部 ◐ 按钮切换浅色与深色。新建和编辑继续使用原有的资源专用向导，存储、调用、导出、删除及 TeamFlow 接口保持一致。鎏金星穹可在页眉暂停动效，并遵循系统的减少动态效果设置。主题选择只保存在当前浏览器。
 
@@ -64,7 +64,7 @@ Skill 自动识别 `SKILL.md`，带入 `references/`、`scripts/`、`assets/`。
 
 通过同宿主 `ctx.gallery` 使用 `listResources(query)`、`getResource(id)`、`resolveReference({id,digest?})` 和 `getSnapshot({id,digest?})`。引用包含 digest 时，资源变化会返回冲突；执行方可以保存快照保证本次运行内容一致。
 
-宿主通过独立的本地文件存储适配器访问资源，后续统一数据库可在此边界扩展。原共享 HTTP/SQLite 实现及测试暂保留为后续接入参考，不属于默认运行链路。详见 [接口说明](docs/integration.md) 和 [存储说明](docs/storage.md)。
+宿主通过独立的存储适配器访问资源，可选择本地文件或 PostgreSQL 中心服务。原共享 HTTP/SQLite 实现及测试暂保留，不属于当前中心服务运行链路。详见 [接口说明](docs/integration.md) 和 [存储说明](docs/storage.md)。
 
 ## 开发
 
@@ -82,7 +82,7 @@ npm pack
 
 首次打开可直接选择默认的「DSH 内部存储」。右上角「存储设置」可检查存储。内部存储固定使用一个默认资源库，不再提供新建本地资源库入口。关闭首次选择会保留并确认默认资源库，无需身份或接入码。
 
-当前仅内部存储可用，固定读取 `gallery/resources.json`。中心服务作为后续适配方向展示，暂不可配置或启用。存储设置不再显示「当前资源库」，也不提供创建或切换资源库功能。
+内部存储固定读取 `gallery/resources.json`，不再创建额外内部库。存储设置可选择内部存储或 PostgreSQL 中心服务，连接检查通过后保存；切换不会迁移或覆盖另一侧资源。
 
 旧多库配置不会再决定当前数据来源，额外库不再读取；确认存储配置后仅保存默认库配置。资源引用中的 libraryId 当前只能为 local，旧额外库引用不再解析。
 
