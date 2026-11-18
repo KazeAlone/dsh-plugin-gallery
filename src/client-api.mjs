@@ -3,7 +3,9 @@ import { demand, GalleryError } from "./model.mjs";
 export function serviceUrl(value) {
   let url;
   try {
-    url = new URL(value);
+    const address = typeof value === "string" ? value.trim() : "";
+    demand(address, 400, "INVALID_URL", "共享服务地址无效");
+    url = new URL(address.includes("://") ? address : "http://" + address);
   } catch {
     demand(false, 400, "INVALID_URL", "共享服务地址无效");
   }
@@ -18,14 +20,18 @@ export function serviceUrl(value) {
     "服务地址只能包含协议、主机与端口",
   );
   demand(
-    url.protocol === "https:" ||
-      (url.protocol === "http:" &&
-        ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)),
+    ["https:", "http:"].includes(url.protocol),
     400,
     "INSECURE_URL",
-    "远程共享服务必须使用 HTTPS，本机允许 HTTP",
+    "中心服务地址仅支持 HTTP 或 HTTPS",
   );
   return url.origin;
+}
+
+/** A protocol change on the same endpoint must preserve the DSH's identity. */
+export function sameCenterEndpoint(first, second) {
+  if (!first || !second) return false;
+  return new URL(serviceUrl(first)).host === new URL(serviceUrl(second)).host;
 }
 const certificateDispatchers = new Map();
 function certificateDispatcher(ca) {

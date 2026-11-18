@@ -1,84 +1,81 @@
-# PostgreSQL 中心资源库（0.26.0）
+# 公司内网中心资源库（0.29.0）
 
-中心服务只存储资源，执行仍在各自 DSH / TeamFlow。所有成员可查看、导出和使用资源；只有创建者的独立身份可以编辑、删除自己的资源。检查同时发生在列表/详情权限标记与服务端写入事务内。
+中心只存储资源，不运行 Agent、MCP 或 Workflow。所有成员可查看和使用资源；每个 DSH 自动保存独立身份，只有创建者可以编辑、删除自己的资源。
 
-## 服务器：开放 HTTPS 8088
+## 服务器一键部署
 
-已执行过 `scripts/install-postgres.sh` 的服务器，在更新后的 Gallery 仓库根目录执行：
-
-```bash
-git pull
-sudo bash scripts/install-center.sh --public-host 109.105.132.53 --public-port 8088
-```
-
-需要 Docker Compose >= 2.24.4。脚本保留数据库数据卷和密码，在 Docker 内网连接 `postgres:5432`；不修改原来的 `compose.yaml`，通过覆盖配置移除数据库的宿主机端口映射，再由 HTTPS 网关使用 8088。因此 8088 从 PostgreSQL 入口变为 Gallery 服务入口，不需要对外开放数据库权限。其他端口配置（例如 DSH 网页）保持原样。
-
-脚本自动生成和保存 HTTPS CA，导出公开根证书 `/opt/gallery-db/gallery-center-ca.crt`。此证书不是密钥，可以分发给成员；不要分发 CA 私钥或 Docker TLS 数据卷。防火墙/云安全组需允许所需客户端访问 TCP 8088，脚本不会修改防火墙。
-
-接入密钥仍位于 `/opt/gallery-db/center.env` 的 `GALLERY_API_TOKEN`。查询：
+在 Linux 服务器上的 Gallery 仓库根目录执行：
 
 ```bash
-sudo grep '^GALLERY_API_TOKEN=' /opt/gallery-db/center.env
+git pull --ff-only origin main
+sudo bash scripts/install-center.sh --port 8088
 ```
 
-重复执行会保留接入密钥、加密密钥、证书及资源数据。对外地址保存在 `public.env`，以后不带参数执行也沿用此地址。`--local-only` 明确切回本机 API，并移除网关容器（保留证书卷）。仅本机连接时可继续使用 `http://127.0.0.1:8090`。
+**不需要先运行数据库安装脚本。** 这条命令负责准备 Docker（Ubuntu / Debian 可自动安装）、PostgreSQL 和 Center，默认对公司内网开放 HTTP 8088。数据库只在 Docker 网络中使用，不映射宿主机端口；不再部署 Caddy，也不需要分发密钥或证书。防火墙/安全组只需放行客户端到服务器的 TCP 8088。
+
+脚本会显示一个本机 IP；有多个网卡或需要指定显示地址时，可加 `--public-host 109.105.132.53`。该参数用于显示接入地址，不影响默认监听全部网卡。首次需要下载容器镜像和少量依赖，耗时取决于服务器网络；以后代码未变时直接复用镜像，不再构建。Center 只安装 PostgreSQL 驱动，等待数据库健康后才启动。
+
+本方案面向公司可信内网，HTTP 不加密传输，能够访问该端口的客户端可注册并读取共享资源。公网访问或需要加密时，应在前面配置公司 HTTPS 网关。插件仍支持 HTTPS，并保留已有连接的证书配置。
 
 ## 每个用户的 DSH
 
-双方都更新插件到 **0.26.0** 并重启 DSH，在 Gallery「存储设置」中：
+更新 Gallery 到 **0.29.0** 并重启 DSH，在「存储设置」选择中心服务，填写：
 
-1. 填写自己的显示用户名。
-2. 选择中心服务，地址填 **`https://109.105.132.53:8088`**。
-3. 首次填写共享接入密钥。
-4. 将管理员提供的 `gallery-center-ca.crt` 下载到浏览器所在电脑，在「服务器证书」上传。
-5. 点击「检查存储」，成功后点击「完成」。
+```text
+109.105.132.53:8088
+```
 
-证书上传后仅由当前中心连接使用，不关闭 HTTPS 校验，也不需要修改系统证书或 Node 启动环境变量。证书必须与服务器实际提供的证书匹配。若已有受信任的公司 HTTPS 反向代理，可填写其 HTTPS 地址，证书上传留空。
+点击「检查存储」，成功后点击「完成」。无需填写共享接入密钥、无需上传证书。用户名默认使用当前 DSH 服务器系统用户名，可以自行修改显示名称；即使重名，也不会共用编辑权限。真正连接中心的是 DSH 宿主，不是浏览器。
 
-页面可以在另一台电脑打开；真正连接中心服务的是 DSH 宿主。
+第一次保存时自动注册独立身份。以后重启、切换存储、再次保存同一地址都会沿用原身份。检查连接不会提前创建用户。内部库和中心库独立，切换不自动迁移资源，可使用 Gallery JSON 导入导出。
+
+## 从原来的两步部署升级
+
+在**原服务器**运行上面同一个脚本即可。继续使用 `/opt/gallery-db` 和原 Compose 项目、`gallery_data` 数据卷；数据库密码、MCP 加密密钥、用户凭证和已有资源全部保留。旧配置在 `/opt/gallery-db/backups/` 下自动备份。旧 HTTPS 网关容器会被移除，原证书卷保留。
+
+客户端将原地址 `https://109.105.132.53:8088` 改为 `109.105.132.53:8088`，同一主机和端口上的协议切换会保留原身份及资源归属。不要删除或互相复制 DSH 的 `gallery/storage.json`。如果同时换了主机或端口，应先备份身份文件，并单独安排身份迁移，避免建立新身份。
+
+新插件与中心需一起升级。若旧中心仍要求密钥，新插件会提示在服务器运行新版部署脚本。
+
+## 日常操作
+
+脚本会创建一个管理入口，不必再拼接两个 Compose 配置文件：
+
+```bash
+# 查看状态
+sudo /opt/gallery-db/gallery-center ps
+
+# 查看日志
+sudo /opt/gallery-db/gallery-center logs --tail=50 center
+
+# 服务器重启后容器会自动启动；也可以手动启动
+sudo /opt/gallery-db/gallery-center up -d
+```
+
+升级 Center 时，在源码仓库 `git pull --ff-only origin main` 后重新执行 `sudo bash scripts/install-center.sh`；沿用已保存的端口。需要重新构建镜像时加 `--rebuild`。仅本机使用时加 `--local-only`。这些操作都不删除数据库卷。
+
+需要备份数据库和 `/opt/gallery-db/center.env`；后者包含 MCP 认证的加密密钥，丢失后无法解密已有认证。每个用户还需备份自己的 DSH `gallery/storage.json` 身份文件。配置备份不是数据库备份。
 
 ## 身份和权限
 
-- 共享接入密钥仅用于接入检查和首次注册，不再能直接读写资源，也不是管理员万能密钥。
-- 首次保存连接时，中心为该 DSH 生成随机 userId 和独立用户凭证。中心数据库只存用户凭证的 SHA-256 哈希；明文凭证只保存在该 DSH 的 `gallery/storage.json`（0600），不由设置接口回传页面。
-- `gallery_users` 保存用户 ID、显示名称、凭证哈希、创建时间。资源由服务端写入 `creator.userId`，不信任客户端传入的创建者 ID。用户名相同或修改显示名称，都不会改变资源归属。
-- A、B 可读取和使用彼此四类资源，包括保存的 MCP 认证；A 不能编辑/删除 B 的资源，B 也不能编辑/删除 A 的资源。直接调用 HTTP 接口同样返回 403。
-- `scope=mine` 按稳定用户 ID 筛选；普通列表和详情的 canEdit/canDelete 由服务器按当前身份计算。
-- `gallery_audit` 事务性记录创建、修改、删除的操作者 ID、资源 ID、动作和时间。调用次数继续使用 usageId 去重，不授予任何编辑权限。
-- 重启 DSH、切换到内部存储再切回、重新填写同一服务的接入密钥，都会保留原有独立身份。
+- 免共享接入密钥不等于共用身份。Center 为每个 DSH 生成随机 userId 和用户凭证，自动保存在该 DSH 的 `gallery/storage.json`（0600），不回传到浏览器。数据库只存凭证哈希。
+- 未注册的客户端只能检查服务和注册身份，不能直接读写资源。无效的旧身份不会被悄悄替换成新身份。
+- 资源归属由服务端按凭证写入，不信任客户端提供的用户名或 userId。A、B 不能修改或删除彼此资源；改成相同用户名也不会获得权限。
+- 资源更新/删除保留 revision 并发检查、事务及审计记录。调用次数使用 usageId 去重。
+- 当前身份对应独立的 DSH 数据目录，尚未接公司 SSO。身份文件丢失后，不能仅凭同名用户名找回归属。
+- MCP 认证在数据库中使用 AES-256-GCM 加密；成员 DSH 可读取并使用共享 MCP 认证。中心 stdio MCP 仍需在各 DSH 设置中明确允许。
 
-**当前身份对应独立的 DSH 数据目录，不是公司 SSO 账号。** 两人应使用各自的 DSH / DSH_HOME，不要互相复制 `gallery/storage.json`；复制文件等同于共享身份。请备份自己的身份文件，丢失后不能仅凭同名用户名找回归属。
-
-## 从 0.25.0 升级
-
-插件与中心服务需一起升级。旧客户端只有共用密钥，升级后不能继续直接读写中心资源；需更新插件并重新保存中心连接，自动建立独立身份。
-
-旧资源没有可信的 userId，升级后保留、可查看和使用，但默认只读。不会按用户名自动认领，以免同名用户接管他人的数据。管理员可在服务器终端查看身份列表，并将**全部未归属旧资源**明确分配给指定身份：
+原来没有可信 userId 的旧资源不会按用户名自动认领。管理员可在服务器查看身份，再明确分配全部未归属旧资源：
 
 ```bash
-cd /opt/gallery-db
-sudo docker compose --env-file .env --env-file center-build.env \
-  -f compose.yaml -f center.compose.yaml exec center node scripts/center-users.mjs list
+sudo /opt/gallery-db/gallery-center exec center node scripts/center-users.mjs list
+sudo /opt/gallery-db/gallery-center exec center node scripts/center-users.mjs assign-legacy <userId>
 ```
 
-确认目标 userId 后，将末尾命令改为 `node scripts/center-users.mjs assign-legacy <userId>`。只影响没有归属的旧资源，不转移已有归属；会增加 revision 并写入审计记录。这是服务器管理员操作，不开放给共享接入密钥持有人。
+此操作不转移已有归属，并写入审计记录。
 
-## 存储和运维
+自建部署仍支持 `GALLERY_API_TOKEN` 加共享注册密钥的旧方式；一键脚本通过 `GALLERY_OPEN_ENROLLMENT=true` 开启免密注册。插件设置页已简化，旧连接保存在宿主上的凭证和证书仍可继续使用。
 
-- 内部与中心库独立，切换不自动迁移或合并资源；可使用 Gallery JSON 导入导出。
-- 第一版每个完整资源包存为一个 PostgreSQL JSONB 行，沿用 100 文件、5 MiB 限制；暂不保存历史版本或拆分对象存储。
-- 编辑/删除使用 revision 和行锁，防止并发覆盖；断线报错，不静默写回内部存储。
-- MCP 认证以 AES-256-GCM 加密保存，普通详情和列表不返回明文。成员宿主运行接口可读取并使用这些认证，不提供每用户 MCP 密钥隔离。
-- 中心 stdio MCP 默认不自动执行，仍需在各自 DSH 的存储设置明确允许；HTTP MCP 沿用原有运行方式。
-- 中心 MCP 变更最多约 30 秒在其他 DSH 刷新，Skill 目录定期失效；页面刷新可读取其他人的更新。
-- 数据库备份需同时保存 `center.env`，丢失加密密钥会无法解密 MCP 认证。对外部署还需备份 TLS 数据卷；成员需分别备份自己的 DSH 身份文件。
+## 开发验证
 
-查看服务日志：
-
-```bash
-cd /opt/gallery-db
-sudo docker compose --env-file .env --env-file center-build.env \
-  -f compose.yaml -f center.compose.yaml logs --tail=50 center gateway
-```
-
-开发验证使用 `GALLERY_TEST_DATABASE_URL` 执行 `node --test test/center.test.mjs`。测试创建独立随机 schema 并清理，不清空已有资源表；测试账号需有创建 schema 权限。
+`GALLERY_TEST_DATABASE_URL=... node --test test/center.test.mjs` 在随机独立 schema 中验证真实 PostgreSQL、跨用户权限、MCP 加密和免密接入，测试后清理，不清空应用数据。`node --test test/center-installer.test.mjs` 验证新装、旧部署升级、镜像复用及配置保留。

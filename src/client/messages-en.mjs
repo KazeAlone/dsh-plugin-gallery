@@ -501,6 +501,12 @@ export const english = {
   "服务器证书（可选）": "Server certificate (optional)",
   "服务器路径不存在，请检查绝对路径":
     "Server path not found. Check the absolute path.",
+  "填写服务器 IP 和端口即可，无需接入密钥或证书。":
+    "Enter the server IP and port. No access key or certificate needed.",
+  "中心服务地址仅支持 HTTP 或 HTTPS":
+    "The center address must use HTTP or HTTPS",
+  "中心服务尚未开启免密接入，请在服务器运行新版部署脚本":
+    "Update the center deployment script on the server to enable automatic enrollment.",
   服务地址: "Service URL",
   "服务地址只能包含协议、主机与端口":
     "Service URLs may only contain a protocol, host and port",

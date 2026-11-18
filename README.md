@@ -8,6 +8,8 @@ Workflow 采用成员栏与流程画布分离的布局：Agent 在成员栏统�
 
 打开「Gallery」即可使用，**无需填写姓名、接入码或 Gallery 身份凭证**。沿用 DSH 自身的宿主访问认证，不增加插件登录流程。
 
+公司内网中心存储可一键部署：`sudo bash scripts/install-center.sh --port 8088`，自动准备数据库和 Center。插件只填 `服务器IP:8088`，无需共享密钥或证书，保留独立用户编辑权限。首次下载镜像需要网络，后续可复用镜像。详见[中心存储部署](docs/center-storage.md)。
+
 ## 安装
 
 要求 Node.js >=24.9、DSH 0.2.1-rc.3 或 0.2.1-rc.5。
@@ -22,7 +24,7 @@ npx dsh plugin --profile web add github:KazeAlone/dsh-plugin-gallery --ignore-sc
 
 本地目录链接与安装包的依赖行为不同，详见[安装说明](docs/installation.md)。
 
-中心存储先使用[PostgreSQL 一键部署脚本](docs/database-setup.md)，再按照[中心服务连接说明](docs/center-storage.md)启动服务。在存储设置选择「中心服务」即可连接；默认仍使用 DSH 内部存储。0.26.0 中心连接自动建立各 DSH 的独立身份：全员可读可用，仅作者可编辑/删除。支持 HTTPS IP 入口及页面上传服务器根证书。
+中心存储使用[一键中心服务部署](docs/center-storage.md)，无需单独安装数据库。默认仍使用 DSH 内部存储。
 
 ## 本地存储
 

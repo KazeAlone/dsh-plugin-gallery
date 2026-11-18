@@ -20,6 +20,9 @@ await store.initialize();
 const server = createCenterServer({
   store,
   token: process.env.GALLERY_API_TOKEN,
+  openEnrollment:
+    process.env.GALLERY_OPEN_ENROLLMENT === "true" ||
+    !process.env.GALLERY_API_TOKEN,
 });
 server.listen(
   Number(process.env.PORT || 8090),

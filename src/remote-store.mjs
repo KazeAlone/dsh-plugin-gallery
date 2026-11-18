@@ -1,5 +1,5 @@
 import { demand } from "./model.mjs";
-import { GalleryClient } from "./client-api.mjs";
+import { GalleryClient, sameCenterEndpoint } from "./client-api.mjs";
 
 /** Only the DSH host contacts the center; its token is never returned to the UI. */
 export class RemoteGalleryStore {
@@ -15,7 +15,18 @@ export class RemoteGalleryStore {
     return this.client.request("/v2/runtime?" + new URLSearchParams({ type }));
   }
   async health() {
-    const status = await this.client.request("/v2/health");
+    let status;
+    try {
+      status = await this.client.request("/v2/health");
+    } catch (error) {
+      demand(
+        error.status !== 401 || Boolean(this.client.credential),
+        400,
+        "CENTER_UPGRADE_REQUIRED",
+        "中心服务尚未开启免密接入，请在服务器运行新版部署脚本",
+      );
+      throw error;
+    }
     demand(
       status.ready &&
         status.protocol === 3 &&
@@ -38,9 +49,10 @@ export class RemoteGalleryStore {
       "中心服务身份响应无效",
     );
     // Re-entering the shared enrollment key must not replace an existing identity.
-    if (previous?.userId && previous.url === this.client.url) {
+    if (previous?.userId && sameCenterEndpoint(previous.url, this.client.url)) {
       return new RemoteGalleryStore({
         ...previous,
+        url: this.client.url,
         caCertificate: this.client.caCertificate,
       }).connect(username);
     }

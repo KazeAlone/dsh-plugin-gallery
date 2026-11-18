@@ -449,3 +449,158 @@ test("HTTPS center requires a trusted certificate and preserves per-connection C
   // Trust is scoped to this center client; the process-wide trust store is unchanged.
   await assert.rejects(new RemoteGalleryStore({ url, token }).health());
 });
+
+test("intranet enrollment needs only an address; writes still require individual identity", async (t) => {
+  const users = new Map();
+  const server = createCenterServer({
+    store: {
+      health: async () => ({
+        ready: true,
+        protocol: 3,
+        storage: "postgres",
+        ownership: true,
+      }),
+      enroll: async (username) => {
+        const token = "guser_" + randomBytes(32).toString("hex");
+        const user = { id: randomBytes(8).toString("hex"), username };
+        users.set(token, user);
+        return { token, user };
+      },
+      authenticate: async (token) => users.get(token),
+    },
+  });
+  const root = mkdtempSync(join(tmpdir(), "gallery-intranet-"));
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+    rmSync(root, { recursive: true, force: true });
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = "127.0.0.1:" + server.address().port;
+  const url = "http://" + address;
+  const a = new StorageManager(join(root, "a"));
+  const b = new StorageManager(join(root, "b"));
+  a.setUsername("Alice");
+  b.setUsername("Bob");
+  assert.equal(
+    (await a.testConnection({ type: "service", url: address })).ready,
+    true,
+  );
+  assert.equal(users.size, 0, "checking never creates a user");
+  await a.configure({ type: "service", url: address });
+  await b.configure({ type: "service", url: address });
+  const identity = a.read().service;
+  assert.notEqual(identity.userId, b.read().service.userId);
+  assert.ok(identity.token.startsWith("guser_"));
+  assert.ok(!JSON.stringify(a.settings()).includes(identity.token));
+  await a.configure({ type: "internal" });
+  await new StorageManager(a.directory).configure({
+    type: "service",
+    url: address,
+  });
+  assert.equal(a.read().service.token, identity.token);
+  assert.equal(users.size, 2);
+  // Upgrading the old HTTPS deployment to HTTP on the same address preserves ownership.
+  a.change((config) => {
+    config.service.url = "https://" + address;
+  });
+  await a.configure({ type: "service", url: address });
+  assert.equal(a.read().service.userId, identity.userId);
+  assert.equal(a.read().service.token, identity.token);
+  assert.equal(users.size, 2);
+  assert.equal(a.connection({ url: "127.0.0.1:9999" }).token, undefined);
+  const anonymous = await fetch(url + "/v2/resources");
+  assert.equal(anonymous.status, 401);
+  const invalid = await fetch(url + "/v2/health", {
+    headers: { Authorization: "Bearer invalid" },
+  });
+  assert.equal(
+    invalid.status,
+    401,
+    "an invalid identity must not silently become a new user",
+  );
+  const enroll = await fetch(url + "/v2/enroll", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: "" }),
+  });
+  assert.equal(enroll.status, 400);
+});
+
+test(
+  "intranet PostgreSQL: no shared key, stable ownership, restart and encrypted MCP",
+  { skip: !database },
+  async (t) => {
+    const schema = "gallery_open_" + randomBytes(8).toString("hex");
+    const admin = new pg.Pool({ connectionString: database });
+    await admin.query(`CREATE SCHEMA ${schema}`);
+    const pool = new pg.Pool({
+      connectionString: database,
+      options: `-c search_path=${schema}`,
+    });
+    const store = new PostgresGalleryStore(
+      pool,
+      randomBytes(32).toString("hex"),
+    );
+    await store.initialize();
+    const root = mkdtempSync(join(tmpdir(), "gallery-open-pg-"));
+    // Existing deployments may retain their old bootstrap key; anonymous enrollment is explicit.
+    const server = createCenterServer({
+      store,
+      token: randomBytes(32).toString("hex"),
+      openEnrollment: true,
+    });
+    await new Promise((r) => server.listen(0, "127.0.0.1", r));
+    t.after(async () => {
+      server.closeAllConnections();
+      await new Promise((r) => server.close(r));
+      await pool.end();
+      await admin.query(`DROP SCHEMA ${schema} CASCADE`);
+      await admin.end();
+      rmSync(root, { recursive: true, force: true });
+    });
+    const url = "127.0.0.1:" + server.address().port;
+    const a = new StorageManager(join(root, "a"));
+    const b = new StorageManager(join(root, "b"));
+    a.setUsername("Alice");
+    b.setUsername("Bob");
+    await a.configure({ type: "service", url });
+    await b.configure({ type: "service", url });
+    const saved = await a.createResource(skill);
+    assert.equal((await b.getResource(saved.id)).canEdit, false);
+    await assert.rejects(b.updateResource(saved.id, skill, 1), { status: 403 });
+    await assert.rejects(b.deleteResource(saved.id, 1), { status: 403 });
+    await b.setUsername("Alice");
+    await assert.rejects(b.deleteResource(saved.id, 1), { status: 403 });
+    const restored = new StorageManager(a.directory);
+    await restored.configure({ type: "service", url });
+    assert.equal(restored.read().service.userId, saved.creator.userId);
+    await restored.updateResource(saved.id, { ...skill, name: "Updated" }, 1);
+    const mcp = await a.createResource({
+      type: "mcp",
+      name: "Library",
+      files: [],
+      metadata: {
+        mcp: validateMcpConfig({
+          serverName: "library",
+          transport: "streamable-http",
+          url: "https://example.com/mcp",
+          credentialKeys: ["Authorization"],
+        }),
+      },
+      mcpCredentials: { Authorization: "Bearer private-test" },
+    });
+    const raw = await pool.query(
+      "SELECT body FROM gallery_resources WHERE id=$1",
+      [mcp.id],
+    );
+    assert.equal(JSON.stringify(raw.rows).includes("private-test"), false);
+    assert.equal(
+      (await b.adapter().read("mcp")).resources[0].privateMcpCredentials
+        .Authorization,
+      "Bearer private-test",
+    );
+    await restored.deleteResource(saved.id, 2);
+    await assert.rejects(b.getResource(saved.id), { status: 404 });
+  },
+);

@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { userInfo } from "node:os";
 import { randomUUID, X509Certificate } from "node:crypto";
 import { RemoteGalleryStore } from "./remote-store.mjs";
-import { serviceUrl } from "./client-api.mjs";
+import { serviceUrl, sameCenterEndpoint } from "./client-api.mjs";
 import { LocalGalleryStore } from "./local-store.mjs";
 import { demand } from "./model.mjs";
 
@@ -163,12 +163,14 @@ export class StorageManager {
     const previous = this.read().service;
     const url = serviceUrl(input.url || previous?.url);
     const token =
-      input.token || (url === previous?.url ? previous?.token : undefined);
+      input.token ||
+      (sameCenterEndpoint(url, previous?.url) ? previous?.token : undefined);
     demand(
-      typeof token === "string" &&
-        token.length >= 16 &&
-        token.length <= 512 &&
-        !/\s/.test(token),
+      !token ||
+        (typeof token === "string" &&
+          token.length >= 16 &&
+          token.length <= 512 &&
+          !/\s/.test(token)),
       400,
       "INVALID_SERVICE_TOKEN",
       "请填写中心服务访问密钥（至少 16 位）",

@@ -15,9 +15,15 @@ function validUsername(value) {
   );
   return value.trim();
 }
-export function createCenterServer({ store, token, logger = console }) {
+export function createCenterServer({
+  store,
+  token,
+  openEnrollment = !token,
+  logger = console,
+}) {
   demand(
-    typeof token === "string" && token.length >= 32 && !/\s/.test(token),
+    (!token && openEnrollment) ||
+      (typeof token === "string" && token.length >= 32 && !/\s/.test(token)),
     500,
     "INVALID_API_TOKEN",
     "中心服务访问密钥至少需要 32 位",
@@ -35,10 +41,9 @@ export function createCenterServer({ store, token, logger = console }) {
       };
       try {
         const authorization = req.headers.authorization || "";
-        const bootstrap = timingSafeEqual(
-          hash(authorization),
-          hash("Bearer " + token),
-        );
+        const bootstrap =
+          Boolean(token) &&
+          timingSafeEqual(hash(authorization), hash("Bearer " + token));
         const credential = authorization.startsWith("Bearer ")
           ? authorization.slice(7)
           : "";
@@ -46,8 +51,18 @@ export function createCenterServer({ store, token, logger = console }) {
           !bootstrap && credential
             ? await store.authenticate(credential)
             : undefined;
-        demand(bootstrap || actor, 401, "UNAUTHORIZED", "中心服务访问密钥无效");
         const url = new URL(req.url, "http://localhost");
+        const enrollment =
+          openEnrollment &&
+          !authorization &&
+          ((url.pathname === "/v2/health" && req.method === "GET") ||
+            (url.pathname === "/v2/enroll" && req.method === "POST"));
+        demand(
+          bootstrap || actor || enrollment,
+          401,
+          "UNAUTHORIZED",
+          "中心服务访问密钥无效",
+        );
         const parts = url.pathname.split("/").filter(Boolean);
         let body = {};
         if (["POST", "PUT", "DELETE"].includes(req.method)) {
@@ -89,7 +104,12 @@ export function createCenterServer({ store, token, logger = console }) {
               : { kind: "enrollment" },
           });
         if (url.pathname === "/v2/enroll" && req.method === "POST") {
-          demand(bootstrap, 403, "ENROLLMENT_REQUIRED", "需要中心服务接入密钥");
+          demand(
+            bootstrap || enrollment,
+            403,
+            "ENROLLMENT_REQUIRED",
+            "需要中心服务接入密钥",
+          );
           return send(201, await store.enroll(validUsername(body.username)));
         }
         demand(

@@ -300,18 +300,23 @@ test("文件路径、大小、编码及共享地址边界", () => {
     "TOO_LARGE",
   );
   for (const url of [
-    "http://example.com",
     "https://a:b@example.com",
     "https://example.com/?secret=x",
   ])
-    throwsCode(
-      () => serviceUrl(url),
-      url.startsWith("http:") ? "INSECURE_URL" : "INVALID_URL",
-    );
+    throwsCode(() => serviceUrl(url), "INVALID_URL");
   assert.equal(
     serviceUrl("https://gallery.example.com"),
     "https://gallery.example.com",
   );
+  assert.equal(
+    serviceUrl(" 109.105.132.53:8088 "),
+    "http://109.105.132.53:8088",
+  );
+  assert.equal(
+    serviceUrl("http://gallery.internal:8088"),
+    "http://gallery.internal:8088",
+  );
+  throwsCode(() => serviceUrl("ftp://gallery.internal"), "INSECURE_URL");
 });
 
 test("导入包含 WAL 的一致快照并拒绝覆盖已有目标", async (t) => {
