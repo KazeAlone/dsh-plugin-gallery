@@ -96,7 +96,7 @@ test('old layer records flatten without losing constraints or bypassing human co
 test('AI can propose several full-length member instructions together', async t => {
   const f = await mount(t)
   const context = await f.context()
-  const prompt = '指'.repeat(63_999) + '末'
+  const prompt = '指'.repeat(255_999) + '末'
   const operations = ['writer', 'reviewer'].map(name => ({ action: 'add_member', name, summary: 'Work', executionPrompt: prompt }))
   await f.call('agent_teams_workflow_propose', { base: context.base, title: 'Roles', operations })
   const saved = await f.read()
@@ -109,7 +109,7 @@ test('template extraction uses structured arguments, preserves layout and leaves
   const definition={...context.templateFormat,tasks:context.templateFormat.tasks.map(task=>({...task,general:brief}))}
   await assert.rejects(f.call('agent_teams_template_propose',{base:context.base,definition:JSON.stringify(definition)}),/object/)
   await assert.rejects(f.call('agent_teams_template_propose',{base:context.base,definition:{...definition,tasks:definition.tasks.slice(1)}}),/保留|依赖/)
-  const prompt = '指'.repeat(63_999) + '末'
+  const prompt = '指'.repeat(255_999) + '末'
   for (const member of definition.members) member.executionPrompt = prompt
   for (const task of definition.tasks) task.general = { requirements: prompt, deliverables: prompt, acceptance: prompt }
   const malformed=structuredClone(definition);malformed.tasks[0].general.deliverables=['code']

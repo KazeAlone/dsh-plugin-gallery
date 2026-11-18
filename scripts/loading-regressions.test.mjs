@@ -41,6 +41,6 @@ test('planning context carries all fitting user text and marks omissions without
   const events = [user(...blocks), {type:'user/message',data:{source:{kind:'tool'},content:[{type:'text',text:'private'}]}}]
   const session = {ownEvents:()=>events}
   assert.deepEqual(recentUserRequirements(session),{text:blocks.join('\n'),partial:false})
-  events.push(user('开' + '😀' + '字'.repeat(63_999)))
-  assert.deepEqual(recentUserRequirements(session),{text:'字'.repeat(63_999),partial:true})
+  events.push(user('开' + '😀' + '字'.repeat(255_999)))
+  assert.deepEqual(recentUserRequirements(session),{text:'字'.repeat(255_999),partial:true})
 })

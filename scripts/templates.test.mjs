@@ -27,7 +27,7 @@ const team=()=>instantiateTemplate(template(),'new-team','captain','算子 B','�
 const adaptation=t=>t.tasks.map(task=>({action:'update_task',id:task.id,description:`本次处理算子 B：${task.subject}。交付 B 的实现，验收 B 的正确性。`,adaptationIssue:'',confirmConfiguration:true}))
 
 test('member PE survives workflow edits, template reuse and persona generation at the character limit', () => {
-  const prompt = '指'.repeat(63_999) + '末'
+  const prompt = '指'.repeat(255_999) + '末'
   const add = { action: 'add_member', name: 'writer', summary: 'Write', executionPrompt: prompt }
   const update = { action: 'update_member', name: 'worker', executionPrompt: prompt }
   const edited = applyWorkflowOperations(team(), parseWorkflowOperations([add, update]))
@@ -39,13 +39,13 @@ test('member PE survives workflow edits, template reuse and persona generation a
   }
 
   for (const op of [add, update]) {
-    assert.throws(() => parseWorkflowOperations([{ ...op, executionPrompt: prompt + '字' }]), /64000/)
+    assert.throws(() => parseWorkflowOperations([{ ...op, executionPrompt: prompt + '字' }]), /256000/)
   }
   saved.members[0].executionPrompt += '字'
-  assert.throws(() => parseTemplate(saved), /64000/)
+  assert.throws(() => parseTemplate(saved), /256000/)
   for (const field of ['specificPrompt', 'summary', 'role']) {
     assert.equal(parseWorkflowOperations([{ ...update, [field]: prompt }])[0][field], prompt)
-    assert.throws(() => parseWorkflowOperations([{ ...update, [field]: prompt + '字' }]), /64000/)
+    assert.throws(() => parseWorkflowOperations([{ ...update, [field]: prompt + '字' }]), /256000/)
   }
 })
 
@@ -98,7 +98,7 @@ test('authenticated workflow handler applies templates once and leaves the sourc
   installWorkflowWorkbench(ctx,{stateDir:'.agent-teams',templateDirectory:library,maxMembers:8},{},{register:r=>{route=r;return()=>{}}})
   async function call(action,fields={}){const req=Readable.from([JSON.stringify({sessionId:'captain',action,...fields})]);req.method='POST';let status,value;await route.handler(req,{writeHead:s=>{status=s},end:v=>{value=JSON.parse(v)}});return {status,...value}}
   assert.equal((await call('template_list')).templates.length,6)
-  const goal = '实现 B' + '求'.repeat(63_995) + '末'
+  const goal = '实现 B' + '求'.repeat(255_995) + '末'
   captain.session.ownEvents = () => ['earlier', goal].map(text => ({type:'user/message',data:{source:{kind:'user'},content:[{type:'text',text}]}}))
   const catalog = await call('template_list')
   assert.equal(catalog.context, goal)
