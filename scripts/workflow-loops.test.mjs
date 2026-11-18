@@ -1118,7 +1118,13 @@ test('gate settings and wiring can be saved in alternating steps without startin
   delete team.workflow.loops
   const f = await routeFixture(t, team)
   const call = async (action, fields) => f.call(action, { ...fields, base:workflowFingerprint(await f.read()) })
-  assert.equal((await call('checkpoint_mode', {taskId:'gate', mode:'ai'})).code, 200)
+  for (const reviewer of [undefined, '', '   ', null]) {
+    const switched = await call('checkpoint_mode', {taskId:'gate', mode:'ai', reviewer})
+    assert.equal(switched.code, 200, switched.error)
+    const checkpoint = switched.team.tasks.find(task=>task.id==='gate').checkpoint
+    assert.equal(checkpoint.mode, 'ai')
+    assert.equal(checkpoint.draftReviewer, undefined)
+  }
   const saved = await call('loop_configure', {config:{...config, entryId:'', mode:'ai', maxRounds:5}})
   assert.equal(saved.code, 200, saved.error)
   assert.equal(saved.team.tasks.find(task => task.id === 'gate').checkpoint.draftLoopSettings.maxRounds, 5)
@@ -1127,6 +1133,9 @@ test('gate settings and wiring can be saved in alternating steps without startin
   const loop = connected.team.workflow.loops[0]
   assert.equal(loop.status, 'ready')
   assert.equal(loop.historyCount, 0)
+  const switched = await call('checkpoint_mode', {taskId:'gate', mode:'ai', reviewer:''})
+  assert.equal(switched.code, 200, switched.error)
+  assert.equal(switched.team.workflow.loops[0].reviewer, undefined)
   const blocked = await call('loop_start', {loopId:loop.id})
   assert.equal(blocked.code, 409)
   assert.match(blocked.error, /AI 审核成员/)

@@ -645,8 +645,10 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
     const disabled = working || archiveView || (loop ? !canEditLoopGate(task) : !!team.halted || task.status !== 'pending' || !!task.checkpoint.decision)
     return <select aria-label={l.language === 'en' ? 'Review mode' : '审核方式'} value={mode === 'ai' && isGate && reviewer ? 'ai:'+reviewer : mode} disabled={disabled}
       onPointerDown={e=>e.stopPropagation()} onClick={e=>e.stopPropagation()} onChange={event=>{
-        const value=event.target.value
-        void perform('checkpoint_mode',{taskId:task.id,base:data?.base,mode:value === 'human' ? 'human' : 'ai',reviewer:value.startsWith('ai:') ? value.slice(3) : undefined})
+        const value = event.target.value
+        const reviewer = value.startsWith('ai:') ? value.slice(3).trim() : ''
+        void perform('checkpoint_mode', {taskId:task.id, base:data?.base, mode:value === 'human' ? 'human' : 'ai',
+          ...(reviewer ? {reviewer} : {})})
       }}>
       <option value="human">{l.language === 'en' ? 'Human review' : '人工审核'}</option>
       {(!isGate || !loop || isDraftLoop(loop) || !reviewer) && <option value="ai">{isGate ? l('AI 审核 · 待指定审核员') : l.language === 'en' ? 'AI review' : 'AI 审核'}</option>}
