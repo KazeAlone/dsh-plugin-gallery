@@ -47,8 +47,9 @@ function setup(t) {
     rows,
     created,
     remote,
-    connect() {
+    connect(activeLibraryId = "center") {
       store.change((config) => {
+        config.activeLibraryId = activeLibraryId;
         config.service = {
           url: "http://center.internal:8088",
           token: "guser_fixture_only",
@@ -58,17 +59,29 @@ function setup(t) {
     },
   };
 }
-test("workflow uploads require a configured independent center identity and never fall back locally", async (t) => {
-  const { store } = setup(t);
-  assert.equal(workflowSharingStatus(store).configured, false);
-  await assert.rejects(
-    uploadWorkflowTemplate(store, definition, { id: "source", version: 1 }),
-    { code: "CENTER_NOT_CONFIGURED" },
-  );
-  assert.equal(store.listResources().total, 0);
-  assert.equal(store.read().activeLibraryId, "local");
+test("workflow uploads use local storage even with a center configured", async (t) => {
+  const { store, connect, remote, created } = setup(t);
+  const source = { id: "source", version: 1 };
+  assert.deepEqual(workflowSharingStatus(store), {
+    available: true, configured: true, libraryId: "local",
+  });
+  const local = await uploadWorkflowTemplate(store, definition, source);
+  assert.equal(local.libraryId, "local");
+  const copy = store.getResource(local.id);
+  store.updateResource(local.id, { ...copy, name: "Edited locally" }, copy.revision);
+  connect("local");
+  const retry = await uploadWorkflowTemplate(store, definition, source, () => remote);
+  assert.equal(retry.id, local.id);
+  assert.equal(retry.name, "Edited locally");
+  assert.equal(retry.reused, true);
+  assert.equal(created.length, 0);
+  connect();
+  const center = await uploadWorkflowTemplate(store, definition, source, () => remote);
+  assert.equal(center.libraryId, "center");
+  assert.notEqual(center.id, local.id);
+  assert.equal(created.length, 1);
 });
-test("shared uploads preserve portable fields, attribution and current local selection; retries do not overwrite edits", async (t) => {
+test("center uploads preserve portable fields and attribution; retries do not overwrite edits", async (t) => {
   const { store, connect, remote, rows, created } = setup(t);
   connect();
   const original = structuredClone(definition),
@@ -81,8 +94,8 @@ test("shared uploads preserve portable fields, attribution and current local sel
   );
   assert.equal(first.libraryId, "center");
   assert.equal(first.reused, false);
-  assert.equal(store.read().activeLibraryId, "local");
-  assert.equal(store.listResources().total, 0);
+  assert.equal(store.read().activeLibraryId, "center");
+  assert.equal(store.adapter("local").listResources().total, 0);
   assert.deepEqual(JSON.parse(created[0].files[0].content), definition);
   assert.deepEqual(definition, original);
   assert.deepEqual(created[0].creator, { username: "Alice" });

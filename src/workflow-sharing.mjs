@@ -15,14 +15,15 @@ import {
 import { RemoteGalleryStore } from "./remote-store.mjs";
 
 export function workflowSharingStatus(store) {
-  const service = store.read().service;
+  const { activeLibraryId: libraryId, service } = store.read();
   return {
     available: true,
-    configured: Boolean(service?.url && service.userId && service.token),
+    libraryId,
+    configured: libraryId === "local" || Boolean(service?.url && service.userId && service.token),
   };
 }
 
-/** Human-initiated host integration; writes only to the explicitly configured center. */
+/** Upload to the library selected when the request begins. */
 export async function uploadWorkflowTemplate(
   store,
   definition,
@@ -48,18 +49,18 @@ export async function uploadWorkflowTemplate(
     "INCOMPLETE_TEMPLATE",
     "请先补全模板的通用任务要求",
   );
-  const connection = store.read().service;
+  const { activeLibraryId: libraryId, service } = store.read();
+  const useCenter = libraryId === "center";
   demand(
-    Boolean(connection?.url && connection.userId && connection.token),
+    !useCenter || Boolean(service?.url && service.userId && service.token),
     400,
     "CENTER_NOT_CONFIGURED",
-    "请先在 Gallery 存储设置中连接中心服务，再上传共享模板",
+    "请先在 Gallery 存储设置中重新连接中心服务",
   );
-  const remote = createRemote(connection);
+  const adapter = useCenter ? createRemote(service) : store.adapter(libraryId);
   const key = digest(
     JSON.stringify([
-      connection.url,
-      connection.userId,
+      ...(useCenter ? [service.url, service.userId] : ["local"]),
       source.id,
       source.version,
       source.language || "",
@@ -73,7 +74,7 @@ export async function uploadWorkflowTemplate(
     mkdirSync(lock);
   } catch (error) {
     if (error.code === "EEXIST")
-      demand(false, 409, "UPLOAD_BUSY", "共享模板正在上传，请稍后重试");
+      demand(false, 409, "UPLOAD_BUSY", "模板正在上传，请稍后重试");
     throw error;
   }
   try {
@@ -91,7 +92,7 @@ export async function uploadWorkflowTemplate(
         !Array.isArray(registry.entries),
       500,
       "INVALID_UPLOAD_REGISTRY",
-      "共享上传记录无效，请先备份检查",
+      "模板上传记录无效，请先备份检查",
     );
     const previous = registry.entries[key];
     if (previous) {
@@ -102,17 +103,17 @@ export async function uploadWorkflowTemplate(
         "同一模板版本的内容已变化，请先另存为新版本",
       );
       try {
-        const existing = await remote.getResource(previous.id);
+        const existing = await adapter.getResource(previous.id);
         demand(
           existing.canEdit === true && existing.type === "workflow",
           403,
           "UPLOAD_NOT_OWNED",
-          "共享副本不属于当前用户，请先检查 Gallery 身份",
+          "模板副本不属于当前用户，请先检查 Gallery 身份",
         );
         return {
           id: existing.id,
           name: existing.name,
-          libraryId: "center",
+          libraryId,
           sourceVersion: source.version,
           reused: true,
         };
@@ -120,7 +121,7 @@ export async function uploadWorkflowTemplate(
         if (error.status !== 404) throw error;
       }
     }
-    const created = await remote.createResource(
+    const created = await adapter.createResource(
       {
         type: "workflow",
         name: clean.name,
@@ -158,7 +159,7 @@ export async function uploadWorkflowTemplate(
     return {
       id: created.id,
       name: created.name,
-      libraryId: "center",
+      libraryId,
       sourceVersion: source.version,
       reused: false,
     };
