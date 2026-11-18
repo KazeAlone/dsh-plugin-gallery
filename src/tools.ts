@@ -1011,7 +1011,7 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
       approval: {
         type: 'string',
         enum: ['required', 'automatic'],
-        description: 'required stages the plan for explicit user review; automatic starts immediately. Defaults to automatic for API compatibility.',
+        description: 'required stages the plan for explicit user review; automatic starts immediately. Defaults to automatic for API compatibility. Plans with gated loops always wait for explicit approval.',
       },
     },
     output: {
@@ -1062,7 +1062,6 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
       const teamName = args.name.trim()
       if (teamName === '') throw new Error('team name must not be empty')
       const teamId = sanitizeKey(teamName)
-      const staged = args.approval === 'required'
       // Some models materialize optional parameters as "" instead of omitting
       // them (issue #99). The profile is optional, so treat a blank value
       // exactly like an omitted one instead of failing every create call.
@@ -1073,6 +1072,7 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
       // #234): an empty shell carries no roster, so it is an omitted plan and
       // the profile / inline-plan exclusion below stays untouched.
       const inlinePlan = args.plan !== undefined && !isEmptyInlinePlan(args.plan) ? args.plan : undefined
+      const staged = args.approval === 'required' || !!inlinePlan?.loops?.length
       if (profileName !== undefined && inlinePlan !== undefined) throw new Error('choose either a configured profile or an inline plan')
       const created = await withTeamLock(captainLockKey(stateRoot, captain.id), async () => {
         const current = await findTeamByParticipant(stateRoot, captain.id, await leadIdentityOfAsync(ctx, captain.session))

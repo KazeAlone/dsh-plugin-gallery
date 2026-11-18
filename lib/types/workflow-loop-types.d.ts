@@ -35,6 +35,7 @@ export interface WorkflowLoop extends LoopConfig {
     executionRounds?: Record<string, number>;
 }
 export declare function canEditLoopGate(gate: Pick<TeamTask, 'status' | 'reassigning'>): boolean;
+export declare function isDraftLoop(loop: WorkflowLoop): boolean;
 export declare function isUnstartedLoop(loop: WorkflowLoop): boolean;
 export declare function canAssignLoopTask(loop: WorkflowLoop, task: TeamTask): boolean;
 export declare function canToggleLoopTask(loop: Pick<WorkflowLoop, 'gateId' | 'status' | 'lastDecision'>, taskId: string): boolean;

@@ -158,6 +158,8 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
     if (!removedIds.has(gate.id)) {
       if (gate.status !== 'pending' || gate.attemptId || gate.checkpoint?.decision) resetTaskForRerun(gate, false, now)
       gate.assignee = undefined
+      gate.checkpoint!.draftReviewer = loop.reviewer
+      gate.checkpoint!.draftLoopSettings = {maxRounds:loop.maxRounds, timeoutMinutes:loop.timeoutMinutes}
       gate.workflowConfigPending = true
       holdLoopTask(gate)
     }

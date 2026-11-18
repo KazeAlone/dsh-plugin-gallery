@@ -1,4 +1,4 @@
-import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow, isUntriggeredLoopTask } from '../workflow-loop-types.ts'
+import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow, isDraftLoop, isUntriggeredLoopTask } from '../workflow-loop-types.ts'
 import { previewGate, upstreamIds } from '../workflow-loop-config.ts'
 import { draftTaskId } from './workflow-draft.ts'
 import { WorkbenchGuide } from './WorkbenchGuide.tsx'
@@ -623,15 +623,19 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
     if (!task?.checkpoint || !team) return null
     const loop = team.workflow?.loops?.find(item => item.gateId === task.id)
     const mode = loop?.mode ?? task.checkpoint.mode ?? 'human'
-    const members = loop ? team.members.filter(m => m.status !== 'removed' && !team.tasks.some(t => loop.bodyIds.includes(t.id) && t.assignee === m.name)) : []
+    const isGate = gateNode(task)
+    const reviewer = loop?.reviewer ?? task.checkpoint.draftReviewer
+    const members = isGate ? team.members.filter(m => m.status !== 'removed' && !team.tasks.some(t => loop?.bodyIds.includes(t.id) && t.assignee === m.name)) : []
     const disabled = working || archiveView || (loop ? !canEditLoopGate(task) : !!team.halted || task.status !== 'pending' || !!task.checkpoint.decision)
-    return <select aria-label={l.language === 'en' ? 'Review mode' : '审核方式'} value={mode === 'ai' && loop ? 'ai:'+loop.reviewer : mode} disabled={disabled}
+    return <select aria-label={l.language === 'en' ? 'Review mode' : '审核方式'} value={mode === 'ai' && isGate && reviewer ? 'ai:'+reviewer : mode} disabled={disabled}
       onPointerDown={e=>e.stopPropagation()} onClick={e=>e.stopPropagation()} onChange={event=>{
         const value=event.target.value
         void perform('checkpoint_mode',{taskId:task.id,base:data?.base,mode:value === 'human' ? 'human' : 'ai',reviewer:value.startsWith('ai:') ? value.slice(3) : undefined})
       }}>
       <option value="human">{l.language === 'en' ? 'Human review' : '人工审核'}</option>
-      {loop ? members.map(m=><option key={m.name} value={'ai:'+m.name}>AI · {m.name}</option>) : <option value="ai">{l.language === 'en' ? 'AI review' : 'AI 审核'}</option>}
+      {(!isGate || !loop || isDraftLoop(loop) || !reviewer) && <option value="ai">{isGate ? l('AI 审核 · 待指定审核员') : l.language === 'en' ? 'AI review' : 'AI 审核'}</option>}
+      {isGate && reviewer && !members.some(member => member.name === reviewer) && <option value={'ai:'+reviewer} disabled>AI · {reviewer}</option>}
+      {members.map(m => <option key={m.name} value={'ai:'+m.name}>AI · {m.name}</option>)}
     </select>
   }
   async function createNode(type: 'task' | 'check' | 'gate' | 'archive', at?: {x:number; y:number}): Promise<void> {
@@ -906,8 +910,8 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                       const attachOnReject = target && gateLoop && !inForwardPath && !target.checkpoint && target.kind !== 'archive'
                       const config = target && {
                         gateId: task.id, entryId: attachOnReject ? gateLoop.entryId : target.id, mode: gateLoop?.mode ?? task.checkpoint?.mode ?? 'human',
-                        reviewer: gateLoop?.reviewer, maxRounds: gateLoop?.maxRounds ?? 3,
-                        timeoutMinutes: gateLoop?.timeoutMinutes ?? 30, rejectToEntry: true,
+                        reviewer: gateLoop?.reviewer ?? task.checkpoint?.draftReviewer, maxRounds: gateLoop?.maxRounds ?? task.checkpoint?.draftLoopSettings?.maxRounds ?? 3,
+                        timeoutMinutes: gateLoop?.timeoutMinutes ?? task.checkpoint?.draftLoopSettings?.timeoutMinutes ?? 30, rejectToEntry: true,
                         rejectTaskIds: attachOnReject ? [...new Set([...gateLoop.rejectTaskIds ?? [], target.id])] : gateLoop?.rejectTaskIds,
                       }
                       const issue = config ? workflowMessage(previewGate(team, config, passTargets).error, l) : ''

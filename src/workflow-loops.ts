@@ -1,13 +1,13 @@
 import { MAX_WORKFLOW_TEXT_LENGTH } from './workflow-types.ts'
 import { excerpt, reviewResult } from './review-results.ts'
-import { deriveLoop, planGateSettings, parseLoopConfig, validateLoopGraph as validateLoopStructure } from './workflow-loop-config.ts'
+import { deriveLoop, planGateSettings, parseLoopConfig, reviewerConflicts, validateLoopGraph as validateLoopStructure } from './workflow-loop-config.ts'
 export { parseLoopConfig } from './workflow-loop-config.ts'
 /** Structured loops: backward edges are control flow, never task dependencies. */
 import { createHash, randomUUID } from 'node:crypto'
 import type { TeamState, TeamTask } from './types.ts'
 import { resetTaskForRerun } from './task-rerun.ts'
 
-import { canEditLoopGate, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
+import { canEditLoopGate, isDraftLoop, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
 export type { LoopConfig, WorkflowLoop, LoopHistoryRecord } from './workflow-loop-types.ts'
 const pending = new WeakMap<TeamState, LoopHistoryRecord[]>()
 export const loopRetryInstructions = '按原任务要求重试本轮，保留先前的执行记录。'
@@ -61,6 +61,8 @@ export function configureLoop(team: TeamState, config: LoopConfig): WorkflowLoop
   team.workflow = candidate.workflow
   gate.assignee = assignee
   gate.checkpoint!.kind = 'gate'
+  delete gate.checkpoint!.draftReviewer
+  delete gate.checkpoint!.draftLoopSettings
   gate.checkpoint!.mode = loop.mode
   if (gate.description?.trim() && !gate.adaptationIssue?.trim()) gate.workflowConfigPending = false
   for (const id of [...body, gate.id]) { const task = taskOf(team, id); task.workflowPaused = true; task.workflowAwaitingStart = true }
@@ -77,7 +79,7 @@ export function updateGateReview(team: TeamState, gateId: string, mode: LoopConf
   const loop = loopsOf(draft).find(item => item.gateId === gateId)
   const gate = taskOf(draft, gateId)
   if (!loop || !canEditLoopGate(gate)) throw new Error('当前门控不能修改审核方式')
-  if (mode === 'ai' && !draft.members.some(member => member.name === reviewer && member.status !== 'removed')) throw new Error('请选择有效的 AI 审核成员')
+  if (mode === 'ai' && (!isDraftLoop(loop) || reviewer) && !draft.members.some(member => member.name === reviewer && member.status !== 'removed')) throw new Error('请选择有效的 AI 审核成员')
   validateLoopGraph(draft)
   if (loop.mode !== mode || loop.reviewer !== reviewer) invalidateLoopReview(loop)
   loop.mode = mode
@@ -232,7 +234,11 @@ export function startLoop(team: TeamState, id: string, additionalRounds = 0, now
   if (tasks.some(t => t.id !== loop.gateId && !team.members.some(m => m.name === t.assignee && m.status !== 'removed'))) {
     throw new LoopStartUnavailable('请先为循环内任务指定有效负责人')
   }
-  if (loop.mode === 'ai' && !team.members.some(m => m.name === loop.reviewer && m.status !== 'removed')) throw new LoopStartUnavailable('请选择有效的 AI 审核成员')
+  if (loop.mode === 'ai') {
+    if (!loop.reviewer || !team.members.some(m => m.name === loop.reviewer && m.status !== 'removed')) throw new LoopStartUnavailable('请选择有效的 AI 审核成员')
+    const conflicts = reviewerConflicts(team, loop.bodyIds, loop.reviewer)
+    if (conflicts.length) throw new LoopStartUnavailable(`${loop.reviewer} 负责「${conflicts.map(task => task.subject).join('、')}」，请选择独立审核成员`)
+  }
   if (tasks.some(t => active(t))) throw new LoopStartUnavailable('请先停止仍在运行的循环任务，再继续')
   if (tasks.some(t => t.workflowConfigPending || !t.description?.trim())) throw new LoopStartUnavailable('请先完成所有循环节点的任务要求')
   if (loop.lastDecision === 'revise' && loop.round >= loop.maxRounds && !additionalRounds) throw new LoopStartUnavailable('已达轮次上限，请明确追加轮数后继续')

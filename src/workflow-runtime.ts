@@ -492,9 +492,14 @@ export function installWorkflowWorkbench(ctx: Context, config: ToolsConfig, runt
             const mode = body['mode']
             if (!task?.checkpoint || mode !== 'human' && mode !== 'ai') throw new Error('当前节点不能修改审核方式')
             const loop = loopsOf(team).find(item => item.gateId === task.id)
-            if (loop) updateGateReview(team, task.id, mode, mode === 'ai' ? string(body['reviewer'], 'reviewer') : undefined)
+            const reviewer = mode === 'ai' && body['reviewer'] !== undefined ? string(body['reviewer'], 'reviewer') : undefined
+            if (loop) updateGateReview(team, task.id, mode, reviewer)
             else if (task.status !== 'pending' || task.checkpoint.decision || team.halted) throw new Error('当前节点不能修改审核方式')
-            else if ((task.checkpoint.mode ?? 'human') !== mode) {
+            else if (task.checkpoint.kind === 'gate') {
+              if (reviewer && !team.members.some(member => member.name === reviewer && member.status !== 'removed')) throw new Error('请选择有效的 AI 审核成员')
+              task.checkpoint.mode = mode
+              task.checkpoint.draftReviewer = reviewer
+            } else if ((task.checkpoint.mode ?? 'human') !== mode) {
               task.checkpoint.mode = mode
               const slot = 'discussion:check:'+task.id
               const previous = state.discussions[slot]
@@ -506,7 +511,11 @@ export function installWorkflowWorkbench(ctx: Context, config: ToolsConfig, runt
           } else if (action === 'loop_configure') {
             if (body['base'] !== workflowFingerprint(team)) throw new Error('流程已变化，请刷新')
             const config = parseLoopConfig(body['config'])
-            if ('passTargets' in body) saveGateSettings(team, config, body['passTargets'], body['loopId'], body['reconnect'] === true)
+            if (!config.entryId) {
+              const gate = team.tasks.find(task => task.id === config.gateId)
+              if (gate?.checkpoint?.kind !== 'gate' || gate.status !== 'pending' || gate.reassigning || loopForTask(team, gate.id)) throw new Error('门控配置已变化，请刷新')
+              gate.checkpoint.draftLoopSettings = {maxRounds:config.maxRounds, timeoutMinutes:config.timeoutMinutes}
+            } else if ('passTargets' in body) saveGateSettings(team, config, body['passTargets'], body['loopId'], body['reconnect'] === true)
             else configureLoop(team, config)
           } else if (action === 'loop_start') {
             if (body['base'] !== workflowFingerprint(team)) throw new Error('流程已变化，请刷新')

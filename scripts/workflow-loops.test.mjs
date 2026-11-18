@@ -143,9 +143,11 @@ test('gate preview follows the selected entry and matches save without mutating 
   const config = {...loop, mode:'ai', reviewer:'reviewer'}
   const before = structuredClone(team)
   const preview = previewGate(team, config, ['after'])
-  assert.match(preview.error, /reviewer.*「a」/)
+  assert.equal(preview.error, '')
   assert.deepEqual(reviewerConflicts(team, preview.bodyIds, 'reviewer').map(t => t.id), ['a'])
-  assert.throws(() => saveGateSettings(team, config, ['after'], loop.id), {message:preview.error})
+  const draft = structuredClone(team)
+  saveGateSettings(draft, config, ['after'], loop.id)
+  assert.throws(() => startLoop(draft, loop.id), /reviewer.*「a」/)
   const narrower = {...config, entryId:'b'}
   assert.equal(previewGate(team, narrower, ['after']).error, '')
   assert.ok(previewGate(team, narrower, ['a']).error)
@@ -1105,4 +1107,45 @@ test('reject paths reject shared ownership, forward work and backward edges', ()
   assert.throws(() => saveGateSettings(team, {...loop, rejectTaskIds:['a']}, ['after'], loop.id), /首轮路径/)
   assert.throws(() => saveGateSettings(team, {...loop, rejectTaskIds:['plan','debug']}, ['after'], loop.id), /更早的任务/)
   assert.deepEqual(team.workflow.loops[0].rejectTaskIds, ['debug','plan'])
+})
+
+test('gate settings and wiring can be saved in alternating steps without starting the loop', async t => {
+  const {team, loop: config} = fixture()
+  delete team.workflow.loops
+  const f = await routeFixture(t, team)
+  const call = async (action, fields) => f.call(action, { ...fields, base:workflowFingerprint(await f.read()) })
+  assert.equal((await call('checkpoint_mode', {taskId:'gate', mode:'ai'})).code, 200)
+  const saved = await call('loop_configure', {config:{...config, entryId:'', mode:'ai', maxRounds:5}})
+  assert.equal(saved.code, 200, saved.error)
+  assert.equal(saved.team.tasks.find(task => task.id === 'gate').checkpoint.draftLoopSettings.maxRounds, 5)
+  const connected = await call('loop_configure', {config:{...config, mode:'ai', maxRounds:5}, passTargets:['after']})
+  assert.equal(connected.code, 200, connected.error)
+  const loop = connected.team.workflow.loops[0]
+  assert.equal(loop.status, 'ready')
+  assert.equal(loop.historyCount, 0)
+  const blocked = await call('loop_start', {loopId:loop.id})
+  assert.equal(blocked.code, 409)
+  assert.match(blocked.error, /AI 审核成员/)
+  assert.equal((await call('checkpoint_mode', {taskId:'gate', mode:'ai', reviewer:'reviewer'})).code, 200)
+  const beforeStart = await f.read()
+  assert.equal(beforeStart.workflow.loops[0].status, 'ready')
+  assert.equal(beforeStart.workflow.loops[0].maxRounds, 5)
+  assert.ok(beforeStart.tasks.every(task => !task.attempt))
+  assert.equal((await call('loop_start', {loopId:loop.id})).code, 200)
+})
+
+test('a tool-created plan with a loop waits for approval even if automatic was requested', async t => {
+  const {team} = fixture()
+  const f = await routeFixture(t, team)
+  await archiveTeamDir(f.stateRoot, team.id)
+  const created = await f.tool('agent_teams_create', {name:'new loop', approval:'automatic', plan:{
+    members:[{name:'worker', summary:'Implement', provider:'fixture', model:'model-a'}],
+    tasks:[{id:'work', subject:'Work', description:'Implement and verify.', assignee:'worker', dependencies:[]},
+      {id:'check', subject:'Review', description:'Verify the result.', checkpoint:true, dependencies:['work']}],
+    loops:[{entryId:'work', gateId:'check', mode:'human'}],
+  }}, 'captain')
+  assert.equal(created.phase, 'staged')
+  const staged = await readTeam(f.stateRoot, created.team_id)
+  assert.equal(staged.workflow.loops[0].status, 'ready')
+  assert.equal(staged.workflow.loops[0].historyCount, 0)
 })

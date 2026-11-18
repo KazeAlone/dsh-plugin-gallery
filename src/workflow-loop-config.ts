@@ -1,5 +1,5 @@
 import type { LoopConfig } from './workflow-loop-types.ts'
-import { canEditLoopGate, type WorkflowLoop } from './workflow-loop-types.ts'
+import { canEditLoopGate, isDraftLoop, type WorkflowLoop } from './workflow-loop-types.ts'
 export function parseLoopConfig(raw: unknown): LoopConfig {
   if (!raw || typeof raw !== 'object') throw new Error('循环配置无效')
   const value = raw as Record<string, unknown>
@@ -132,7 +132,7 @@ export function validateLoopGraph(team: TeamState): void {
     for (const id of body) {
       const task = taskOf(team, id)
       if (task.kind === 'archive') throw new Error('成果归档节点应放在循环门控的 PASS 路径之后')
-      if ((loop.status !== 'ready' || loop.queued) && (!task.assignee || !team.members.some(m => m.name === task.assignee && (m.status !== 'removed' || ['paused','passed','cancelled'].includes(loop.status))))) throw new Error('请先为循环内任务指定有效负责人')
+      if (!isDraftLoop(loop) && (!task.assignee || !team.members.some(m => m.name === task.assignee && (m.status !== 'removed' || ['paused','passed','cancelled'].includes(loop.status))))) throw new Error('请先为循环内任务指定有效负责人')
       const returnIndex = returnIds.indexOf(id)
       if (returnIndex >= 0) {
         const earlier = returnIds.slice(0, returnIndex)
@@ -148,6 +148,7 @@ export function validateLoopGraph(team: TeamState): void {
     }
     if (loop.mode === 'ai') {
       if (gate.assignee !== loop.reviewer) throw new Error('AI 门控负责人必须与循环审核成员一致')
+      if (isDraftLoop(loop)) continue
       if (!loop.reviewer || !team.members.some(m => m.name === loop.reviewer && (m.status !== 'removed' || ['paused','passed','cancelled'].includes(loop.status)))) throw new Error('请选择有效的 AI 审核成员')
       const conflicts = reviewerConflicts(team, loop.bodyIds, loop.reviewer)
       if (conflicts.length) throw new Error(`${loop.reviewer} 负责「${conflicts.map(task => task.subject).join('、')}」，请选择独立审核成员`)
