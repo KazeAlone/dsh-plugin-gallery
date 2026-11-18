@@ -14,12 +14,12 @@ export function connectionPath(start: {x:number;y:number}, end: {x:number;y:numb
 }
 
 /** Mirrors graph invariants for immediate drag feedback; the server revalidates. */
-export function connectionIssue(tasks: TeamTask[], from: string, to: string, l: WorkflowText = sourceText): string | undefined {
+export function connectionIssue(tasks: TeamTask[], from: string, to: string, l: WorkflowText = sourceText, editableGate = false): string | undefined {
   const target = tasks.find(t => t.id === to)
   if (!target || !tasks.some(t => t.id === from)) return l("节点不存在")
   if (from === to) return l("不能连接自身")
   if (target.dependencies.includes(from)) return l("这条交接已存在")
-  if (target.status !== 'pending' || ((target.attempt ?? 0) > 0 && !target.workflowPaused) || target.reassigning || (target.checkpoint?.decision && target.checkpoint.decision !== 'reject')) return l("请先停止目标任务，或创建返工轮次")
+  if (!editableGate && (target.status !== 'pending' || ((target.attempt ?? 0) > 0 && !target.workflowPaused) || target.reassigning || (target.checkpoint?.decision && target.checkpoint.decision !== 'reject'))) return l("请先停止目标任务，或创建返工轮次")
   const seen = new Set<string>()
   function reaches(id: string): boolean {
     if (id === to) return true

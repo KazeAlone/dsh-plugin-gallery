@@ -7,7 +7,7 @@ export declare function deriveLoop(team: TeamState, config: LoopConfig, id: stri
 export declare function reviewerConflicts(team: TeamState, bodyIds: string[], reviewer: string): TeamTask[];
 /** Apply the draft PASS edges to a new task list for both preview and save. */
 export declare function gateRouteTasks(team: TeamState, gateId: string, passTargets: unknown): TeamTask[];
-export declare function planGateSettings(team: TeamState, raw: LoopConfig, passTargets: unknown): {
+export declare function planGateSettings(team: TeamState, raw: LoopConfig, passTargets: unknown, dependenciesChanged?: boolean): {
     config: LoopConfig;
     tasks: TeamTask[];
     previous: WorkflowLoop | undefined;

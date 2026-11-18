@@ -103,18 +103,17 @@ export function holdLoopTask(task: TeamTask): void {
 }
 
 /** Validate both routes before publishing the new configuration. */
-export function saveGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown): void {
+export function saveGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown, dependenciesChanged = false): void {
   const draft = structuredClone(team)
-  const { config: parsed, tasks, previous, loop, rewired } = planGateSettings(draft, config, passTargets)
+  const { config: parsed, tasks, previous, loop, rewired } = planGateSettings(draft, config, passTargets, dependenciesChanged)
   if (previous?.id !== loopId) throw new Error('门控配置已变化，请刷新')
   draft.tasks = tasks
   const gate = taskOf(draft, parsed.gateId)
   draft.workflow ??= { positions: {}, discussions: {}, history: [] }
   draft.workflow.loops = [...loopsOf(draft).filter(item => item !== previous), loop]
   if (rewired) {
-    if (!previous) { loop.id = randomUUID(); loop.runId = randomUUID() }
-    loop.historyHead = previous?.historyHead
-    loop.historyCount = previous?.historyCount ?? 0
+    if (!previous) loop.id = randomUUID()
+    if (!previous || previous.historyCount || previous.contracts) loop.runId = randomUUID()
     if (gate.status !== 'pending' || gate.attemptId || gate.checkpoint?.decision) resetTaskForRerun(gate, false, Date.now())
     gate.checkpoint!.round = loop.round
     for (const id of new Set([loop.gateId, ...loop.bodyIds, ...previous?.bodyIds ?? []])) holdLoopTask(taskOf(draft, id))

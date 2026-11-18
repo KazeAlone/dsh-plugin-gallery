@@ -10,8 +10,8 @@ import { validateCreateTask } from './quality-gates.ts'
 import { sanitizeKey } from './state.ts'
 import { taskIsExecuting, canRestartTask, rerunImpact, resetTaskForRerun } from './task-rerun.ts'
 import { taskNeedsConfiguration } from './task-description.ts'
-import { configureLoop, holdLoopTask, loopForTask, loopTaskContract, parseLoopConfig, validateLoopGraph } from './workflow-loops.ts'
-import { canAssignLoopTask, canEditLoopGate, isUnstartedLoop } from './workflow-loop-types.ts'
+import { configureLoop, holdLoopTask, loopForTask, loopTaskContract, parseLoopConfig, saveGateSettings, validateLoopGraph } from './workflow-loops.ts'
+import { canAssignLoopTask, canEditLoopGate } from './workflow-loop-types.ts'
 
 export function workflowState(team: TeamState): WorkflowState {
   return team.workflow ??= { positions: {}, discussions: {}, history: [] }
@@ -137,32 +137,36 @@ export function checkpointInputs(team: TeamState, task: TeamTask): TeamTask[] {
 /** Apply to a detached copy: validation errors never partly modify durable state. */
 export function applyWorkflowOperations(original: TeamState, operations: WorkflowOperation[], maxMembers = 64): TeamState {
   // Saving properties is allowed while the team is halted.
-  if (original.halted && operations.some(op => op.action !== 'update_member' && op.action !== 'update_task' && !(op.action === 'remove_task' && loopForTask(original, op.id)?.gateId === op.id))) throw new Error('团队已停止，请先恢复团队')
+  if (original.halted && operations.some(op => op.action !== 'update_member' && op.action !== 'update_task' && !(op.action === 'remove_task' && loopForTask(original, op.id)))) throw new Error('团队已停止，请先恢复团队')
   const team = structuredClone(original)
   const now = Date.now()
   // Canvas deletion removes outgoing dependencies and the node in one batch.
   // Detach the draft loop first so those dependency edits can be validated normally.
   const removedIds = new Set(operations.flatMap(op => op.action === 'remove_task' ? [op.id] : []))
-  const removedGates = new Set<string>()
+  const removedLoopTasks = new Set<string>()
   for (const loop of team.workflow?.loops ?? []) {
-    if (!removedIds.has(loop.gateId) && !loop.bodyIds.some(id => removedIds.has(id))) continue
+    const selected = [loop.gateId, ...loop.bodyIds].filter(id => removedIds.has(id))
+    if (!selected.length) continue
     const gate = taskOf(team, loop.gateId)
-    if (removedIds.has(gate.id)) {
-      if (!canEditLoopGate(gate)) throw new Error('门控正在执行，请在执行结束后编辑')
-      removedGates.add(gate.id)
-      if (loop.historyHead) {
-        const workflow = workflowState(team)
-        workflow.removedLoopHistory = { ...workflow.removedLoopHistory, [loop.id]: { id: loop.id, runId: loop.runId, historyHead: loop.historyHead } }
-      }
-      for (const id of loop.bodyIds) holdLoopTask(taskOf(team, id))
-      for (const task of team.tasks.filter(task => task.dependencies.includes(gate.id))) {
-        task.dependencies = task.dependencies.filter(id => id !== gate.id)
-        holdLoopTask(task)
-      }
-    } else {
-      if (!isUnstartedLoop(loop)) throw new Error('已启动或排队的循环不能删除执行节点')
+    if (!canEditLoopGate(gate)) throw new Error('门控正在执行，请在执行结束后编辑')
+    if (selected.some(id => taskIsExecuting(taskOf(team, id)))) throw new Error('请先停止要删除的循环任务')
+    selected.forEach(id => removedLoopTasks.add(id))
+    if (loop.historyHead) {
+      const workflow = workflowState(team)
+      workflow.removedLoopHistory = { ...workflow.removedLoopHistory, [loop.id]: { id: loop.id, runId: loop.runId, historyHead: loop.historyHead } }
+    }
+    if (!removedIds.has(gate.id)) {
+      if (gate.status !== 'pending' || gate.attemptId || gate.checkpoint?.decision) resetTaskForRerun(gate, false, now)
       gate.assignee = undefined
       gate.workflowConfigPending = true
+      holdLoopTask(gate)
+    }
+    for (const task of team.tasks) {
+      if (loop.bodyIds.includes(task.id)) holdLoopTask(task)
+      if (task.dependencies.some(id => selected.includes(id))) {
+        task.dependencies = task.dependencies.filter(id => !selected.includes(id))
+        holdLoopTask(task)
+      }
     }
     team.workflow!.loops = team.workflow!.loops!.filter(item => item !== loop)
   }
@@ -172,8 +176,7 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
     if (loop) {
       if (op.action !== 'update_task') throw new Error('循环节点请使用循环控制；不能修改拓扑或单独重跑')
       const task = taskOf(team, op.id)
-      if ((op.dependencies !== undefined && JSON.stringify(op.dependencies) !== JSON.stringify(task.dependencies))
-        || (op.assignee !== undefined && (op.assignee || undefined) !== task.assignee && !canAssignLoopTask(loop, task))) throw new Error('循环节点不能单独修改依赖或负责人')
+      if (op.assignee !== undefined && (op.assignee || undefined) !== task.assignee && !canAssignLoopTask(loop, task)) throw new Error('循环执行后不能单独修改负责人')
       if (loop.contracts && loop.contracts[task.id] !== loopTaskContract(task)) throw new Error('循环任务契约已变化，请检查流程')
     }
     // Removal changes loop membership; editing an idle member's configuration does not.
@@ -226,7 +229,7 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
       if (taskIsExecuting(task)) throw new Error('任务已开始，请先停止该任务')
       if (op.dependencies && JSON.stringify(op.dependencies) !== JSON.stringify(task.dependencies)) {
         if (team.halted) throw new Error('团队已停止，请先恢复团队再修改依赖')
-        editable(task, reconnectRejected)
+        if (loop?.gateId !== task.id) editable(task, reconnectRejected)
       }
       if (op.subject !== undefined) task.subject = op.subject
       if (op.description !== undefined) task.description = op.description
@@ -254,7 +257,7 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
       if (task.status === 'pending') task.updatedAt = now
     } else if (op.action === 'remove_task') {
       const task = taskOf(team, op.id)
-      if (!removedGates.has(task.id)) editable(task)
+      if (!removedLoopTasks.has(task.id)) editable(task)
       if (team.tasks.some(t => t.dependencies.includes(task.id))) throw new Error('请先断开该任务的下游连接')
       team.tasks = team.tasks.filter(t => t.id !== task.id)
     } else if (op.action === 'rerun_task') {
@@ -317,9 +320,46 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
       gate.updatedAt = now
     }
   }
+  updateEditedLoopRoutes(original, team)
   validateWorkflowGraph(team)
   return team
 }
+/** Rebuild affected loops from the edited forward graph before saving any edge. */
+function updateEditedLoopRoutes(original: TeamState, team: TeamState): void {
+  const loops = team.workflow?.loops
+  if (!loops?.length) return
+  const before = new Map(original.tasks.map(task => [task.id, task.dependencies]))
+  const changed = team.tasks.filter(task => {
+    const old = before.get(task.id) ?? []
+    return old.length !== task.dependencies.length || old.some(id => !task.dependencies.includes(id))
+  })
+  const affected = loops.filter(loop => original.workflow?.loops?.some(old => old.id === loop.id) && changed.some(task =>
+    task.id === loop.gateId || loop.bodyIds.includes(task.id)
+    || (before.get(task.id)?.includes(loop.gateId) ?? false) !== task.dependencies.includes(loop.gateId)
+  ))
+  if (!affected.length) return
+
+  // Rebuild each changed region, then validate all regions together for overlap.
+  team.workflow!.loops = loops.filter(loop => !affected.includes(loop))
+  for (const loop of affected) {
+    const outgoing = team.tasks.filter(task => task.dependencies.includes(loop.gateId)).map(task => task.id)
+    const otherLoops: typeof loops = team.workflow!.loops!
+    team.workflow!.loops = [loop]
+    saveGateSettings(team, loop, outgoing, loop.id, true)
+    const rebuilt = team.workflow!.loops![0]!
+    team.workflow!.loops = [...otherLoops, rebuilt]
+    const affectedResults = new Set(changed.filter(task => rebuilt.bodyIds.includes(task.id)).flatMap(task =>
+      rerunImpact(team.tasks, task.id).descendants.filter(next => rebuilt.bodyIds.includes(next.id))))
+    for (const task of affectedResults) {
+      if (taskIsExecuting(task)) throw new Error('请先停止受连线变更影响的循环任务')
+      if (task.status === 'completed') resetTaskForRerun(task, true, Date.now())
+    }
+    for (const task of team.tasks) {
+      if ((before.get(task.id)?.includes(loop.gateId) ?? false) !== task.dependencies.includes(loop.gateId)) holdLoopTask(task)
+    }
+  }
+}
+
 export function proposeWorkflow(team: TeamState, title: string, raw: unknown, maxMembers?: number): WorkflowProposal {
   const operations = parseWorkflowOperations(raw)
   applyWorkflowOperations(team, operations, maxMembers)

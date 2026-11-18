@@ -1,4 +1,4 @@
-import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow, isUnstartedLoop } from '../workflow-loop-types.ts'
+import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow } from '../workflow-loop-types.ts'
 import { previewGate } from '../workflow-loop-config.ts'
 import { draftTaskId } from './workflow-draft.ts'
 import { WorkbenchGuide } from './WorkbenchGuide.tsx'
@@ -470,8 +470,8 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
   }
   async function deleteNode(id: string): Promise<void> {
     if (!team || working || archiveView || !editing) return
-    const deletingGate = team.workflow?.loops?.some(loop => loop.gateId === id)
-    const updates: WorkflowOperation[] = deletingGate ? [] : team.tasks.filter(task => task.dependencies.includes(id)).map(task => ({ action: 'update_task', id: task.id, dependencies: task.dependencies.filter(dep => dep !== id) }))
+    const deletingLoopTask = team.workflow?.loops?.some(loop => loop.gateId === id || loop.bodyIds.includes(id))
+    const updates: WorkflowOperation[] = deletingLoopTask ? [] : team.tasks.filter(task => task.dependencies.includes(id)).map(task => ({ action: 'update_task', id: task.id, dependencies: task.dependencies.filter(dep => dep !== id) }))
     updates.push({ action: 'remove_task', id })
     const revision=viewRef.current.revision
     if (await perform('edit', { operations: updates, title: l("删除节点及其连接"), base: data?.base, positions: Object.fromEntries(team.tasks.map(task => [task.id, storedPoint(pos(task.id))])) })) {
@@ -904,7 +904,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                       const config = target && {
                         gateId: task.id, entryId: target.id, mode: gateLoop?.mode ?? task.checkpoint?.mode ?? 'human',
                         reviewer: gateLoop?.reviewer, maxRounds: gateLoop?.maxRounds ?? 3,
-                        timeoutMinutes: gateLoop?.timeoutMinutes ?? 30, rejectToEntry: gateLoop?.rejectToEntry ?? !gateLoop,
+                        timeoutMinutes: gateLoop?.timeoutMinutes ?? 30, rejectToEntry: true,
                       }
                       const issue = config ? workflowMessage(previewGate(team, config, passTargets).error, l) : ''
                       const end = target && !issue ? connectionPort(canvasPos(target.id), 'input', gateNode(target)) : at
@@ -920,7 +920,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                       if (!config) return
                       if (issue) { setError(issue); return }
                       choose({type:'check',id:task.id})
-                      void perform('loop_configure', {base:data.base, config, loopId:gateLoop?.id, passTargets})
+                      void perform('loop_configure', {base:data.base, config, loopId:gateLoop?.id, passTargets, reconnect:true})
                     }
                   }}>REJECT</button>}
                 <button className={`${css.port} ${css.input}`} data-connection-handle data-input-id={task.id} aria-label={l("{0} 输入端", task.subject)} />
@@ -930,9 +930,10 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                   const target = event.currentTarget
                   target.setPointerCapture(event.pointerId)
                   const update = (move: { clientX: number; clientY: number }) => {
-                    const at = point(move), to = connectionTarget(team.tasks, pos, at, task.id, gateNode)
-                    const issue = to ? connectionIssue(team.tasks, task.id, to.id, l) : undefined
-                    const end = to && !issue ? connectionPort(pos(to.id),'input', gateNode(to)) : at
+                    const at = point(move), to = connectionTarget(canvasTasks, canvasPos, at, task.id, gateNode)
+                    const editableGate = !!to && gateNode(to) && canEditLoopGate(to)
+                    const issue = to ? connectionIssue(team.tasks, task.id, to.id, l, editableGate) : undefined
+                    const end = to && !issue ? connectionPort(canvasPos(to.id),'input', gateNode(to)) : at
                     setLink({ from: task.id, ...end, to: to?.id, issue })
                     return { to, issue }
                   }
@@ -1046,7 +1047,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
           {terminalEdit && <button type="submit" data-rerun-task disabled={working || team.halted || team.phase === 'staged' || !!draft['adaptationIssue']?.trim() || !draft['rerunInstructions']?.trim()}>{l("保存并重跑此任务")}</button>}
           {editor.type === 'member' && editor.id && rerunnableTasks(team.tasks,editor.id).some(task=>task.id===draft['rerunTaskId']) && <button type="submit" data-rerun="true" disabled={working}>{l("保存成员并编辑重跑要求")}</button>}
           {editor.id && editor.type !== 'member' && !activeLoop && !gateNode(activeTask) && !terminalEdit && !activeTask?.workflowConfigPending && !activeTask?.workflowRerunRequired && team.tasks.find(task => task.id === editor.id)?.workflowPaused && <button type="submit" data-resume="true" disabled={working || (activeTask?.workflowRerunRequired && activeTask.dependencies.some(id => team.tasks.find(task => task.id === id)?.status !== 'completed'))}>{activeTask?.workflowRerunRequired ? editor.type === 'check' ? l("使用新结果重新验收") : l("使用新结果执行") : editor.type === 'check' ? l("保存并开始验收") : l("保存并开始执行")}</button>}
-          {editor.id && editor.type !== 'member' && activeTask && (activeLoop?.gateId === activeTask.id ? canEditLoopGate(activeTask) : (!activeLoop || isUnstartedLoop(activeLoop)) && !terminalEdit && activeTask.status === 'pending') && <button type="button" disabled={working} title={activeLoop ? l("删除节点会解除当前循环配置") : undefined} onClick={() => void deleteNode(editor.id!)}>{l("删除节点")}</button>}
+          {editor.id && editor.type !== 'member' && activeTask && (activeLoop ? canEditLoopGate(activeTask) : !terminalEdit && activeTask.status === 'pending') && <button type="button" disabled={working} title={activeLoop ? l("删除节点会解除当前循环配置") : undefined} onClick={() => void deleteNode(editor.id!)}>{l("删除节点")}</button>}
           {editor.type === 'check' && !gateNode(activeTask) && editor.id && data.ready.includes(editor.id) && <button type="button" disabled={working} onClick={() => void openReview(editor.id!)}>{l("开始验收 ↗")}</button>}<button type="button" onClick={cancelEdit}>{l("放弃修改")}</button>
           {editor.type === 'member' && editor.id && <button type="button" disabled={working} onClick={() => void saveEdit([{ action: 'remove_member', name: editor.id! }], l("移除 {0}", editor.id), true)}>{l("移除成员")}</button>}</footer>
       </form>}

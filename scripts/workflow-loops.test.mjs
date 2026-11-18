@@ -171,7 +171,7 @@ test('an unassigned loop can be wired and saved, but must have owners before sta
 
 test('deleting a draft loop node detaches the loop and leaves its remaining path held', () => {
   const {team, loop} = fixture()
-  const removeBody = [{action:'update_task', id:'b', dependencies:[]}, {action:'remove_task', id:'a'}]
+  const removeBody = [{action:'remove_task', id:'a'}]
   const withoutBody = applyWorkflowOperations(team, removeBody)
   assert.equal(withoutBody.workflow.loops.length, 0)
   assert.equal(withoutBody.tasks.some(task => task.id === 'a'), false)
@@ -181,10 +181,10 @@ test('deleting a draft loop node detaches the loop and leaves its remaining path
   const withoutGate = applyWorkflowOperations(team, [{action:'update_task', id:'after', dependencies:[]}, {action:'remove_task', id:'gate'}])
   assert.equal(withoutGate.workflow.loops.length, 0)
   assert.equal(withoutGate.tasks.find(task => task.id === 'after').workflowAwaitingStart, true)
-  assert.throws(() => applyWorkflowOperations(team, [{action:'remove_task', id:'a'}]), /下游连接/)
   assert.equal(team.workflow.loops[0], loop)
   startLoop(team, loop.id)
-  assert.throws(() => applyWorkflowOperations(team, removeBody), /已启动/)
+  beginTaskAttempt(team.tasks[0], 'worker')
+  assert.throws(() => applyWorkflowOperations(team, removeBody), /停止要删除/)
 })
 
 test('review materials compare the preceding decision with a partial rerun', async t => {
@@ -951,24 +951,36 @@ test('IF settings update both routes atomically and retain the run across review
   validateWorkflowGraph(team)
 })
 
-test('an idle gate can be rewired after approval and removed while its body is running', async t => {
+test('rewiring clears multiple rounds and removing an idle node after review still works', async t => {
   const {team, loop} = fixture()
   startLoop(team, loop.id)
   finish(team)
+  decideLoop(team, loop.id, decision(team, loop, 'revise', ['b']), 'human')
+  finish(team, ['b'])
   decideLoop(team, loop.id, decision(team, loop, 'pass', []), 'human')
   const f = await routeFixture(t, team)
   const saved = await f.read()
+  assert.equal(saved.workflow.loops[0].round, 2)
   const approval = saved.workflow.loops[0].historyHead
   saveGateSettings(saved, {...saved.workflow.loops[0], entryId:'b'}, ['after'], loop.id)
   const rewired = saved.workflow.loops[0]
   assert.equal(rewired.status, 'ready')
-  assert.equal(rewired.historyHead, approval)
+  assert.equal(rewired.round, 1)
+  assert.equal(rewired.historyCount, 0)
+  assert.equal(rewired.historyHead, undefined)
+  assert.notEqual(rewired.runId, loop.runId)
+  assert.deepEqual((await readLoopHistory(f.stateRoot, saved, loop.id)).records, [])
   assert.equal(saved.tasks.find(task => task.id === 'gate').checkpoint.decision, undefined)
   assert.equal(saved.tasks.find(task => task.id === 'a').status, 'completed')
   assert.equal(saved.tasks.find(task => task.id === 'b').status, 'completed')
   assert.equal(reconcileLoops(saved), false)
   startLoop(saved, loop.id)
   reconcileLoops(saved)
+  const reviewed = await f.read()
+  const withoutB = applyWorkflowOperations(reviewed, [{action:'remove_task', id:'b'}])
+  assert.equal(withoutB.tasks.some(task => task.id === 'b'), false)
+  assert.equal(withoutB.tasks.find(task => task.id === 'gate').workflowConfigPending, true)
+  assert.equal(withoutB.tasks.find(task => task.id === 'gate').checkpoint.decision, undefined)
   const active = await f.read()
   active.workflow.loops[0].status = 'running'
   const body = active.tasks.find(task => task.id === 'a')
@@ -989,4 +1001,32 @@ test('an idle gate can be rewired after approval and removed while its body is r
   saveGateSettings(reloaded, replacement, ['after'])
   assert.equal(reloaded.workflow.loops[0].status, 'ready')
   assert.throws(() => startLoop(reloaded, reloaded.workflow.loops[0].id), /仍在运行/)
+})
+
+test('ordinary canvas edges rederive a loop and REJECT retries the connected original tasks', () => {
+  const {team, loop} = fixture()
+  const wired = applyWorkflowOperations(team, [
+    {action:'add_task', id:'check-results', subject:'Check results', description:'Check results', assignee:'worker', dependencies:['b']},
+    {action:'update_task', id:'gate', dependencies:['check-results']},
+  ])
+  const configured = wired.workflow.loops[0]
+  assert.equal(configured.id, loop.id)
+  assert.deepEqual(configured.bodyIds, ['a','b','check-results'])
+  saveGateSettings(wired, {...configured, entryId:'b', rejectToEntry:true}, ['after'], loop.id)
+  startLoop(wired, loop.id)
+  finish(wired, ['a'])
+  finish(wired, ['b','check-results'])
+  const state = wired.workflow.loops[0]
+  assert.equal(state.status, 'reviewing')
+  decideLoop(wired, loop.id, decision(wired, state, 'revise', []), 'human')
+  assert.equal(state.round, 2)
+  assert.equal(wired.tasks.find(task => task.id === 'a').status, 'completed')
+  for (const id of ['b','check-results']) {
+    const retried = wired.tasks.find(task => task.id === id)
+    assert.equal(retried.status, 'pending')
+    assert.ok(retried.workflowRerunContext?.instructions)
+  }
+  assert.deepEqual(wired.tasks.map(task => task.id), ['a','b','gate','after','check-results'])
+  assert.throws(() => applyWorkflowOperations(wired, [{action:'update_task', id:'gate', dependencies:[]}]), /入口/)
+  assert.deepEqual(wired.tasks.find(task => task.id === 'gate').dependencies, ['check-results'])
 })

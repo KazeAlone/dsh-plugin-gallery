@@ -16,7 +16,7 @@ export declare function updateGateReview(team: TeamState, gateId: string, mode: 
 /** Hold future work while preserving any attempt already in flight. */
 export declare function holdLoopTask(task: TeamTask): void;
 /** Validate both routes before publishing the new configuration. */
-export declare function saveGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown): void;
+export declare function saveGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown, dependenciesChanged?: boolean): void;
 export declare function loopCanExecute(team: TeamState, task: TeamTask): boolean;
 export declare function loopDependenciesSatisfied(team: TeamState, task: TeamTask): boolean;
 /** Called before every durable write and from the scheduler watchdog. Never creates tasks. */

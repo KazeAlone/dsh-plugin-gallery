@@ -505,7 +505,7 @@ export function installWorkflowWorkbench(ctx: Context, config: ToolsConfig, runt
           } else if (action === 'loop_configure') {
             if (body['base'] !== workflowFingerprint(team)) throw new Error('流程已变化，请刷新')
             const config = parseLoopConfig(body['config'])
-            if ('passTargets' in body) saveGateSettings(team, config, body['passTargets'], body['loopId'])
+            if ('passTargets' in body) saveGateSettings(team, config, body['passTargets'], body['loopId'], body['reconnect'] === true)
             else configureLoop(team, config)
           } else if (action === 'loop_start') {
             if (body['base'] !== workflowFingerprint(team)) throw new Error('流程已变化，请刷新')

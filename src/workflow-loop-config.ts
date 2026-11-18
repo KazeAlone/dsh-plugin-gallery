@@ -46,7 +46,7 @@ export function gateRouteTasks(team: TeamState, gateId: string, passTargets: unk
   })
 }
 
-export function planGateSettings(team: TeamState, raw: LoopConfig, passTargets: unknown) {
+export function planGateSettings(team: TeamState, raw: LoopConfig, passTargets: unknown, dependenciesChanged = false) {
   const config = parseLoopConfig(raw)
   if (config.mode === 'human') delete config.reviewer
   const gate = taskOf(team, config.gateId)
@@ -55,10 +55,10 @@ export function planGateSettings(team: TeamState, raw: LoopConfig, passTargets: 
   const tasks = gateRouteTasks(team, gate.id, passTargets)
   const candidate = { ...team, tasks }
   const region = deriveLoop(candidate, config, previous?.id ?? gate.id, previous?.runId ?? gate.id)
-  const rewired = !previous || previous.entryId !== config.entryId
+  const rewired = dependenciesChanged || !previous || previous.entryId !== config.entryId
     || region.bodyIds.length !== previous.bodyIds.length || region.bodyIds.some(id => !previous.bodyIds.includes(id))
     || tasks.some((task, i) => task !== team.tasks[i])
-  const round = previous?.round ?? 1
+  const round = rewired ? 1 : previous!.round
   if (config.maxRounds < round) throw new Error('轮次上限不能低于当前轮')
   const loop = rewired ? { ...region, round } : { ...previous!, ...config, rejectToEntry: config.rejectToEntry, reviewer: config.reviewer }
   const draftGate = { ...gate, assignee: config.mode === 'ai' ? config.reviewer : undefined }

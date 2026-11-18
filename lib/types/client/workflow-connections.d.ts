@@ -20,7 +20,7 @@ export declare function connectionPath(start: {
     y: number;
 }): string;
 /** Mirrors graph invariants for immediate drag feedback; the server revalidates. */
-export declare function connectionIssue(tasks: TeamTask[], from: string, to: string, l?: WorkflowText): string | undefined;
+export declare function connectionIssue(tasks: TeamTask[], from: string, to: string, l?: WorkflowText, editableGate?: boolean): string | undefined;
 export declare function connectionTarget(tasks: TeamTask[], position: (id: string) => {
     x: number;
     y: number;
