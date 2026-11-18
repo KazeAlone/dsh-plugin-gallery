@@ -25,7 +25,7 @@ When configuring an IF gate, select the return target to preview the loop and se
 
 **Continue and rerun**: Start all resumes unfinished, paused, or interrupted work and preserves completed results. Run through a node resumes its required ancestors and pauses later descendants; human checkpoints still require approval. Continuing needs no new input. An explicit rerun requires a reason in the card editor. Reconnection reads current state without replaying mutations. Blockers and recovery explains configuration, dependencies, review, and execution issues with next actions.
 
-This README describes stable version **`0.2.12`** on `main`. See the [release notes](./release-notes/v0.2.12.md). The package is `@yogurtss/dsh-teamflow`; install it from this repository or a local build.
+This README describes stable version **`0.2.13`** on `main`. See the [release notes](./release-notes/v0.2.13.md). The package is `@yogurtss/dsh-teamflow`; install it from this repository or a local build.
 
 | Channel | Git source | Purpose |
 | --- | --- | --- |
@@ -34,6 +34,8 @@ This README describes stable version **`0.2.12`** on `main`. See the [release no
 | Classic | `github:yogurtss/dsh-teamflow#classic` | Historical version without Gallery |
 
 This release accepts DSH `0.2.1-rc.5`; the repository's development dependencies remain on `0.2.1-rc.2`. See the [compatibility record](./docs/harness-0.2.1-rc.5/README.md) and [compatibility matrix](./compatibility.json) for exact targets and validation scope. Stable and development releases have separate schedules.
+
+Member Gallery switches use bounded discovery with Gallery 0.30.0+: search, load a relevant Skill, inspect and call selected MCP tools. Older Gallery versions require an upgrade when access is enabled. See [Gallery integration](docs/gallery-discovery.md).
 
 ## Your first workflow
 

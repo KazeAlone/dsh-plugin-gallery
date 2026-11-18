@@ -1,4 +1,5 @@
-import { parseGalleryAccess, type GalleryAccess } from "./gallery-access.ts"
+import { parseGalleryAccess } from "./gallery-access.ts"
+import { installMemberGalleryAccess } from "./gallery-runtime.ts"
 /**
  * Member subagent lifecycle: spawn a continuable child per member, deliver
  * task turns and step-boundary messages, and observe its activity.
@@ -685,15 +686,7 @@ export function installMemberSelectionRuntime(
     const access = setup ?? savedMember
     let stopGallery = (): void => undefined
     try {
-      if (access?.gallerySkill !== undefined || access?.galleryMcp !== undefined) {
-        const gallery = (ctx as unknown as { get(key: string): unknown }).get('gallery') as {
-          setMemberAccess?: (agent: Agent, access: GalleryAccess) => () => void
-        } | undefined
-        if (gallery) {
-          if (!gallery.setMemberAccess) throw new Error('请先升级 Gallery，以应用成员的 Skill / MCP 开关')
-          stopGallery = gallery.setMemberAccess(child, parseGalleryAccess({...access}))
-        }
-      }
+      stopGallery = installMemberGalleryAccess(ctx, child, access, setup?.toolFilter ?? savedMember?.toolFilter)
     } catch (error) {
       stopGallery(); disposeSetup(); disposeAdmission()
       throw error
