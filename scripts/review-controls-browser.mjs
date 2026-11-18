@@ -109,6 +109,7 @@ try {
   ])
   assert.ok(inputLinked.ok())
   await warning.waitFor({state:'detached'})
+  assert.equal(await page.getByRole('button',{name:'结束循环',exact:true}).count(),0)
   await page.locator('[data-flow-branch="reject"]').waitFor()
   await page.reload()
   await page.getByRole('button',{name:'收起循环任务'}).waitFor()

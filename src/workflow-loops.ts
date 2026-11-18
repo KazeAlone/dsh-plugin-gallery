@@ -7,7 +7,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import type { TeamState, TeamTask } from './types.ts'
 import { resetTaskForRerun } from './task-rerun.ts'
 
-import { canEditLoopGate, isDraftLoop, isDraftRejectTask, isPendingLoopEntry, loopHasExternalEntry, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
+import { canEditLoopGate, canEndLoop, isDraftLoop, isDraftRejectTask, isPendingLoopEntry, loopHasExternalEntry, loopHasStarted, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
 export type { LoopConfig, WorkflowLoop, LoopHistoryRecord } from './workflow-loop-types.ts'
 const pending = new WeakMap<TeamState, LoopHistoryRecord[]>()
 export const loopRetryInstructions = '按原任务要求重试本轮，保留先前的执行记录。'
@@ -189,7 +189,7 @@ function captureExecutions(team: TeamState, loop: WorkflowLoop, now: number): vo
 }
 function pause(team: TeamState, loop: WorkflowLoop, reason: string, now: number): void {
   if (loop.status === 'paused' && loop.reason === reason) return
-  snapshot(team, loop, 'control', reason, [loop.gateId, ...loop.bodyIds].map(id => taskOf(team, id)), {}, now)
+  if (loopHasStarted(loop)) snapshot(team, loop, 'control', reason, [loop.gateId, ...loop.bodyIds].map(id => taskOf(team, id)), {}, now)
   loop.status = 'paused'; loop.reason = reason
   delete loop.failedExecutionTaskId
   for (const id of [loop.gateId, ...loop.bodyIds]) { const task = taskOf(team, id); if (!terminal(task)) task.workflowPaused = true }
@@ -351,6 +351,7 @@ export function decideLoop(team: TeamState, id: string, input: { decisionId: str
 export function pauseLoop(team: TeamState, id: string, cancel = false, reason?: string): void {
   const loop = loopsOf(team).find(l => l.id === id)
   if (!loop || loop.status === 'passed' || loop.status === 'cancelled') throw new Error('循环已结束')
+  if (cancel ? !canEndLoop(loop) : !loopHasStarted(loop) && !loop.queued) throw new Error('循环尚未启动')
   pause(team, loop, reason ?? (cancel ? '用户结束循环' : '用户暂停循环'), Date.now())
   delete loop.queued
   if (cancel) loop.status = 'cancelled'

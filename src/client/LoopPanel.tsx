@@ -1,7 +1,7 @@
 import { MAX_WORKFLOW_TEXT_LENGTH } from '../workflow-types.ts'
 import { useEffect, useRef, useState } from 'react'
 import type { TeamState, TeamTask, ArtifactDigest } from '../types.ts'
-import { canEditLoopGate, type LoopHistoryRecord } from '../workflow-loop-types.ts'
+import { canEditLoopGate, canEndLoop, type LoopHistoryRecord } from '../workflow-loop-types.ts'
 import { workflowRequest } from './workflow-request.ts'
 import { useWorkflowText } from './workflow-i18n.tsx'
 import { workflowMessage } from './workflow-text.ts'
@@ -104,13 +104,13 @@ export function LoopPanel({ team, task, sessionId, base, archived, busy, perform
       <p>{loop.reason || tr('通过门控后才会继续执行环外任务。', 'Downstream tasks wait until this gate passes.')}</p>
       {loop.feedback && <p className={css.feedback}>{loop.feedback}</p>}
       {!archived && <div className={css.controls}>
-        {['ready', 'paused'].includes(loop.status) && <>
+        {!loop.queued && ['ready', 'paused'].includes(loop.status) && <>
           {exhausted && !capped && <label>{tr('明确追加轮数', 'Add rounds explicitly')}<input aria-label={tr('明确追加轮数', 'Add rounds explicitly')} type="number" min={1} max={20 - loop.maxRounds} value={extra} onChange={e => setExtra(Number(e.target.value))} /></label>}
           {capped && <p>{tr('已达单次运行 20 轮上限，请结束后建立新流程。', 'This run reached its 20-round maximum. End it and create a new workflow.')}</p>}
           <button disabled={blocked || capped || team.phase === 'staged' || !!team.halted} onClick={() => void guarded(() => perform('loop_start', { base, loopId: loop.id, additionalRounds: loop.lastDecision === 'revise' && loop.round >= loop.maxRounds ? extra : 0 }))}>{loop.status === 'ready' ? tr('启动循环', 'Start loop') : tr('继续循环', 'Resume loop')}</button>
         </>}
-        {!['passed', 'cancelled', 'ready'].includes(loop.status) && <button disabled={blocked} onClick={() => void guarded(() => perform('loop_pause', { base, loopId: loop.id }))}>{tr('暂停并停止执行', 'Pause and stop execution')}</button>}
-        {!['passed', 'cancelled'].includes(loop.status) && <button disabled={blocked} onClick={() => void guarded(() => perform('loop_cancel', { base, loopId: loop.id }))}>{tr('结束循环', 'End loop')}</button>}
+        {(loop.queued || ['running', 'reviewing'].includes(loop.status)) && <button disabled={blocked} onClick={() => void guarded(() => perform('loop_pause', { base, loopId: loop.id }))}>{loop.queued ? tr('取消排队', 'Cancel queued start') : tr('暂停并停止执行', 'Pause and stop execution')}</button>}
+        {canEndLoop(loop) && <button disabled={blocked} onClick={() => void guarded(() => perform('loop_cancel', { base, loopId: loop.id }))}>{tr('结束循环', 'End loop')}</button>}
       </div>}
       {!archived && loop.status === 'reviewing' && loop.mode === 'human' && <>
         <button disabled={blocked} onClick={() => void guarded(async () => setMaterials(await request('loop_materials') as typeof materials))}>{tr('读取本轮审核材料', 'Read current review materials')}</button>

@@ -39,6 +39,12 @@ export interface WorkflowLoop extends LoopConfig {
 export function canEditLoopGate(gate: Pick<TeamTask, 'status' | 'reassigning'>): boolean {
   return gate.status !== 'claimed' && gate.status !== 'in_progress' && !gate.reassigning
 }
+export function loopHasStarted(loop: Pick<WorkflowLoop, 'startedAt' | 'contracts'>): boolean {
+  return loop.startedAt !== undefined || loop.contracts !== undefined
+}
+export function canEndLoop(loop: WorkflowLoop): boolean {
+  return loopHasStarted(loop) && loop.status !== 'passed' && loop.status !== 'cancelled'
+}
 export function isDraftLoop(loop: WorkflowLoop): boolean {
   return loop.status === 'ready' && !loop.queued
 }

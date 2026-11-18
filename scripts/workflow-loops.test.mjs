@@ -1262,3 +1262,28 @@ test('return target and ordinary edges can be saved before wiring or assigning t
   ]})).code, 200)
   assert.equal((await call('loop_start', {loopId:loop.id})).code, 200)
 })
+
+test('draft and queued loops cannot be ended or generate empty runs', async t => {
+  const {team, loop} = fixture()
+  team.tasks.find(task=>task.id==='start').status = 'pending'
+  const f = await routeFixture(t, team)
+  const call = async action => f.call(action, {loopId:loop.id,base:workflowFingerprint(await f.read())})
+  assert.equal((await call('loop_cancel')).code, 409)
+  assert.equal((await call('loop_pause')).code, 409)
+  assert.equal((await f.read()).workflow.loops[0].status, 'ready')
+  assert.equal((await call('loop_start')).team.workflow.loops[0].queued, true)
+  assert.equal((await call('loop_cancel')).code, 409)
+  const dequeued = await call('loop_pause')
+  assert.equal(dequeued.code, 200, dequeued.error)
+  const paused = dequeued.team.workflow.loops[0]
+  assert.equal(paused.status, 'paused')
+  assert.equal(paused.queued, undefined)
+  assert.equal(paused.historyCount, 0)
+  assert.equal(paused.historyHead, undefined)
+  const saved = await f.read()
+  assert.deepEqual((await readLoopHistory(f.stateRoot, saved, loop.id)).records, [])
+  finish(saved, ['start'])
+  await writeTeam(f.stateRoot, saved)
+  assert.equal((await call('loop_start')).team.workflow.loops[0].status, 'running')
+  assert.equal((await call('loop_cancel')).team.workflow.loops[0].status, 'cancelled')
+})
