@@ -77,6 +77,8 @@ export interface Checkpoint {
     draftLoopSettings?: {
         maxRounds: number;
         timeoutMinutes: number;
+        rejectTaskIds?: string[];
+        rejectDag?: true;
     };
     /** Legacy checkpoints are acceptance nodes unless referenced by a loop. */
     kind?: 'gate' | 'acceptance';

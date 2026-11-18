@@ -14,6 +14,7 @@ export interface LayoutLoop {
     entryId: string;
     bodyIds?: readonly string[];
     rejectTaskIds?: readonly string[];
+    rejectDag?: true;
 }
 /** Template configs carry entry/gate IDs; runtime loops also carry the derived body. */
 export declare function loopBodyIds(tasks: readonly LayoutTask[], loop: LayoutLoop): string[];
@@ -36,4 +37,7 @@ export declare function loopRegion(tasks: readonly LayoutTask[], loop: LayoutLoo
 export declare function arrangeTasks(tasks: Pick<TeamTask, 'id' | 'dependencies'>[]): Record<string, CanvasPoint>;
 export declare const clampZoom: (value: number) => number;
 export declare function fitGraph(width: number, height: number, graphWidth: number, graphHeight: number): number;
+export declare function loopReturnPaths(tasks: readonly LayoutTask[], loop: Omit<LayoutLoop, 'entryId'> & {
+    entryId?: string;
+}, position: (id: string) => CanvasPoint, lane: number): string[];
 export {};

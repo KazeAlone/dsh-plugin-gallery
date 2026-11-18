@@ -46,6 +46,7 @@ export declare function openCodeFiles(team: TeamState): {
             reviewer?: string;
             rejectToEntry?: boolean;
             rejectTaskIds?: string[];
+            rejectDag?: true;
             maxRounds: number;
             timeoutMinutes: number;
         }[];

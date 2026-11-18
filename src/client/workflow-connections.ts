@@ -9,6 +9,14 @@ export const WORKFLOW_GATE_PORT_Y = 75
 export function connectionPort(point: {x:number;y:number}, side: 'input'|'output', checkpoint = false) {
   return {x:point.x + (side === 'output' ? WORKFLOW_NODE_WIDTH : 0),y:point.y + (checkpoint ? WORKFLOW_GATE_PORT_Y : WORKFLOW_PORT_Y)}
 }
+export function rejectPort(point: {x:number;y:number}) {
+  return {x:point.x + 42, y:point.y + 106}
+}
+/** Route feedback around the cards, then enter the normal left input port. */
+export function rejectPath(start: {x:number;y:number}, end: {x:number;y:number}, lane: number, out: 'left' | 'right' = 'left') {
+  const left = Math.max(2, end.x - 20)
+  return `M${start.x},${start.y} H${start.x + (out === 'left' ? -18 : 18)} V${lane} H${left} V${end.y} H${end.x}`
+}
 export function connectionPath(start: {x:number;y:number}, end: {x:number;y:number}) {
   return `M${start.x},${start.y} C${start.x+35},${start.y} ${end.x-35},${end.y} ${end.x},${end.y}`
 }

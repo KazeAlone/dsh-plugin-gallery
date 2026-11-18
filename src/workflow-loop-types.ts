@@ -6,6 +6,8 @@ export interface LoopConfig {
   reviewer?: string
   rejectToEntry?: boolean
   rejectTaskIds?: string[]
+  /** When absent on an existing run, preserve its original list order. */
+  rejectDag?: true
   maxRounds: number
   timeoutMinutes: number
 }
@@ -83,4 +85,8 @@ export function roundBodyIds(loop: WorkflowLoop): string[] {
   return loop.round === 1 && loop.rejectTaskIds?.length
     ? loop.bodyIds.filter(id => !loop.rejectTaskIds!.includes(id))
     : loop.bodyIds
+}
+
+export function isDraftRejectTask(team: {tasks: readonly Pick<TeamTask, 'checkpoint'>[]}, taskId: string): boolean {
+  return team.tasks.some(task => task.checkpoint?.draftLoopSettings?.rejectTaskIds?.includes(taskId))
 }

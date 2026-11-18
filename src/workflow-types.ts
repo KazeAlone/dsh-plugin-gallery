@@ -27,7 +27,7 @@ export type WorkflowOperation =
 export interface Checkpoint {
   /** Reviewer selected before the gate is connected. Draft configuration only. */
   draftReviewer?: string
-  draftLoopSettings?: { maxRounds: number; timeoutMinutes: number }
+  draftLoopSettings?: { maxRounds: number; timeoutMinutes: number; rejectTaskIds?: string[]; rejectDag?: true }
   /** Legacy checkpoints are acceptance nodes unless referenced by a loop. */
   kind?: 'gate' | 'acceptance'
   mode?: 'ai' | 'human'

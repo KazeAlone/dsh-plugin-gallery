@@ -1,18 +1,18 @@
-import { canRetryLoopTask, canStartLoopWithFlow, canToggleLoopTask, isUntriggeredLoopTask } from '../workflow-loop-types.ts'
+import { canRetryLoopTask, canStartLoopWithFlow, canToggleLoopTask, isDraftRejectTask, isUntriggeredLoopTask } from '../workflow-loop-types.ts'
 import type { ActivityTask } from './activity-monitor.ts'
 import type { AgentTeamsLocaleKey } from './locales.ts'
 
 /** Playback grants scheduling permission; it never satisfies a dependency. */
 export type ControlTask = Pick<ActivityTask, 'id'|'status'|'dependencies'|'checkpoint'|'workflowPaused'|'workflowAwaitingStart'|'workflowConfigPending'|'workflowRerunRequired'|'updatedAt'>
-export interface ControlTeam { tasks: readonly ControlTask[]; phase?: string; halted?: boolean; workflow?: { loops?: readonly (Pick<import('../workflow-loop-types.ts').WorkflowLoop, 'gateId'|'bodyIds'|'status'|'mode'|'round'|'maxRounds'|'rejectTaskIds'> & Partial<Pick<import('../workflow-loop-types.ts').WorkflowLoop, 'queued'|'failedExecutionTaskId'|'reason'|'lastDecision'>>)[] } }
+export interface ControlTeam { tasks: readonly ControlTask[]; phase?: string; halted?: boolean; workflow?: { loops?: readonly (Pick<import('../workflow-loop-types.ts').WorkflowLoop, 'gateId'|'bodyIds'|'status'|'mode'|'round'|'maxRounds'|'rejectTaskIds'|'rejectDag'> & Partial<Pick<import('../workflow-loop-types.ts').WorkflowLoop, 'queued'|'failedExecutionTaskId'|'reason'|'lastDecision'>>)[] } }
 export function taskControlState(team: ControlTeam, task: ControlTask, historic = false) {
   const loop = team.workflow?.loops?.find(loop => loop.gateId === task.id || loop.bodyIds.includes(task.id))
-  const untriggered = isUntriggeredLoopTask(team, task.id)
+  const untriggered = isUntriggeredLoopTask(team, task.id) || isDraftRejectTask(team, task.id)
   const terminal = ['completed','failed','cancelled'].includes(task.status)
   const stopping = !!task.workflowPaused && ['claimed','in_progress'].includes(task.status)
   const returnIds = loop && loop.round > 1 && loop.gateId !== task.id ? loop.rejectTaskIds ?? [] : []
   const returnIndex = returnIds.indexOf(task.id)
-  const waiting = [...new Set([...task.dependencies, ...returnIds.slice(0, returnIndex < 0 ? returnIds.length : returnIndex)])].filter(id => !team.tasks.some(upstream => upstream.id === id && upstream.status === 'completed'))
+  const waiting = [...new Set([...task.dependencies, ...returnIds.slice(0, returnIndex < 0 ? returnIds.length : loop?.rejectDag ? 0 : returnIndex)])].filter(id => !team.tasks.some(upstream => upstream.id === id && upstream.status === 'completed'))
   const humanReview = loop ? loop.gateId === task.id && loop.mode === 'human' && loop.status === 'reviewing'
     : task.checkpoint?.kind !== 'gate' && task.checkpoint?.mode !== 'ai' && !waiting.length
   const reviewReady = humanReview && !!task.checkpoint && !task.checkpoint.decision && task.status === 'pending' && !task.workflowPaused && !task.workflowConfigPending && !task.workflowRerunRequired && team.phase !== 'staged' && !team.halted && !historic
@@ -52,7 +52,7 @@ export function taskControlState(team: ControlTeam, task: ControlTask, historic 
 
 /** Optimistic concurrency token shared by the canvas, activity view and route. */
 export function flowControlVersion(team: ControlTeam): string {
-  return JSON.stringify([team.phase ?? 'running', !!team.halted, (team.workflow?.loops ?? []).map(loop => [loop.gateId, loop.bodyIds, loop.status, loop.mode, !!loop.queued, loop.failedExecutionTaskId, canStartLoopWithFlow(loop)]), team.tasks.filter(task => !isUntriggeredLoopTask(team, task.id)).map(task => [task.id, task.updatedAt, task.status, !!task.workflowPaused, !!task.workflowConfigPending, !!task.workflowRerunRequired, task.checkpoint?.decision, task.dependencies])])
+  return JSON.stringify([team.phase ?? 'running', !!team.halted, (team.workflow?.loops ?? []).map(loop => [loop.gateId, loop.bodyIds, loop.status, loop.mode, loop.rejectTaskIds, loop.rejectDag, !!loop.queued, loop.failedExecutionTaskId, canStartLoopWithFlow(loop)]), team.tasks.filter(task => !isUntriggeredLoopTask(team, task.id) && !isDraftRejectTask(team, task.id)).map(task => [task.id, task.updatedAt, task.status, !!task.workflowPaused, !!task.workflowConfigPending, !!task.workflowRerunRequired, task.checkpoint?.decision, task.dependencies])])
 }
 
 export function flowControlState(team: ControlTeam) {

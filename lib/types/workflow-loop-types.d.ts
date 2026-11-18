@@ -6,6 +6,8 @@ export interface LoopConfig {
     reviewer?: string;
     rejectToEntry?: boolean;
     rejectTaskIds?: string[];
+    /** When absent on an existing run, preserve its original list order. */
+    rejectDag?: true;
     maxRounds: number;
     timeoutMinutes: number;
 }
@@ -68,3 +70,6 @@ export declare function isUntriggeredLoopTask(team: {
     };
 }, taskId: string): boolean;
 export declare function roundBodyIds(loop: WorkflowLoop): string[];
+export declare function isDraftRejectTask(team: {
+    tasks: readonly Pick<TeamTask, 'checkpoint'>[];
+}, taskId: string): boolean;

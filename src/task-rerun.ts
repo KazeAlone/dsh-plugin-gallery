@@ -1,3 +1,4 @@
+import { isDraftRejectTask } from './workflow-loop-types.ts'
 /** Transitive dependents that must wait for a person's rerun confirmation. */
 import type { TeamTask } from './types.ts'
 export function rerunImpact(tasks: readonly TeamTask[], id: string): { descendants: TeamTask[]; active: TeamTask[] } {
@@ -57,6 +58,7 @@ export function startWorkflowPath(team:TeamState,targetId:string,now=Date.now())
   if(target.status!=='pending')throw new Error('此节点已不需要确认重跑，请刷新状态')
   for(const task of path){
     if(task.status==='completed')continue
+    if(isDraftRejectTask(team, task.id)) throw new Error('退回任务要等门控退回后运行')
     if(taskNeedsConfiguration(task))throw new Error(`请先完成路径节点的配置：${task.subject}`)
     if(task.reassigning || team.members.some(m=>m.name===task.assignee&&m.stopping))throw new Error(`路径节点正在停止，请稍后重试：${task.subject}`)
     if(['failed','cancelled'].includes(task.status)||task.checkpoint?.decision==='reject')throw new Error(`请先处理路径中的失败或退回节点：${task.subject}`)

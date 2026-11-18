@@ -1,3 +1,4 @@
+import { connectionPort, rejectPath, rejectPort } from './workflow-connections.ts'
 import type { TeamTask } from '../types.ts'
 
 export interface CanvasPoint { x: number; y: number }
@@ -8,7 +9,7 @@ export function reviewHistoryEdges(tasks: readonly Pick<TeamTask, 'id'|'dependen
   return tasks.flatMap(task => [...new Set(task.checkpoint?.history.flatMap(entry => entry.inputIds ?? []) ?? [])]
     .filter(id => ids.has(id) && !task.dependencies.includes(id)).map(from => ({ from, to: task.id })))
 }
-export interface LayoutLoop { gateId: string; entryId: string; bodyIds?: readonly string[]; rejectTaskIds?: readonly string[] }
+export interface LayoutLoop { gateId: string; entryId: string; bodyIds?: readonly string[]; rejectTaskIds?: readonly string[]; rejectDag?: true }
 
 /** Template configs carry entry/gate IDs; runtime loops also carry the derived body. */
 export function loopBodyIds(tasks: readonly LayoutTask[], loop: LayoutLoop): string[] {
@@ -62,15 +63,8 @@ export function loopRegion(tasks: readonly LayoutTask[], loop: LayoutLoop, posit
   const x = Math.min(...points.map(p => p.x)) - 20, y = Math.min(...points.map(p => p.y)) - 28
   const right = Math.max(...points.map(p => p.x)) + cardWidth + 20, bottom = Math.max(...points.map(p => p.y)) + cardHeight + 90
   const gate = position(loop.gateId), entry = position(loop.entryId), lane = bottom - 35
-  const returnPath = `M${gate.x + 112.5},${gate.y + 150} V${lane - 18} Q${gate.x + 112.5},${lane} ${gate.x + 94.5},${lane} H${entry.x + cardWidth/2 + 18} Q${entry.x + cardWidth/2},${lane} ${entry.x + cardWidth/2},${lane - 18} V${entry.y + cardHeight}`
-  const stops = [loop.gateId, ...loop.rejectTaskIds ?? [], loop.entryId].map(position)
-  const returnPaths = loop.rejectTaskIds?.length ? stops.slice(1).map((point, i) => {
-    const from = stops[i]!
-    const sx = from.x + cardWidth / 2, ex = point.x + cardWidth / 2
-    const sy = from.y + cardHeight, ey = point.y + cardHeight
-    const bend = lane + i * 6
-    return `M${sx},${sy} C${sx},${bend} ${ex},${bend} ${ex},${ey}`
-  }) : [returnPath]
+  const returnPath = rejectPath(rejectPort(gate), connectionPort(entry, 'input'), lane)
+  const returnPaths = loopReturnPaths(tasks, loop, position, lane)
   return { x, y, width: right - x, height: bottom - y, bottom, returnPath, returnPaths,
     label: { x: (gate.x + entry.x) / 2 + 112.5, y: lane - 10 } }
 }
@@ -98,4 +92,21 @@ export function arrangeTasks(tasks: Pick<TeamTask, 'id' | 'dependencies'>[]): Re
 export const clampZoom = (value: number): number => Math.max(.1, Math.min(2, value))
 export function fitGraph(width: number, height: number, graphWidth: number, graphHeight: number): number {
   return clampZoom(Math.min(1, Math.max(1, width - 32) / graphWidth, Math.max(1, height - 32) / graphHeight))
+}
+
+
+export function loopReturnPaths(tasks: readonly LayoutTask[], loop: Omit<LayoutLoop, 'entryId'> & {entryId?: string}, position: (id:string) => CanvasPoint, lane: number): string[] {
+  const branch = loop.rejectTaskIds ?? []
+  const fromGate = (id: string) => rejectPath(rejectPort(position(loop.gateId)), connectionPort(position(id), 'input'), lane)
+  if (!branch.length) return loop.entryId ? [fromGate(loop.entryId)] : []
+  const roots = loop.rejectDag ? branch.filter(id => !tasks.find(t => t.id === id)?.dependencies.some(dep => branch.includes(dep))) : branch.slice(0,1)
+  const leaves = loop.rejectDag ? branch.filter(id => !tasks.some(t => branch.includes(t.id) && t.dependencies.includes(id))) : branch.slice(-1)
+  const paths = roots.map(fromGate)
+  if (!loop.rejectDag) for (let i=1;i<branch.length;i++) {
+    paths.push(rejectPath(connectionPort(position(branch[i-1]!),'output'), connectionPort(position(branch[i]!),'input'), lane, 'right'))
+  }
+  if (loop.entryId) for (const id of leaves) {
+    paths.push(rejectPath(connectionPort(position(id),'output'), connectionPort(position(loop.entryId),'input'), lane, 'right'))
+  }
+  return paths
 }

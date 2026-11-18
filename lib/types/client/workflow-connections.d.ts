@@ -12,6 +12,21 @@ export declare function connectionPort(point: {
     x: number;
     y: number;
 };
+export declare function rejectPort(point: {
+    x: number;
+    y: number;
+}): {
+    x: number;
+    y: number;
+};
+/** Route feedback around the cards, then enter the normal left input port. */
+export declare function rejectPath(start: {
+    x: number;
+    y: number;
+}, end: {
+    x: number;
+    y: number;
+}, lane: number, out?: 'left' | 'right'): string;
 export declare function connectionPath(start: {
     x: number;
     y: number;

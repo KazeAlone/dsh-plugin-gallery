@@ -144,9 +144,31 @@ try {
   const savedBranch = await configured.json()
   assert.deepEqual(savedBranch.team.workflow.loops[0].rejectTaskIds, branch)
   assert.ok(branch.every(id => !savedBranch.activity.tasks.some(task => task.id === id)))
-  await page.waitForFunction(() => document.querySelectorAll('[data-flow-branch="reject"] path').length === 3)
+  await page.waitForFunction(() => document.querySelectorAll('[data-flow-branch="reject"] path').length === 4)
   await page.reload()
-  await page.waitForFunction(() => document.querySelectorAll('[data-flow-branch="reject"] path').length === 3)
+  await page.waitForFunction(() => document.querySelectorAll('[data-flow-branch="reject"] path').length === 4)
+  await page.locator('[data-guide="edit"]').click()
+  await Promise.all([
+    page.waitForResponse(res=>res.url().endsWith('/workflow') && res.request().postDataJSON()?.action==='layout'),
+    page.getByRole('button',{name:'自动整理'}).click(),
+  ])
+  await page.getByRole('button',{name:'适应画布'}).click()
+  const sourcePort = page.locator('[data-canvas-node="'+branch[0]+'"] [data-connection-handle]').last()
+  const destinationPort = page.locator('[data-input-id="'+branch[1]+'"]')
+  const start = await sourcePort.boundingBox(), end = await destinationPort.boundingBox()
+  assert.ok(await sourcePort.isEnabled() && start && end)
+  await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, {steps:8})
+  await page.locator('[data-canvas-node="'+branch[1]+'"][data-connection="valid"]').waitFor({timeout:3000})
+  const [ordered] = await Promise.all([
+    page.waitForResponse(res=>res.url().endsWith('/workflow') && res.request().postDataJSON()?.rejectEdge, {timeout:5000}),
+    page.mouse.up(),
+  ])
+  assert.ok(ordered.ok())
+  const orderedGraph = await ordered.json()
+  assert.deepEqual(orderedGraph.team.tasks.find(task=>task.id===branch[1]).dependencies,[branch[0]])
+  await page.waitForFunction(() => document.querySelectorAll('[data-flow-branch="reject"] path').length === 2)
   await page.setViewportSize({width:840,height:900})
   await page.locator('[data-guide="task"]').click()
   const mobileNode=page.locator('[data-task-selected="true"]')

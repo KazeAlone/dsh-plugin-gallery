@@ -1,4 +1,4 @@
-import { isUntriggeredLoopTask } from './workflow-loop-types.ts'
+import { isDraftRejectTask, isUntriggeredLoopTask } from './workflow-loop-types.ts'
 import { replacedTaskIds } from './replaced-tasks.ts'
 /**
  * Team activity snapshot assembly for the activity panel.
@@ -89,7 +89,7 @@ export interface TeamActivitySnapshot {
   readonly captainSessionId: string
   readonly phase: 'staged' | 'running'
   readonly workflowEnabled?: boolean
-  readonly workflow?: { loops: Pick<import('./workflow-loop-types.ts').WorkflowLoop, 'gateId'|'bodyIds'|'status'|'mode'|'round'|'maxRounds'|'rejectTaskIds'|'queued'|'failedExecutionTaskId'|'reason'|'lastDecision'>[] }
+  readonly workflow?: { loops: Pick<import('./workflow-loop-types.ts').WorkflowLoop, 'gateId'|'bodyIds'|'status'|'mode'|'round'|'maxRounds'|'rejectTaskIds'|'rejectDag'|'queued'|'failedExecutionTaskId'|'reason'|'lastDecision'>[] }
   readonly planReviewState?: 'awaiting_review' | 'awaiting_feedback'
   readonly halted?: boolean
   readonly forceCompleted?: boolean
@@ -151,7 +151,7 @@ export async function assembleTeamSnapshot(
   options: TeamSnapshotOptions = {},
 ): Promise<TeamActivitySnapshot> {
   const superseded = replacedTaskIds(state.tasks, state.workflow)
-  const tasks = state.tasks.filter(task => !isUntriggeredLoopTask(state, task.id))
+  const tasks = state.tasks.filter(task => !isUntriggeredLoopTask(state, task.id) && !isDraftRejectTask(state, task.id))
   const depths = taskDepthsById(tasks)
   const roster = options.includeRemoved === true
     ? state.members
@@ -220,7 +220,7 @@ export async function assembleTeamSnapshot(
     captainSessionId: state.captainSessionId,
     phase: state.phase ?? 'running',
     ...state.workflow === undefined ? {} : { workflowEnabled: true },
-    ...state.workflow?.loops?.length ? { workflow: { loops: state.workflow.loops.map(({gateId,bodyIds,status,mode,round,maxRounds,rejectTaskIds,queued,failedExecutionTaskId,reason,lastDecision}) => ({gateId,bodyIds,status,mode,round,maxRounds,rejectTaskIds,queued,failedExecutionTaskId,reason,lastDecision})) } } : {},
+    ...state.workflow?.loops?.length ? { workflow: { loops: state.workflow.loops.map(({gateId,bodyIds,status,mode,round,maxRounds,rejectTaskIds,rejectDag,queued,failedExecutionTaskId,reason,lastDecision}) => ({gateId,bodyIds,status,mode,round,maxRounds,rejectTaskIds,rejectDag,queued,failedExecutionTaskId,reason,lastDecision})) } } : {},
     ...state.phase === 'staged'
       ? { planReviewState: state.planReviewState ?? 'awaiting_review' as const }
       : {},

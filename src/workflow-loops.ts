@@ -7,7 +7,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import type { TeamState, TeamTask } from './types.ts'
 import { resetTaskForRerun } from './task-rerun.ts'
 
-import { canEditLoopGate, isDraftLoop, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
+import { canEditLoopGate, isDraftLoop, isDraftRejectTask, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
 export type { LoopConfig, WorkflowLoop, LoopHistoryRecord } from './workflow-loop-types.ts'
 const pending = new WeakMap<TeamState, LoopHistoryRecord[]>()
 export const loopRetryInstructions = '按原任务要求重试本轮，保留先前的执行记录。'
@@ -134,7 +134,7 @@ export function saveGateSettings(team: TeamState, config: LoopConfig, passTarget
 }
 export function loopCanExecute(team: TeamState, task: TeamTask): boolean {
   const loop = loopForTask(team, task.id)
-  if (!loop) return !task.checkpoint
+  if (!loop) return !task.checkpoint && !isDraftRejectTask(team, task.id)
   if (team.halted || team.phase === 'staged') return false
   if (task.id === loop.gateId) return loop.mode === 'ai' && loop.status === 'reviewing'
   return loop.status === 'running' && !isUntriggeredLoopTask(team, task.id)
@@ -149,7 +149,8 @@ export function loopReturnDependencies(team: TeamState, task: TeamTask): string[
   const loop = loopForTask(team, task.id)
   if (!loop || loop.round < 2 || loop.gateId === task.id || !loop.rejectTaskIds?.length) return []
   const index = loop.rejectTaskIds.indexOf(task.id)
-  return index < 0 ? loop.rejectTaskIds : loop.rejectTaskIds.slice(0, index)
+  if (index < 0) return loop.rejectTaskIds
+  return loop.rejectDag ? [] : loop.rejectTaskIds.slice(0, index)
 }
 function captureExecutions(team: TeamState, loop: WorkflowLoop, now: number): void {
   for (const id of roundBodyIds(loop)) {

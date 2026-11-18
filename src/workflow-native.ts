@@ -162,7 +162,7 @@ export function installWorkflowConversations(ctx: Context, config: ToolsConfig,
       description: 'One atomic batch of 1–50 proposed edits. Submit objects directly, not a JSON-encoded string. No changes take effect before human confirmation.',
       items: { type: 'object', additionalProperties: false, properties: {
         action: { type: 'string', required: true, enum: ['add_member','update_member','remove_member','add_task','update_task','remove_task','rerun_task','rework','configure_loop'] },
-        gateId: { type: 'string' }, entryId: { type: 'string' }, rejectTaskIds: {type:'array',items:{type:'string'}}, mode: { type: 'string', enum: ['human','ai'] }, reviewer: { type: 'string' },
+        gateId: { type: 'string' }, entryId: { type: 'string' }, rejectDag: {type:'boolean'}, rejectTaskIds: {type:'array',items:{type:'string'}}, mode: { type: 'string', enum: ['human','ai'] }, reviewer: { type: 'string' },
         maxRounds: { type: 'number' }, timeoutMinutes: { type: 'number' },
         id: { type: 'string', description: 'Existing task ID for task edits/removal/rerun, or checkpoint ID for rework. Optional new ID for add_task.' }, name: { type: 'string', description: 'Required for member operations; use the exact member name.' }, subject: { type: 'string', description: 'Required non-empty title for add_task.' }, summary: { type: 'string', description: 'Required responsibility summary for add_member.' },
         role: { type: 'string' }, executionPrompt: { type: 'string' }, specificPrompt: { type: 'string' },

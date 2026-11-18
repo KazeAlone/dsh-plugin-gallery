@@ -1,3 +1,4 @@
+import { isDraftRejectTask } from './workflow-loop-types.ts'
 import { cancelTaskArchive } from './task-archive.ts'
 import { parseTaskArchive, taskArchiveParameter } from './task-archive-config.ts'
 import { drainMemberChildren } from './harness-compat.ts'
@@ -1001,7 +1002,8 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
           loops: { type: 'array', description: 'Optional disjoint gated loops. IDs reference tasks in this plan. Each body must exit only through its gate. Defaults: maxRounds=3, timeoutMinutes=30.', items: { type: 'object', additionalProperties: false, properties: {
             gateId: { type: 'string', required: true }, entryId: { type: 'string', required: true },
             mode: { type: 'string', enum: ['human', 'ai'], required: true },
-            rejectTaskIds: { type: 'array', items: { type: 'string' }, description: 'Optional ordered tasks that only execute on reject, before returning to entryId.' },
+            rejectDag: {type:'boolean', description:'Use task dependencies for reject paths, so independent tasks can run in parallel.'},
+            rejectTaskIds: { type: 'array', items: { type: 'string' }, description: 'Tasks that run only on reject before returning to entryId.' },
             reviewer: { type: 'string', description: 'AI mode requires an independent member who owns no task inside this loop.' },
             maxRounds: { type: 'number', description: 'Finite total rounds including first, 1–20; exhaustion pauses for user action.' },
             timeoutMinutes: { type: 'number', description: 'Execution/review timeout, 1–1440 minutes.' },
@@ -1715,7 +1717,7 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
       const revoked = await withTeamLock(teamLockKey(stateRoot, team.id), async () => {
         const fresh = await requireFreshCaptainTeam(ctx, stateRoot, team.id, captain.id)
         const task = requireTask(fresh, args.task_id)
-        if (loopForTask(fresh, task.id)) throw new Error('循环任务请使用循环控制，不能单独重新分配')
+        if (isDraftRejectTask(fresh, task.id) || loopForTask(fresh, task.id)) throw new Error('循环任务请使用循环控制，不能单独重新分配')
         if (task.status === 'completed') throw new Error(`completed task ${task.id} is immutable and cannot be reassigned`)
         if (task.reassigning === true) {
           const previousMember = fresh.members.find(member => member.id === task.handoffFromMemberId && member.stopping === true)
@@ -1869,7 +1871,7 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
           }
           assignee = identity.name
         }
-        if (loopForTask(fresh, task.id) && !loopCanExecute(fresh, task)) throw new Error('循环当前不允许领取此节点')
+        if (isDraftRejectTask(fresh, task.id) || loopForTask(fresh, task.id) && !loopCanExecute(fresh, task)) throw new Error('循环当前不允许领取此节点')
         // Authorization must happen before the idempotent return: another
         // member must not receive a false success for somebody else's task.
         if (task.status === 'claimed' || task.status === 'in_progress') {
@@ -1885,7 +1887,7 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
             ...task.attemptId === undefined ? {} : { attempt_id: task.attemptId },
           }
         }
-        if (loopForTask(fresh, task.id) && !loopCanExecute(fresh, task)) throw new Error('循环当前不允许执行此节点')
+        if (isDraftRejectTask(fresh, task.id) || loopForTask(fresh, task.id) && !loopCanExecute(fresh, task)) throw new Error('循环当前不允许执行此节点')
         const pending = loopDependenciesSatisfied(fresh, task) ? [] : unsatisfiedDependencies(fresh.tasks, [...task.dependencies, ...loopReturnDependencies(fresh, task)])
         if (pending.length > 0) {
           throw new Error(`task ${task.id} is blocked by unfinished dependencies: ${pending.join(', ')} — complete them first`)
@@ -2697,7 +2699,7 @@ async function initializeProfileTeam(input: {
   profileName: string
   inlinePlan?: Omit<import('./profiles.ts').TeamProfileConfig, 'tasks'> & {
     tasks?: (import('./profiles.ts').TeamProfileTaskConfig & { checkpoint?: boolean; kind?: string; archive?: unknown })[]
-    loops?: { gateId: string; entryId: string; mode: string; rejectTaskIds?: string[]; reviewer?: string; maxRounds?: number; timeoutMinutes?: number }[]
+    loops?: { gateId: string; entryId: string; mode: string; rejectDag?: boolean; rejectTaskIds?: string[]; reviewer?: string; maxRounds?: number; timeoutMinutes?: number }[]
   }
   description?: string
   staged: boolean
@@ -2801,6 +2803,7 @@ async function initializeProfileTeam(input: {
   for (const config of input.inlinePlan?.loops ?? []) {
     configureLoop(draft, {
       ...config, mode: config.mode as 'human' | 'ai',
+      rejectDag: config.rejectDag === true ? true : undefined,
       rejectTaskIds: config.rejectTaskIds?.map(id => seedToActual.get(id.trim()) ?? id),
       gateId: seedToActual.get(config.gateId.trim()) ?? config.gateId,
       entryId: seedToActual.get(config.entryId.trim()) ?? config.entryId,

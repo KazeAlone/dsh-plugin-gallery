@@ -1149,3 +1149,61 @@ test('a tool-created plan with a loop waits for approval even if automatic was r
   assert.equal(staged.workflow.loops[0].status, 'ready')
   assert.equal(staged.workflow.loops[0].historyCount, 0)
 })
+
+test('save a reject draft first, then join parallel tasks back to the original entry', async t => {
+  const {team, loop:config} = fixture()
+  delete team.workflow.loops
+  team.tasks.unshift(task('external'))
+  team.tasks.find(task => task.id === 'a').dependencies = ['external']
+  team.tasks.push(task('left'), {...task('right'), assignee:'reviewer'})
+  const f = await routeFixture(t, team)
+  const set = async (config, extra = {}) => f.call('loop_configure', {base:workflowFingerprint(await f.read()), config, passTargets:['after'], ...extra})
+  const draft = {...config, entryId:'', rejectTaskIds:['left','right'], rejectDag:true}
+  const saved = await set(draft)
+  assert.equal(saved.code, 200, saved.error)
+  assert.ok(!saved.team.workflow.loops?.length)
+  assert.ok(!saved.activity.tasks.some(task => ['left','right'].includes(task.id)))
+  assert.equal(loopCanExecute(saved.team, saved.team.tasks.find(task => task.id === 'left')), false)
+  const attached = await set({...draft, entryId:'a'})
+  assert.equal(attached.code, 200, attached.error)
+  const current = await f.read(), loop = current.workflow.loops[0]
+  startLoop(current, loop.id)
+  assert.equal(loop.queued, true)
+  finish(current, ['external'])
+  assert.equal(loop.status, 'running')
+  finish(current)
+  decideLoop(current, loop.id, decision(current, loop, 'revise', []), 'human')
+  const byId = id => current.tasks.find(task=>task.id===id)
+  assert.equal(loopDependenciesSatisfied(current, byId('left')), true)
+  assert.equal(loopDependenciesSatisfied(current, byId('right')), true)
+  assert.equal(loopDependenciesSatisfied(current, byId('a')), false)
+  finish(current, ['right'])
+  assert.equal(loopDependenciesSatisfied(current, byId('a')), false)
+  finish(current, ['left'])
+  assert.equal(loopDependenciesSatisfied(current, byId('a')), true)
+  assert.deepEqual(byId('a').dependencies, ['external'])
+})
+
+test('connecting reject tasks serializes them and reverse edges are rejected', async t => {
+  const {team, loop} = fixture()
+  team.tasks.push(task('first'), task('second'))
+  saveGateSettings(team, {...loop, rejectTaskIds:['first','second'], rejectDag:true}, ['after'], loop.id)
+  const f = await routeFixture(t, team)
+  const link = async (from,to) => {
+    const saved = await f.read()
+    return f.call('loop_configure', {base:workflowFingerprint(saved), config:saved.workflow.loops[0], loopId:loop.id,
+      passTargets:['after'], rejectEdge:{from,to}})
+  }
+  assert.equal((await link('first','second')).code, 200)
+  assert.equal((await link('second','first')).code, 409)
+  const current = await f.read(), configured = current.workflow.loops[0]
+  startLoop(current, configured.id); finish(current)
+  decideLoop(current, configured.id, decision(current, configured, 'revise', []), 'human')
+  const byId = id => current.tasks.find(task=>task.id===id)
+  assert.equal(loopDependenciesSatisfied(current, byId('second')), false)
+  finish(current, ['first'])
+  assert.equal(loopDependenciesSatisfied(current, byId('second')), true)
+  assert.equal(loopDependenciesSatisfied(current, byId('a')), false)
+  finish(current, ['second'])
+  assert.equal(loopDependenciesSatisfied(current, byId('a')), true)
+})

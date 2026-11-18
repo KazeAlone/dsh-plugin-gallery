@@ -24,7 +24,7 @@ import type { TeamState, TeamTask } from '../types.ts'
 import type { WorkflowOperation } from '../workflow-types.ts'
 import css from './WorkflowWorkbench.module.css'
 import { TaskRecord, WorkflowContext } from './WorkflowContext.tsx'
-import { WORKFLOW_GATE_PATH, connectionIssue, connectionPath, WORKFLOW_GATE_PORT_Y } from './workflow-connections.ts'
+import { WORKFLOW_GATE_PATH, connectionIssue, connectionPath, rejectPort, WORKFLOW_GATE_PORT_Y } from './workflow-connections.ts'
 import { LEAD_ART, REVIEW_ART, memberArtUrl } from './artwork.ts'
 import type { ModelDirectory } from '@deepseek-ai/dsh-client-ui-model-selection/client'
 import type { AgentTeamsTranslate } from './locales.ts'
@@ -36,7 +36,7 @@ import { TaskRerunPicker } from './TaskRerunPicker.tsx'
 import { canRestartTask, rerunPath, resumeRerunPath, rerunImpact, rerunnableTasks } from '../task-rerun.ts'
 import { draftSource, editorKey, editorTarget, finishWorkbenchSave, initialEditorDraft, initialWorkbenchView, selectWorkbench, targetDiscussion, type EditorTarget, type WorkbenchTarget, type WorkbenchView } from './workbench-selection.ts'
 import { publishWorkflowActivity, type ActivityTeam } from './activity-monitor.ts'
-import { arrangeWorkflow, loopRegion, clampZoom, fitGraph } from './workflow-layout.ts'
+import { arrangeWorkflow, loopReturnPaths, loopRegion, clampZoom, fitGraph } from './workflow-layout.ts'
 import { decodeDrafts, draftStorageKey, pendingDrafts, propertyOperation } from './workbench-drafts.ts'
 import { taskReadiness, type ExecutionState } from './task-readiness.ts'
 import { flowControlState, flowControlVersion, taskControlState } from './task-control.ts'
@@ -531,7 +531,9 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
   const canvasPos = (id: string) => compactPositions?.[id] ?? pos(id)
   const graphWidth = Math.max(580, ...canvasTasks.map(t => canvasPos(t.id).x + CARD_WIDTH + 40), taskEditing ? draftPosition.x + CARD_WIDTH + 40 : 0)
   const loopRegions = compactLoops ? [] : team?.workflow?.loops?.map(loop => ({ loop, ...loopRegion(team.tasks, loop, pos, CARD_WIDTH, CARD_HEIGHT) })) ?? []
-  const graphHeight = Math.max(260, ...canvasTasks.map(t => canvasPos(t.id).y + CARD_HEIGHT + 24), ...loopRegions.map(region => region.bottom + 20), taskEditing ? draftPosition.y + CARD_HEIGHT + 24 : 0)
+  const draftRejectGates = compactLoops ? [] : team?.tasks.filter(task => task.checkpoint?.draftLoopSettings?.rejectTaskIds?.length && !team.workflow?.loops?.some(loop => loop.gateId === task.id)) ?? []
+  const draftRejectLane = Math.max(260, ...canvasTasks.map(task=>canvasPos(task.id).y + CARD_HEIGHT + 54))
+  const graphHeight = Math.max(260, draftRejectGates.length ? draftRejectLane + 24 : 0, ...canvasTasks.map(t => canvasPos(t.id).y + CARD_HEIGHT + 24), ...loopRegions.map(region => region.bottom + 20), taskEditing ? draftPosition.y + CARD_HEIGHT + 24 : 0)
   function fitCanvas(): void {
     if (!canvas.current) return
     setZoom(fitGraph(canvas.current.clientWidth, canvas.current.clientHeight, graphWidth, graphHeight))
@@ -829,7 +831,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
         </aside>
         <main className={css.graphArea}>
           <nav className={css.toolbar} aria-label={l("画布工具")}><button aria-pressed={!panMode} onClick={() => setPanMode(false)}><WorkflowIcon name="select" />{l("选择")}</button><button aria-pressed={panMode} onClick={() => setPanMode(true)}><WorkflowIcon name="pan" />{l("平移")}</button><button aria-label={l("缩小画布")} disabled={zoom <= .1} onClick={() => changeZoom(zoom - .1)}>−</button><button title={l("恢复 100%")} aria-label={l("缩放 {0}%，点击恢复 100%", Math.round(zoom * 100))} onClick={() => changeZoom(1)}>{Math.round(zoom * 100)}%</button><button aria-label={l("放大画布")} disabled={zoom >= 2} onClick={() => changeZoom(zoom + .1)}>＋</button>{!editing && team.phase !== 'staged' && !!team.workflow?.loops?.length && <button aria-pressed={showLoopSteps} onClick={() => setShowLoopSteps(value => !value)}>{l.language === 'en' ? showLoopSteps ? 'Hide loop steps' : 'Show loop steps' : showLoopSteps ? '收起循环任务' : '展开循环任务'}</button>}<button onClick={fitCanvas}><WorkflowIcon name="fit" />{l("适应画布")}</button><button disabled={working || archiveView || !team.tasks.length} onClick={() => void arrangeCanvas()}><WorkflowIcon name="arrange" />{l("自动整理")}</button></nav>
-          <div className={css.canvas} data-pan={panMode || !editing || archiveView} data-linking={!!link} ref={canvas} onDragOver={event => {
+          <div className={css.canvas} data-pan={panMode || !editing || archiveView} data-linking={!!link} data-wiring={editing && !archiveView} ref={canvas} onDragOver={event => {
             if (!working && !archiveView && event.dataTransfer.types.includes('application/x-teamflow-gate')) event.preventDefault()
           }} onDrop={event => {
             if (event.dataTransfer.getData('application/x-teamflow-gate') !== 'gate') return
@@ -848,7 +850,11 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                 </g> }))}
                 {reviewHistoryEdges(canvasTasks).map(edge => <g key={`history:${edge.from}:${edge.to}`} className={css.historyEdge} data-review-history-edge><path d={connectionPath(connectionPort(canvasPos(edge.from),'output',gateNode(team.tasks.find(t=>t.id===edge.from))),connectionPort(canvasPos(edge.to),'input',gateNode(team.tasks.find(t=>t.id===edge.to))))} markerEnd="url(#workflow-arrow)"/><text x={(canvasPos(edge.from).x+CARD_WIDTH+canvasPos(edge.to).x)/2} y={(canvasPos(edge.from).y+canvasPos(edge.to).y)/2+42} textAnchor="middle" fontSize="11">{l('历史路径')}</text></g>)}
                 {loopRegions.map(region => <g key={region.loop.id} className={css.edge} data-flow-branch="reject">{region.returnPaths.map((path, index) => <path key={index} d={path} strokeDasharray="7 5" markerEnd="url(#workflow-arrow-reject)"/>)}<text x={region.label.x} y={region.label.y} textAnchor="middle" fontSize="13" fontWeight="650">REJECT · {l.language==='en'?'Revise with feedback':'按意见改进'} · {region.loop.round}/{region.loop.maxRounds}</text></g>)}
-                {link && <path d={connectionPath(link.returning ? {x:canvasPos(link.from).x+112.5,y:canvasPos(link.from).y+150} : connectionPort(canvasPos(link.from),'output', gateNode(team.tasks.find(task => task.id === link.from))),link)} />}
+                {draftRejectGates.map(gate => <g key={gate.id} className={css.edge} data-flow-branch="reject" data-draft-reject>
+                  {loopReturnPaths(team.tasks, {gateId:gate.id,rejectDag:true,rejectTaskIds:gate.checkpoint?.draftLoopSettings?.rejectTaskIds}, canvasPos, draftRejectLane).map((path,index)=>
+                    <path key={index} d={path} strokeDasharray="7 5" markerEnd="url(#workflow-arrow-reject)" />)}
+                </g>)}
+                {link && <path d={connectionPath(link.returning ? rejectPort(canvasPos(link.from)) : connectionPort(canvasPos(link.from),'output', gateNode(team.tasks.find(task => task.id === link.from))),link)} />}
               </svg>
               {!archiveView && loopRegions.map(({loop,x,bottom}) => {
                 if (team.halted || team.phase === 'staged') return null
@@ -907,14 +913,17 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                       const at = point(move)
                       const target = connectionTarget(canvasTasks, canvasPos, at, task.id, gateNode)
                       const inForwardPath = target && upstreamIds(team.tasks, task.id).has(target.id)
-                      const attachOnReject = target && gateLoop && !inForwardPath && !target.checkpoint && target.kind !== 'archive'
+                      const attachOnReject = target && !inForwardPath && !target.checkpoint && target.kind !== 'archive'
                       const config = target && {
-                        gateId: task.id, entryId: attachOnReject ? gateLoop.entryId : target.id, mode: gateLoop?.mode ?? task.checkpoint?.mode ?? 'human',
+                        gateId: task.id, entryId: attachOnReject ? gateLoop?.entryId ?? '' : target.id, mode: gateLoop?.mode ?? task.checkpoint?.mode ?? 'human',
                         reviewer: gateLoop?.reviewer ?? task.checkpoint?.draftReviewer, maxRounds: gateLoop?.maxRounds ?? task.checkpoint?.draftLoopSettings?.maxRounds ?? 3,
                         timeoutMinutes: gateLoop?.timeoutMinutes ?? task.checkpoint?.draftLoopSettings?.timeoutMinutes ?? 30, rejectToEntry: true,
-                        rejectTaskIds: attachOnReject ? [...new Set([...gateLoop.rejectTaskIds ?? [], target.id])] : gateLoop?.rejectTaskIds,
+                        rejectTaskIds: attachOnReject
+                          ? [...new Set([...(gateLoop?.rejectTaskIds ?? task.checkpoint?.draftLoopSettings?.rejectTaskIds ?? []), target.id])]
+                          : gateLoop?.rejectTaskIds ?? task.checkpoint?.draftLoopSettings?.rejectTaskIds,
+                        rejectDag: attachOnReject || !gateLoop ? true as const : gateLoop.rejectDag,
                       }
-                      const issue = config ? workflowMessage(previewGate(team, config, passTargets).error, l) : ''
+                      const issue = config?.entryId ? workflowMessage(previewGate(team, config, passTargets).error, l) : ''
                       const end = target && !issue ? connectionPort(canvasPos(target.id), 'input', gateNode(target)) : at
                       setLink({from:task.id, returning:true, ...end, to:target?.id, issue})
                       return {config, issue}
@@ -937,13 +946,33 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                   event.preventDefault()
                   const target = event.currentTarget
                   target.setPointerCapture(event.pointerId)
+                  const rejectLoop = team.workflow?.loops?.find(loop => loop.rejectTaskIds?.includes(task.id))
+                  const rejectGate = rejectLoop ? team.tasks.find(node => node.id === rejectLoop.gateId)
+                    : draftRejectGates.find(node => node.checkpoint?.draftLoopSettings?.rejectTaskIds?.includes(task.id))
                   const update = (move: { clientX: number; clientY: number }) => {
                     const at = point(move), to = connectionTarget(canvasTasks, canvasPos, at, task.id, gateNode)
                     const editableGate = !!to && gateNode(to) && canEditLoopGate(to)
-                    const issue = to ? connectionIssue(team.tasks, task.id, to.id, l, editableGate) : undefined
+                    let issue = to ? connectionIssue(team.tasks, task.id, to.id, l, editableGate) : undefined
+                    let reject: Record<string, unknown> | undefined
+                    if (to && rejectGate) {
+                      const passTargets = team.tasks.filter(node => node.dependencies.includes(rejectGate.id)).map(node => node.id)
+                      const draft = rejectGate.checkpoint?.draftLoopSettings
+                      const returning = upstreamIds(team.tasks, rejectGate.id).has(to.id)
+                      const rejectTaskIds = [...new Set([...(rejectLoop?.rejectTaskIds ?? draft?.rejectTaskIds ?? []), ...(returning ? [] : [to.id])])]
+                      const config = { gateId:rejectGate.id, entryId:returning ? to.id : rejectLoop?.entryId ?? '',
+                        mode:rejectLoop?.mode ?? rejectGate.checkpoint?.mode ?? 'human',
+                        reviewer:rejectLoop?.reviewer ?? rejectGate.checkpoint?.draftReviewer,
+                        maxRounds:rejectLoop?.maxRounds ?? draft?.maxRounds ?? 3,
+                        timeoutMinutes:rejectLoop?.timeoutMinutes ?? draft?.timeoutMinutes ?? 30,
+                        rejectTaskIds, rejectDag:true as const, rejectToEntry:true }
+                      if (returning) issue = workflowMessage(previewGate(team, config, passTargets).error, l)
+                      else if (to.checkpoint || to.kind === 'archive') issue = l('退回路径只能包含普通任务')
+                      reject = {base:data.base, config, loopId:rejectLoop?.id, passTargets,
+                        ...(returning ? {reconnect:true} : {rejectEdge:{from:task.id, to:to.id}})}
+                    }
                     const end = to && !issue ? connectionPort(canvasPos(to.id),'input', gateNode(to)) : at
                     setLink({ from: task.id, ...end, to: to?.id, issue })
-                    return { to, issue }
+                    return { to, issue, reject }
                   }
                   const cleanup = () => {
                     target.onpointermove = null; target.onpointerup = null; target.onpointercancel = null
@@ -954,9 +983,10 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                   update(event)
                   target.onpointermove = move => { update(move) }
                   target.onpointerup = up => {
-                    const { to, issue } = update(up); cleanup()
+                    const { to, issue, reject } = update(up); cleanup()
                     if (issue) setError(issue)
-                    if (to && !issue) void saveEdit([{ action: 'update_task', id: to.id, dependencies: [...to.dependencies, task.id] }], l("连接 {0} → {1}", task.subject, to.subject))
+                    if (reject && !issue) void perform('loop_configure', reject)
+                    else if (to && !issue) void saveEdit([{ action: 'update_task', id: to.id, dependencies: [...to.dependencies, task.id] }], l("连接 {0} → {1}", task.subject, to.subject))
                   }
                   target.onpointercancel = cleanup
                 }} />

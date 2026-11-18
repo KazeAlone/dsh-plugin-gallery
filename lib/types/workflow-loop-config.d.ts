@@ -41,6 +41,7 @@ export declare function planGateSettings(team: TeamState, raw: LoopConfig, passT
         reviewer?: string;
         rejectToEntry?: boolean;
         rejectTaskIds?: string[];
+        rejectDag?: true;
         maxRounds: number;
         timeoutMinutes: number;
     };
@@ -50,4 +51,5 @@ export declare function previewGate(team: TeamState, config: LoopConfig, passTar
     bodyIds: string[];
     error: string;
 };
+export declare function validateDraftRejectPaths(team: TeamState): void;
 export declare function validateLoopGraph(team: TeamState): void;

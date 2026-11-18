@@ -159,7 +159,7 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
       if (gate.status !== 'pending' || gate.attemptId || gate.checkpoint?.decision) resetTaskForRerun(gate, false, now)
       gate.assignee = undefined
       gate.checkpoint!.draftReviewer = loop.reviewer
-      gate.checkpoint!.draftLoopSettings = {maxRounds:loop.maxRounds, timeoutMinutes:loop.timeoutMinutes}
+      gate.checkpoint!.draftLoopSettings = {maxRounds:loop.maxRounds, timeoutMinutes:loop.timeoutMinutes, rejectTaskIds:loop.rejectTaskIds?.filter(id=>!removedIds.has(id)), rejectDag:loop.rejectDag}
       gate.workflowConfigPending = true
       holdLoopTask(gate)
     }
@@ -262,6 +262,10 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
       if (!removedLoopTasks.has(task.id)) editable(task)
       if (team.tasks.some(t => t.dependencies.includes(task.id))) throw new Error('请先断开该任务的下游连接')
       team.tasks = team.tasks.filter(t => t.id !== task.id)
+      for (const gate of team.tasks) {
+        const draft = gate.checkpoint?.draftLoopSettings
+        if (draft?.rejectTaskIds?.includes(task.id)) draft.rejectTaskIds = draft.rejectTaskIds.filter(id => id !== task.id)
+      }
     } else if (op.action === 'rerun_task') {
       const original = taskOf(team, op.id)
       if (team.phase === 'staged') throw new Error('团队尚未启动，请直接编辑待执行任务')
