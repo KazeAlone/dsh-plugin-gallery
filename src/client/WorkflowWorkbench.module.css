@@ -539,6 +539,7 @@ label.galleryPermission input[type="checkbox"] { width: auto; }
 .replyBody pre:where(:not([data-code-block-content] pre)) { max-width: 100%; overflow-x: auto; white-space: pre; overflow-wrap: normal; }
 .replyBody img { max-width: 100%; height: auto; }
 
+.setupNotices { display:grid; gap:4px; padding:6px 16px; background:var(--wb-bg); border-bottom:1px solid var(--wb-border); }
 .loopEntryWarning { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; color:var(--wb-text); font-size:11px; }
 .workbench .loopEntryWarning button { padding:1px 5px; color:var(--wb-accent); }
 .workbench .port span { position:absolute; top:17px; font-size:9px; font-weight:700; line-height:1; color:var(--wb-text); background:var(--wb-base); border:1px solid var(--wb-border); padding:2px 4px; border-radius:4px; pointer-events:none; white-space:nowrap; }

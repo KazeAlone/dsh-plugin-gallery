@@ -1,4 +1,4 @@
-import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow, isDraftLoop, isUntriggeredLoopTask, loopHasExternalEntry } from '../workflow-loop-types.ts'
+import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow, isUntriggeredLoopTask, loopHasExternalEntry } from '../workflow-loop-types.ts'
 import { previewGate, upstreamIds } from '../workflow-loop-config.ts'
 import { draftTaskId } from './workflow-draft.ts'
 import { WorkbenchGuide } from './WorkbenchGuide.tsx'
@@ -661,17 +661,20 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
     const isGate = gateNode(task)
     const reviewer = loop?.reviewer ?? task.checkpoint.draftReviewer
     const members = isGate ? team.members.filter(m => m.status !== 'removed' && !team.tasks.some(t => loop?.bodyIds.includes(t.id) && t.assignee === m.name)) : []
+    const canKeepReviewer = !!reviewer && members.some(member => member.name === reviewer)
+    const value = isGate && mode === 'ai' ? canKeepReviewer ? 'ai:' + reviewer : 'unavailable' : mode
     const disabled = working || archiveView || (loop ? !canEditLoopGate(task) : !!team.halted || task.status !== 'pending' || !!task.checkpoint.decision)
-    return <select aria-label={l.language === 'en' ? 'Review mode' : '审核方式'} value={mode === 'ai' && isGate && reviewer ? 'ai:'+reviewer : mode} disabled={disabled}
+    return <select aria-label={l.language === 'en' ? 'Review mode' : '审核方式'} value={value} disabled={disabled}
       onPointerDown={e=>e.stopPropagation()} onClick={e=>e.stopPropagation()} onChange={event=>{
         const value = event.target.value
+        if (isGate && value !== 'human' && !value.startsWith('ai:')) return
         const reviewer = value.startsWith('ai:') ? value.slice(3).trim() : ''
         void perform('checkpoint_mode', {taskId:task.id, base:data?.base, mode:value === 'human' ? 'human' : 'ai',
           ...(reviewer ? {reviewer} : {})})
       }}>
       <option value="human">{l.language === 'en' ? 'Human review' : '人工审核'}</option>
-      {(!isGate || !loop || isDraftLoop(loop) || !reviewer) && <option value="ai">{isGate ? l('AI 审核 · 待指定审核员') : l.language === 'en' ? 'AI review' : 'AI 审核'}</option>}
-      {isGate && reviewer && !members.some(member => member.name === reviewer) && <option value={'ai:'+reviewer} disabled>AI · {reviewer}</option>}
+      {!isGate && <option value="ai">{l.language === 'en' ? 'AI review' : 'AI 审核'}</option>}
+      {value === 'unavailable' && <option value="unavailable" hidden disabled>{l('当前 AI 审核员不可用')}</option>}
       {members.map(m => <option key={m.name} value={'ai:'+m.name}>AI · {m.name}</option>)}
     </select>
   }
@@ -778,23 +781,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
       }
     }}>
       <header className={css.header}><div className={css.title}><BrandIcon size={32}/><div><strong>{team?.name ?? 'Teamflow'}</strong><span>{archiveView ? l("归档画布 · 成果与详情完整保留") : team?.phase === 'staged' ? l("准备流程 · 确认后开始执行") : l("团队工作台")}{!!team?.tasks.length && <> · {l("已完成 {0}/{1}", completed, team.tasks.length)}</>}</span>
-        {!archiveView && incompleteLoopGates.length > 0 && <div className={css.loopEntryWarning} role="status">
-          {l("请先接通循环入口到门控的前向路径")}
-          {incompleteLoopGates.map(gate => <button key={gate.id} type="button" onClick={() => locateTask(gate.id)}>{gate.subject}</button>)}
-        </div>}
-        {!archiveView && missingLoopInputs.length > 0 && <div className={css.loopEntryWarning} role="status" data-loop-entry-warning>
-          {l('请先从环外任务连接到循环入口')}
-          {missingLoopInputs.map(loop => <button type="button" key={loop.id} onClick={() => locateTask(loop.entryId)}>{team?.tasks.find(task=>task.id===loop.entryId)?.subject ?? loop.entryId}</button>)}
-        </div>}
-        {!archiveView && configWarningGroups.length > 0 && <details className={css.loopEntryWarning} data-setup-warning>
-          <summary>{l("有待配置的节点")}</summary>
-          {configWarningGroups.map(group=><div key={group.label}>
-            {l(group.label)} {group.tasks.map(task=><button key={task.id} type="button" onClick={() => {
-              if (group.edit) {edit('task',task.id);scrollToTask(task.id)}
-              else locateTask(task.id)
-            }}>{task.subject}</button>)}
-          </div>)}
-        </details>}</div></div>
+        </div></div>
         <div>{team && !galleryMode && !showOutcomes && (archiveView ? <button className={css.primary} disabled={working} onClick={() => void perform('restore_archive')}><WorkflowIcon name="edit" />{l("恢复并编辑流程")}</button> : <button data-guide="edit" aria-pressed={editing} onClick={() => {setEditing(!editing);updateView(current=>({...current,revision:current.revision+1}))}}>{editing ? <IconBranchOutline16 /> : <WorkflowIcon name="edit" />}{editing ? l("查看流程") : l("编辑流程")}</button>)}
           {team && !galleryMode && !showOutcomes && <OpenCodeExport key={team.id} sessionId={sessionId} base={data?.base} archived={archiveView} team={team} disabled={working || !!connectionError || pendingCount > 0} unsaved={unsaved.length > 0} />}
           {!galleryMode && !showOutcomes && !archiveView && team?.phase === 'staged' && <button data-guide="run" className={css.primary} disabled={working || unsaved.length > 0 || unconfigured.length > 0 || missingLoopInputs.length > 0 || missingOwners.length > 0 || missingReviewers.length > 0 || pendingCount > 0} title={unsaved.length ? l("请先保存属性草稿") : missingLoopInputs.length ? l("请先从环外任务连接到循环入口") : unconfigured.length ? l("请先完成待配置节点") : pendingCount ? l("请先处理待确认的修改") : undefined} onClick={() => void perform('start')}>{l("确认并启动")}</button>}
@@ -844,6 +831,25 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
         {storageError && <span role="alert">{workflowMessage(storageError, l)}</span>}
       </section>}
       {team && <nav className={css.paneTabs} aria-label={l("工作台视图")}>{(['members', 'flow', 'discussion'] as const).map(value => <button data-guide={value === 'members' ? 'roster' : value === 'discussion' ? 'inspector' : undefined} key={value} aria-pressed={pane === value} onClick={() => { setPane(value); setInspectorExpanded(false); if (value === 'discussion') setInspectorHidden(false) }}>{value === 'members' ? l("对象列表") : value === 'flow' ? l("任务流程") : l("修改与验收")}{value === 'discussion' && proposal && <i aria-label={l("有待确认的修改")} />}</button>)}</nav>}
+      {!archiveView && (incompleteLoopGates.length > 0 || missingLoopInputs.length > 0 || configWarningGroups.length > 0) && <section className={css.setupNotices} aria-label={l("有待配置的节点")}>
+        {incompleteLoopGates.length > 0 && <div className={css.loopEntryWarning} role="status">
+          {l("请先接通循环入口到门控的前向路径")}
+          {incompleteLoopGates.map(gate => <button key={gate.id} type="button" onClick={() => locateTask(gate.id)}>{gate.subject}</button>)}
+        </div>}
+        {missingLoopInputs.length > 0 && <div className={css.loopEntryWarning} role="status" data-loop-entry-warning>
+          {l('请先从环外任务连接到循环入口')}
+          {missingLoopInputs.map(loop => <button type="button" key={loop.id} onClick={() => locateTask(loop.entryId)}>{team?.tasks.find(task=>task.id===loop.entryId)?.subject ?? loop.entryId}</button>)}
+        </div>}
+        {configWarningGroups.length > 0 && <details className={css.loopEntryWarning} data-setup-warning>
+          <summary>{l("有待配置的节点")}</summary>
+          {configWarningGroups.map(group=><div key={group.label}>
+            {l(group.label)} {group.tasks.map(task=><button key={task.id} type="button" onClick={() => {
+              if (group.edit) {edit('task',task.id);scrollToTask(task.id)}
+              else locateTask(task.id)
+            }}>{task.subject}</button>)}
+          </div>)}
+        </details>}
+      </section>}
       {firstAction && <nav className={css.attention} aria-label={l("待处理")}>
         <strong>{l("待处理")} · {attention.length}</strong>
         <button disabled={working} title={firstAction.label} onClick={firstAction.open}>{firstAction.label}</button>
