@@ -233,8 +233,8 @@ test('sharing uploads exact server-side versions through authenticated global ro
  const first=await saveTemplate(root,definition())
  await saveTemplate(root,{...definition(),name:'Second version'},{id:first.id,version:1})
  let route,rejection,configured=true,gallery;const uploaded=[]
- const installed={workflowSharingStatus:()=>({configured}),uploadWorkflowTemplate:async(value,source)=>{
-  uploaded.push({value,source});return{id:'shared-id',name:value.name,libraryId:'center',sourceVersion:source.version,reused:false}
+ const installed={workflowSharingStatus:()=>({configured,libraryId:configured?"local":"center"}),uploadWorkflowTemplate:async(value,source)=>{
+  uploaded.push({value,source});return{id:'shared-id',name:value.name,libraryId:'local',sourceVersion:source.version,reused:false}
  }}
  const ctx={get:key=>key==='gallery'?gallery:undefined,effect:fn=>fn(),agents:{get:()=>undefined}}
  installWorkflowWorkbench(ctx,{stateDir:'.agent-teams',templateDirectory:root,maxMembers:8},{},authenticatedWebRoutes({register(value){route=value;return()=>{}}},()=>({requestRejection:()=>rejection})))
@@ -245,13 +245,14 @@ test('sharing uploads exact server-side versions through authenticated global ro
  assert.equal((await request({action:'template_gallery_status'})).status,401)
  rejection=undefined;gallery=undefined
  assert.equal((await request({action:'template_gallery_status'})).available,false)
- assert.match((await request(upload)).error,/0.32.0/)
- gallery={workflowSharingStatus:installed.workflowSharingStatus};assert.match((await request(upload)).error,/0.32.0/)
+ assert.match((await request(upload)).error,/0.32.1/)
+ gallery={workflowSharingStatus:installed.workflowSharingStatus};assert.match((await request(upload)).error,/0.32.1/)
  gallery=installed;configured=false;assert.match((await request(upload)).error,/中心服务/)
  configured=true
  assert.equal((await request({action:'template_gallery_status'})).configured,true)
  const result=await request({...upload,sessionId:'nonexistent'})
  assert.equal(result.status,200,result.error);assert.equal(result.resource.sourceVersion,1)
+ assert.equal(result.resource.libraryId,"local")
  assert.equal(uploaded[0].value.name,first.name);assert.deepEqual(uploaded[0].source,{id:first.id,version:1})
  assert.equal((await getTemplate(root,first.id)).version,2)
  assert.equal((await request({...upload,version:999})).status,409)

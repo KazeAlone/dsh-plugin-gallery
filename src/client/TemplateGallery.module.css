@@ -30,3 +30,23 @@ label.galleryPermission input[type="checkbox"] { width: auto; }
 .flowViewport .flowLarge { display:block; margin:0; }
 .flowViews { display:flex; flex-wrap:wrap; gap:8px; }
 .flowViews button[aria-pressed='true'] { border-color:var(--teamflow-brand); background:color-mix(in srgb,var(--teamflow-brand) 8%,var(--wb-bg)); }
+
+.uploadToast {
+  position: fixed;
+  inset-inline-end: 36px;
+  inset-block-end: 36px;
+  z-index: 10;
+  max-width: min(400px, calc(100% - 72px));
+  box-sizing: border-box;
+  pointer-events: none;
+  overflow-wrap: anywhere;
+}
+.uploadToast[data-state] {
+  padding: 12px 16px;
+  border: 1px solid var(--wb-border);
+  border-radius: 12px;
+  background: var(--wb-bg);
+  box-shadow: 0 6px 24px #0003;
+}
+.uploadToast[data-state="success"] { border-inline-start: 4px solid #2eaa71; }
+.uploadToast[data-state="error"] { border-inline-start: 4px solid #d99824; }

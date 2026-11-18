@@ -2,7 +2,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { TemplateDefinition, TemplateVersion } from './templates.ts'
 
 interface GallerySharing {
-  workflowSharingStatus?: () => { configured: boolean }
+  workflowSharingStatus?: () => { configured: boolean; libraryId?: string }
   uploadWorkflowTemplate?: (
     definition: TemplateDefinition,
     source: { id: string; version: number; language?: 'zh' | 'en' },
@@ -16,13 +16,17 @@ function bridge(ctx: Context): GallerySharing | undefined {
 export function gallerySharingStatus(ctx: Context): { available: boolean; configured: boolean; reason: string } {
   const gallery = bridge(ctx)
   if (typeof gallery?.workflowSharingStatus !== 'function' || typeof gallery.uploadWorkflowTemplate !== 'function') {
-    return { available: false, configured: false, reason: '请安装或升级 Gallery 到 0.32.0 以共享模板' }
+    return { available: false, configured: false, reason: '请安装或升级 Gallery 到 0.32.1 以上版本以支持上传模板' }
   }
   try {
-    const configured = gallery.workflowSharingStatus().configured === true
+    const status = gallery.workflowSharingStatus()
+    if (status.libraryId !== 'local' && status.libraryId !== 'center') {
+      return { available: false, configured: false, reason: '请安装或升级 Gallery 到 0.32.1 以上版本以支持上传模板' }
+    }
+    const configured = status.configured === true
     return {
       available: true, configured,
-      reason: configured ? '' : '请先在 Gallery 存储设置中连接中心服务，再上传共享模板',
+      reason: configured ? '' : '请先在 Gallery 存储设置中重新连接中心服务',
     }
   } catch {
     return { available: true, configured: false, reason: 'Gallery 存储配置不可用，请先检查存储设置' }

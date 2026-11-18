@@ -50,12 +50,25 @@ export function TemplateGallery({sessionId,team,archived=false,mode='browse',onA
   const l = useWorkflowText()
 
   const [sharing,setSharing]=useState<Sharing>()
+  const [uploadFeedback, setUploadFeedback] = useState<{
+    templateId: string
+    version: number
+    state: 'pending' | 'success' | 'error'
+    text: string
+  }>()
   const [templates,setTemplates]=useState<TemplateVersion[]>(()=>catalogCache.get(sessionId??'')?.templates??[]),[warnings,setWarnings]=useState<string[]>([])
   const [search,setSearch]=useState(''),[tag,setTag]=useState(''),[selection,setSelected]=useState<TemplateVersion>()
   const [draft,setDraft]=useState<TemplateDefinition>(),[previous,setPrevious]=useState<{id:string;version:number}>()
   const [busy,setBusy]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[goal,setGoal]=useState(''),[name,setName]=useState<string>()
   const [extracting,setExtracting]=useState(false),[aiDraft,setAiDraft]=useState<TemplateDefinition>(),[deleteId,setDeleteId]=useState('')
   const selected=selection?localizeBuiltinTemplate(selection,l.language):undefined
+  const feedback = uploadFeedback && uploadFeedback.templateId === selected?.id
+    && uploadFeedback.version === selected.version ? uploadFeedback : undefined
+  useEffect(() => {
+    if (!uploadFeedback || uploadFeedback.state === 'pending') return
+    const timeout = window.setTimeout(() => setUploadFeedback(undefined), 4000)
+    return () => window.clearTimeout(timeout)
+  }, [uploadFeedback])
   const catalog=templates.map(item=>localizeBuiltinTemplate(item,l.language))
   const goalInput = useRef<HTMLTextAreaElement>(null)
   const detailHeading = useRef<HTMLHeadingElement>(null)
@@ -93,16 +106,36 @@ export function TemplateGallery({sessionId,team,archived=false,mode='browse',onA
     cardTrigger.current = (apply ? 'use:' : 'view:') + item.id
     focusGoal.current = apply && !team
     setSelected(item)
+    setUploadFeedback(undefined)
     void api(sessionId,'template_gallery_status').then(result=>{if(alive.current)setSharing(result)}).catch(()=>{})
     setName(undefined)
     setDeleteId('')
     setError('')
+  }
+  async function uploadTemplate(template: TemplateVersion) {
+    const target = { templateId: template.id, version: template.version }
+    setUploadFeedback({ ...target, state: 'pending', text: l("正在上传至 Gallery…") })
+    await run(async () => {
+      try {
+        const { resource } = await api(sessionId, 'template_upload_gallery', { ...target, language: l.language })
+        const text = resource.reused
+          ? l("此版本已上传至 Gallery：{0}", resource.name)
+          : l("已上传至 Gallery：{0}", resource.name)
+        if (alive.current) setUploadFeedback({ ...target, state: 'success', text })
+      } catch (error) {
+        const text = workflowMessage(error instanceof Error ? error.message : String(error), l)
+        if (alive.current) setUploadFeedback({ ...target, state: 'error', text })
+      }
+    })
   }
   const tags=[...new Set(catalog.flatMap(t=>t.tags))]
   const activeTag=tags.includes(tag)?tag:builtinText(tag,l.language)
   const filtered=catalog.filter(t=>(!activeTag||t.tags.includes(activeTag))&&`${t.name} ${t.description} ${t.tags.join(' ')}`.toLowerCase().includes(search.toLowerCase()))
   function briefEditor(value:TaskBrief,change:(v:TaskBrief)=>void){return <><label>{l("通用任务要求")}<textarea value={value.requirements} maxLength={MAX_WORKFLOW_TEXT_LENGTH} onChange={e=>change({...value,requirements:e.target.value})}/></label><details><summary>{l("交付物与验收要求")}</summary><label>{l("通用交付物")}<textarea value={value.deliverables} maxLength={MAX_WORKFLOW_TEXT_LENGTH} onChange={e=>change({...value,deliverables:e.target.value})}/></label><label>{l("通用验收要求")}<textarea value={value.acceptance} maxLength={MAX_WORKFLOW_TEXT_LENGTH} onChange={e=>change({...value,acceptance:e.target.value})}/></label></details></>}
   return <section ref={gallery} className={css.gallery} aria-label={l("流程模板库")}>
+    <div className={css.uploadToast} data-state={feedback?.state} role="status" aria-atomic="true">
+      {feedback?.text}
+    </div>
     {(!selected || draft) && <header className={css.hero}><div className={css.heroIcon}><BrandIcon name="gallery" size={38}/></div><div><small>MY TEAMFLOW GALLERY</small><h2>{draft?l("编辑流程模板"):l("流程模板库")}</h2><p>{l("留下有效的方法，让下一次协作从这里开始。")}</p></div>{onBack && <button onClick={onBack} disabled={busy}>{l("返回当前流程")}</button>}</header>}
     {error&&<p className={css.warning} role="alert">{workflowMessage(error, l)}</p>}{notice&&<p role="status">{workflowMessage(notice, l)}</p>}{warnings.map(w=><p key={w} role="alert">{workflowMessage(w,l)}</p>)}
     {draft?<div className={css.editorGrid}><div className={css.definition}>
@@ -125,10 +158,13 @@ export function TemplateGallery({sessionId,team,archived=false,mode='browse',onA
       {team ? <p className={css.warning}>{l("当前对话已有流程。请在新的对话打开 Teamflow 后应用；不会覆盖当前流程。")}</p> : <form className={css.apply} onSubmit={e=>{e.preventDefault();void run(()=>onApply(selected,name??selected.name,goal))}}><h3>{l("应用到本次任务")}</h3><p>{selected.inputs||l("描述本次目标、工作范围和特殊要求。")}</p><label>{l("流程名称")}<input required maxLength={120} value={name??selected.name} onChange={e=>setName(e.target.value)}/></label><label>{l("本次需求")}<textarea ref={goalInput} required maxLength={MAX_WORKFLOW_TEXT_LENGTH} value={goal} onChange={e=>setGoal(e.target.value)} placeholder={l("例如：实现算子 B，遵循当前项目接口，并验证正确性…")}/></label><small>{l("已有对话需求会带入适配。保留全部节点和连线，由 Captain 统一生成本次任务；确认后才执行。")}</small><button className={css.primary} disabled={busy||!!team||!goal.trim()}>{l("使用模板并讨论本次任务")}</button></form>}
       <div><MiniFlow template={selected} large/><h3>{l("流程与通用要求")}</h3>{selected.tasks.map(t=><details key={t.id}><summary>{t.checkpoint?t.checkpointKind==='gate'||selected.loops?.some(loop=>loop.gateId===t.id)?l('门控节点'):l('验收节点'):l("任务")} · {t.subject}</summary><p>{briefDisplay(t.general,l)}</p><small>{l("负责人：")}{t.assignee||selected.loops?.find(loop=>loop.gateId===t.id)?.reviewer||l("人工／自动分配")} {l(" · 上游：")}{t.dependencies.map(id=>selected.tasks.find(n=>n.id===id)?.subject).join('、')||l("无")}</small></details>)}<h3>{l("角色分工")}</h3>{selected.members.map(m=><details key={m.name}><summary>{m.name} · {m.summary}</summary><p>{m.role}</p><p>{m.executionPrompt}</p></details>)}</div>
       </div>
-      <div className={css.actions}><button disabled={busy||!sharing?.configured} title={sharing?.reason?workflowMessage(sharing.reason,l):undefined} onClick={()=>void run(async()=>{
-        const result=await api(sessionId,'template_upload_gallery',{templateId:selected.id,version:selected.version,language:l.language});
-        setNotice(result.resource.reused?l("此版本已上传至共享 Gallery：{0}",result.resource.name):l("已上传至共享 Gallery：{0}",result.resource.name));
-      })}><BrandIcon name="gallery"/>{l("上传至共享 Gallery")}</button>{!sharing?.configured&&sharing?.reason&&<small>{workflowMessage(sharing.reason,l)}</small>}<button onClick={()=>{setDraft(structuredClone(selected));setPrevious(isBuiltinTemplate(selected.id)?undefined:{id:selected.id,version:selected.version});setSelected(undefined)}}>{isBuiltinTemplate(selected.id)?l("编辑并另存为个人模板"):l("编辑模板")}</button><button onClick={()=>{setDraft({...structuredClone(selected),name:l("{0} · 副本", selected.name)});setPrevious(undefined);setSelected(undefined)}}>{l("复制模板")}</button>{isBuiltinTemplate(selected.id)?<small>{l("内置模板只读，修改后保存为个人模板。")}</small>:deleteId===selected.id?<><span>{l("删除后已创建的流程不受影响。")}</span><button disabled={busy} onClick={()=>void run(async()=>{await api(sessionId,'template_delete',{templateId:selected.id,version:selected.version});setSelected(undefined);await refresh()})}>{l("确认删除")}</button><button onClick={()=>setDeleteId('')}>{l("取消")}</button></>:<button onClick={()=>setDeleteId(selected.id)}>{l("删除模板")}</button>}</div>
+      <div className={css.actions}>
+        <button disabled={busy || !sharing?.configured}
+          title={sharing?.reason ? workflowMessage(sharing.reason, l) : undefined}
+          onClick={() => void uploadTemplate(selected)}>
+          <BrandIcon name="gallery"/>{l("上传至 Gallery")}
+        </button>
+        {!sharing?.configured&&sharing?.reason&&<small>{workflowMessage(sharing.reason,l)}</small>}<button onClick={()=>{setDraft(structuredClone(selected));setPrevious(isBuiltinTemplate(selected.id)?undefined:{id:selected.id,version:selected.version});setSelected(undefined)}}>{isBuiltinTemplate(selected.id)?l("编辑并另存为个人模板"):l("编辑模板")}</button><button onClick={()=>{setDraft({...structuredClone(selected),name:l("{0} · 副本", selected.name)});setPrevious(undefined);setSelected(undefined)}}>{l("复制模板")}</button>{isBuiltinTemplate(selected.id)?<small>{l("内置模板只读，修改后保存为个人模板。")}</small>:deleteId===selected.id?<><span>{l("删除后已创建的流程不受影响。")}</span><button disabled={busy} onClick={()=>void run(async()=>{await api(sessionId,'template_delete',{templateId:selected.id,version:selected.version});setSelected(undefined);await refresh()})}>{l("确认删除")}</button><button onClick={()=>setDeleteId('')}>{l("取消")}</button></>:<button onClick={()=>setDeleteId(selected.id)}>{l("删除模板")}</button>}</div>
     </div>:<><div className={css.filters}><input aria-label={l("搜索模板")} placeholder={l("搜索模板名称、用途或标签")} value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label={l("标签筛选")} value={activeTag} onChange={e=>setTag(e.target.value)}><option value="">{l("所有标签")}</option>{tags.map(t=><option key={t}>{t}</option>)}</select><span>{filtered.length} {l(" 个模板")}</span></div>
       {busy&&!templates.length?<p role="status">{l("正在读取模板库…")}</p>:!filtered.length?<div className={css.empty}><BrandIcon name="gallery" size={56}/><h3>{templates.length?l("没有匹配的模板"):l("把有效的协作流程留在这里")}</h3><p>{templates.length?l("试试其他关键词或标签。"):l("在流程画布点击「保存为模板」，提炼一次，以后直接套用。")}</p>{templates.length ? <button onClick={()=>{setSearch('');setTag('')}}>{l("清除筛选")}</button> : onBack ? <button onClick={onBack}>{l("返回流程")}</button> : null}</div>:<div className={css.cards}>{filtered.map(item=><article className={css.card} key={item.id}><button className={css.cardPreview} data-template-choice={'view:' + item.id} onClick={()=>choose(item)} aria-label={l("查看 {0}", item.name)}><MiniFlow template={item}/><h3>{item.name}</h3><p>{item.description||l("个人流程模板")}</p></button><div className={css.tags}>{item.tags.map(t=><span key={t}>{t}</span>)}</div><small>{item.members.length} {l(" 个角色 · ")}{item.tasks.length} {l(" 个节点 · ")}{item.tasks.filter(t=>t.checkpoint&&!item.loops?.some(loop=>loop.gateId===t.id&&loop.mode==='ai')).length} {l(" 个人工检查点")}</small><footer><small>{isBuiltinTemplate(item.id)?l("内置"):l("个人")} · v{item.version} · {new Date(item.updatedAt).toLocaleDateString(l.language==='en'?'en-US':'zh-CN')}</small><button className={css.primary} data-template-choice={'use:' + item.id} onClick={()=>choose(item,true)}>{team ? l("查看模板") : l("使用模板")}</button></footer></article>)}</div>}</>}
   </section>

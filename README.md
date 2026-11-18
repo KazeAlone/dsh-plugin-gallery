@@ -25,7 +25,7 @@ When configuring an IF gate, select the return target to preview the loop and se
 
 **Continue and rerun**: Start all resumes unfinished, paused, or interrupted work and preserves completed results. Run through a node resumes its required ancestors and pauses later descendants; human checkpoints still require approval. Continuing needs no new input. An explicit rerun requires a reason in the card editor. Reconnection reads current state without replaying mutations. Blockers and recovery explains configuration, dependencies, review, and execution issues with next actions.
 
-This README describes stable version **`0.2.14`** on `main`. See the [release notes](./release-notes/v0.2.14.md). The package is `@yogurtss/dsh-teamflow`; install it from this repository or a local build.
+This README describes stable version **`0.2.15`** on `main`. See the [release notes](./release-notes/v0.2.15.md). The package is `@yogurtss/dsh-teamflow`; install it from this repository or a local build.
 
 | Channel | Git source | Purpose |
 | --- | --- | --- |
@@ -240,4 +240,4 @@ For development, run `pnpm install --frozen-lockfile`, `pnpm build`, and `pnpm v
 
 [MIT](./LICENSE). Based on AgentTeams by [NanmiCoder](https://github.com/NanmiCoder/dsh-agent-teams).
 
-Use **Upload to shared Gallery** in template details to share the selected version. Requires Gallery 0.32.0+ with a configured center connection. Repeated uploads reuse the existing copy; new versions create separate resources without overwriting shared edits. Other users can view and use the resource but cannot edit or delete it.
+Use **Upload to Gallery** in template details to copy the selected version to the active Gallery library. Gallery 0.32.1 or later supports both local and center storage. Repeated uploads reuse the existing copy in that library.

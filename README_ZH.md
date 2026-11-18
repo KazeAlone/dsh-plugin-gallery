@@ -23,7 +23,7 @@ TeamFlow 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
 
 **继续与重跑**：开始全部会恢复未完成、暂停或中断的任务，保留已完成结果。选择“运行到此节点”会恢复必要上游，并暂停目标之后的节点；人工验收仍需确认。模型中断时继续无需填写信息，修改并重跑则需在卡片中填写理由。连接恢复后先读取最新状态，界面不会自动重发操作。阻塞与恢复面板会说明配置、依赖、验收或执行会话的问题，并提供处理入口。
 
-本页介绍 `main` 上的稳定版 **`0.2.14`**，详见[发布说明](./release-notes/v0.2.14.md)。包名为 `@yogurtss/dsh-teamflow`，请通过本仓库或本地构建包安装。
+本页介绍 `main` 上的稳定版 **`0.2.15`**，详见[发布说明](./release-notes/v0.2.15.md)。包名为 `@yogurtss/dsh-teamflow`，请通过本仓库或本地构建包安装。
 
 第一次打开工作台，可以点击顶部「使用指南」。每一步会高亮当前界面的一个控件，点击「Got it」继续，也可按 Esc 退出。
 
@@ -249,4 +249,4 @@ dsh --profile web
 
 [MIT](./LICENSE)。基于 [NanmiCoder 的 AgentTeams](https://github.com/NanmiCoder/dsh-agent-teams) 开发。
 
-模板详情页的「上传至共享 Gallery」将所选版本上传到中心资源库，需要 Gallery 0.32.0+ 并已连接中心服务。重复上传复用已有副本，新版本另建资源，不覆盖共享编辑；其他用户只可查看和使用。
+在模板详情页点击「上传至 Gallery」，将所选版本复制到当前使用的资源库。Gallery 0.32.1 及以上支持本地库和中心库。重复上传会复用目标库内的已有副本。
