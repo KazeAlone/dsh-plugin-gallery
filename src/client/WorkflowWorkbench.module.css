@@ -449,8 +449,10 @@ label.galleryPermission input[type="checkbox"] { width: auto; }
 .loopRegion text { fill:var(--loop-reject); }
 .edge[data-flow-branch='pass']>path:first-child { stroke:var(--loop-pass); stroke-width:2.5; }
 .edge[data-flow-branch='pass'] text { fill:var(--loop-pass); }
-.edge[data-flow-branch='reject']>path:first-child { stroke:var(--loop-reject); stroke-width:2.5; }
+.edge[data-flow-branch='reject']>path { stroke:var(--loop-reject); stroke-width:2.5; }
 .edge[data-flow-branch='reject'] text { fill:var(--loop-reject); }
+.edge[data-flow-branch='reject'][data-draft-reject]>path { stroke:var(--wb-muted); stroke-width:1.5; }
+.edge[data-flow-branch='reject'][data-draft-reject] text { fill:var(--wb-muted); }
 
 .node[data-node-shape='archive'] { border-radius: 8px 8px 22px 22px; border-top: 5px solid light-dark(#0e7490,#67e8f9); background: color-mix(in srgb, light-dark(#0e7490,#67e8f9) 4%, var(--wb-bg)); }
 

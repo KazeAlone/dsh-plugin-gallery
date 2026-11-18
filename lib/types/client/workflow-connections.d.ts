@@ -26,7 +26,7 @@ export declare function rejectPath(start: {
 }, end: {
     x: number;
     y: number;
-}, lane: number, out?: 'left' | 'right'): string;
+}, lane: number, out?: 'left' | 'right', offset?: number): string;
 export declare function connectionPath(start: {
     x: number;
     y: number;

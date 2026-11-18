@@ -37,7 +37,13 @@ export declare function loopRegion(tasks: readonly LayoutTask[], loop: LayoutLoo
 export declare function arrangeTasks(tasks: Pick<TeamTask, 'id' | 'dependencies'>[]): Record<string, CanvasPoint>;
 export declare const clampZoom: (value: number) => number;
 export declare function fitGraph(width: number, height: number, graphWidth: number, graphHeight: number): number;
+/** Give intersecting horizontal spans separate lanes, and reuse lanes for disjoint spans. */
+export declare function createRejectLaneRouter(firstLane: number): {
+    lane(from: CanvasPoint, to: CanvasPoint): number;
+    offset(lane: number): number;
+    readonly bottom: number;
+};
 export declare function loopReturnPaths(tasks: readonly LayoutTask[], loop: Omit<LayoutLoop, 'entryId'> & {
     entryId?: string;
-}, position: (id: string) => CanvasPoint, lane: number): string[];
+}, position: (id: string) => CanvasPoint, lane: number | ((from: CanvasPoint, to: CanvasPoint) => number), laneOffset?: (lane: number) => number): string[];
 export {};

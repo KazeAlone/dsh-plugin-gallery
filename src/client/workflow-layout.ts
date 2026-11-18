@@ -96,18 +96,38 @@ export function fitGraph(width: number, height: number, graphWidth: number, grap
 }
 
 
-export function loopReturnPaths(tasks: readonly LayoutTask[], loop: Omit<LayoutLoop, 'entryId'> & {entryId?: string}, position: (id:string) => CanvasPoint, lane: number): string[] {
+/** Give intersecting horizontal spans separate lanes, and reuse lanes for disjoint spans. */
+export function createRejectLaneRouter(firstLane: number) {
+  const tracks: {left:number;right:number}[][] = []
+  return {
+    lane(from: CanvasPoint, to: CanvasPoint) {
+      const span = {left:Math.min(from.x, to.x) - 25, right:Math.max(from.x, to.x) + 25}
+      let index = tracks.findIndex(track => track.every(used => used.right < span.left || span.right < used.left))
+      if (index < 0) index = tracks.push([]) - 1
+      tracks[index]!.push(span)
+      return firstLane + index * 22
+    },
+    offset(lane: number) {return Math.min(18, Math.max(0, (lane - firstLane) / 22) * 3)},
+    get bottom() {return tracks.length ? firstLane + (tracks.length - 1) * 22 + 24 : 0},
+  }
+}
+
+export function loopReturnPaths(tasks: readonly LayoutTask[], loop: Omit<LayoutLoop, 'entryId'> & {entryId?: string}, position: (id:string) => CanvasPoint, lane: number | ((from:CanvasPoint,to:CanvasPoint)=>number), laneOffset?: (lane:number)=>number): string[] {
   const branch = loop.rejectTaskIds ?? []
-  const fromGate = (id: string) => rejectPath(rejectPort(position(loop.gateId)), connectionPort(position(id), 'input'), lane)
+  const route = (from:CanvasPoint, to:CanvasPoint, direction:'left'|'right') => {
+    const row = typeof lane === 'number' ? lane : lane(from, to)
+    return rejectPath(from, to, row, direction, laneOffset?.(row))
+  }
+  const fromGate = (id: string) => route(rejectPort(position(loop.gateId)), connectionPort(position(id), 'input'), 'left')
   if (!branch.length) return loop.entryId ? [fromGate(loop.entryId)] : []
   const roots = loop.rejectDag ? branch.filter(id => !tasks.find(t => t.id === id)?.dependencies.some(dep => branch.includes(dep))) : branch.slice(0,1)
   const leaves = loop.rejectDag ? branch.filter(id => !tasks.some(t => branch.includes(t.id) && t.dependencies.includes(id))) : branch.slice(-1)
   const paths = roots.map(fromGate)
   if (!loop.rejectDag) for (let i=1;i<branch.length;i++) {
-    paths.push(rejectPath(connectionPort(position(branch[i-1]!),'output'), connectionPort(position(branch[i]!),'input'), lane, 'right'))
+    paths.push(route(connectionPort(position(branch[i-1]!),'output'), connectionPort(position(branch[i]!),'input'), 'right'))
   }
   if (loop.entryId) for (const id of leaves) {
-    paths.push(rejectPath(connectionPort(position(id),'output'), connectionPort(position(loop.entryId),'input'), lane, 'right'))
+    paths.push(route(connectionPort(position(id),'output'), connectionPort(position(loop.entryId),'input'), 'right'))
   }
   return paths
 }

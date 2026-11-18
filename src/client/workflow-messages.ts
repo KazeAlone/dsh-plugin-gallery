@@ -20,6 +20,8 @@ export const workflowEnglish: Record<string, string> = {
   "{0} 负责「{1}」，请选择独立审核成员": "{0} owns “{1}”. Choose an independent reviewer.",
   "AI 审核 · 待指定审核员": "AI review · Assign reviewer later",
   "请选择有效的 AI 审核成员": "Choose an active AI reviewer.",
+  "仅退回时走此线": "Follow this edge only on rejection",
+  "草稿，待接通": "Draft · awaiting connection",
   "仅退回时执行": "Run only on reject",
   "退回任务不能同时位于首轮路径": "A reject task cannot also run on the first round.",
   "退回任务只能依赖已完成的首轮外部输入或同一路径中更早的任务，输出不能绕过门控": "Reject tasks may depend on inputs shared with the first round or earlier tasks in the same reject path. Outputs must stay behind the gate.",

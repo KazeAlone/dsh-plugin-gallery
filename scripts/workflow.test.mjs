@@ -18,7 +18,7 @@ import { openAgentTeamMember, openWorkflowConversation } from '../lib/client/ses
 import { taskDraftOperations } from '../lib/client/workflow-draft.js'
 import { rerunImpact, rerunnableTasks } from '../lib/task-rerun.js'
 import { draftSource, editorKey, editorTarget, finishWorkbenchSave, initialWorkbenchView, selectWorkbench, targetDiscussion } from '../lib/client/workbench-selection.js'
-import { arrangeTasks, arrangeWorkflow, loopBodyIds, loopRegion, fitGraph } from '../lib/client/workflow-layout.js'
+import { arrangeTasks, arrangeWorkflow, loopBodyIds, loopRegion, createRejectLaneRouter, fitGraph } from '../lib/client/workflow-layout.js'
 import { flowControlVersion, flowControlState, taskControlState } from '../lib/client/task-control.js'
 
 const member = { id: '', name: 'worker', role: 'developer', provider: 'fixture', model: 'fixture', status: 'idle', joinedAt: 1 }
@@ -1637,4 +1637,14 @@ test('OpenCode project generation uses the owning workspace and rejects stale/fo
  assert.equal(result.code,200);assert.equal(result.workspace,realpathSync.native(f.workspace))
  assert.ok(result.readme.endsWith('/README.md'))
  const retry=await f.call('opencode_project',{base});assert.equal(retry.code,200)
+})
+
+test('overlapping reject spans use separate lanes and disjoint spans can reuse them', () => {
+  const router = createRejectLaneRouter(340)
+  const allocateLane = (a,b)=>router.lane({x:a,y:80},{x:b,y:140})
+  assert.equal(allocateLane(0,200),340)
+  assert.equal(allocateLane(180,350),362)
+  assert.equal(allocateLane(460,700),340)
+  assert.notEqual(router.offset(340),router.offset(362))
+  assert.equal(router.bottom,386)
 })
