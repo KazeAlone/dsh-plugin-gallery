@@ -15,6 +15,8 @@ export declare function configureLoop(team: TeamState, config: LoopConfig): Work
 export declare function updateGateReview(team: TeamState, gateId: string, mode: LoopConfig['mode'], reviewer?: string): void;
 /** Hold future work while preserving any attempt already in flight. */
 export declare function holdLoopTask(task: TeamTask): void;
+/** Store a partial loop without making it eligible for scheduling. */
+export declare function savePendingGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown): void;
 /** Validate both routes before publishing the new configuration. */
 export declare function saveGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown, dependenciesChanged?: boolean): void;
 export declare function loopCanExecute(team: TeamState, task: TeamTask): boolean;

@@ -34,7 +34,7 @@ try {
   assert.ok(await createGate.evaluate(button => button.querySelector('svg').getBoundingClientRect().width >= button.clientWidth - 1), 'The diamond outline must span the whole creation button')
   await page.locator('[data-canvas-node="gate"]').click()
   const panel = page.getByRole('region', { name: '门控节点', exact: true })
-  await panel.getByLabel('返回连线目标（必选）', { exact: true }).selectOption('a')
+  await panel.getByLabel('回到哪个任务', { exact: true }).selectOption('a')
   await panel.getByLabel('审核方式', { exact: true }).selectOption(human ? 'human' : 'ai')
   if (!human) await panel.getByLabel('独立审核成员', { exact: true }).selectOption('reviewer')
   await panel.getByLabel('轮次上限（包含首次）', { exact: true }).fill('2')

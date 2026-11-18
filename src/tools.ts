@@ -1,4 +1,4 @@
-import { isDraftRejectTask } from './workflow-loop-types.ts'
+import { isDraftRejectTask, isPendingLoopEntry } from './workflow-loop-types.ts'
 import { cancelTaskArchive } from './task-archive.ts'
 import { parseTaskArchive, taskArchiveParameter } from './task-archive-config.ts'
 import { drainMemberChildren } from './harness-compat.ts'
@@ -1717,7 +1717,7 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
       const revoked = await withTeamLock(teamLockKey(stateRoot, team.id), async () => {
         const fresh = await requireFreshCaptainTeam(ctx, stateRoot, team.id, captain.id)
         const task = requireTask(fresh, args.task_id)
-        if (isDraftRejectTask(fresh, task.id) || loopForTask(fresh, task.id)) throw new Error('循环任务请使用循环控制，不能单独重新分配')
+        if (isDraftRejectTask(fresh, task.id) || isPendingLoopEntry(fresh, task.id) || loopForTask(fresh, task.id)) throw new Error('循环任务请使用循环控制，不能单独重新分配')
         if (task.status === 'completed') throw new Error(`completed task ${task.id} is immutable and cannot be reassigned`)
         if (task.reassigning === true) {
           const previousMember = fresh.members.find(member => member.id === task.handoffFromMemberId && member.stopping === true)
@@ -1871,7 +1871,7 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
           }
           assignee = identity.name
         }
-        if (isDraftRejectTask(fresh, task.id) || loopForTask(fresh, task.id) && !loopCanExecute(fresh, task)) throw new Error('循环当前不允许领取此节点')
+        if (isDraftRejectTask(fresh, task.id) || isPendingLoopEntry(fresh, task.id) || loopForTask(fresh, task.id) && !loopCanExecute(fresh, task)) throw new Error('循环当前不允许领取此节点')
         // Authorization must happen before the idempotent return: another
         // member must not receive a false success for somebody else's task.
         if (task.status === 'claimed' || task.status === 'in_progress') {
@@ -1887,7 +1887,7 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
             ...task.attemptId === undefined ? {} : { attempt_id: task.attemptId },
           }
         }
-        if (isDraftRejectTask(fresh, task.id) || loopForTask(fresh, task.id) && !loopCanExecute(fresh, task)) throw new Error('循环当前不允许执行此节点')
+        if (isDraftRejectTask(fresh, task.id) || isPendingLoopEntry(fresh, task.id) || loopForTask(fresh, task.id) && !loopCanExecute(fresh, task)) throw new Error('循环当前不允许执行此节点')
         const pending = loopDependenciesSatisfied(fresh, task) ? [] : unsatisfiedDependencies(fresh.tasks, [...task.dependencies, ...loopReturnDependencies(fresh, task)])
         if (pending.length > 0) {
           throw new Error(`task ${task.id} is blocked by unfinished dependencies: ${pending.join(', ')} — complete them first`)

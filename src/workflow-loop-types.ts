@@ -46,8 +46,7 @@ export function isUnstartedLoop(loop: WorkflowLoop): boolean {
   return isDraftLoop(loop) && !loop.contracts && !loop.historyCount
 }
 export function canAssignLoopTask(loop: WorkflowLoop, task: TeamTask): boolean {
-  return isUnstartedLoop(loop) && loop.bodyIds.includes(task.id)
-    && task.status === 'pending' && !task.attempt && !task.reassigning
+  return loop.bodyIds.includes(task.id) && task.status === 'pending' && !task.reassigning
 }
 export function canToggleLoopTask(loop: Pick<WorkflowLoop, 'gateId' | 'status' | 'lastDecision'>, taskId: string): boolean {
   return taskId !== loop.gateId && (loop.status === 'ready' || loop.status === 'running' || loop.status === 'paused' && loop.lastDecision !== 'revise')
@@ -95,4 +94,8 @@ export function isDraftRejectTask(team: {tasks: readonly Pick<TeamTask, 'checkpo
 export function loopHasExternalEntry(tasks: readonly Pick<TeamTask,'id'|'dependencies'>[], loop: Pick<WorkflowLoop,'entryId'|'gateId'|'bodyIds'>): boolean {
   const entry = tasks.find(task => task.id === loop.entryId)
   return entry?.dependencies.some(id => id !== loop.gateId && !loop.bodyIds.includes(id) && tasks.some(task => task.id === id)) ?? false
+}
+
+export function isPendingLoopEntry(team: {tasks: readonly Pick<TeamTask, 'checkpoint'>[]}, id: string): boolean {
+  return team.tasks.some(task => task.checkpoint?.draftLoopSettings?.entryId === id)
 }

@@ -51,9 +51,10 @@ test('a pending loop task can receive new requirements while its upstream is wor
   assert.equal(updated.tasks[1].description, edit.description)
   assert.deepEqual(updated.tasks[0], team.tasks[0])
   assert.equal(updated.workflow.loops[0].status, 'running')
-  for (const change of [{id:'a'}, {assignee:'reviewer'}, {dependencies:[]}]) {
+  for (const change of [{id:'a'}]) {
     assert.throws(() => applyWorkflowOperations(team, [{...edit, ...change}]), /循环|已开始/)
   }
+  assert.equal(applyWorkflowOperations(team, [{...edit, assignee:'reviewer'}]).tasks[1].assignee, 'reviewer')
   team.tasks[1].attempt = 1
   assert.equal(applyWorkflowOperations(team, [edit]).tasks[1].description, edit.description)
 })
@@ -1032,7 +1033,9 @@ test('ordinary canvas edges rederive a loop and REJECT retries the connected ori
     assert.ok(retried.workflowRerunContext?.instructions)
   }
   assert.deepEqual(wired.tasks.map(task => task.id), ['a','b','gate','after','start','check-results'])
-  assert.throws(() => applyWorkflowOperations(wired, [{action:'update_task', id:'gate', dependencies:[]}]), /入口/)
+  const detached = applyWorkflowOperations(wired, [{action:'update_task', id:'gate', dependencies:[]}])
+  assert.equal(detached.workflow.loops.length, 0)
+  assert.equal(detached.tasks.find(task=>task.id==='gate').checkpoint.draftLoopSettings.entryId, 'b')
   assert.deepEqual(wired.tasks.find(task => task.id === 'gate').dependencies, ['check-results'])
 })
 
@@ -1224,4 +1227,29 @@ test('a loop without a direct upstream input can be edited, but cannot start unt
   ]})
   assert.equal(connected.code, 200, connected.error)
   assert.equal((await start()).code, 200)
+})
+
+test('return target and ordinary edges can be saved before wiring or assigning the loop', async t => {
+  const {team, loop:config} = fixture()
+  delete team.workflow.loops
+  const gate = team.tasks.find(task => task.id === 'gate')
+  gate.dependencies = []
+  gate.workflowConfigPending = true
+  delete team.tasks.find(task => task.id === 'a').assignee
+  delete team.tasks.find(task => task.id === 'b').assignee
+  const f = await routeFixture(t, team)
+  const call = async (action, fields) => f.call(action, {...fields, base:workflowFingerprint(await f.read())})
+  const draft = await call('loop_configure', {config, passTargets:['after']})
+  assert.equal(draft.code, 200, draft.error)
+  assert.equal(draft.team.tasks.find(task => task.id === 'gate').checkpoint.draftLoopSettings.entryId, 'a')
+  assert.equal(loopCanExecute(draft.team, draft.team.tasks.find(task => task.id === 'a')), false)
+  const wire = await call('edit', {title:'Connect forward path', operations:[{action:'update_task', id:'gate', dependencies:['b']}]})
+  assert.equal(wire.code, 200, wire.error)
+  const loop = wire.team.workflow.loops[0]
+  assert.equal(loop.status, 'ready')
+  assert.equal((await call('loop_start', {loopId:loop.id})).code, 409)
+  assert.equal((await call('edit', {title:'Assign tasks after wiring', operations:[
+    {action:'update_task', id:'a', assignee:'worker'}, {action:'update_task', id:'b', assignee:'reviewer'},
+  ]})).code, 200)
+  assert.equal((await call('loop_start', {loopId:loop.id})).code, 200)
 })

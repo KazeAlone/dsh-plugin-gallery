@@ -81,9 +81,14 @@ export function planGateSettings(team: TeamState, raw: LoopConfig, passTargets: 
   return { config, tasks, previous, loop, rewired }
 }
 
+export function gateEntryConnected(tasks: readonly TeamTask[], config: Pick<LoopConfig,'gateId'|'entryId'>): boolean {
+  return !!config.entryId && upstreamIds(tasks, config.gateId).has(config.entryId)
+}
+
 export function previewGate(team: TeamState, config: LoopConfig, passTargets: string[]) {
   let bodyIds: string[] = []
   try {
+    if (!gateEntryConnected(team.tasks, config)) return {bodyIds, error:''}
     bodyIds = deriveLoop(team, config, config.gateId, config.gateId).bodyIds
     planGateSettings(team, config, passTargets)
     return { bodyIds, error: '' }
@@ -96,7 +101,14 @@ export function validateDraftRejectPaths(team: TeamState): void {
   const reserved = new Set(loopsOf(team).flatMap(loop => [loop.gateId, ...loop.bodyIds]))
   for (const gate of team.tasks.filter(task => task.checkpoint?.kind === 'gate')) {
     if (loopsOf(team).some(loop => loop.gateId === gate.id)) continue
-    for (const id of gate.checkpoint?.draftLoopSettings?.rejectTaskIds ?? []) {
+    const draft = gate.checkpoint?.draftLoopSettings
+    if (draft?.entryId) {
+      const entry = taskOf(team, draft.entryId)
+      if (entry.checkpoint || entry.kind === 'archive' || draft.rejectTaskIds?.includes(entry.id)) throw new Error('请选择有效的循环入口任务')
+      if (reserved.has(entry.id)) throw new Error('不支持嵌套或共享节点的循环')
+      reserved.add(entry.id)
+    }
+    for (const id of draft?.rejectTaskIds ?? []) {
       const task = taskOf(team, id)
       if (task.checkpoint || task.kind === 'archive') throw new Error('退回路径只能包含普通任务')
       if (reserved.has(id)) throw new Error('不支持嵌套或共享节点的循环')

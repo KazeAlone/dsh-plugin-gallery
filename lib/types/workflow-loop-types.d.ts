@@ -75,3 +75,6 @@ export declare function isDraftRejectTask(team: {
 }, taskId: string): boolean;
 /** A configured loop may be saved as a draft, but execution must enter it from the forward graph. */
 export declare function loopHasExternalEntry(tasks: readonly Pick<TeamTask, 'id' | 'dependencies'>[], loop: Pick<WorkflowLoop, 'entryId' | 'gateId' | 'bodyIds'>): boolean;
+export declare function isPendingLoopEntry(team: {
+    tasks: readonly Pick<TeamTask, 'checkpoint'>[];
+}, id: string): boolean;

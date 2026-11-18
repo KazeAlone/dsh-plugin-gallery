@@ -75,6 +75,8 @@ export interface Checkpoint {
     /** Reviewer selected before the gate is connected. Draft configuration only. */
     draftReviewer?: string;
     draftLoopSettings?: {
+        entryId?: string;
+        rejectToEntry?: boolean;
         maxRounds: number;
         timeoutMinutes: number;
         rejectTaskIds?: string[];

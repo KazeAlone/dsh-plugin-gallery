@@ -1,4 +1,4 @@
-import { isDraftRejectTask, roundBodyIds } from './workflow-loop-types.ts'
+import { isDraftRejectTask, isPendingLoopEntry, roundBodyIds } from './workflow-loop-types.ts'
 import { writeOpenCodeProject } from './opencode-project.ts'
 import { canRetryLoopTask, canStartLoopWithFlow, canToggleLoopTask } from './workflow-loop-types.ts'
 import { MAX_WORKFLOW_TEXT_LENGTH, MAX_WORKFLOW_REQUEST_BYTES } from './workflow-types.ts'
@@ -6,10 +6,9 @@ import { recentUserRequirements, partialRequirementsNotice } from './discussion-
 import { resumeTeamState } from './quality-gates.ts'
 import { workflowMaterialEvidence } from './workflow-material-evidence.ts'
 import { readTaskArchive, cancelTaskArchive, archiveRunning } from './task-archive.ts'
-import { gateRouteTasks } from './workflow-loop-config.ts'
-import { holdLoopTask } from './workflow-loops.ts'
+import { gateEntryConnected } from './workflow-loop-config.ts'
 import { branchCheckpoint, validateWorkflowGraph } from './workflow.ts'
-import { LoopStartUnavailable, updateGateReview, saveGateSettings, configureLoop, decideLoop, loopForTask, loopInputFingerprint, loopsOf, parseLoopConfig, pauseLoop, reconcileLoops, startLoop } from './workflow-loops.ts'
+import { LoopStartUnavailable, updateGateReview, saveGateSettings, savePendingGateSettings, configureLoop, decideLoop, loopForTask, loopInputFingerprint, loopsOf, parseLoopConfig, pauseLoop, reconcileLoops, startLoop } from './workflow-loops.ts'
 import { previousReview, readLoopHistory } from './workflow-loop-history.ts'
 import { cp } from 'node:fs/promises'
 import { loopArtifactEvidence } from './workflow-loop-evidence.ts'
@@ -417,6 +416,7 @@ export function installWorkflowWorkbench(ctx: Context, config: ToolsConfig, runt
           const ids = await withTeamLock(lock, async () => {
             const team = await load()
             if (team.halted || team.phase === 'staged' || body['version'] !== flowControlVersion(team)) throw new Error('流程已变化或尚未启动，请刷新后重试')
+            if (body['enabled'] && team.tasks.some(task => task.checkpoint?.draftLoopSettings?.entryId)) throw new Error('请先接通循环入口到门控的前向路径')
             if (body['enabled']) for (const loop of loopsOf(team)) {
               if (!canStartLoopWithFlow(loop) || [loop.gateId, ...loop.bodyIds].some(id => skipped.has(id))) continue
               try { startLoop(team, loop.id) }
@@ -427,7 +427,7 @@ export function installWorkflowWorkbench(ctx: Context, config: ToolsConfig, runt
             }
             if (!body['enabled']) for (const loop of loopsOf(team)) if (loop.status === 'ready' && loop.queued) pauseLoop(team, loop.id, false, '用户暂停流程，已取消循环排队')
             const tasks = team.tasks.filter(task => {
-              if (['completed','failed','cancelled'].includes(task.status) || task.checkpoint?.decision || task.workflowConfigPending || isDraftRejectTask(team, task.id)) return false
+              if (['completed','failed','cancelled'].includes(task.status) || task.checkpoint?.decision || task.workflowConfigPending || isDraftRejectTask(team, task.id) || isPendingLoopEntry(team, task.id)) return false
               const loop = loopForTask(team, task.id)
               return !body['enabled'] || !loop || task.workflowLoopTaskHold && (loop.status === 'running' || loop.queued)
             })
@@ -522,18 +522,10 @@ export function installWorkflowWorkbench(ctx: Context, config: ToolsConfig, runt
                 || !node || node.reassigning || ['claimed','in_progress'].includes(node.status)) throw new Error('退回任务连线无效')
               if (!node.dependencies.includes(source)) node.dependencies = [...node.dependencies, source]
             }
-            if (!config.entryId) {
-              const gate = team.tasks.find(task => task.id === config.gateId)
-              if (gate?.checkpoint?.kind !== 'gate' || gate.status !== 'pending' || gate.reassigning || loopForTask(team, gate.id)) throw new Error('门控配置已变化，请刷新')
-              gate.workflowConfigPending = true
-              holdLoopTask(gate)
-              gate.checkpoint.draftLoopSettings = {
-                maxRounds:config.maxRounds, timeoutMinutes:config.timeoutMinutes,
-                rejectTaskIds: config.rejectTaskIds, rejectDag: config.rejectDag,
-              }
-              if ('passTargets' in body) team.tasks = gateRouteTasks(team, gate.id, body['passTargets'])
+            if (!gateEntryConnected(team.tasks, config)) {
+              const passes = body['passTargets'] ?? team.tasks.filter(task => task.dependencies.includes(config.gateId)).map(task => task.id)
+              savePendingGateSettings(team, config, passes, body['loopId'])
               validateWorkflowGraph(team)
-              for (const task of team.tasks) if (config.rejectTaskIds?.includes(task.id)) holdLoopTask(task)
             } else if ('passTargets' in body) saveGateSettings(team, config, body['passTargets'], body['loopId'], body['reconnect'] === true || body['rejectEdge'] !== undefined)
             else configureLoop(team, config)
           } else if (action === 'loop_start') {

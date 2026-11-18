@@ -1,13 +1,13 @@
 import { MAX_WORKFLOW_TEXT_LENGTH } from './workflow-types.ts'
 import { excerpt, reviewResult } from './review-results.ts'
-import { deriveLoop, planGateSettings, parseLoopConfig, reviewerConflicts, validateLoopGraph as validateLoopStructure } from './workflow-loop-config.ts'
+import { deriveLoop, gateRouteTasks, planGateSettings, parseLoopConfig, reviewerConflicts, validateLoopGraph as validateLoopStructure } from './workflow-loop-config.ts'
 export { parseLoopConfig } from './workflow-loop-config.ts'
 /** Structured loops: backward edges are control flow, never task dependencies. */
 import { createHash, randomUUID } from 'node:crypto'
 import type { TeamState, TeamTask } from './types.ts'
 import { resetTaskForRerun } from './task-rerun.ts'
 
-import { canEditLoopGate, isDraftLoop, isDraftRejectTask, loopHasExternalEntry, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
+import { canEditLoopGate, isDraftLoop, isDraftRejectTask, isPendingLoopEntry, loopHasExternalEntry, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
 export type { LoopConfig, WorkflowLoop, LoopHistoryRecord } from './workflow-loop-types.ts'
 const pending = new WeakMap<TeamState, LoopHistoryRecord[]>()
 export const loopRetryInstructions = '按原任务要求重试本轮，保留先前的执行记录。'
@@ -104,6 +104,27 @@ export function holdLoopTask(task: TeamTask): void {
   }
 }
 
+/** Store a partial loop without making it eligible for scheduling. */
+export function savePendingGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown): void {
+  const gate = taskOf(team, config.gateId)
+  const previous = loopsOf(team).find(loop => loop.gateId === gate.id)
+  if (previous?.id !== loopId || gate.checkpoint?.kind !== 'gate' || !canEditLoopGate(gate)) throw new Error('门控配置已变化，请刷新')
+  const tasks = gateRouteTasks(team, gate.id, passTargets)
+  const updatedGate = tasks.find(task => task.id === gate.id)!
+  if (updatedGate.status !== 'pending' || updatedGate.attemptId || updatedGate.checkpoint?.decision) resetTaskForRerun(updatedGate, false, Date.now())
+  updatedGate.assignee = undefined
+  updatedGate.workflowConfigPending = true
+  updatedGate.checkpoint!.mode = config.mode
+  updatedGate.checkpoint!.draftReviewer = config.reviewer
+  const {entryId, maxRounds, timeoutMinutes, rejectTaskIds, rejectDag, rejectToEntry} = config
+  updatedGate.checkpoint!.draftLoopSettings = {entryId:entryId || undefined, maxRounds, timeoutMinutes, rejectTaskIds, rejectDag, rejectToEntry}
+  team.tasks = tasks
+  if (previous) team.workflow!.loops = loopsOf(team).filter(loop => loop !== previous)
+  for (const task of tasks) {
+    if ([gate.id, entryId, ...rejectTaskIds ?? [], ...previous?.bodyIds ?? []].includes(task.id)) holdLoopTask(task)
+  }
+}
+
 /** Validate both routes before publishing the new configuration. */
 export function saveGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown, dependenciesChanged = false): void {
   const draft = structuredClone(team)
@@ -134,7 +155,7 @@ export function saveGateSettings(team: TeamState, config: LoopConfig, passTarget
 }
 export function loopCanExecute(team: TeamState, task: TeamTask): boolean {
   const loop = loopForTask(team, task.id)
-  if (!loop) return !task.checkpoint && !isDraftRejectTask(team, task.id)
+  if (!loop) return !task.checkpoint && !isDraftRejectTask(team, task.id) && !isPendingLoopEntry(team, task.id)
   if (team.halted || team.phase === 'staged') return false
   if (task.id === loop.gateId) return loop.mode === 'ai' && loop.status === 'reviewing'
   return loop.status === 'running' && !isUntriggeredLoopTask(team, task.id)

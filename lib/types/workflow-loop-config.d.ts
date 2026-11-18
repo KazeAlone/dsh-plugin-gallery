@@ -47,6 +47,7 @@ export declare function planGateSettings(team: TeamState, raw: LoopConfig, passT
     };
     rewired: boolean;
 };
+export declare function gateEntryConnected(tasks: readonly TeamTask[], config: Pick<LoopConfig, 'gateId' | 'entryId'>): boolean;
 export declare function previewGate(team: TeamState, config: LoopConfig, passTargets: string[]): {
     bodyIds: string[];
     error: string;

@@ -10,7 +10,8 @@ import { validateCreateTask } from './quality-gates.ts'
 import { sanitizeKey } from './state.ts'
 import { taskIsExecuting, canRestartTask, rerunImpact, resetTaskForRerun } from './task-rerun.ts'
 import { taskNeedsConfiguration } from './task-description.ts'
-import { configureLoop, holdLoopTask, loopForTask, loopTaskContract, parseLoopConfig, saveGateSettings, validateLoopGraph } from './workflow-loops.ts'
+import { configureLoop, holdLoopTask, loopForTask, loopTaskContract, parseLoopConfig, saveGateSettings, savePendingGateSettings, validateLoopGraph } from './workflow-loops.ts'
+import { gateEntryConnected, previewGate } from './workflow-loop-config.ts'
 import { canAssignLoopTask, canEditLoopGate } from './workflow-loop-types.ts'
 
 export function workflowState(team: TeamState): WorkflowState {
@@ -50,7 +51,7 @@ export function parseWorkflowOperations(value: unknown): WorkflowOperation[] {
     for (const field of ['configurationPending', 'confirmConfiguration']) if (op[field] !== undefined && typeof op[field] !== 'boolean') throw new Error(`${field} 必须是布尔值`)
     switch (action) {
       case 'configure_loop': return { action, ...parseLoopConfig(op) }
-      case 'add_member': return { action, ...parseGalleryAccess(op), name: text(op['name'], 'name', true)!, summary: text(op['summary'], 'summary', true)!, ...fields(['role', 'executionPrompt', 'specificPrompt', 'provider', 'model', 'reasoningEffort']) }
+      case 'add_member': return { action, ...parseGalleryAccess(op), name: text(op['name'], 'name', true)!, summary: text(op['summary'], 'summary') ?? '', ...fields(['role', 'executionPrompt', 'specificPrompt', 'provider', 'model', 'reasoningEffort']) }
       case 'update_member': return { action, ...parseGalleryAccess(op), name: text(op['name'], 'name', true)!, ...fields(['summary', 'role', 'executionPrompt', 'specificPrompt', 'provider', 'model', 'reasoningEffort']) }
       case 'remove_member': return { action, name: text(op['name'], 'name', true)! }
       case 'add_task': {
@@ -103,7 +104,7 @@ export function validateWorkflowGraph(team: TeamState): void {
     if (done.has(task.id)) return
     visiting.add(task.id)
     if (!task.subject.trim()) throw new Error('任务名称不能为空')
-    if (task.checkpoint?.kind === 'gate' && !loopForTask(team, task.id) && (!task.workflowConfigPending || task.status !== 'pending' || task.checkpoint.decision || (task.attempt ?? 0) > 0)) throw new Error('门控节点必须连接返回线构成环路，才能完成配置或运行')
+    if (task.checkpoint?.kind === 'gate' && !loopForTask(team, task.id) && (!task.workflowConfigPending || task.status !== 'pending' || task.checkpoint.decision || task.attemptId || task.reassigning)) throw new Error('门控节点必须连接返回线构成环路，才能完成配置或运行')
     if (!validArchiveFields(task as unknown as Record<string,unknown>)) throw new Error('归档节点配置无效或设置了执行成员')
     if (!task.checkpoint && !['completed', 'failed', 'cancelled'].includes(task.status) && task.assignee !== undefined && !members.has(task.assignee) && task.assignee !== 'captain') throw new Error(`执行成员不存在：${task.assignee}`)
     if (task.checkpoint && task.assignee && loopForTask(team, task.id)?.mode !== 'ai') throw new Error('人工检查不能分配给执行成员')
@@ -178,7 +179,7 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
     if (loop) {
       if (op.action !== 'update_task') throw new Error('循环节点请使用循环控制；不能修改拓扑或单独重跑')
       const task = taskOf(team, op.id)
-      if (op.assignee !== undefined && (op.assignee || undefined) !== task.assignee && !canAssignLoopTask(loop, task)) throw new Error('循环执行后不能单独修改负责人')
+      if (op.assignee !== undefined && (op.assignee || undefined) !== task.assignee && !canAssignLoopTask(loop, task)) throw new Error('任务正在执行或已结束，请先停止或重跑再修改负责人')
       if (loop.contracts && loop.contracts[task.id] !== loopTaskContract(task)) throw new Error('循环任务契约已变化，请检查流程')
     }
     // Removal changes loop membership; editing an idle member's configuration does not.
@@ -264,6 +265,7 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
       team.tasks = team.tasks.filter(t => t.id !== task.id)
       for (const gate of team.tasks) {
         const draft = gate.checkpoint?.draftLoopSettings
+        if (draft?.entryId === task.id) delete draft.entryId
         if (draft?.rejectTaskIds?.includes(task.id)) draft.rejectTaskIds = draft.rejectTaskIds.filter(id => id !== task.id)
       }
     } else if (op.action === 'rerun_task') {
@@ -327,6 +329,7 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
     }
   }
   updateEditedLoopRoutes(original, team)
+  completeConnectedGateDrafts(team)
   validateWorkflowGraph(team)
   return team
 }
@@ -351,6 +354,11 @@ function updateEditedLoopRoutes(original: TeamState, team: TeamState): void {
     const outgoing = team.tasks.filter(task => task.dependencies.includes(loop.gateId)).map(task => task.id)
     const otherLoops: typeof loops = team.workflow!.loops!
     team.workflow!.loops = [loop]
+    if (!gateEntryConnected(team.tasks, loop)) {
+      savePendingGateSettings(team, loop, outgoing, loop.id)
+      team.workflow!.loops = otherLoops
+      continue
+    }
     saveGateSettings(team, loop, outgoing, loop.id, true)
     const rebuilt = team.workflow!.loops![0]!
     team.workflow!.loops = [...otherLoops, rebuilt]
@@ -363,6 +371,17 @@ function updateEditedLoopRoutes(original: TeamState, team: TeamState): void {
     for (const task of team.tasks) {
       if ((before.get(task.id)?.includes(loop.gateId) ?? false) !== task.dependencies.includes(loop.gateId)) holdLoopTask(task)
     }
+  }
+}
+
+function completeConnectedGateDrafts(team: TeamState): void {
+  for (const gate of team.tasks) {
+    const draft = gate.checkpoint?.draftLoopSettings
+    if (!draft?.entryId || !canEditLoopGate(gate) || loopForTask(team, gate.id)) continue
+    const config = { ...draft, gateId:gate.id, entryId:draft.entryId, mode:gate.checkpoint?.mode ?? 'human', reviewer:gate.checkpoint?.draftReviewer }
+    if (!gateEntryConnected(team.tasks, config)) continue
+    const downstream = team.tasks.filter(task => task.dependencies.includes(gate.id)).map(task => task.id)
+    if (!previewGate(team, config, downstream).error) saveGateSettings(team, config, downstream)
   }
 }
 
