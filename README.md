@@ -66,6 +66,8 @@ Skill 自动识别 `SKILL.md`，带入 `references/`、`scripts/`、`assets/`。
 
 ## 其他插件接入
 
+Gallery 提供 Skill/MCP 按需搜索、Skill 加载、MCP 工具查询与代理调用。消费插件为成员启用 `resourceMode: "discovery"` 后，仅提供少量固定入口，避免全量目录和工具定义占用上下文。旧接入方式保留；TeamFlow 尚需启用新模式。详见[按需访问接口](docs/resource-discovery.md)。
+
 通过同宿主 `ctx.gallery` 使用 `listResources(query)`、`getResource(id)`、`resolveReference({id,digest?})` 和 `getSnapshot({id,digest?})`。引用包含 digest 时，资源变化会返回冲突；执行方可以保存快照保证本次运行内容一致。
 
 宿主通过独立的存储适配器访问资源，可选择本地文件或 PostgreSQL 中心服务。原共享 HTTP/SQLite 实现及测试暂保留，不属于当前中心服务运行链路。详见 [接口说明](docs/integration.md) 和 [存储说明](docs/storage.md)。

@@ -119,3 +119,8 @@ TeamFlow 在成员激活时调用 setMemberAccess；当 galleryMcp 明确为 tru
 模板验证与注册保留 checkpointKind、reviewMode、archive 和顶层 loops。普通依赖无环；返工关系由 loops 指定，上游执行区域按入口与门控推导，不保存运行时 bodyIds/status/runId。规则与 TeamFlow main 0.2.12 对齐：最多 16 个独立循环、轮次 1–20、超时 1–1440 分钟；禁止共享或嵌套、环内审核/归档、绕过门控的输出及审核人执行环内任务。
 
 保存时按 Agent 内部 ID 转换 loops.reviewer 与任务 assignee 为模板成员名，重开时反向还原。发布仍通过 workflowFromResource 统一验证，归档配置和循环关系不会因再次注册丢失。操作见[Workflow 画布](workflow-canvas.md)。
+
+
+## 按需资源访问（0.30.0）
+
+新增五个固定搜索/加载/调用工具及同进程 API。通过 `resourceCapabilities()` 检测能力，`setMemberAccess(agent, {..., resourceMode: "discovery"})` 为指定成员启用。原来两个开关仍控制 Skill/MCP 权限；未指定新模式时保留原生行为。消费方不应继续注入全量目录。具体参数、分页上限、权限与原生 MCP 嵌套执行契约见[按需访问说明](resource-discovery.md)。
