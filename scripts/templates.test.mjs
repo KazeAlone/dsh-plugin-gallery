@@ -226,3 +226,40 @@ test('generated template example conforms to the strict tool schema and preserve
  assert.equal(result.members[0].gallerySkill,true);assert.equal(result.members[0].galleryMcp,false)
  assert.equal(source.members[0].gallerySkill,true)
 })
+
+test('sharing uploads exact server-side versions through authenticated global routes',async t=>{
+ const root=await mkdtemp(join(tmpdir(),'template-sharing-'));t.after(()=>rm(root,{recursive:true,force:true}))
+ const {authenticatedWebRoutes}=await import('../lib/web-routes.js')
+ const first=await saveTemplate(root,definition())
+ await saveTemplate(root,{...definition(),name:'Second version'},{id:first.id,version:1})
+ let route,rejection,configured=true,gallery;const uploaded=[]
+ const installed={workflowSharingStatus:()=>({configured}),uploadWorkflowTemplate:async(value,source)=>{
+  uploaded.push({value,source});return{id:'shared-id',name:value.name,libraryId:'center',sourceVersion:source.version,reused:false}
+ }}
+ const ctx={get:key=>key==='gallery'?gallery:undefined,effect:fn=>fn(),agents:{get:()=>undefined}}
+ installWorkflowWorkbench(ctx,{stateDir:'.agent-teams',templateDirectory:root,maxMembers:8},{},authenticatedWebRoutes({register(value){route=value;return()=>{}}},()=>({requestRejection:()=>rejection})))
+ const request=async body=>{let status,result;const req=Readable.from([JSON.stringify(body)]);req.method='POST';req.headers={};await route.handler(req,{writeHead:code=>status=code,end:value=>result=JSON.parse(value)});return{status,...result}}
+ const upload={action:'template_upload_gallery',templateId:first.id,version:1,definition:{name:'Forged'},creator:{username:'Forged'}}
+ gallery=installed;rejection=401
+ assert.equal((await request(upload)).status,401);assert.equal(uploaded.length,0)
+ assert.equal((await request({action:'template_gallery_status'})).status,401)
+ rejection=undefined;gallery=undefined
+ assert.equal((await request({action:'template_gallery_status'})).available,false)
+ assert.match((await request(upload)).error,/0.32.0/)
+ gallery={workflowSharingStatus:installed.workflowSharingStatus};assert.match((await request(upload)).error,/0.32.0/)
+ gallery=installed;configured=false;assert.match((await request(upload)).error,/中心服务/)
+ configured=true
+ assert.equal((await request({action:'template_gallery_status'})).configured,true)
+ const result=await request({...upload,sessionId:'nonexistent'})
+ assert.equal(result.status,200,result.error);assert.equal(result.resource.sourceVersion,1)
+ assert.equal(uploaded[0].value.name,first.name);assert.deepEqual(uploaded[0].source,{id:first.id,version:1})
+ assert.equal((await getTemplate(root,first.id)).version,2)
+ assert.equal((await request({...upload,version:999})).status,409)
+ for(const version of [0,-1,1.5,null])assert.equal((await request({...upload,version})).status,409)
+ const builtin=builtinTemplates()[0]
+ const localized=await request({action:'template_upload_gallery',templateId:builtin.id,version:builtin.version,language:'en'})
+ assert.equal(localized.status,200,localized.error)
+ assert.deepEqual(uploaded[1].source,{id:builtin.id,version:builtin.version,language:'en'})
+ assert.notEqual(uploaded[1].value.name,builtin.name)
+ assert.equal(uploaded.length,2)
+})

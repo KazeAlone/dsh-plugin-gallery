@@ -1,3 +1,4 @@
+import { gallerySharingStatus, uploadTemplateToGallery } from "./gallery-sharing.ts"
 import { isDraftRejectTask, isPendingLoopEntry, roundBodyIds } from './workflow-loop-types.ts'
 import { writeOpenCodeProject } from './opencode-project.ts'
 import { canRetryLoopTask, canStartLoopWithFlow, canToggleLoopTask } from './workflow-loop-types.ts'
@@ -105,11 +106,19 @@ export function installWorkflowWorkbench(ctx: Context, config: ToolsConfig, runt
         const kind=picker?.capability?.().kind
         reply(200,{directoryPicker:kind === 'native' || kind === 'browse' ? kind : 'unavailable'}); return
       }
+      if (action === 'template_gallery_status') { reply(200, gallerySharingStatus(ctx)); return }
+      if (action === 'template_upload_gallery') {
+        const id = string(body['templateId'], 'templateId'), version = Number(body['version'])
+        if (!Number.isSafeInteger(version) || version < 1) throw new Error('模板来源或版本无效')
+        const builtin = isBuiltinTemplate(id), language = body['language'] === 'en' ? 'en' : 'zh'
+        const template = builtin ? localizeBuiltinTemplate(getBuiltinTemplate(id, version), language) : await getTemplate(libraryRoot, id, version)
+        reply(200, { resource: await uploadTemplateToGallery(ctx, template, builtin ? language : undefined) }); return
+      }
       // The personal library belongs to the authenticated user, not a live conversation.
       if (!body['sessionId'] && ['template_list', 'template_save', 'template_delete'].includes(action)) {
         if (action === 'template_list') {
           const library = await listTemplates(libraryRoot)
-          reply(200, {...library, templates:[...builtinTemplates(), ...library.templates], context:''})
+          reply(200, {...library, templates:[...builtinTemplates(), ...library.templates], context:'', gallerySharing:gallerySharingStatus(ctx)})
         } else if (action === 'template_save') {
           const previous = body['templateId'] === undefined ? undefined : {id:string(body['templateId'],'templateId'),version:Number(body['version'])}
           reply(200, {template:await saveTemplate(libraryRoot,body['definition'],previous)})
@@ -142,7 +151,7 @@ export function installWorkflowWorkbench(ctx: Context, config: ToolsConfig, runt
         const requirements = recentUserRequirements(caller.session)
         const library = await listTemplates(libraryRoot)
         const warnings = requirements.partial ? [...library.warnings, partialRequirementsNotice] : library.warnings
-        reply(200, { warnings, templates: [...builtinTemplates(), ...library.templates], context: requirements.text })
+        reply(200, { warnings, templates: [...builtinTemplates(), ...library.templates], context: requirements.text, gallerySharing:gallerySharingStatus(ctx) })
         return
       }
       if(action==='template_save'){

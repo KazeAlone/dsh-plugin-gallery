@@ -17,7 +17,8 @@ import { BrandIcon } from './BrandIcon.tsx'
 import { EmbeddedDiscussion } from './EmbeddedDiscussion.tsx'
 import css from './TemplateGallery.module.css'
 
-type Catalog = {templates:TemplateVersion[];warnings:string[];context?:string}
+type Sharing = {available:boolean;configured:boolean;reason:string}
+type Catalog = {templates:TemplateVersion[];warnings:string[];context?:string;gallerySharing?:Sharing}
 const catalogCache=createWorkflowCache<Catalog>(4,2*1024*1024)
 async function api(sessionId:string | undefined,action:string,fields:Record<string,unknown>={},signal?:AbortSignal){
   return workflowRequest<any>({sessionId,action,...fields},fetch,undefined,signal)
@@ -48,6 +49,7 @@ function MiniFlow({template,large=false}:{template:TemplateDefinition;large?:boo
 export function TemplateGallery({sessionId,team,archived=false,mode='browse',onApply,onBack}:{sessionId?:string;team?:TeamState;archived?:boolean;mode?:'browse'|'save';onApply:(template:TemplateVersion,name:string,goal:string)=>Promise<void>;onBack?:()=>void}){
   const l = useWorkflowText()
 
+  const [sharing,setSharing]=useState<Sharing>()
   const [templates,setTemplates]=useState<TemplateVersion[]>(()=>catalogCache.get(sessionId??'')?.templates??[]),[warnings,setWarnings]=useState<string[]>([])
   const [search,setSearch]=useState(''),[tag,setTag]=useState(''),[selection,setSelected]=useState<TemplateVersion>()
   const [draft,setDraft]=useState<TemplateDefinition>(),[previous,setPrevious]=useState<{id:string;version:number}>()
@@ -66,7 +68,7 @@ export function TemplateGallery({sessionId,team,archived=false,mode='browse',onA
   }, [selection, draft])
   const alive=useRef(true)
   useEffect(()=>{alive.current=true;return()=>{alive.current=false}},[])
-  async function refresh(signal?:AbortSignal){const result=await api(sessionId,'template_list',{},signal);if(alive.current&&!signal?.aborted){catalogCache.set(sessionId??'',result);setTemplates(result.templates);setWarnings(result.warnings);setGoal(current=>current||result.context||'')}}
+  async function refresh(signal?:AbortSignal){const result=await api(sessionId,'template_list',{},signal);if(alive.current&&!signal?.aborted){catalogCache.set(sessionId??'',result);setTemplates(result.templates);setWarnings(result.warnings);setSharing(result.gallerySharing);setGoal(current=>current||result.context||'')}}
   async function run(action:()=>Promise<void>){setBusy(true);setError('');setNotice('');try{await action()}catch(e){if(alive.current)setError(e instanceof Error?e.message:String(e))}finally{if(alive.current)setBusy(false)}}
   useEffect(()=>{
     const controller=new AbortController()
@@ -91,6 +93,7 @@ export function TemplateGallery({sessionId,team,archived=false,mode='browse',onA
     cardTrigger.current = (apply ? 'use:' : 'view:') + item.id
     focusGoal.current = apply && !team
     setSelected(item)
+    void api(sessionId,'template_gallery_status').then(result=>{if(alive.current)setSharing(result)}).catch(()=>{})
     setName(undefined)
     setDeleteId('')
     setError('')
@@ -122,7 +125,10 @@ export function TemplateGallery({sessionId,team,archived=false,mode='browse',onA
       {team ? <p className={css.warning}>{l("当前对话已有流程。请在新的对话打开 Teamflow 后应用；不会覆盖当前流程。")}</p> : <form className={css.apply} onSubmit={e=>{e.preventDefault();void run(()=>onApply(selected,name??selected.name,goal))}}><h3>{l("应用到本次任务")}</h3><p>{selected.inputs||l("描述本次目标、工作范围和特殊要求。")}</p><label>{l("流程名称")}<input required maxLength={120} value={name??selected.name} onChange={e=>setName(e.target.value)}/></label><label>{l("本次需求")}<textarea ref={goalInput} required maxLength={MAX_WORKFLOW_TEXT_LENGTH} value={goal} onChange={e=>setGoal(e.target.value)} placeholder={l("例如：实现算子 B，遵循当前项目接口，并验证正确性…")}/></label><small>{l("已有对话需求会带入适配。保留全部节点和连线，由 Captain 统一生成本次任务；确认后才执行。")}</small><button className={css.primary} disabled={busy||!!team||!goal.trim()}>{l("使用模板并讨论本次任务")}</button></form>}
       <div><MiniFlow template={selected} large/><h3>{l("流程与通用要求")}</h3>{selected.tasks.map(t=><details key={t.id}><summary>{t.checkpoint?t.checkpointKind==='gate'||selected.loops?.some(loop=>loop.gateId===t.id)?l('门控节点'):l('验收节点'):l("任务")} · {t.subject}</summary><p>{briefDisplay(t.general,l)}</p><small>{l("负责人：")}{t.assignee||selected.loops?.find(loop=>loop.gateId===t.id)?.reviewer||l("人工／自动分配")} {l(" · 上游：")}{t.dependencies.map(id=>selected.tasks.find(n=>n.id===id)?.subject).join('、')||l("无")}</small></details>)}<h3>{l("角色分工")}</h3>{selected.members.map(m=><details key={m.name}><summary>{m.name} · {m.summary}</summary><p>{m.role}</p><p>{m.executionPrompt}</p></details>)}</div>
       </div>
-      <div className={css.actions}><button onClick={()=>{setDraft(structuredClone(selected));setPrevious(isBuiltinTemplate(selected.id)?undefined:{id:selected.id,version:selected.version});setSelected(undefined)}}>{isBuiltinTemplate(selected.id)?l("编辑并另存为个人模板"):l("编辑模板")}</button><button onClick={()=>{setDraft({...structuredClone(selected),name:l("{0} · 副本", selected.name)});setPrevious(undefined);setSelected(undefined)}}>{l("复制模板")}</button>{isBuiltinTemplate(selected.id)?<small>{l("内置模板只读，修改后保存为个人模板。")}</small>:deleteId===selected.id?<><span>{l("删除后已创建的流程不受影响。")}</span><button disabled={busy} onClick={()=>void run(async()=>{await api(sessionId,'template_delete',{templateId:selected.id,version:selected.version});setSelected(undefined);await refresh()})}>{l("确认删除")}</button><button onClick={()=>setDeleteId('')}>{l("取消")}</button></>:<button onClick={()=>setDeleteId(selected.id)}>{l("删除模板")}</button>}</div>
+      <div className={css.actions}><button disabled={busy||!sharing?.configured} title={sharing?.reason?workflowMessage(sharing.reason,l):undefined} onClick={()=>void run(async()=>{
+        const result=await api(sessionId,'template_upload_gallery',{templateId:selected.id,version:selected.version,language:l.language});
+        setNotice(result.resource.reused?l("此版本已上传至共享 Gallery：{0}",result.resource.name):l("已上传至共享 Gallery：{0}",result.resource.name));
+      })}><BrandIcon name="gallery"/>{l("上传至共享 Gallery")}</button>{!sharing?.configured&&sharing?.reason&&<small>{workflowMessage(sharing.reason,l)}</small>}<button onClick={()=>{setDraft(structuredClone(selected));setPrevious(isBuiltinTemplate(selected.id)?undefined:{id:selected.id,version:selected.version});setSelected(undefined)}}>{isBuiltinTemplate(selected.id)?l("编辑并另存为个人模板"):l("编辑模板")}</button><button onClick={()=>{setDraft({...structuredClone(selected),name:l("{0} · 副本", selected.name)});setPrevious(undefined);setSelected(undefined)}}>{l("复制模板")}</button>{isBuiltinTemplate(selected.id)?<small>{l("内置模板只读，修改后保存为个人模板。")}</small>:deleteId===selected.id?<><span>{l("删除后已创建的流程不受影响。")}</span><button disabled={busy} onClick={()=>void run(async()=>{await api(sessionId,'template_delete',{templateId:selected.id,version:selected.version});setSelected(undefined);await refresh()})}>{l("确认删除")}</button><button onClick={()=>setDeleteId('')}>{l("取消")}</button></>:<button onClick={()=>setDeleteId(selected.id)}>{l("删除模板")}</button>}</div>
     </div>:<><div className={css.filters}><input aria-label={l("搜索模板")} placeholder={l("搜索模板名称、用途或标签")} value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label={l("标签筛选")} value={activeTag} onChange={e=>setTag(e.target.value)}><option value="">{l("所有标签")}</option>{tags.map(t=><option key={t}>{t}</option>)}</select><span>{filtered.length} {l(" 个模板")}</span></div>
       {busy&&!templates.length?<p role="status">{l("正在读取模板库…")}</p>:!filtered.length?<div className={css.empty}><BrandIcon name="gallery" size={56}/><h3>{templates.length?l("没有匹配的模板"):l("把有效的协作流程留在这里")}</h3><p>{templates.length?l("试试其他关键词或标签。"):l("在流程画布点击「保存为模板」，提炼一次，以后直接套用。")}</p>{templates.length ? <button onClick={()=>{setSearch('');setTag('')}}>{l("清除筛选")}</button> : onBack ? <button onClick={onBack}>{l("返回流程")}</button> : null}</div>:<div className={css.cards}>{filtered.map(item=><article className={css.card} key={item.id}><button className={css.cardPreview} data-template-choice={'view:' + item.id} onClick={()=>choose(item)} aria-label={l("查看 {0}", item.name)}><MiniFlow template={item}/><h3>{item.name}</h3><p>{item.description||l("个人流程模板")}</p></button><div className={css.tags}>{item.tags.map(t=><span key={t}>{t}</span>)}</div><small>{item.members.length} {l(" 个角色 · ")}{item.tasks.length} {l(" 个节点 · ")}{item.tasks.filter(t=>t.checkpoint&&!item.loops?.some(loop=>loop.gateId===t.id&&loop.mode==='ai')).length} {l(" 个人工检查点")}</small><footer><small>{isBuiltinTemplate(item.id)?l("内置"):l("个人")} · v{item.version} · {new Date(item.updatedAt).toLocaleDateString(l.language==='en'?'en-US':'zh-CN')}</small><button className={css.primary} data-template-choice={'use:' + item.id} onClick={()=>choose(item,true)}>{team ? l("查看模板") : l("使用模板")}</button></footer></article>)}</div>}</>}
   </section>
