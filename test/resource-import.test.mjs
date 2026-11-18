@@ -4,6 +4,7 @@ import {
   mkdtempSync,
   mkdirSync,
   writeFileSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   existsSync,
@@ -14,11 +15,56 @@ import { tmpdir } from "node:os";
 import { importResourceFiles } from "../src/client/resource-import.mjs";
 import { readSkill, skillIssues } from "../src/client/skill-format.mjs";
 import { readAgent, agentIssues } from "../src/client/agent-format.mjs";
+import { workflowFromResource } from "../src/workflow-template.mjs";
+import { LocalGalleryStore } from "../src/local-store.mjs";
 import {
   importResource,
   browseServerDirectory,
 } from "../src/resource-import.mjs";
 const file = (path, content) => ({ path, content, encoding: "utf8" });
+
+test("Workflow bundle imports a portable canvas that can be saved as a new draft", (t) => {
+  const definition = JSON.parse(readFileSync(new URL("./fixtures/workflow-gated.json", import.meta.url), "utf8"));
+  definition.tasks[0].general.requirements = "";
+  const resource = {
+    id: "original-workflow",
+    type: "workflow",
+    files: [file("workflow.json", JSON.stringify(definition))],
+    metadata: {
+      cover: "writing",
+      workflowCanvas: {
+        agents: [{ memberName: "writer", resourceId: "original-agent", position: { x: -40, y: 70 } }],
+        taskPositions: { write: { x: 220, y: 330 } },
+      },
+    },
+  };
+  const bundle = (value, schemaVersion = 2) => [
+    file("review.gallery.json", JSON.stringify({ format: "dsh-gallery-resource", schemaVersion, resource: value })),
+  ];
+  const directory = mkdtempSync(join(tmpdir(), "gallery-workflow-import-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const store = new LocalGalleryStore(join(directory, "resources.json"));
+
+  for (const version of [1, 2]) {
+    const result = importResourceFiles("workflow", bundle(resource, version));
+    assert.equal(result.resource.metadata.cover, "writing");
+    assert.equal(result.resource.metadata.workflowCanvas.draft, true);
+    assert.deepEqual(result.resource.metadata.workflowCanvas.taskPositions.write, { x: 220, y: 330 });
+    const [writer] = result.resource.metadata.workflowCanvas.agents;
+    assert.equal(writer.resourceId, "");
+    assert.deepEqual(writer.position, { x: -40, y: 70 });
+    const saved = store.createResource(result.resource, { id: "local", name: "Local" });
+    assert.notEqual(saved.id, resource.id);
+    const restored = workflowFromResource(saved, { draft: true });
+    assert.deepEqual(restored.members, definition.members);
+    assert.deepEqual(restored.tasks[1].dependencies, ["write"]);
+    assert.equal(restored.loops[0].rejectToEntry, true);
+  }
+
+  assert.throws(() => importResourceFiles("workflow", bundle({ ...resource, type: "agent" })), /同类型/);
+  assert.throws(() => importResourceFiles("workflow", bundle({ ...resource, files: [] })));
+  assert.throws(() => importResourceFiles("workflow", bundle({ ...resource, files: [file("workflow.json", "{")] })), /有效 JSON/);
+});
 const skill =
   "---\nname: paper-review\ndescription: 检查资料\nlicense: MIT\n---\n\n# 资料核对\n\n阅读原文并交付摘要。\n";
 const agent =

@@ -226,6 +226,13 @@ var english = {
   "\u4EC5 Workflow \u53EF\u4EE5\u5B89\u88C5\u5230 TeamFlow": "Only Workflows can be registered with TeamFlow",
   "\u4EC5\u652F\u6301 Skill \u548C Agent": "Only Skill and Agent are supported",
   "\u4EC5\u652F\u6301\u5BFC\u5165 Skill \u548C Agent": "Only Skills and Agents can be imported",
+  "\u4EC5\u652F\u6301\u5BFC\u5165 Skill\u3001Agent \u548C Workflow": "Only Skills, Agents, and Workflows can be imported",
+  "\u8D44\u6E90\u6587\u4EF6\u8D85\u51FA\u5927\u5C0F\u9650\u5236": "Resource files exceed the size limit",
+  "\u8BF7\u9009\u62E9\u4E00\u4E2A Workflow .gallery.json \u8D44\u6E90\u5305": "Choose one Workflow .gallery.json bundle",
+  "\u5728\u7A7A\u767D\u753B\u5E03\u4E0A\u6DFB\u52A0\u5E76\u8FDE\u63A5\u8282\u70B9\u3002": "Add and connect nodes on a blank canvas.",
+  "\u8BFB\u53D6 Gallery \u5BFC\u51FA\u7684 .gallery.json \u8D44\u6E90\u5305\u3002": "Read a .gallery.json bundle exported from Gallery.",
+  "\u6253\u5F00\u753B\u5E03": "Open canvas",
+  "\u5DF2\u4FDD\u7559\u6210\u5458\u5FEB\u7167\u3002\u5982\u9700\u4F7F\u7528\u539F\u8D44\u6E90\u5E93\u4E2D\u7684\u5F15\u7528\uFF0C\u8BF7\u5728\u5F53\u524D\u5E93\u91CD\u65B0\u9009\u62E9\u8D44\u6E90\u3002": "Member snapshots were kept. To restore resource links, select the resources in this library.",
   \u4ECE\u524D\u7F6E\u8282\u70B9\u7684\u8F93\u51FA\u5706\u70B9\u62D6\u52A8\u5230\u540E\u7EED\u8282\u70B9\u7684\u8F93\u5165\u5706\u70B9: "Drag an output port to the next node's input port",
   "\u4ECE\u5DE6\u4FA7\u6210\u5458\u5217\u8868\u914D\u7F6E Agent\uFF0C\u70B9\u51FB\u4EFB\u52A1\u4E0A\u7684\u8D1F\u8D23\u4EBA\u4E5F\u53EF\u7F16\u8F91\u6210\u5458\u3002\u753B\u5E03\u8FDE\u7EBF\u8868\u793A\u4F9D\u8D56\u548C REJECT \u8FD4\u5DE5\u8DEF\u5F84\u3002": "Configure Agents in the member list, or click a task owner. Canvas connections show dependencies and REJECT return paths.",
   "\u4ECE\u672C\u673A\u6587\u4EF6\u6216\u670D\u52A1\u5668\u76EE\u5F55\u8BFB\u53D6\u3002": "Read from local files or a server directory.",
@@ -4518,6 +4525,19 @@ function validateWorkflowTemplate(input, options = {}) {
     ...loops ? { loops } : {}
   };
 }
+function workflowFromResource(resource, options = {}) {
+  const file = resource.files?.find(
+    (f) => f.path === "workflow.json" && f.encoding === "utf8"
+  );
+  demand(file, 400, "INVALID_WORKFLOW", "\u7F3A\u5C11 workflow.json");
+  let definition;
+  try {
+    definition = JSON.parse(file.content);
+  } catch {
+    demand(false, 400, "INVALID_WORKFLOW", "workflow.json \u4E0D\u662F\u6709\u6548 JSON");
+  }
+  return validateWorkflowTemplate(definition, options);
+}
 function workflowTemplateIssues(definition) {
   const issues = [];
   try {
@@ -4604,6 +4624,7 @@ function initial(resource) {
 }
 function WorkflowWizard({
   resource,
+  importedResource,
   onClose,
   onSave,
   onList,
@@ -4611,7 +4632,8 @@ function WorkflowWizard({
   onExtract
 }) {
   const l = useGalleryText();
-  const [cover, setCover] = (0, import_react8.useState)(resource?.metadata?.cover ?? "");
+  const source = resource ?? importedResource;
+  const [cover, setCover] = (0, import_react8.useState)(source?.metadata?.cover ?? "");
   const [fullscreen, setFullscreen] = (0, import_react8.useState)(false);
   const editor = (0, import_react8.useRef)(null), pan = (0, import_react8.useRef)(null), zoomValue = (0, import_react8.useRef)(1), cameraRef = (0, import_react8.useRef)({ x: 0, y: 0 }), boxDrag = (0, import_react8.useRef)(null);
   const [camera, setCamera] = (0, import_react8.useState)({ x: 0, y: 0 });
@@ -4621,7 +4643,7 @@ function WorkflowWizard({
     setCamera(value);
   }
   const arrow = (0, import_react8.useId)();
-  const [start] = (0, import_react8.useState)(() => initial(resource));
+  const [start] = (0, import_react8.useState)(() => initial(source));
   const [draft, setDraft] = (0, import_react8.useState)(start.definition), [agents, setAgents] = (0, import_react8.useState)(start.agents), [positions, setPositions] = (0, import_react8.useState)(start.positions);
   const [contextMenu, setContextMenu] = (0, import_react8.useState)(null);
   const connection = (0, import_react8.useRef)(null);
@@ -5052,7 +5074,7 @@ function WorkflowWizard({
           }
         ],
         metadata: {
-          ...withResourceCover(resource?.metadata, cover),
+          ...withResourceCover(source?.metadata, cover),
           format: "dsh-teamflow-template-v1",
           workflowCanvas: {
             version: 1,
@@ -5064,7 +5086,7 @@ function WorkflowWizard({
             }))
           }
         },
-        references: resource?.references || []
+        references: source?.references || []
       });
     } catch (e) {
       setError(e?.rpcError?.message || e.message || String(e));
@@ -12530,16 +12552,15 @@ ${ATTACHMENTS_END}`;
 
 // src/client/resource-import.mjs
 var IMPORT_LIMIT = 5 * 1024 * 1024;
+var WORKFLOW_BUNDLE_LIMIT = 6 * IMPORT_LIMIT + 1024 * 1024;
 var validPath = (path) => typeof path === "string" && !/^[\\/]|[\\\x00-\x1f]/.test(path) && !/^[a-z]:/i.test(path) && path.split("/").every((p) => p && p !== "." && p !== "..");
-function importResourceFiles(type, input, label = "") {
-  if (!["skill", "agent"].includes(type))
-    throw Error("\u4EC5\u652F\u6301\u5BFC\u5165 Skill \u548C Agent");
+function validateImportFiles(input, limit = IMPORT_LIMIT) {
   if (!Array.isArray(input) || !input.length || input.length > 100)
     throw Error("\u8BF7\u9009\u62E9\u4E00\u4E2A\u8D44\u6E90\uFF0C\u6700\u591A 100 \u4E2A\u6587\u4EF6");
   const seen = /* @__PURE__ */ new Set();
   let total = 0;
   for (const f of input) {
-    if (!validPath(f.path) || seen.has(f.path) || !["utf8", "base64"].includes(f.encoding) || typeof f.content !== "string")
+    if (!validPath(f?.path) || seen.has(f.path) || !["utf8", "base64"].includes(f.encoding) || typeof f.content !== "string")
       throw Error("\u6587\u4EF6\u8DEF\u5F84\u3001\u7F16\u7801\u65E0\u6548\u6216\u5B58\u5728\u91CD\u590D\u6587\u4EF6");
     seen.add(f.path);
     if (f.encoding === "base64" && !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(
@@ -12548,7 +12569,63 @@ function importResourceFiles(type, input, label = "") {
       throw Error("\u9644\u4EF6\u7F16\u7801\u65E0\u6548");
     total += f.encoding === "base64" ? f.content.length * 3 / 4 : new TextEncoder().encode(f.content).length;
   }
-  if (total > IMPORT_LIMIT) throw Error("\u8D44\u6E90\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB");
+  if (total > limit)
+    throw Error(limit === IMPORT_LIMIT ? "\u8D44\u6E90\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB" : "\u8D44\u6E90\u6587\u4EF6\u8D85\u51FA\u5927\u5C0F\u9650\u5236");
+}
+function importWorkflow(source) {
+  validateImportFiles(source.files);
+  const definition = workflowFromResource(source, { draft: true });
+  const saved = source.metadata?.workflowCanvas;
+  const savedAgents = Array.isArray(saved?.agents) ? saved.agents : [];
+  const position = (point, fallback) => Number.isFinite(point?.x) && Number.isFinite(point?.y) ? { x: point.x, y: point.y } : fallback;
+  const agents = definition.members.map((member, index) => {
+    const previous = savedAgents.find(
+      (node) => (node?.memberName || node?.id) === member.name
+    );
+    return {
+      id: createResourceIdentifier("a"),
+      memberName: member.name,
+      label: member.name,
+      resourceId: "",
+      skills: [],
+      mcps: [],
+      position: position(previous?.position, { x: 40, y: 70 + index * 155 })
+    };
+  });
+  const taskPositions = Object.fromEntries(
+    definition.tasks.map((task, index) => [
+      task.id,
+      position(
+        saved?.taskPositions?.[task.id] ?? definition.positions[`task:${task.id}`],
+        { x: 380 + index % 3 * 270, y: 80 + Math.floor(index / 3) * 180 }
+      )
+    ])
+  );
+  const warnings = workflowTemplateIssues(definition);
+  const draft = warnings.length > 0;
+  if (savedAgents.some((node) => node?.resourceId || node?.skills?.length || node?.mcps?.length) || source.references?.length)
+    warnings.push("\u5DF2\u4FDD\u7559\u6210\u5458\u5FEB\u7167\u3002\u5982\u9700\u4F7F\u7528\u539F\u8D44\u6E90\u5E93\u4E2D\u7684\u5F15\u7528\uFF0C\u8BF7\u5728\u5F53\u524D\u5E93\u91CD\u65B0\u9009\u62E9\u8D44\u6E90\u3002");
+  return {
+    resource: {
+      type: "workflow",
+      name: definition.name,
+      description: definition.description,
+      tags: definition.tags,
+      files: [{ path: "workflow.json", encoding: "utf8", content: JSON.stringify(definition) }],
+      metadata: {
+        ...typeof source.metadata?.cover === "string" && source.metadata.cover.length <= 64 ? { cover: source.metadata.cover } : {},
+        format: "dsh-teamflow-template-v1",
+        workflowCanvas: { version: 1, draft, taskPositions, agents }
+      },
+      references: []
+    },
+    warnings
+  };
+}
+function importResourceFiles(type, input, label = "") {
+  if (!["skill", "agent", "workflow"].includes(type))
+    throw Error("\u4EC5\u652F\u6301\u5BFC\u5165 Skill\u3001Agent \u548C Workflow");
+  validateImportFiles(input, type === "workflow" ? WORKFLOW_BUNDLE_LIMIT : IMPORT_LIMIT);
   if (input.length === 1 && /\.json$/i.test(input[0].path)) {
     let bundle;
     try {
@@ -12556,8 +12633,9 @@ function importResourceFiles(type, input, label = "") {
     } catch {
       throw Error("\u8D44\u6E90\u5305 JSON \u65E0\u6CD5\u89E3\u6790");
     }
-    if (bundle.format !== "dsh-gallery-resource" || ![1, 2].includes(bundle.schemaVersion) || bundle.resource?.type !== type)
+    if (bundle?.format !== "dsh-gallery-resource" || ![1, 2].includes(bundle.schemaVersion) || bundle.resource?.type !== type)
       throw Error("\u8BF7\u9009\u62E9\u540C\u7C7B\u578B\u7684 Gallery \u5BFC\u51FA\u8D44\u6E90\u5305");
+    if (type === "workflow") return importWorkflow(bundle.resource);
     const result = importResourceFiles(
       type,
       bundle.resource.files,
@@ -12578,6 +12656,7 @@ function importResourceFiles(type, input, label = "") {
       }
     };
   }
+  if (type === "workflow") throw Error("\u8BF7\u9009\u62E9\u4E00\u4E2A Workflow .gallery.json \u8D44\u6E90\u5305");
   const canonical = type === "skill" ? "SKILL.md" : "AGENT.md";
   let candidates = input.filter((f) => f.path.split("/").at(-1) === canonical);
   if (!candidates.length && input.length === 1 && /\.md$/i.test(input[0].path))
@@ -12704,12 +12783,13 @@ function importResourceFiles(type, input, label = "") {
   if (!description) warnings.unshift("\u672A\u627E\u5230\u63CF\u8FF0\uFF0C\u8BF7\u5728\u57FA\u672C\u4FE1\u606F\u4E2D\u8865\u5145");
   return { resource, warnings };
 }
-async function readBrowserResourceFiles(list) {
+async function readBrowserResourceFiles(list, type) {
   const files = Array.from(list || []);
   if (!files.length || files.length > 100)
     throw Error("\u6700\u591A\u9009\u62E9 100 \u4E2A\u6587\u4EF6\uFF0C\u8BF7\u5355\u72EC\u9009\u62E9\u8D44\u6E90\u76EE\u5F55");
-  if (files.reduce((s, f) => s + f.size, 0) > IMPORT_LIMIT)
-    throw Error("\u8D44\u6E90\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB");
+  const limit = type === "workflow" ? WORKFLOW_BUNDLE_LIMIT : IMPORT_LIMIT;
+  if (files.reduce((s, f) => s + f.size, 0) > limit)
+    throw Error(limit === IMPORT_LIMIT ? "\u8D44\u6E90\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB" : "\u8D44\u6E90\u6587\u4EF6\u8D85\u51FA\u5927\u5C0F\u9650\u5236");
   return Promise.all(
     files.map(async (f) => {
       const bytes = new Uint8Array(await f.arrayBuffer());
@@ -12738,7 +12818,8 @@ function ResourceStart({
   onBrowse
 }) {
   const l = useGalleryText();
-  const label = type === "skill" ? "Skill" : "Agent";
+  const workflow = type === "workflow";
+  const label = { skill: "Skill", agent: "Agent", workflow: "Workflow" }[type];
   const [mode, setMode] = (0, import_react10.useState)("choose"), [source, setSource] = (0, import_react10.useState)("browser"), [busy, setBusy] = (0, import_react10.useState)(false), [error, setError] = (0, import_react10.useState)(""), [result, setResult] = (0, import_react10.useState)(null);
   const [directory, setDirectory] = (0, import_react10.useState)(null);
   const [selectedEntry, setSelectedEntry] = (0, import_react10.useState)(null);
@@ -12770,7 +12851,7 @@ function ResourceStart({
   });
   const upload = (files) => run(
     async () => setResult(
-      importResourceFiles(type, await readBrowserResourceFiles(files))
+      importResourceFiles(type, await readBrowserResourceFiles(files, type))
     )
   );
   return /* @__PURE__ */ import_react10.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react10.default.createElement(
@@ -12783,7 +12864,7 @@ function ResourceStart({
       tabIndex: -1
     },
     /* @__PURE__ */ import_react10.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("h2", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: type }), mode === "choose" ? l("\u521B\u5EFA {0}", label) : l("\u5BFC\u5165\u5DF2\u6709 {0}", label)), /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u5BFC\u5165\u540E\u53EF\u68C0\u67E5\u548C\u7F16\u8F91\uFF0C\u786E\u8BA4\u4FDD\u5B58\u540E\u624D\u52A0\u5165\u8D44\u6E90\u5E93\u3002"))), /* @__PURE__ */ import_react10.default.createElement("button", { "aria-label": l("\u5173\u95ED\u521B\u5EFA"), disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-dialog-body" }, mode === "choose" ? /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-create-options" }, /* @__PURE__ */ import_react10.default.createElement("button", { disabled: busy, onClick: onBlank }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "plus", size: 32 }), /* @__PURE__ */ import_react10.default.createElement("strong", null, l("\u4ECE\u96F6\u521B\u5EFA")), /* @__PURE__ */ import_react10.default.createElement("span", null, l("\u586B\u5199\u57FA\u672C\u4FE1\u606F\uFF0C\u7F16\u5199\u6307\u5F15\u5E76\u6DFB\u52A0\u9644\u4EF6\u3002"))), /* @__PURE__ */ import_react10.default.createElement("button", { disabled: busy, onClick: () => setMode("import") }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "folder", size: 32 }), /* @__PURE__ */ import_react10.default.createElement("strong", null, l("\u5BFC\u5165\u5DF2\u6709")), /* @__PURE__ */ import_react10.default.createElement("span", null, l("\u4ECE\u672C\u673A\u6587\u4EF6\u6216\u670D\u52A1\u5668\u76EE\u5F55\u8BFB\u53D6\u3002")))) : /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, null, /* @__PURE__ */ import_react10.default.createElement("nav", { className: "gal-import-tabs", "aria-label": l("\u5BFC\u5165\u6765\u6E90") }, [
+    /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-dialog-body" }, mode === "choose" ? /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-create-options" }, /* @__PURE__ */ import_react10.default.createElement("button", { disabled: busy, onClick: onBlank }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "plus", size: 32 }), /* @__PURE__ */ import_react10.default.createElement("strong", null, l("\u4ECE\u96F6\u521B\u5EFA")), /* @__PURE__ */ import_react10.default.createElement("span", null, l(workflow ? "\u5728\u7A7A\u767D\u753B\u5E03\u4E0A\u6DFB\u52A0\u5E76\u8FDE\u63A5\u8282\u70B9\u3002" : "\u586B\u5199\u57FA\u672C\u4FE1\u606F\uFF0C\u7F16\u5199\u6307\u5F15\u5E76\u6DFB\u52A0\u9644\u4EF6\u3002"))), /* @__PURE__ */ import_react10.default.createElement("button", { disabled: busy, onClick: () => setMode("import") }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "folder", size: 32 }), /* @__PURE__ */ import_react10.default.createElement("strong", null, l("\u5BFC\u5165\u5DF2\u6709")), /* @__PURE__ */ import_react10.default.createElement("span", null, l(workflow ? "\u8BFB\u53D6 Gallery \u5BFC\u51FA\u7684 .gallery.json \u8D44\u6E90\u5305\u3002" : "\u4ECE\u672C\u673A\u6587\u4EF6\u6216\u670D\u52A1\u5668\u76EE\u5F55\u8BFB\u53D6\u3002")))) : /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, null, !workflow && /* @__PURE__ */ import_react10.default.createElement("nav", { className: "gal-import-tabs", "aria-label": l("\u5BFC\u5165\u6765\u6E90") }, [
       ["browser", l("\u672C\u673A\u6587\u4EF6")],
       ["server", l("\u670D\u52A1\u5668\u76EE\u5F55")]
     ].map(([key, name]) => /* @__PURE__ */ import_react10.default.createElement(
@@ -12800,11 +12881,11 @@ function ResourceStart({
         }
       },
       name
-    ))), source === "browser" && /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-import-local" }, /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u9009\u62E9\u4E00\u4E2A "), l(label), l(" \u7684 Markdown \u6587\u4EF6\u3001\u5B8C\u6574\u8D44\u6E90\u6587\u4EF6\u5939\uFF0C\u6216 Gallery \u5BFC\u51FA\u7684 JSON \u8D44\u6E90\u5305\u3002")), /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file" }), l("\u9009\u62E9\u6587\u4EF6"), /* @__PURE__ */ import_react10.default.createElement(
+    ))), source === "browser" && /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-import-local" }, /* @__PURE__ */ import_react10.default.createElement("p", null, workflow ? l("\u8BF7\u9009\u62E9\u4E00\u4E2A Workflow .gallery.json \u8D44\u6E90\u5305") : /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, null, l("\u9009\u62E9\u4E00\u4E2A "), l(label), l(" \u7684 Markdown \u6587\u4EF6\u3001\u5B8C\u6574\u8D44\u6E90\u6587\u4EF6\u5939\uFF0C\u6216 Gallery \u5BFC\u51FA\u7684 JSON \u8D44\u6E90\u5305\u3002"))), /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file" }), l("\u9009\u62E9\u6587\u4EF6"), /* @__PURE__ */ import_react10.default.createElement(
       "input",
       {
         type: "file",
-        accept: ".md,.json",
+        accept: workflow ? ".json" : ".md,.json",
         "aria-label": l("\u5BFC\u5165\u672C\u673A\u6587\u4EF6"),
         disabled: busy,
         onChange: (e) => {
@@ -12812,7 +12893,7 @@ function ResourceStart({
           e.target.value = "";
         }
       }
-    )), /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "folder" }), l("\u9009\u62E9\u6587\u4EF6\u5939"), /* @__PURE__ */ import_react10.default.createElement(
+    )), !workflow && /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "folder" }), l("\u9009\u62E9\u6587\u4EF6\u5939"), /* @__PURE__ */ import_react10.default.createElement(
       "input",
       {
         type: "file",
@@ -12825,7 +12906,7 @@ function ResourceStart({
           e.target.value = "";
         }
       }
-    ))), /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u6587\u4EF6\u6765\u81EA\u5F53\u524D\u6D4F\u89C8\u5668\u6240\u5728\u7684\u7535\u8111\uFF1B\u8BFB\u53D6 DSH \u4E3B\u673A\u4E0A\u7684\u6587\u4EF6\u8BF7\u5207\u6362\u5230\u670D\u52A1\u5668\u76EE\u5F55\u3002"))), source === "server" && /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-import-server" }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-server-toolbar" }, /* @__PURE__ */ import_react10.default.createElement(
+    ))), !workflow && /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u6587\u4EF6\u6765\u81EA\u5F53\u524D\u6D4F\u89C8\u5668\u6240\u5728\u7684\u7535\u8111\uFF1B\u8BFB\u53D6 DSH \u4E3B\u673A\u4E0A\u7684\u6587\u4EF6\u8BF7\u5207\u6362\u5230\u670D\u52A1\u5668\u76EE\u5F55\u3002"))), source === "server" && /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-import-server" }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-server-toolbar" }, /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
         "aria-label": l("\u4E0A\u4E00\u7EA7"),
@@ -12916,7 +12997,7 @@ function ResourceStart({
         /* @__PURE__ */ import_react10.default.createElement("span", { className: "gal-directory-name" }, entry.name, entry.symlink ? " \u2197" : ""),
         /* @__PURE__ */ import_react10.default.createElement("span", { className: "gal-directory-type" }, entry.directory ? l("\u6587\u4EF6\u5939") : /\.json$/i.test(entry.name) ? l("\u8D44\u6E90\u5305") : "Markdown")
       )) : /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-directory-empty" }, busy ? l("\u6B63\u5728\u8BFB\u53D6\u76EE\u5F55\u2026") : l("\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u6587\u4EF6\u5939"))
-    ), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-file-status" }, /* @__PURE__ */ import_react10.default.createElement("span", null, selectedEntry ? l("\u5DF2\u9009\u4E2D\uFF1A{0}", selectedEntry.name) : l("{0} \u9879", directory?.entries.length ?? 0)), /* @__PURE__ */ import_react10.default.createElement("span", null, l("\u53CC\u51FB\u6587\u4EF6\u5939\u8FDB\u5165 \xB7 \u672A\u9009\u4E2D\u65F6\u8BFB\u53D6\u5F53\u524D\u76EE\u5F55")))), /* @__PURE__ */ import_react10.default.createElement("p", { className: "gal-import-hint" }, l(label), l(" \u4E3B\u6587\u4EF6\u4F1A\u81EA\u52A8\u8BC6\u522B\uFF1B"), type === "skill" ? "references / scripts / assets" : l("references / assets \u53CA config.json"), " ", l("\u968F\u8D44\u6E90\u5E26\u5165\u3002\u5BFC\u5165\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D\u6267\u884C\u6587\u4EF6\u3002")), busy && /* @__PURE__ */ import_react10.default.createElement("p", { role: "status" }, l("\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u2026")), result && /* @__PURE__ */ import_react10.default.createElement("section", { className: "gal-import-preview", "aria-label": l("\u5BFC\u5165\u9884\u89C8") }, /* @__PURE__ */ import_react10.default.createElement("h3", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "check" }), l("\u5DF2\u8BFB\u53D6 \xB7 "), result.resource.name), /* @__PURE__ */ import_react10.default.createElement("p", null, result.resource.description || l("\u63CF\u8FF0\u5C1A\u672A\u586B\u5199\uFF0C\u53EF\u5728\u4E0B\u4E00\u6B65\u8865\u5145\u3002")), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-import-files" }, result.resource.files.map((f) => /* @__PURE__ */ import_react10.default.createElement("div", { key: f.path }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file", size: 15 }), /* @__PURE__ */ import_react10.default.createElement("span", null, f.path)))), result.warnings?.length > 0 && /* @__PURE__ */ import_react10.default.createElement("details", { open: true }, /* @__PURE__ */ import_react10.default.createElement("summary", null, l("\u9700\u8981\u786E\u8BA4\u7684\u5185\u5BB9\uFF08"), result.warnings.length, "\uFF09"), result.warnings.map((text2, i) => /* @__PURE__ */ import_react10.default.createElement("p", { key: i }, text2))))), error && /* @__PURE__ */ import_react10.default.createElement("p", { role: "alert", className: "gal-error" }, l(error))),
+    ), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-file-status" }, /* @__PURE__ */ import_react10.default.createElement("span", null, selectedEntry ? l("\u5DF2\u9009\u4E2D\uFF1A{0}", selectedEntry.name) : l("{0} \u9879", directory?.entries.length ?? 0)), /* @__PURE__ */ import_react10.default.createElement("span", null, l("\u53CC\u51FB\u6587\u4EF6\u5939\u8FDB\u5165 \xB7 \u672A\u9009\u4E2D\u65F6\u8BFB\u53D6\u5F53\u524D\u76EE\u5F55")))), !workflow && /* @__PURE__ */ import_react10.default.createElement("p", { className: "gal-import-hint" }, l(label), l(" \u4E3B\u6587\u4EF6\u4F1A\u81EA\u52A8\u8BC6\u522B\uFF1B"), type === "skill" ? "references / scripts / assets" : l("references / assets \u53CA config.json"), " ", l("\u968F\u8D44\u6E90\u5E26\u5165\u3002\u5BFC\u5165\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D\u6267\u884C\u6587\u4EF6\u3002")), busy && /* @__PURE__ */ import_react10.default.createElement("p", { role: "status" }, l("\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u2026")), result && /* @__PURE__ */ import_react10.default.createElement("section", { className: "gal-import-preview", "aria-label": l("\u5BFC\u5165\u9884\u89C8") }, /* @__PURE__ */ import_react10.default.createElement("h3", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "check" }), l("\u5DF2\u8BFB\u53D6 \xB7 "), result.resource.name), /* @__PURE__ */ import_react10.default.createElement("p", null, result.resource.description || l("\u63CF\u8FF0\u5C1A\u672A\u586B\u5199\uFF0C\u53EF\u5728\u4E0B\u4E00\u6B65\u8865\u5145\u3002")), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-import-files" }, result.resource.files.map((f) => /* @__PURE__ */ import_react10.default.createElement("div", { key: f.path }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file", size: 15 }), /* @__PURE__ */ import_react10.default.createElement("span", null, f.path)))), result.warnings?.length > 0 && /* @__PURE__ */ import_react10.default.createElement("details", { open: true }, /* @__PURE__ */ import_react10.default.createElement("summary", null, l("\u9700\u8981\u786E\u8BA4\u7684\u5185\u5BB9\uFF08"), result.warnings.length, "\uFF09"), result.warnings.map((text2, i) => /* @__PURE__ */ import_react10.default.createElement("p", { key: i }, text2))))), error && /* @__PURE__ */ import_react10.default.createElement("p", { role: "alert", className: "gal-error" }, l(error))),
     /* @__PURE__ */ import_react10.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
@@ -12934,7 +13015,7 @@ function ResourceStart({
         disabled: busy || !result,
         onClick: () => onImported(result.resource)
       },
-      l("\u8FDB\u5165\u521B\u5EFA\u5411\u5BFC"),
+      l(workflow ? "\u6253\u5F00\u753B\u5E03" : "\u8FDB\u5165\u521B\u5EFA\u5411\u5BFC"),
       /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "arrow" })
     ))
   ));
@@ -14015,7 +14096,7 @@ function GalleryContent({ remote }) {
     setError("");
     if (!r && !resourceType) return;
     setSelected(null);
-    if (!r && ["skill", "agent"].includes(resourceType)) {
+    if (!r && ["skill", "agent", "workflow"].includes(resourceType)) {
       setCreation(resourceType);
       return;
     }
@@ -14047,6 +14128,13 @@ function GalleryContent({ remote }) {
       newPath: "",
       importError: ""
     });
+  }
+  function startResource(importedResource) {
+    const wizard = { resource: null, importedResource };
+    if (creation === "workflow") setWorkflowWizard(wizard);
+    else if (creation === "skill") setSkillWizard(wizard);
+    else setAgentWizard(wizard);
+    setCreation(null);
   }
   function change(key, value) {
     setEditor((x) => ({ ...x, [key]: value }));
@@ -14387,16 +14475,8 @@ function GalleryContent({ remote }) {
     {
       type: creation,
       onClose: () => setCreation(null),
-      onBlank: () => {
-        const setter = creation === "skill" ? setSkillWizard : setAgentWizard;
-        setter({ resource: null });
-        setCreation(null);
-      },
-      onImported: (importedResource) => {
-        const setter = creation === "skill" ? setSkillWizard : setAgentWizard;
-        setter({ resource: null, importedResource });
-        setCreation(null);
-      },
+      onBlank: () => startResource(),
+      onImported: startResource,
       onBrowse: (payload) => call(remote, "uiImportDirectory", json2(payload)),
       onRead: (payload) => call(remote, "uiImportResource", json2(payload))
     }
@@ -14407,7 +14487,7 @@ function GalleryContent({ remote }) {
       rows.push(...page.items);
       if (rows.length >= page.total || !page.items.length) return rows;
     }
-  }, resource: workflowWizard.resource, onClose: async () => {
+  }, resource: workflowWizard.resource, importedResource: workflowWizard.importedResource, onClose: async () => {
     if (await confirmAction(l("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Workflow\uFF1F"))) setWorkflowWizard(false);
   }, onSave: async (resource) => {
     const existing = workflowWizard.resource;

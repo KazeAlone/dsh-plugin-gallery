@@ -227,6 +227,14 @@ export const english = {
     "Only Workflows can be registered with TeamFlow",
   "仅支持 Skill 和 Agent": "Only Skill and Agent are supported",
   "仅支持导入 Skill 和 Agent": "Only Skills and Agents can be imported",
+  "仅支持导入 Skill、Agent 和 Workflow": "Only Skills, Agents, and Workflows can be imported",
+  "资源文件超出大小限制": "Resource files exceed the size limit",
+  "请选择一个 Workflow .gallery.json 资源包": "Choose one Workflow .gallery.json bundle",
+  "在空白画布上添加并连接节点。": "Add and connect nodes on a blank canvas.",
+  "读取 Gallery 导出的 .gallery.json 资源包。": "Read a .gallery.json bundle exported from Gallery.",
+  "打开画布": "Open canvas",
+  "已保留成员快照。如需使用原资源库中的引用，请在当前库重新选择资源。":
+    "Member snapshots were kept. To restore resource links, select the resources in this library.",
   从前置节点的输出圆点拖动到后续节点的输入圆点:
     "Drag an output port to the next node's input port",
   "从左侧成员列表配置 Agent，点击任务上的负责人也可编辑成员。画布连线表示依赖和 REJECT 返工路径。":

@@ -16,7 +16,8 @@ export function ResourceStart({
   onBrowse,
 }) {
   const l = useGalleryText();
-  const label = type === "skill" ? "Skill" : "Agent";
+  const workflow = type === "workflow";
+  const label = { skill: "Skill", agent: "Agent", workflow: "Workflow" }[type];
   const [mode, setMode] = useState("choose"),
     [source, setSource] = useState("browser"),
     [busy, setBusy] = useState(false),
@@ -55,7 +56,7 @@ export function ResourceStart({
   const upload = (files) =>
     run(async () =>
       setResult(
-        importResourceFiles(type, await readBrowserResourceFiles(files)),
+        importResourceFiles(type, await readBrowserResourceFiles(files, type)),
       ),
     );
   return (
@@ -85,17 +86,17 @@ export function ResourceStart({
               <button disabled={busy} onClick={onBlank}>
                 <Glyph name="plus" size={32} />
                 <strong>{l("从零创建")}</strong>
-                <span>{l("填写基本信息，编写指引并添加附件。")}</span>
+                <span>{l(workflow ? "在空白画布上添加并连接节点。" : "填写基本信息，编写指引并添加附件。")}</span>
               </button>
               <button disabled={busy} onClick={() => setMode("import")}>
                 <Glyph name="folder" size={32} />
                 <strong>{l("导入已有")}</strong>
-                <span>{l("从本机文件或服务器目录读取。")}</span>
+                <span>{l(workflow ? "读取 Gallery 导出的 .gallery.json 资源包。" : "从本机文件或服务器目录读取。")}</span>
               </button>
             </div>
           ) : (
             <>
-              <nav className="gal-import-tabs" aria-label={l("导入来源")}>
+              {!workflow && <nav className="gal-import-tabs" aria-label={l("导入来源")}>
                 {[
                   ["browser", l("本机文件")],
                   ["server", l("服务器目录")],
@@ -114,15 +115,15 @@ export function ResourceStart({
                     {name}
                   </button>
                 ))}
-              </nav>
+              </nav>}
               {source === "browser" && (
                 <div className="gal-import-local">
-                  <p>{l("选择一个 ")}{l(label)}{l(" 的 Markdown 文件、完整资源文件夹，或 Gallery 导出的 JSON 资源包。")}</p>
+                  <p>{workflow ? l("请选择一个 Workflow .gallery.json 资源包") : <>{l("选择一个 ")}{l(label)}{l(" 的 Markdown 文件、完整资源文件夹，或 Gallery 导出的 JSON 资源包。")}</>}</p>
                   <div>
                     <label className="gal-upload">
                       <Glyph name="file" />{l("选择文件")}<input
                         type="file"
-                        accept=".md,.json"
+                        accept={workflow ? ".json" : ".md,.json"}
                         aria-label={l("导入本机文件")}
                         disabled={busy}
                         onChange={(e) => {
@@ -131,7 +132,7 @@ export function ResourceStart({
                         }}
                       />
                     </label>
-                    <label className="gal-upload">
+                    {!workflow && <label className="gal-upload">
                       <Glyph name="folder" />{l("选择文件夹")}<input
                         type="file"
                         webkitdirectory=""
@@ -143,9 +144,9 @@ export function ResourceStart({
                           e.target.value = "";
                         }}
                       />
-                    </label>
+                    </label>}
                   </div>
-                  <p>{l("文件来自当前浏览器所在的电脑；读取 DSH 主机上的文件请切换到服务器目录。")}</p>
+                  {!workflow && <p>{l("文件来自当前浏览器所在的电脑；读取 DSH 主机上的文件请切换到服务器目录。")}</p>}
                 </div>
               )}
               {source === "server" && (
@@ -291,10 +292,10 @@ export function ResourceStart({
                   </div>
                 </div>
               )}
-              <p className="gal-import-hint">
+              {!workflow && <p className="gal-import-hint">
                 {l(label)}{l(" 主文件会自动识别；")}{type === "skill"
                   ? "references / scripts / assets"
-                  : l("references / assets 及 config.json")}{" "}{l("随资源带入。导入只读取内容，不执行文件。")}</p>
+                  : l("references / assets 及 config.json")}{" "}{l("随资源带入。导入只读取内容，不执行文件。")}</p>}
               {busy && <p role="status">{l("正在读取资源…")}</p>}
               {result && (
                 <section className="gal-import-preview" aria-label={l("导入预览")}>
@@ -351,7 +352,7 @@ export function ResourceStart({
               className="gal-primary"
               disabled={busy || !result}
               onClick={() => onImported(result.resource)}
-            >{l("进入创建向导")}<Glyph name="arrow" />
+            >{l(workflow ? "打开画布" : "进入创建向导")}<Glyph name="arrow" />
             </button>
           )}
         </footer>

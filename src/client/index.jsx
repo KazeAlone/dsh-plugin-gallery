@@ -256,7 +256,7 @@ function GalleryContent({ remote }) {
     setError("");
     if (!r && !resourceType) return;
     setSelected(null);
-    if (!r && ["skill", "agent"].includes(resourceType)) {
+    if (!r && ["skill", "agent", "workflow"].includes(resourceType)) {
       setCreation(resourceType);
       return;
     }
@@ -288,6 +288,13 @@ function GalleryContent({ remote }) {
       newPath: "",
       importError: "",
     });
+  }
+  function startResource(importedResource) {
+    const wizard = { resource: null, importedResource };
+    if (creation === "workflow") setWorkflowWizard(wizard);
+    else if (creation === "skill") setSkillWizard(wizard);
+    else setAgentWizard(wizard);
+    setCreation(null);
   }
   function change(key, value) {
     setEditor((x) => ({ ...x, [key]: value }));
@@ -717,8 +724,8 @@ function GalleryContent({ remote }) {
         </>
       )}
       {creation && <ResourceStart type={creation} onClose={() => setCreation(null)}
-        onBlank={() => { const setter = creation === "skill" ? setSkillWizard : setAgentWizard; setter({resource:null}); setCreation(null); }}
-        onImported={importedResource => { const setter = creation === "skill" ? setSkillWizard : setAgentWizard; setter({resource:null,importedResource}); setCreation(null); }}
+        onBlank={() => startResource()}
+        onImported={startResource}
         onBrowse={payload => call(remote,"uiImportDirectory",json(payload))}
         onRead={payload => call(remote,"uiImportResource",json(payload))} />}
       {workflowWizard && <WorkflowWizard onExtract={(resourceId) => call(remote,"uiExtractWorkflowAgent",json({resourceId}))} onGet={id => call(remote, "uiGet", id)} onList={async type => {
@@ -728,7 +735,7 @@ function GalleryContent({ remote }) {
           rows.push(...page.items);
           if (rows.length >= page.total || !page.items.length) return rows;
         }
-      }} resource={workflowWizard.resource} onClose={async () => { if (await confirmAction(l("放弃尚未保存的 Workflow？"))) setWorkflowWizard(false); }} onSave={async (resource) => {
+      }} resource={workflowWizard.resource} importedResource={workflowWizard.importedResource} onClose={async () => { if (await confirmAction(l("放弃尚未保存的 Workflow？"))) setWorkflowWizard(false); }} onSave={async (resource) => {
         const existing = workflowWizard.resource;
         await (existing ? call(remote, "uiUpdate", existing.id, json({ resource, expectedRevision: existing.revision })) : call(remote, "uiCreate", json(resource)));
         setSelected(null); setWorkflowWizard(false); setRefresh(x => x + 1); setNotice(l("Workflow 已保存。"));

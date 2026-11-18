@@ -90,6 +90,7 @@ function initial(resource) {
 }
 export function WorkflowWizard({
   resource,
+  importedResource,
   onClose,
   onSave,
   onList,
@@ -97,7 +98,8 @@ export function WorkflowWizard({
   onExtract,
 }) {
   const l = useGalleryText();
-  const [cover, setCover] = useState(resource?.metadata?.cover ?? "");
+  const source = resource ?? importedResource;
+  const [cover, setCover] = useState(source?.metadata?.cover ?? "");
   const [fullscreen, setFullscreen] = useState(false);
   const editor = useRef(null),
     pan = useRef(null),
@@ -112,7 +114,7 @@ export function WorkflowWizard({
     setCamera(value);
   }
   const arrow = useId();
-  const [start] = useState(() => initial(resource));
+  const [start] = useState(() => initial(source));
   const [draft, setDraft] = useState(start.definition),
     [agents, setAgents] = useState(start.agents),
     [positions, setPositions] = useState(start.positions);
@@ -588,7 +590,7 @@ export function WorkflowWizard({
           },
         ],
         metadata: {
-          ...withResourceCover(resource?.metadata, cover),
+          ...withResourceCover(source?.metadata, cover),
           format: "dsh-teamflow-template-v1",
           workflowCanvas: {
             version: 1,
@@ -600,7 +602,7 @@ export function WorkflowWizard({
             })),
           },
         },
-        references: resource?.references || [],
+        references: source?.references || [],
       });
     } catch (e) {
       setError(e?.rpcError?.message || e.message || String(e));
