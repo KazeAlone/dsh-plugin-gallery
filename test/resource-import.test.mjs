@@ -23,7 +23,7 @@ import {
 } from "../src/resource-import.mjs";
 const file = (path, content) => ({ path, content, encoding: "utf8" });
 
-test("Workflow bundle imports a portable canvas that can be saved as a new draft", (t) => {
+test("Workflow bundle imports a portable canvas that can be saved as a new draft", async (t) => {
   const definition = JSON.parse(readFileSync(new URL("./fixtures/workflow-gated.json", import.meta.url), "utf8"));
   definition.tasks[0].general.requirements = "";
   const resource = {
@@ -64,6 +64,24 @@ test("Workflow bundle imports a portable canvas that can be saved as a new draft
   assert.throws(() => importResourceFiles("workflow", bundle({ ...resource, type: "agent" })), /同类型/);
   assert.throws(() => importResourceFiles("workflow", bundle({ ...resource, files: [] })));
   assert.throws(() => importResourceFiles("workflow", bundle({ ...resource, files: [file("workflow.json", "{")] })), /有效 JSON/);
+
+  const [exported] = bundle(resource);
+  const select = (path) => importResource({ type: "workflow", source: "server", path });
+  const path = join(directory, exported.path);
+  writeFileSync(path, exported.content);
+  writeFileSync(join(directory, "notes.md"), "notes");
+  const listing = await browseServerDirectory({ path: directory, type: "workflow" });
+  assert.ok(listing.entries.some((entry) => entry.name === exported.path));
+  assert.ok(!listing.entries.some((entry) => entry.name === "notes.md"));
+  for (const selection of [path, directory]) {
+    const result = await select(selection);
+    assert.deepEqual(workflowFromResource(result.resource, { draft: true }).members, definition.members);
+    assert.equal(result.resource.metadata.workflowCanvas.draft, true);
+  }
+  writeFileSync(join(directory, "other.gallery.json"), exported.content);
+  await assert.rejects(() => select(directory), /选择一个 Workflow/);
+  writeFileSync(path, bundle({ ...resource, type: "agent" })[0].content);
+  await assert.rejects(() => select(path), /同类型/);
 });
 const skill =
   "---\nname: paper-review\ndescription: 检查资料\nlicense: MIT\n---\n\n# 资料核对\n\n阅读原文并交付摘要。\n";

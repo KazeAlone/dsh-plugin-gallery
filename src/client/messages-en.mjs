@@ -231,7 +231,10 @@ export const english = {
   "资源文件超出大小限制": "Resource files exceed the size limit",
   "请选择一个 Workflow .gallery.json 资源包": "Choose one Workflow .gallery.json bundle",
   "在空白画布上添加并连接节点。": "Add and connect nodes on a blank canvas.",
-  "读取 Gallery 导出的 .gallery.json 资源包。": "Read a .gallery.json bundle exported from Gallery.",
+  "请在服务器目录中选择一个 Workflow .gallery.json 资源包":
+    "Select one Workflow .gallery.json bundle in the server directory.",
+  "选择一个资源包，或读取仅含一个 .gallery.json 的目录":
+    "Select a bundle or read a folder containing a single .gallery.json file.",
   "打开画布": "Open canvas",
   "已保留成员快照。如需使用原资源库中的引用，请在当前库重新选择资源。":
     "Member snapshots were kept. To restore resource links, select the resources in this library.",

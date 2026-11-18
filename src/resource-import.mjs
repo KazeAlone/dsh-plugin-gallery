@@ -5,15 +5,16 @@ import { homedir } from "node:os";
 import {
   importResourceFiles,
   IMPORT_LIMIT,
+  WORKFLOW_BUNDLE_LIMIT,
 } from "./client/resource-import.mjs";
 import { normalizeResource, demand } from "./model.mjs";
 
 function selectedType(type) {
   demand(
-    ["skill", "agent"].includes(type),
+    ["skill", "agent", "workflow"].includes(type),
     400,
     "INVALID_IMPORT",
-    "仅支持 Skill 和 Agent",
+    "仅支持导入 Skill、Agent 和 Workflow",
   );
   return type;
 }
@@ -69,6 +70,7 @@ export async function browseServerDirectory(input = {}) {
       "请选择服务器文件夹",
     );
     const entries = await readdir(target, { withFileTypes: true });
+    const filePattern = input.type === "workflow" ? /\.json$/i : /\.(md|json)$/i;
     demand(
       entries.length <= 2000,
       400,
@@ -89,7 +91,7 @@ export async function browseServerDirectory(input = {}) {
             return null;
           }
         }
-        if (!directory && !(file && /\.(md|json)$/i.test(entry.name)))
+        if (!directory && !(file && filePattern.test(entry.name)))
           return null;
         return {
           name: entry.name,
@@ -128,8 +130,11 @@ function decodeFile(path, bytes) {
     };
   }
 }
-async function localFile(path, name, budget) {
+async function localFile(path, name, budget, limit = IMPORT_LIMIT) {
   demand(budget.count++ < 100, 413, "IMPORT_TOO_MANY", "资源最多 100 个文件");
+  const sizeError = limit === IMPORT_LIMIT
+    ? "资源文件总大小不能超过 5 MiB"
+    : "资源文件超出大小限制";
   const handle = await open(
     path,
     constants.O_RDONLY | (constants.O_NOFOLLOW || 0),
@@ -137,25 +142,25 @@ async function localFile(path, name, budget) {
   try {
     const stat = await handle.stat();
     demand(
-      stat.isFile() && stat.size <= IMPORT_LIMIT - budget.bytes,
+      stat.isFile() && stat.size <= limit - budget.bytes,
       413,
       "IMPORT_TOO_LARGE",
-      "资源文件总大小不能超过 5 MiB",
+      sizeError,
     );
     const chunks = [];
     let size = 0;
     for (;;) {
       const chunk = Buffer.alloc(
-        Math.min(65536, IMPORT_LIMIT - budget.bytes - size + 1),
+        Math.min(65536, limit - budget.bytes - size + 1),
       );
       const { bytesRead } = await handle.read(chunk);
       if (!bytesRead) break;
       size += bytesRead;
       demand(
-        size + budget.bytes <= IMPORT_LIMIT,
+        size + budget.bytes <= limit,
         413,
         "IMPORT_TOO_LARGE",
-        "资源文件总大小不能超过 5 MiB",
+        sizeError,
       );
       chunks.push(chunk.subarray(0, bytesRead));
     }
@@ -169,6 +174,31 @@ async function localImport(input) {
   const { target } = await serverLocation(input),
     type = selectedType(input.type),
     stat = await lstat(target);
+  const budget = { count: 0, bytes: 0, visited: 0 };
+  if (type === "workflow") {
+    let path = target;
+    if (stat.isDirectory()) {
+      const entries = await readdir(target, { withFileTypes: true });
+      const bundles = entries.filter(
+        (entry) => entry.isFile() && !entry.name.startsWith(".") && /\.gallery\.json$/i.test(entry.name),
+      );
+      demand(
+        bundles.length === 1,
+        400,
+        "IMPORT_WORKFLOW_BUNDLE",
+        "请在服务器目录中选择一个 Workflow .gallery.json 资源包",
+      );
+      path = join(target, bundles[0].name);
+    }
+    demand(
+      (stat.isFile() || stat.isDirectory()) && /\.json$/i.test(path),
+      400,
+      "IMPORT_WORKFLOW_BUNDLE",
+      "请在服务器目录中选择一个 Workflow .gallery.json 资源包",
+    );
+    const file = await localFile(path, basename(path), budget, WORKFLOW_BUNDLE_LIMIT);
+    return importResourceFiles(type, [file]);
+  }
   const root = stat.isDirectory() ? target : dirname(target);
   const entries = await readdir(root, { withFileTypes: true });
   let main = stat.isFile()
@@ -192,8 +222,7 @@ async function localImport(input) {
     "IMPORT_SYMLINK",
     "不支持导入符号链接",
   );
-  const files = [],
-    budget = { count: 0, bytes: 0, visited: 0 };
+  const files = [];
   files.push(await localFile(join(root, main), main, budget));
   const walk = async (folder, path, depth = 0) => {
     demand(

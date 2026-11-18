@@ -6,7 +6,7 @@ import { workflowFromResource, workflowTemplateIssues } from "../workflow-templa
 
 export const IMPORT_LIMIT = 5 * 1024 * 1024;
 // JSON escaping can expand text to six times its original size.
-const WORKFLOW_BUNDLE_LIMIT = 6 * IMPORT_LIMIT + 1024 * 1024;
+export const WORKFLOW_BUNDLE_LIMIT = 6 * IMPORT_LIMIT + 1024 * 1024;
 const validPath = (path) =>
   typeof path === "string" &&
   !/^[\\/]|[\\\x00-\x1f]/.test(path) &&

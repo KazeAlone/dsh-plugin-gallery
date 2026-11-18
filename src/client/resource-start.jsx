@@ -44,7 +44,7 @@ export function ResourceStart({
   const browse = (next, shortcut) =>
     run(async () => {
       const value = await onBrowse(
-        shortcut ? { shortcut } : next === undefined ? {} : { path: next },
+        { type, ...(shortcut ? { shortcut } : next === undefined ? {} : { path: next }) },
       );
       setDirectory(value);
       setSelectedEntry(null);
@@ -91,12 +91,12 @@ export function ResourceStart({
               <button disabled={busy} onClick={() => setMode("import")}>
                 <Glyph name="folder" size={32} />
                 <strong>{l("导入已有")}</strong>
-                <span>{l(workflow ? "读取 Gallery 导出的 .gallery.json 资源包。" : "从本机文件或服务器目录读取。")}</span>
+                <span>{l("从本机文件或服务器目录读取。")}</span>
               </button>
             </div>
           ) : (
             <>
-              {!workflow && <nav className="gal-import-tabs" aria-label={l("导入来源")}>
+              <nav className="gal-import-tabs" aria-label={l("导入来源")}>
                 {[
                   ["browser", l("本机文件")],
                   ["server", l("服务器目录")],
@@ -115,7 +115,7 @@ export function ResourceStart({
                     {name}
                   </button>
                 ))}
-              </nav>}
+              </nav>
               {source === "browser" && (
                 <div className="gal-import-local">
                   <p>{workflow ? l("请选择一个 Workflow .gallery.json 资源包") : <>{l("选择一个 ")}{l(label)}{l(" 的 Markdown 文件、完整资源文件夹，或 Gallery 导出的 JSON 资源包。")}</>}</p>
@@ -146,7 +146,7 @@ export function ResourceStart({
                       />
                     </label>}
                   </div>
-                  {!workflow && <p>{l("文件来自当前浏览器所在的电脑；读取 DSH 主机上的文件请切换到服务器目录。")}</p>}
+                  <p>{l("文件来自当前浏览器所在的电脑；读取 DSH 主机上的文件请切换到服务器目录。")}</p>
                 </div>
               )}
               {source === "server" && (
@@ -288,7 +288,7 @@ export function ResourceStart({
                         ? l("已选中：{0}", selectedEntry.name)
                         : l("{0} 项", directory?.entries.length ?? 0)}
                     </span>
-                    <span>{l("双击文件夹进入 · 未选中时读取当前目录")}</span>
+                    <span>{l(workflow ? "选择一个资源包，或读取仅含一个 .gallery.json 的目录" : "双击文件夹进入 · 未选中时读取当前目录")}</span>
                   </div>
                 </div>
               )}
