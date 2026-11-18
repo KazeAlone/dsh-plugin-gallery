@@ -4,7 +4,8 @@ import { Modal } from "./modal.jsx";
 import { Glyph } from "./icons.jsx";
 import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import { createResourceIdentifier } from "./resource-id.mjs";
-import { validateWorkflowTemplate } from "../workflow-template.mjs";
+import { configureRejectTarget, connectWorkflowNodes, removeRejectTask, workflowRejectEdges } from "./workflow-connections.mjs";
+import { validateWorkflowTemplate, workflowTemplateIssues, MAX_WORKFLOW_TEXT_LENGTH } from "../workflow-template.mjs";
 import { assertWorkflowDag, workflowNodeKind, workflowAncestors, workflowLoopBody, validateWorkflowLoops } from "../workflow-loops.mjs";
 
 const nodeWidth = 220;
@@ -261,19 +262,16 @@ export function WorkflowWizard({
     });
   }
   function setReturn(gateId, entryId) {
-    if (!entryId) { update({ loops: (draft.loops || []).filter(loop => loop.gateId !== gateId) }); return; }
-    const entry = draft.tasks.find(t => t.id === entryId);
-    if (!entry || entry.checkpoint || entry.kind === "archive" || !workflowAncestors(draft.tasks, gateId).has(entryId)) {
-      setError(l("REJECT 需要返回门控上游的执行任务；请先连接任务到门控的正向路径")); return;
-    }
-    setLoop(gateId, { entryId });
+    if (!entryId) { setLoop(gateId, { entryId: "" }); return; }
+    try { update({ loops: configureRejectTarget(draft.tasks, draft.loops, gateId, entryId) }); }
+    catch (error) { setError(l(error.message)); return; }
     setSelected({ kind: "task", id: gateId }); setSelection([gateId]); setError("");
   }
   let loopBody = [], loopIssue = "";
   if (selectedLoop) {
     try {
       loopBody = workflowLoopBody(draft.tasks, selectedLoop);
-      validateWorkflowLoops(draft.loops, draft.tasks, agents.map(a => ({ name: a.id })));
+      validateWorkflowLoops(draft.loops, draft.tasks, agents.map(a => ({ name: a.id })), { requireExecutionSetup: true });
     } catch (error) { loopIssue = error.message; }
   }
   function add(kind, point) {
@@ -387,13 +385,7 @@ export function WorkflowWizard({
     if (!from)
       return setError(l("从前置节点的输出圆点拖动到后续节点的输入圆点"));
     try {
-      const tasks = draft.tasks.map((t) =>
-        t.id === to
-          ? { ...t, dependencies: [...new Set([...t.dependencies, from])] }
-          : t,
-      );
-      assertWorkflowDag(tasks);
-      update({ tasks });
+      update(connectWorkflowNodes(draft.tasks, draft.loops, from, to));
       setError("");
       setLinkFrom(null);
     } catch (e) {
@@ -503,7 +495,7 @@ export function WorkflowWizard({
     setAgents((rows) => rows.filter((a) => !deleted.has(a.id)));
     setDraft((d) => ({
       ...d,
-      loops: d.loops?.filter(loop => !deleted.has(loop.gateId) && !deleted.has(loop.entryId)).map(loop => ({ ...loop, ...(deleted.has(loop.reviewer) ? { reviewer: undefined } : {}) })),
+      loops: d.loops?.filter(loop => !deleted.has(loop.gateId)).map(loop => ({ ...loop, ...(deleted.has(loop.entryId) ? { entryId: "" } : {}), rejectTaskIds: loop.rejectTaskIds?.filter(id => !deleted.has(id)), ...(deleted.has(loop.reviewer) ? { reviewer: undefined } : {}) })),
       tasks: d.tasks
         .filter((t) => !deleted.has(t.id))
         .map((t) => ({
@@ -568,8 +560,6 @@ export function WorkflowWizard({
     try {
       if (agents.some((a) => !a.resourceId && !a.snapshot))
         throw Error(l("请为每个成员选择资源库中的 Agent"));
-      if (draft.tasks.some((t) => !t.general.requirements.trim()))
-        throw Error(l("请填写每个节点的通用任务要求或通用检查要求"));
       const value = validateWorkflowTemplate({
         ...draft,
         loops: draft.loops?.map(loop => ({ ...loop, reviewer: agents.find(a => a.id === loop.reviewer)?.snapshot?.name || loop.reviewer })),
@@ -583,7 +573,7 @@ export function WorkflowWizard({
             : "",
         })),
         positions: {},
-      });
+      }, { draft: true });
       setBusy(true);
       await onSave({
         type: "workflow",
@@ -602,6 +592,7 @@ export function WorkflowWizard({
           format: "dsh-teamflow-template-v1",
           workflowCanvas: {
             version: 1,
+            draft: workflowTemplateIssues(value).length > 0,
             taskPositions: positions,
             agents: agents.map(({ snapshot, ...node }) => ({
               ...node,
@@ -617,9 +608,10 @@ export function WorkflowWizard({
     }
   }
   const taskActor = task => task.assignee || draft.loops?.find(loop => loop.gateId === task.id && loop.mode === "ai")?.reviewer;
-  function edge(from, to, key, { fromId, toId, returning = false }) {
+  function edge(from, to, key, { fromId, toId, returning = false, edgeKind, gateId }) {
     if (!from || !to) return null;
-    const path = returning ? `M${from.x + nodeWidth / 2},${from.y + nodeHeight} C${from.x + nodeWidth / 2},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x - 80},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x},${to.y + portY}` : `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
+    const bottom = returning && draft.tasks.find(t => t.id === fromId)?.checkpoint;
+    const path = bottom ? `M${from.x + nodeWidth / 2},${from.y + nodeHeight} C${from.x + nodeWidth / 2},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x - 80},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x},${to.y + portY}` : `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
     const pass = !returning && workflowNodeKind(draft.tasks.find(t => t.id === fromId) || {}, draft.loops) === "gate";
     return (
       <g key={key}>
@@ -628,9 +620,10 @@ export function WorkflowWizard({
           markerEnd={`url(#${arrow})`}
           d={path}
         />
-        {(pass || returning) && <text className={returning ? "gal-flow-reject-label" : "gal-flow-pass-label"} x={returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2} y={returning ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10}>{returning ? l("REJECT · 返工") : "PASS"}</text>}
+        {(pass || returning) && <text className={returning ? "gal-flow-reject-label" : "gal-flow-pass-label"} x={returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2} y={bottom ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10}>{returning ? l("REJECT · 返工") : "PASS"}</text>}
         <path className="gal-flow-edge-hit" d={path}
           data-edge-return={returning ? "true" : undefined}
+          data-edge-kind={edgeKind} data-edge-gate={gateId}
           data-edge-from={fromId} data-edge-to={toId}
  />
       </g>
@@ -657,7 +650,7 @@ export function WorkflowWizard({
         <header className="gal-dialog-head">
           <h2>
             <Glyph name="workflow" />{l(" Workflow 画布")}</h2>
-          <span className="gal-flow-status">{l("TeamFlow 模板 · 保存后可注册使用")}</span>
+          <span className="gal-flow-status">{l("可保存草稿 · 补全后注册到 TeamFlow")}</span>
           <button
             aria-label={l("关闭编辑")}
             disabled={busy}
@@ -922,10 +915,10 @@ export function WorkflowWizard({
                     })()}
                   {draft.tasks.flatMap((t) => [
                     ...t.dependencies.map((id) =>
-                      edge(positions[id], positions[t.id], id + ":" + t.id, { fromId: id, toId: t.id }),
+                      edge(positions[id], positions[t.id], id + ":" + t.id, { fromId: id, toId: t.id, returning: draft.loops?.some(loop => loop.rejectTaskIds?.includes(id) && loop.rejectTaskIds.includes(t.id)) }),
                     ),
                   ])}
-                  {(draft.loops || []).map(loop => edge(positions[loop.gateId], positions[loop.entryId], "reject:" + loop.gateId, { fromId: loop.gateId, toId: loop.entryId, returning: true }))}
+                  {(draft.loops || []).flatMap(loop => workflowRejectEdges(draft.tasks, loop).map(({ from, to, kind }) => edge(positions[from], positions[to], `reject:${loop.gateId}:${from}:${to}`, { fromId: from, toId: to, returning: true, edgeKind: kind, gateId: loop.gateId })))}
                 </svg>
                 {marquee && (
                   <div
@@ -953,7 +946,7 @@ export function WorkflowWizard({
                   })),
                 ].map((n) => (
                   <article
-                    className={`gal-flow-node ${n.kind} ${n.nodeType || ""} ${selection.includes(n.id) ? "selected" : ""}`}
+                    className={`gal-flow-node ${n.kind} ${n.nodeType || ""} ${draft.loops?.some(loop => loop.rejectTaskIds?.includes(n.id)) ? "gal-flow-reject-task" : ""} ${selection.includes(n.id) ? "selected" : ""}`}
                     style={{ left: n.position.x, top: n.position.y }}
                     key={n.id}
                     data-flow-node={n.id}
@@ -974,7 +967,7 @@ export function WorkflowWizard({
                       <Glyph
                         name={nodeIcon(n.nodeType || n.kind)}
                       />
-                      {n.kind === "agent" ? "AGENT" : l(nodeLabel(n.nodeType))}
+                      {draft.loops?.some(loop => loop.rejectTaskIds?.includes(n.id)) ? l("仅退回时执行") : n.kind === "agent" ? "AGENT" : l(nodeLabel(n.nodeType))}
                     </button>
                     <button
                       className="gal-flow-node-title"
@@ -1033,7 +1026,7 @@ export function WorkflowWizard({
                         >
                           <span className="gal-sr-only">{l("连出")}</span>
                         </button>
-                        {n.nodeType === "gate" && <button className="gal-flow-port-reject" aria-label={l("REJECT 返回")} title={l("REJECT：拖到上游任务的输入点")}
+                        {n.nodeType === "gate" && <button className="gal-flow-port-reject" aria-label={l("REJECT 返回")} title={l("REJECT：拖到循环入口或退回分支任务的输入点")}
                           data-flow-port="reject" data-node={n.id} onPointerDown={e => startWire(e, n.id, "reject")} onPointerMove={moveWire} onPointerUp={finishWire}
                           onPointerCancel={() => { connection.current = null; setWire(null); setLinkFrom(null); }}><span>REJECT</span></button>}
                       </div>
@@ -1146,7 +1139,7 @@ export function WorkflowWizard({
                         aria-label={`Agent ${l(label)}`}
                         disabled={busy}
                         rows={3}
-                        maxLength={key === "executionPrompt" ? 64000 : 16000}
+                        maxLength={MAX_WORKFLOW_TEXT_LENGTH}
                         value={agent.snapshot?.[key] || ""}
                         onChange={(e) =>
                           updateAgent({
@@ -1188,7 +1181,7 @@ export function WorkflowWizard({
                 {selectedKind === "gate" && <section className="gal-flow-loop-settings" aria-label={l("门控路径与循环")}>
                   <h4>{l("PASS · 通过后继续")}</h4>
                   <div className="gal-flow-pass-targets">
-                    {draft.tasks.filter(t => t.id !== task.id && !workflowAncestors(draft.tasks, task.id).has(t.id)).map(t => <label className="gal-flow-check" key={t.id}>
+                    {draft.tasks.filter(t => t.id !== task.id && !selectedLoop?.rejectTaskIds?.includes(t.id) && !workflowAncestors(draft.tasks, task.id).has(t.id)).map(t => <label className="gal-flow-check" key={t.id}>
                       <input type="checkbox" checked={t.dependencies.includes(task.id)} onChange={e => {
                         if (e.target.checked) connect(t.id, task.id);
                         else update({ tasks: draft.tasks.map(row => row.id === t.id ? { ...row, dependencies: row.dependencies.filter(id => id !== task.id) } : row) });
@@ -1196,25 +1189,34 @@ export function WorkflowWizard({
                     </label>)}
                   </div>
                   {!draft.tasks.some(t => t.dependencies.includes(task.id)) && <p>{l("通过后结束此路径")}</p>}
-                  <label>{l("REJECT · 返回入口")}<select aria-label={l("REJECT 返回入口")} value={selectedLoop?.entryId || ""} onChange={e => setReturn(task.id, e.target.value)}>
-                      <option value="">{l("未设置循环返回线")}</option>
-                      {draft.tasks.filter(t => !t.checkpoint && t.kind !== "archive" && workflowAncestors(draft.tasks, task.id).has(t.id)).map(t => <option key={t.id} value={t.id}>{t.subject || l("未命名节点")}</option>)}
+                  <label>{l("REJECT · 返回入口")}<select aria-label={l("REJECT 返回入口")} value={selectedLoop?.entryId || ""} onChange={e => setLoop(task.id, { entryId: e.target.value })}>
+                      <option value="">{l("稍后连接循环入口")}</option>
+                      {draft.tasks.filter(t => !t.checkpoint && t.kind !== "archive" && !selectedLoop?.rejectTaskIds?.includes(t.id)).map(t => <option key={t.id} value={t.id}>{t.subject || l("未命名节点")}</option>)}
                     </select>
                   </label>
-                  {!selectedLoop && <p>{l("先连接上游任务，再从门控底部 REJECT 点拖回入口，或在上方选择入口。")}</p>}
+                  {!selectedLoop && <button type="button" onClick={() => setLoop(task.id, {})}>{l("配置 REJECT 分支")}</button>}
+                  {selectedLoop && <fieldset className="gal-flow-reject-settings"><legend>{l("REJECT 后执行的任务")}</legend>
+                    <p>{l("仅在退回时执行，完成后返回循环入口。可从 REJECT 点拖线到任务，再连接分支内任务。")}</p>
+                    {draft.tasks.filter(t => !t.checkpoint && t.kind !== "archive" && !workflowAncestors(draft.tasks, task.id).has(t.id)).map(t => <label className="gal-flow-check" key={t.id}>
+                      <input type="checkbox" checked={Boolean(selectedLoop.rejectTaskIds?.includes(t.id))} onChange={e => {
+                        if (e.target.checked) setReturn(task.id, t.id);
+                        else update(removeRejectTask(draft.tasks, draft.loops, task.id, t.id));
+                      }} />{t.subject || l("未命名节点")}
+                    </label>)}
+                  </fieldset>}
                   {selectedLoop && <>
                     {selectedLoop.mode === "ai" && <label>{l("独立审核 Agent")}<select aria-label={l("独立审核 Agent")} value={selectedLoop.reviewer || ""} onChange={e => setLoop(task.id, { reviewer: e.target.value })}>
                         <option value="">{l("选择独立审核 Agent")}</option>
-                        {agents.map(a => <option key={a.id} value={a.id} disabled={draft.tasks.some(t => loopBody.includes(t.id) && t.assignee === a.id)}>{a.label}</option>)}
+                        {agents.map(a => <option key={a.id} value={a.id} >{a.label}</option>)}
                       </select>
                     </label>}
                     <label>{l("轮次上限（包含首次）")}<input aria-label={l("轮次上限（包含首次）")} type="number" min={1} max={20} value={selectedLoop.maxRounds} onChange={e => setLoop(task.id, { maxRounds: Number(e.target.value) })} /></label>
                     <label>{l("每轮超时（分钟）")}<input aria-label={l("每轮超时（分钟）")} type="number" min={1} max={1440} value={selectedLoop.timeoutMinutes} onChange={e => setLoop(task.id, { timeoutMinutes: Number(e.target.value) })} /></label>
-                    <label className="gal-flow-check"><input type="checkbox" checked={Boolean(selectedLoop.rejectToEntry)} onChange={e => setLoop(task.id, { rejectToEntry: e.target.checked })} />{l("退回时从入口重跑")}</label>
+                    <label className="gal-flow-check"><input type="checkbox" disabled={Boolean(selectedLoop.rejectTaskIds?.length)} checked={Boolean(selectedLoop.rejectToEntry)} onChange={e => setLoop(task.id, { rejectToEntry: e.target.checked })} />{l("退回时从入口重跑")}</label>
                     {!selectedLoop.rejectToEntry && <p>{l("审核时由 TeamFlow 指定返工任务及其下游。")}</p>}
                     {!!loopBody.length && <p>{l("循环内任务：")}{loopBody.map(id => draft.tasks.find(t => t.id === id)?.subject).join(" → ")}</p>}
                     {loopIssue && <p role="status" className="gal-error">{l(loopIssue)}</p>}
-                    <button type="button" onClick={() => setReturn(task.id, "")}>{l("删除 REJECT 返回线")}</button>
+                    <button type="button" onClick={() => update({ loops: (draft.loops || []).filter(loop => loop.gateId !== task.id) })}>{l("删除 REJECT 返回线")}</button>
                   </>}
                 </section>}
                 {selectedKind === "archive" && <>
@@ -1251,7 +1253,7 @@ export function WorkflowWizard({
                     <textarea
                       aria-label={l(label)}
                       rows={3}
-                      maxLength={64000}
+                      maxLength={MAX_WORKFLOW_TEXT_LENGTH}
                       value={task.general[key]}
                       onChange={(e) =>
                         updateTask({
@@ -1281,8 +1283,9 @@ export function WorkflowWizard({
           >
             {contextMenu.edge ? (
               <button onClick={() => {
-                const { edgeFrom, edgeTo, edgeReturn } = contextMenu.edge;
-                if (edgeReturn) { update({ loops: (draft.loops || []).filter(loop => loop.gateId !== edgeFrom) }); setContextMenu(null); return; }
+                const { edgeFrom, edgeTo, edgeKind, edgeGate } = contextMenu.edge;
+                if (edgeKind === "return" || edgeKind === "reject-end") { setLoop(edgeGate, { entryId: "" }); setContextMenu(null); return; }
+                if (edgeKind === "reject-start" || edgeKind === "reject-order") { update(removeRejectTask(draft.tasks, draft.loops, edgeGate, edgeTo)); setContextMenu(null); return; }
                 setDraft((value) => ({
                   ...value,
                   tasks: value.tasks.map((node) => {

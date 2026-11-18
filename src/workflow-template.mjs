@@ -31,7 +31,9 @@ const array = (v, label, max) => {
   );
   return v;
 };
-export function validateWorkflowTemplate(input) {
+export const MAX_WORKFLOW_TEXT_LENGTH = 256000;
+
+export function validateWorkflowTemplate(input, options = {}) {
   const v = object(input, "模板");
   const members = array(v.members, "成员", 32).map((raw) => {
     const m = object(raw, "成员");
@@ -49,9 +51,13 @@ export function validateWorkflowTemplate(input) {
     return {
       ...access,
       name: text(m.name, "成员名称", 80, true),
-      summary: text(m.summary, "简介", 16000),
-      role: text(m.role, "角色", 16000),
-      executionPrompt: text(m.executionPrompt, "执行指令", 64000),
+      summary: text(m.summary, "简介", MAX_WORKFLOW_TEXT_LENGTH),
+      role: text(m.role, "角色", MAX_WORKFLOW_TEXT_LENGTH),
+      executionPrompt: text(
+        m.executionPrompt,
+        "执行指令",
+        MAX_WORKFLOW_TEXT_LENGTH,
+      ),
     };
   });
   demand(
@@ -141,9 +147,13 @@ export function validateWorkflowTemplate(input) {
       ...(t.reviewMode ? { reviewMode: t.reviewMode } : {}),
       ...(archive ? { kind: "archive", archive } : {}),
       general: {
-        requirements: text(g.requirements, "任务要求", 64000),
-        deliverables: text(g.deliverables, "交付物", 64000),
-        acceptance: text(g.acceptance, "验收标准", 64000),
+        requirements: text(
+          g.requirements,
+          "任务要求",
+          MAX_WORKFLOW_TEXT_LENGTH,
+        ),
+        deliverables: text(g.deliverables, "交付物", MAX_WORKFLOW_TEXT_LENGTH),
+        acceptance: text(g.acceptance, "验收标准", MAX_WORKFLOW_TEXT_LENGTH),
       },
     };
   });
@@ -172,7 +182,7 @@ export function validateWorkflowTemplate(input) {
     );
   }
   assertWorkflowDag(tasks);
-  const loops = validateWorkflowLoops(v.loops, tasks, members);
+  const loops = validateWorkflowLoops(v.loops, tasks, members, options);
   const positions = {};
   for (const [key, raw] of Object.entries(
     object(v.positions ?? {}, "画布位置"),
@@ -209,7 +219,7 @@ export function validateWorkflowTemplate(input) {
     ...(loops ? { loops } : {}),
   };
 }
-export function workflowFromResource(resource) {
+export function workflowFromResource(resource, options = {}) {
   const file = resource.files?.find(
     (f) => f.path === "workflow.json" && f.encoding === "utf8",
   );
@@ -220,5 +230,17 @@ export function workflowFromResource(resource) {
   } catch {
     demand(false, 400, "INVALID_WORKFLOW", "workflow.json 不是有效 JSON");
   }
-  return validateWorkflowTemplate(definition);
+  return validateWorkflowTemplate(definition, options);
+}
+
+export function workflowTemplateIssues(definition) {
+  const issues = [];
+  try {
+    validateWorkflowTemplate(definition);
+  } catch (error) {
+    issues.push(error.message);
+  }
+  if (definition.tasks.some((t) => !t.general.requirements.trim()))
+    issues.push("请填写每个节点的通用任务要求或通用检查要求");
+  return issues;
 }

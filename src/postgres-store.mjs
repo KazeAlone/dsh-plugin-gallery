@@ -196,7 +196,7 @@ export class PostgresGalleryStore {
   validate(input) {
     normalizeResource(input);
     if (input.type === "mcp") validateMcpConfig(input.metadata?.mcp);
-    if (input.type === "workflow") workflowFromResource(input);
+    if (input.type === "workflow") workflowFromResource(input, { draft: true });
   }
   async createResource(input, actor) {
     demand(actor?.id, 401, "USER_REQUIRED", "需要独立用户身份");

@@ -431,7 +431,7 @@ export default class GalleryService extends TypertRemoteService {
     return this.ownerCall(async () => {
       const input = JSON.parse(payload);
       if (input.type === "mcp") await this.validateMcpName(input);
-      if (input.type === "workflow") workflowFromResource(input);
+      if (input.type === "workflow") workflowFromResource(input, { draft: true });
       const r = await this.store.createResource(input);
       this.invalidateSkills();
       if (input.type === "mcp") await this.mcpRuntime?.refresh();
@@ -516,7 +516,7 @@ export default class GalleryService extends TypertRemoteService {
       const p = JSON.parse(payload);
       if (p.resource?.type === "mcp")
         await this.validateMcpName(p.resource, id);
-      if (p.resource?.type === "workflow") workflowFromResource(p.resource);
+      if (p.resource?.type === "workflow") workflowFromResource(p.resource, { draft: true });
       const r = await this.store.updateResource(
         id,
         p.resource,

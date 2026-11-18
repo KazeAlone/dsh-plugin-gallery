@@ -1,5 +1,26 @@
 // Plugin-owned interface text. Resource content is never translated.
 export const english = {
+  "REJECT：拖到循环入口或退回分支任务的输入点":
+    "REJECT: drag to the loop entry or a return-branch task input",
+  "配置 REJECT 分支": "Configure REJECT branch",
+  "REJECT 后执行的任务": "Tasks to run after REJECT",
+  "仅在退回时执行，完成后返回循环入口。可从 REJECT 点拖线到任务，再连接分支内任务。":
+    "Run only after rejection, then return to the loop entry. Drag from REJECT to a task and connect branch tasks.",
+  "可保存草稿 · 补全后注册到 TeamFlow":
+    "Save drafts · Complete before registering with TeamFlow",
+  稍后连接循环入口: "Connect the loop entry later",
+  仅退回时执行: "REJECT only",
+  "REJECT 只能连接普通任务": "REJECT can only connect to regular tasks",
+  请选择两个不同的任务节点: "Choose two different task nodes",
+  退回路径中的任务无效或重复: "Return tasks are invalid or duplicated",
+  退回任务不能同时位于首轮路径:
+    "Return tasks cannot also be on the first-pass path",
+  退回路径中的任务不存在: "A return task does not exist",
+  请选择有效的循环入口任务: "Choose a valid loop entry task",
+  循环与退回路径必须由普通执行任务组成:
+    "Loops and return paths must contain regular execution tasks",
+  "退回任务只能依赖首轮外部输入或同一路径中的任务，输出不能绕过门控":
+    "Return tasks may depend only on external first-pass inputs or tasks in the same return path; outputs must pass the gate",
   "删除 {0} 个节点": "Delete {0} nodes",
   " 个节点": " nodes",
   " 次": " calls",

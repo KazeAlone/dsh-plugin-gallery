@@ -2307,3 +2307,6 @@ fieldset.gal-skill-fields {
   .gal .gal-flow-member { width: 160px; flex: 0 0 160px; padding: 6px; }
   .gal-flow-member-copy > small { display: none; }
 }
+
+.gal-flow-reject-settings { border: 1px solid var(--g-line); border-radius: 8px; padding: 10px; margin: 12px 0; }
+.gal-flow-node.gal-flow-reject-task { border-style: dashed; border-color: #ba625e; }

@@ -101,7 +101,7 @@ test("loops reject cycles, overlaps, invalid topology, review conflicts and unbo
   for (const mutate of cases) {
     const input = fresh();
     mutate(input);
-    assert.throws(() => validateWorkflowTemplate(input), {
+    assert.throws(() => validateWorkflowTemplate(input, { requireExecutionSetup: true }), {
       code: "INVALID_WORKFLOW",
     });
   }

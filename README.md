@@ -10,6 +10,8 @@ Workflow 采用成员栏与流程画布分离的布局：Agent 在成员栏统�
 
 公司内网中心存储可一键部署：`sudo bash scripts/install-center.sh --port 8088`，自动准备数据库和 Center。插件只填 `服务器IP:8088`，无需共享密钥或证书，保留独立用户编辑权限。首次下载镜像需要网络，后续可复用镜像。详见[中心存储部署](docs/center-storage.md)。
 
+Workflow 对齐 TeamFlow 0.2.13：保留 REJECT 分支与 DAG 字段，支持分支拖线及草稿保存，成员与任务长文本上限统一为 256000 字符。详见[画布操作](docs/workflow-canvas.md)。
+
 ## 安装
 
 要求 Node.js >=24.9、DSH 0.2.1-rc.3 或 0.2.1-rc.5。

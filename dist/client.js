@@ -37,6 +37,21 @@ module.exports = __toCommonJS(index_exports);
 
 // src/client/messages-en.mjs
 var english = {
+  "REJECT\uFF1A\u62D6\u5230\u5FAA\u73AF\u5165\u53E3\u6216\u9000\u56DE\u5206\u652F\u4EFB\u52A1\u7684\u8F93\u5165\u70B9": "REJECT: drag to the loop entry or a return-branch task input",
+  "\u914D\u7F6E REJECT \u5206\u652F": "Configure REJECT branch",
+  "REJECT \u540E\u6267\u884C\u7684\u4EFB\u52A1": "Tasks to run after REJECT",
+  "\u4EC5\u5728\u9000\u56DE\u65F6\u6267\u884C\uFF0C\u5B8C\u6210\u540E\u8FD4\u56DE\u5FAA\u73AF\u5165\u53E3\u3002\u53EF\u4ECE REJECT \u70B9\u62D6\u7EBF\u5230\u4EFB\u52A1\uFF0C\u518D\u8FDE\u63A5\u5206\u652F\u5185\u4EFB\u52A1\u3002": "Run only after rejection, then return to the loop entry. Drag from REJECT to a task and connect branch tasks.",
+  "\u53EF\u4FDD\u5B58\u8349\u7A3F \xB7 \u8865\u5168\u540E\u6CE8\u518C\u5230 TeamFlow": "Save drafts \xB7 Complete before registering with TeamFlow",
+  \u7A0D\u540E\u8FDE\u63A5\u5FAA\u73AF\u5165\u53E3: "Connect the loop entry later",
+  \u4EC5\u9000\u56DE\u65F6\u6267\u884C: "REJECT only",
+  "REJECT \u53EA\u80FD\u8FDE\u63A5\u666E\u901A\u4EFB\u52A1": "REJECT can only connect to regular tasks",
+  \u8BF7\u9009\u62E9\u4E24\u4E2A\u4E0D\u540C\u7684\u4EFB\u52A1\u8282\u70B9: "Choose two different task nodes",
+  \u9000\u56DE\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\u65E0\u6548\u6216\u91CD\u590D: "Return tasks are invalid or duplicated",
+  \u9000\u56DE\u4EFB\u52A1\u4E0D\u80FD\u540C\u65F6\u4F4D\u4E8E\u9996\u8F6E\u8DEF\u5F84: "Return tasks cannot also be on the first-pass path",
+  \u9000\u56DE\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\u4E0D\u5B58\u5728: "A return task does not exist",
+  \u8BF7\u9009\u62E9\u6709\u6548\u7684\u5FAA\u73AF\u5165\u53E3\u4EFB\u52A1: "Choose a valid loop entry task",
+  \u5FAA\u73AF\u4E0E\u9000\u56DE\u8DEF\u5F84\u5FC5\u987B\u7531\u666E\u901A\u6267\u884C\u4EFB\u52A1\u7EC4\u6210: "Loops and return paths must contain regular execution tasks",
+  "\u9000\u56DE\u4EFB\u52A1\u53EA\u80FD\u4F9D\u8D56\u9996\u8F6E\u5916\u90E8\u8F93\u5165\u6216\u540C\u4E00\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\uFF0C\u8F93\u51FA\u4E0D\u80FD\u7ED5\u8FC7\u95E8\u63A7": "Return tasks may depend only on external first-pass inputs or tasks in the same return path; outputs must pass the gate",
   "\u5220\u9664 {0} \u4E2A\u8282\u70B9": "Delete {0} nodes",
   " \u4E2A\u8282\u70B9": " nodes",
   " \u6B21": " calls",
@@ -3202,6 +3217,9 @@ fieldset.gal-skill-fields {
   .gal .gal-flow-member { width: 160px; flex: 0 0 160px; padding: 6px; }
   .gal-flow-member-copy > small { display: none; }
 }
+
+.gal-flow-reject-settings { border: 1px solid var(--g-line); border-radius: 8px; padding: 10px; margin: 12px 0; }
+.gal-flow-node.gal-flow-reject-task { border-style: dashed; border-color: #ba625e; }
 `;
 
 // src/client/leaderboards.jsx
@@ -4038,7 +4056,7 @@ function assertWorkflowDag(tasks) {
     visit3(t.id);
   });
 }
-function workflowLoopBody(tasks, { gateId, entryId }) {
+function workflowLoopBody(tasks, { gateId, entryId, rejectTaskIds = [] }) {
   const ancestors = workflowAncestors(tasks, gateId);
   check(ancestors.has(entryId), "\u5FAA\u73AF\u5165\u53E3\u5FC5\u987B\u4F4D\u4E8E\u95E8\u63A7\u4E0A\u6E38");
   const body = /* @__PURE__ */ new Set([entryId]);
@@ -4051,9 +4069,17 @@ function workflowLoopBody(tasks, { gateId, entryId }) {
         changed = true;
       }
   }
+  for (const id of rejectTaskIds) {
+    check(id !== gateId && !ancestors.has(id), "\u9000\u56DE\u4EFB\u52A1\u4E0D\u80FD\u540C\u65F6\u4F4D\u4E8E\u9996\u8F6E\u8DEF\u5F84");
+    check(
+      tasks.some((task) => task.id === id),
+      "\u9000\u56DE\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\u4E0D\u5B58\u5728"
+    );
+    body.add(id);
+  }
   return [...body];
 }
-function validateWorkflowLoops(value, tasks, members) {
+function validateWorkflowLoops(value, tasks, members, { draft = false, requireExecutionSetup = false } = {}) {
   if (value === void 0) return void 0;
   check(Array.isArray(value) && value.length <= 16, "\u6700\u591A\u914D\u7F6E 16 \u4E2A\u5FAA\u73AF");
   const occupied = /* @__PURE__ */ new Set();
@@ -4071,13 +4097,22 @@ function validateWorkflowLoops(value, tasks, members) {
       Number.isSafeInteger(timeoutMinutes) && timeoutMinutes >= 1 && timeoutMinutes <= 1440,
       "\u6267\u884C\u8D85\u65F6\u5FC5\u987B\u4E3A 1\u20131440 \u5206\u949F"
     );
+    const returns = raw.rejectTaskIds;
+    check(
+      returns === void 0 || Array.isArray(returns) && returns.length <= 31 && returns.every((id) => typeof id === "string" && id) && new Set(returns).size === returns.length,
+      "\u9000\u56DE\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\u65E0\u6548\u6216\u91CD\u590D"
+    );
     const loop = {
       gateId: raw.gateId,
       entryId: raw.entryId,
       mode: raw.mode,
       maxRounds,
       timeoutMinutes,
-      ...raw.rejectToEntry === true ? { rejectToEntry: true } : {},
+      ...raw.rejectToEntry === true || returns?.length ? { rejectToEntry: true } : {},
+      ...returns?.length ? {
+        rejectTaskIds: [...returns],
+        ...raw.rejectDag === true ? { rejectDag: true } : {}
+      } : {},
       ...typeof raw.reviewer === "string" && raw.reviewer.trim() ? { reviewer: raw.reviewer.trim() } : {}
     };
     const gate = tasks.find((t) => t.id === loop.gateId);
@@ -4085,31 +4120,59 @@ function validateWorkflowLoops(value, tasks, members) {
       gate?.checkpoint && gate.checkpointKind !== "acceptance",
       "\u5FAA\u73AF\u9700\u8981\u72EC\u7ACB\u95E8\u63A7\uFF0C\u9A8C\u6536\u8282\u70B9\u4E0D\u80FD\u4F5C\u4E3A\u5FAA\u73AF\u95E8\u63A7"
     );
-    const body = new Set(workflowLoopBody(tasks, loop));
+    const ancestors = workflowAncestors(tasks, gate.id);
+    const connected = !!loop.entryId && ancestors.has(loop.entryId);
+    check(draft || connected, "\u5FAA\u73AF\u5165\u53E3\u5FC5\u987B\u4F4D\u4E8E\u95E8\u63A7\u4E0A\u6E38");
+    const entry = tasks.find((t) => t.id === loop.entryId);
     check(
-      body.size > 0 && body.size <= 32 && !body.has(gate.id),
-      "\u5FAA\u73AF\u533A\u57DF\u65E0\u6548"
+      !loop.entryId || entry && !entry.checkpoint && entry.kind !== "archive",
+      "\u8BF7\u9009\u62E9\u6709\u6548\u7684\u5FAA\u73AF\u5165\u53E3\u4EFB\u52A1"
     );
+    const body = new Set(
+      connected ? workflowLoopBody(tasks, loop) : [loop.entryId, ...returns || []].filter(Boolean)
+    );
+    check(body.size <= 32 && !body.has(gate.id), "\u5FAA\u73AF\u533A\u57DF\u65E0\u6548");
     for (const id of [...body, gate.id]) {
       check(!occupied.has(id), "\u4E0D\u652F\u6301\u5D4C\u5957\u6216\u5171\u4EAB\u8282\u70B9\u7684\u5FAA\u73AF");
       occupied.add(id);
     }
+    const returnIds = loop.rejectTaskIds || [];
+    check(!returnIds.includes(loop.entryId), "\u9000\u56DE\u4EFB\u52A1\u4E0D\u80FD\u540C\u65F6\u4F4D\u4E8E\u9996\u8F6E\u8DEF\u5F84");
     for (const id of body) {
       const task = tasks.find((t) => t.id === id);
-      check(task.kind !== "archive", "\u6210\u679C\u5F52\u6863\u8282\u70B9\u5E94\u653E\u5728\u95E8\u63A7\u7684 PASS \u8DEF\u5F84\u4E4B\u540E");
       check(
-        task.assignee && members.some((m) => m.name === task.assignee),
-        "\u8BF7\u5148\u4E3A\u5FAA\u73AF\u5185\u4EFB\u52A1\u6307\u5B9A\u6709\u6548\u8D1F\u8D23\u4EBA"
+        task && !task.checkpoint && task.kind !== "archive",
+        "\u5FAA\u73AF\u4E0E\u9000\u56DE\u8DEF\u5F84\u5FC5\u987B\u7531\u666E\u901A\u6267\u884C\u4EFB\u52A1\u7EC4\u6210"
       );
-      check(!task.checkpoint, "\u5FAA\u73AF\u533A\u57DF\u5FC5\u987B\u7531\u6267\u884C\u4EFB\u52A1\u7EC4\u6210\u5E76\u6C47\u5408\u5230\u552F\u4E00\u95E8\u63A7");
-      check(
-        !tasks.some(
-          (t) => !body.has(t.id) && t.id !== gate.id && t.dependencies.includes(id)
-        ),
-        "\u5FAA\u73AF\u5185\u7684\u8F93\u51FA\u5FC5\u987B\u7ECF\u8FC7\u95E8\u63A7\u624D\u80FD\u8FDE\u63A5\u73AF\u5916"
-      );
+      if (requireExecutionSetup)
+        check(
+          task.assignee && members.some((m) => m.name === task.assignee),
+          "\u8BF7\u5148\u4E3A\u5FAA\u73AF\u5185\u4EFB\u52A1\u6307\u5B9A\u6709\u6548\u8D1F\u8D23\u4EBA"
+        );
+      const index = returnIds.indexOf(id);
+      if (index >= 0) {
+        check(!ancestors.has(id), "\u9000\u56DE\u4EFB\u52A1\u4E0D\u80FD\u540C\u65F6\u4F4D\u4E8E\u9996\u8F6E\u8DEF\u5F84");
+        if (draft && !connected) continue;
+        const earlier = loop.rejectDag ? returnIds : returnIds.slice(0, index);
+        const later = loop.rejectDag ? returnIds : returnIds.slice(index + 1);
+        check(
+          task.dependencies.every(
+            (dep) => earlier.includes(dep) || ancestors.has(dep) && !body.has(dep)
+          ) && !tasks.some(
+            (other) => other.dependencies.includes(id) && !later.includes(other.id)
+          ),
+          "\u9000\u56DE\u4EFB\u52A1\u53EA\u80FD\u4F9D\u8D56\u9996\u8F6E\u5916\u90E8\u8F93\u5165\u6216\u540C\u4E00\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\uFF0C\u8F93\u51FA\u4E0D\u80FD\u7ED5\u8FC7\u95E8\u63A7"
+        );
+      } else if (connected) {
+        check(
+          !tasks.some(
+            (t) => !body.has(t.id) && t.id !== gate.id && t.dependencies.includes(id)
+          ),
+          "\u5FAA\u73AF\u5185\u7684\u8F93\u51FA\u5FC5\u987B\u7ECF\u8FC7\u95E8\u63A7\u624D\u80FD\u8FDE\u63A5\u73AF\u5916"
+        );
+      }
     }
-    if (loop.mode === "ai") {
+    if (loop.mode === "ai" && requireExecutionSetup) {
       check(
         loop.reviewer && members.some((m) => m.name === loop.reviewer),
         "\u8BF7\u9009\u62E9\u6709\u6548\u7684 AI \u5BA1\u6838\u6210\u5458"
@@ -4122,6 +4185,130 @@ function validateWorkflowLoops(value, tasks, members) {
     return loop;
   });
   return loops.length ? loops : void 0;
+}
+
+// src/client/workflow-connections.mjs
+var plain = (task) => task && !task.checkpoint && task.kind !== "archive";
+var fail = (message) => {
+  throw new Error(message);
+};
+function configureRejectTarget(tasks, loops = [], gateId, targetId) {
+  const gate = tasks.find((t) => t.id === gateId), target = tasks.find((t) => t.id === targetId);
+  if (!gate?.checkpoint || gate.checkpointKind === "acceptance" || !plain(target))
+    fail("REJECT \u53EA\u80FD\u8FDE\u63A5\u666E\u901A\u4EFB\u52A1");
+  const previous = loops.find((loop) => loop.gateId === gateId);
+  const next = {
+    gateId,
+    entryId: "",
+    mode: gate.reviewMode || "human",
+    maxRounds: 3,
+    timeoutMinutes: 30,
+    rejectToEntry: true,
+    ...previous
+  };
+  if (workflowAncestors(tasks, gateId).has(targetId)) {
+    next.entryId = targetId;
+    next.rejectTaskIds = (next.rejectTaskIds || []).filter(
+      (id) => id !== targetId
+    );
+  } else {
+    next.rejectTaskIds = [
+      .../* @__PURE__ */ new Set([...next.rejectTaskIds || [], targetId])
+    ];
+    next.rejectDag = previous?.rejectTaskIds?.length && !previous.rejectDag ? void 0 : true;
+    next.rejectToEntry = true;
+  }
+  const result = [...loops.filter((loop) => loop.gateId !== gateId), next];
+  validateWorkflowLoops(result, tasks, [], { draft: true });
+  return result;
+}
+function connectWorkflowNodes(tasks, loops = [], from, to) {
+  if (!tasks.some((t) => t.id === from) || !tasks.some((t) => t.id === to) || from === to)
+    fail("\u8BF7\u9009\u62E9\u4E24\u4E2A\u4E0D\u540C\u7684\u4EFB\u52A1\u8282\u70B9");
+  const branch = loops.find((loop) => loop.rejectTaskIds?.includes(from));
+  let nextLoops = loops;
+  if (branch && to === branch.entryId) return { tasks, loops };
+  if (branch && !branch.rejectTaskIds.includes(to))
+    nextLoops = configureRejectTarget(tasks, loops, branch.gateId, to);
+  const next = tasks.map(
+    (task) => task.id === to ? { ...task, dependencies: [.../* @__PURE__ */ new Set([...task.dependencies, from])] } : task
+  );
+  assertWorkflowDag(next);
+  validateWorkflowLoops(nextLoops, next, [], { draft: true });
+  return { tasks: next, loops: nextLoops };
+}
+function removeRejectTask(tasks, loops, gateId, id) {
+  const loop = loops.find((loop2) => loop2.gateId === gateId);
+  const branch = new Set(loop?.rejectTaskIds || []);
+  return {
+    tasks: tasks.map((t) => ({
+      ...t,
+      dependencies: t.dependencies.filter(
+        (dep) => !(t.id === id && branch.has(dep) || branch.has(t.id) && dep === id)
+      )
+    })),
+    loops: loops.map(
+      (l) => l.gateId === gateId ? {
+        ...l,
+        rejectTaskIds: (l.rejectTaskIds || []).filter(
+          (value) => value !== id
+        )
+      } : l
+    )
+  };
+}
+function workflowRejectEdges(tasks, loop) {
+  const ids = loop.rejectTaskIds || [], selected = new Set(ids), edges = [];
+  if (!ids.length)
+    return loop.entryId ? [
+      {
+        from: loop.gateId,
+        to: loop.entryId,
+        kind: "return",
+        gateId: loop.gateId
+      }
+    ] : [];
+  if (!loop.rejectDag) {
+    edges.push({
+      from: loop.gateId,
+      to: ids[0],
+      kind: "reject-start",
+      gateId: loop.gateId
+    });
+    for (let i = 1; i < ids.length; i++)
+      if (!tasks.find((t) => t.id === ids[i])?.dependencies.includes(ids[i - 1]))
+        edges.push({
+          from: ids[i - 1],
+          to: ids[i],
+          kind: "reject-order",
+          gateId: loop.gateId
+        });
+    if (loop.entryId)
+      edges.push({
+        from: ids.at(-1),
+        to: loop.entryId,
+        kind: "reject-end",
+        gateId: loop.gateId
+      });
+    return edges;
+  }
+  for (const id of ids) {
+    if (!tasks.find((t) => t.id === id)?.dependencies.some((dep) => selected.has(dep)))
+      edges.push({
+        from: loop.gateId,
+        to: id,
+        kind: "reject-start",
+        gateId: loop.gateId
+      });
+    if (loop.entryId && !tasks.some((t) => selected.has(t.id) && t.dependencies.includes(id)))
+      edges.push({
+        from: id,
+        to: loop.entryId,
+        kind: "reject-end",
+        gateId: loop.gateId
+      });
+  }
+  return edges;
 }
 
 // src/workflow-template.mjs
@@ -4155,7 +4342,8 @@ var array = (v, label, max) => {
   );
   return v;
 };
-function validateWorkflowTemplate(input) {
+var MAX_WORKFLOW_TEXT_LENGTH = 256e3;
+function validateWorkflowTemplate(input, options = {}) {
   const v = object(input, "\u6A21\u677F");
   const members = array(v.members, "\u6210\u5458", 32).map((raw) => {
     const m = object(raw, "\u6210\u5458");
@@ -4173,9 +4361,13 @@ function validateWorkflowTemplate(input) {
     return {
       ...access,
       name: text(m.name, "\u6210\u5458\u540D\u79F0", 80, true),
-      summary: text(m.summary, "\u7B80\u4ECB", 16e3),
-      role: text(m.role, "\u89D2\u8272", 16e3),
-      executionPrompt: text(m.executionPrompt, "\u6267\u884C\u6307\u4EE4", 64e3)
+      summary: text(m.summary, "\u7B80\u4ECB", MAX_WORKFLOW_TEXT_LENGTH),
+      role: text(m.role, "\u89D2\u8272", MAX_WORKFLOW_TEXT_LENGTH),
+      executionPrompt: text(
+        m.executionPrompt,
+        "\u6267\u884C\u6307\u4EE4",
+        MAX_WORKFLOW_TEXT_LENGTH
+      )
     };
   });
   demand(
@@ -4257,9 +4449,13 @@ function validateWorkflowTemplate(input) {
       ...t.reviewMode ? { reviewMode: t.reviewMode } : {},
       ...archive ? { kind: "archive", archive } : {},
       general: {
-        requirements: text(g.requirements, "\u4EFB\u52A1\u8981\u6C42", 64e3),
-        deliverables: text(g.deliverables, "\u4EA4\u4ED8\u7269", 64e3),
-        acceptance: text(g.acceptance, "\u9A8C\u6536\u6807\u51C6", 64e3)
+        requirements: text(
+          g.requirements,
+          "\u4EFB\u52A1\u8981\u6C42",
+          MAX_WORKFLOW_TEXT_LENGTH
+        ),
+        deliverables: text(g.deliverables, "\u4EA4\u4ED8\u7269", MAX_WORKFLOW_TEXT_LENGTH),
+        acceptance: text(g.acceptance, "\u9A8C\u6536\u6807\u51C6", MAX_WORKFLOW_TEXT_LENGTH)
       }
     };
   });
@@ -4285,7 +4481,7 @@ function validateWorkflowTemplate(input) {
     );
   }
   assertWorkflowDag(tasks);
-  const loops = validateWorkflowLoops(v.loops, tasks, members);
+  const loops = validateWorkflowLoops(v.loops, tasks, members, options);
   const positions = {};
   for (const [key, raw] of Object.entries(
     object(v.positions ?? {}, "\u753B\u5E03\u4F4D\u7F6E")
@@ -4315,6 +4511,17 @@ function validateWorkflowTemplate(input) {
     positions,
     ...loops ? { loops } : {}
   };
+}
+function workflowTemplateIssues(definition) {
+  const issues = [];
+  try {
+    validateWorkflowTemplate(definition);
+  } catch (error) {
+    issues.push(error.message);
+  }
+  if (definition.tasks.some((t) => !t.general.requirements.trim()))
+    issues.push("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u901A\u7528\u4EFB\u52A1\u8981\u6C42\u6216\u901A\u7528\u68C0\u67E5\u8981\u6C42");
+  return issues;
 }
 
 // src/client/workflow-wizard.jsx
@@ -4535,15 +4742,15 @@ function WorkflowWizard({
   }
   function setReturn(gateId, entryId) {
     if (!entryId) {
-      update({ loops: (draft.loops || []).filter((loop) => loop.gateId !== gateId) });
+      setLoop(gateId, { entryId: "" });
       return;
     }
-    const entry = draft.tasks.find((t) => t.id === entryId);
-    if (!entry || entry.checkpoint || entry.kind === "archive" || !workflowAncestors(draft.tasks, gateId).has(entryId)) {
-      setError(l("REJECT \u9700\u8981\u8FD4\u56DE\u95E8\u63A7\u4E0A\u6E38\u7684\u6267\u884C\u4EFB\u52A1\uFF1B\u8BF7\u5148\u8FDE\u63A5\u4EFB\u52A1\u5230\u95E8\u63A7\u7684\u6B63\u5411\u8DEF\u5F84"));
+    try {
+      update({ loops: configureRejectTarget(draft.tasks, draft.loops, gateId, entryId) });
+    } catch (error2) {
+      setError(l(error2.message));
       return;
     }
-    setLoop(gateId, { entryId });
     setSelected({ kind: "task", id: gateId });
     setSelection([gateId]);
     setError("");
@@ -4552,7 +4759,7 @@ function WorkflowWizard({
   if (selectedLoop) {
     try {
       loopBody = workflowLoopBody(draft.tasks, selectedLoop);
-      validateWorkflowLoops(draft.loops, draft.tasks, agents.map((a) => ({ name: a.id })));
+      validateWorkflowLoops(draft.loops, draft.tasks, agents.map((a) => ({ name: a.id })), { requireExecutionSetup: true });
     } catch (error2) {
       loopIssue = error2.message;
     }
@@ -4658,11 +4865,7 @@ function WorkflowWizard({
     if (!from)
       return setError(l("\u4ECE\u524D\u7F6E\u8282\u70B9\u7684\u8F93\u51FA\u5706\u70B9\u62D6\u52A8\u5230\u540E\u7EED\u8282\u70B9\u7684\u8F93\u5165\u5706\u70B9"));
     try {
-      const tasks = draft.tasks.map(
-        (t) => t.id === to ? { ...t, dependencies: [.../* @__PURE__ */ new Set([...t.dependencies, from])] } : t
-      );
-      assertWorkflowDag(tasks);
-      update({ tasks });
+      update(connectWorkflowNodes(draft.tasks, draft.loops, from, to));
       setError("");
       setLinkFrom(null);
     } catch (e) {
@@ -4764,7 +4967,7 @@ function WorkflowWizard({
     setAgents((rows) => rows.filter((a) => !deleted.has(a.id)));
     setDraft((d) => ({
       ...d,
-      loops: d.loops?.filter((loop) => !deleted.has(loop.gateId) && !deleted.has(loop.entryId)).map((loop) => ({ ...loop, ...deleted.has(loop.reviewer) ? { reviewer: void 0 } : {} })),
+      loops: d.loops?.filter((loop) => !deleted.has(loop.gateId)).map((loop) => ({ ...loop, ...deleted.has(loop.entryId) ? { entryId: "" } : {}, rejectTaskIds: loop.rejectTaskIds?.filter((id) => !deleted.has(id)), ...deleted.has(loop.reviewer) ? { reviewer: void 0 } : {} })),
       tasks: d.tasks.filter((t) => !deleted.has(t.id)).map((t) => ({
         ...t,
         assignee: deleted.has(t.assignee) ? "" : t.assignee,
@@ -4818,8 +5021,6 @@ function WorkflowWizard({
     try {
       if (agents.some((a) => !a.resourceId && !a.snapshot))
         throw Error(l("\u8BF7\u4E3A\u6BCF\u4E2A\u6210\u5458\u9009\u62E9\u8D44\u6E90\u5E93\u4E2D\u7684 Agent"));
-      if (draft.tasks.some((t) => !t.general.requirements.trim()))
-        throw Error(l("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u901A\u7528\u4EFB\u52A1\u8981\u6C42\u6216\u901A\u7528\u68C0\u67E5\u8981\u6C42"));
       const value = validateWorkflowTemplate({
         ...draft,
         loops: draft.loops?.map((loop) => ({ ...loop, reviewer: agents.find((a) => a.id === loop.reviewer)?.snapshot?.name || loop.reviewer })),
@@ -4830,7 +5031,7 @@ function WorkflowWizard({
           assignee: t.assignee ? agents.find((a) => a.id === t.assignee)?.snapshot?.name || t.assignee : ""
         })),
         positions: {}
-      });
+      }, { draft: true });
       setBusy(true);
       await onSave({
         type: "workflow",
@@ -4849,6 +5050,7 @@ function WorkflowWizard({
           format: "dsh-teamflow-template-v1",
           workflowCanvas: {
             version: 1,
+            draft: workflowTemplateIssues(value).length > 0,
             taskPositions: positions,
             agents: agents.map(({ snapshot, ...node }) => ({
               ...node,
@@ -4864,9 +5066,10 @@ function WorkflowWizard({
     }
   }
   const taskActor = (task2) => task2.assignee || draft.loops?.find((loop) => loop.gateId === task2.id && loop.mode === "ai")?.reviewer;
-  function edge(from, to, key, { fromId, toId, returning = false }) {
+  function edge(from, to, key, { fromId, toId, returning = false, edgeKind, gateId }) {
     if (!from || !to) return null;
-    const path = returning ? `M${from.x + nodeWidth / 2},${from.y + nodeHeight} C${from.x + nodeWidth / 2},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x - 80},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x},${to.y + portY}` : `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
+    const bottom = returning && draft.tasks.find((t) => t.id === fromId)?.checkpoint;
+    const path = bottom ? `M${from.x + nodeWidth / 2},${from.y + nodeHeight} C${from.x + nodeWidth / 2},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x - 80},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x},${to.y + portY}` : `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
     const pass = !returning && workflowNodeKind(draft.tasks.find((t) => t.id === fromId) || {}, draft.loops) === "gate";
     return /* @__PURE__ */ import_react8.default.createElement("g", { key }, /* @__PURE__ */ import_react8.default.createElement(
       "path",
@@ -4875,12 +5078,14 @@ function WorkflowWizard({
         markerEnd: `url(#${arrow})`,
         d: path
       }
-    ), (pass || returning) && /* @__PURE__ */ import_react8.default.createElement("text", { className: returning ? "gal-flow-reject-label" : "gal-flow-pass-label", x: returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2, y: returning ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10 }, returning ? l("REJECT \xB7 \u8FD4\u5DE5") : "PASS"), /* @__PURE__ */ import_react8.default.createElement(
+    ), (pass || returning) && /* @__PURE__ */ import_react8.default.createElement("text", { className: returning ? "gal-flow-reject-label" : "gal-flow-pass-label", x: returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2, y: bottom ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10 }, returning ? l("REJECT \xB7 \u8FD4\u5DE5") : "PASS"), /* @__PURE__ */ import_react8.default.createElement(
       "path",
       {
         className: "gal-flow-edge-hit",
         d: path,
         "data-edge-return": returning ? "true" : void 0,
+        "data-edge-kind": edgeKind,
+        "data-edge-gate": gateId,
         "data-edge-from": fromId,
         "data-edge-to": toId
       }
@@ -4907,7 +5112,7 @@ function WorkflowWizard({
         "aria-label": resource ? l("\u7F16\u8F91 Workflow") : l("\u65B0\u5EFA Workflow"),
         tabIndex: -1
       },
-      /* @__PURE__ */ import_react8.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react8.default.createElement("h2", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "workflow" }), l(" Workflow \u753B\u5E03")), /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-flow-status" }, l("TeamFlow \u6A21\u677F \xB7 \u4FDD\u5B58\u540E\u53EF\u6CE8\u518C\u4F7F\u7528")), /* @__PURE__ */ import_react8.default.createElement(
+      /* @__PURE__ */ import_react8.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react8.default.createElement("h2", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "workflow" }), l(" Workflow \u753B\u5E03")), /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-flow-status" }, l("\u53EF\u4FDD\u5B58\u8349\u7A3F \xB7 \u8865\u5168\u540E\u6CE8\u518C\u5230 TeamFlow")), /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
           "aria-label": l("\u5173\u95ED\u7F16\u8F91"),
@@ -5147,10 +5352,10 @@ function WorkflowWizard({
             })(),
             draft.tasks.flatMap((t) => [
               ...t.dependencies.map(
-                (id) => edge(positions[id], positions[t.id], id + ":" + t.id, { fromId: id, toId: t.id })
+                (id) => edge(positions[id], positions[t.id], id + ":" + t.id, { fromId: id, toId: t.id, returning: draft.loops?.some((loop) => loop.rejectTaskIds?.includes(id) && loop.rejectTaskIds.includes(t.id)) })
               )
             ]),
-            (draft.loops || []).map((loop) => edge(positions[loop.gateId], positions[loop.entryId], "reject:" + loop.gateId, { fromId: loop.gateId, toId: loop.entryId, returning: true }))
+            (draft.loops || []).flatMap((loop) => workflowRejectEdges(draft.tasks, loop).map(({ from, to, kind }) => edge(positions[from], positions[to], `reject:${loop.gateId}:${from}:${to}`, { fromId: from, toId: to, returning: true, edgeKind: kind, gateId: loop.gateId })))
           ),
           marquee && /* @__PURE__ */ import_react8.default.createElement(
             "div",
@@ -5177,7 +5382,7 @@ function WorkflowWizard({
           ].map((n) => /* @__PURE__ */ import_react8.default.createElement(
             "article",
             {
-              className: `gal-flow-node ${n.kind} ${n.nodeType || ""} ${selection.includes(n.id) ? "selected" : ""}`,
+              className: `gal-flow-node ${n.kind} ${n.nodeType || ""} ${draft.loops?.some((loop) => loop.rejectTaskIds?.includes(n.id)) ? "gal-flow-reject-task" : ""} ${selection.includes(n.id) ? "selected" : ""}`,
               style: { left: n.position.x, top: n.position.y },
               key: n.id,
               "data-flow-node": n.id,
@@ -5203,7 +5408,7 @@ function WorkflowWizard({
                   name: nodeIcon(n.nodeType || n.kind)
                 }
               ),
-              n.kind === "agent" ? "AGENT" : l(nodeLabel(n.nodeType))
+              draft.loops?.some((loop) => loop.rejectTaskIds?.includes(n.id)) ? l("\u4EC5\u9000\u56DE\u65F6\u6267\u884C") : n.kind === "agent" ? "AGENT" : l(nodeLabel(n.nodeType))
             ),
             /* @__PURE__ */ import_react8.default.createElement(
               "button",
@@ -5282,7 +5487,7 @@ function WorkflowWizard({
               {
                 className: "gal-flow-port-reject",
                 "aria-label": l("REJECT \u8FD4\u56DE"),
-                title: l("REJECT\uFF1A\u62D6\u5230\u4E0A\u6E38\u4EFB\u52A1\u7684\u8F93\u5165\u70B9"),
+                title: l("REJECT\uFF1A\u62D6\u5230\u5FAA\u73AF\u5165\u53E3\u6216\u9000\u56DE\u5206\u652F\u4EFB\u52A1\u7684\u8F93\u5165\u70B9"),
                 "data-flow-port": "reject",
                 "data-node": n.id,
                 onPointerDown: (e) => startWire(e, n.id, "reject"),
@@ -5373,7 +5578,7 @@ function WorkflowWizard({
           "aria-label": `Agent ${l(label)}`,
           disabled: busy,
           rows: 3,
-          maxLength: key === "executionPrompt" ? 64e3 : 16e3,
+          maxLength: MAX_WORKFLOW_TEXT_LENGTH,
           value: agent.snapshot?.[key] || "",
           onChange: (e) => updateAgent({
             snapshot: {
@@ -5409,10 +5614,13 @@ function WorkflowWizard({
         },
         /* @__PURE__ */ import_react8.default.createElement("option", { value: "human" }, l("\u4EBA\u5DE5\u5BA1\u6838")),
         /* @__PURE__ */ import_react8.default.createElement("option", { value: "ai" }, l("AI \u5BA1\u6838"))
-      )), selectedKind === "gate" && /* @__PURE__ */ import_react8.default.createElement("section", { className: "gal-flow-loop-settings", "aria-label": l("\u95E8\u63A7\u8DEF\u5F84\u4E0E\u5FAA\u73AF") }, /* @__PURE__ */ import_react8.default.createElement("h4", null, l("PASS \xB7 \u901A\u8FC7\u540E\u7EE7\u7EED")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-flow-pass-targets" }, draft.tasks.filter((t) => t.id !== task.id && !workflowAncestors(draft.tasks, task.id).has(t.id)).map((t) => /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check", key: t.id }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", checked: t.dependencies.includes(task.id), onChange: (e) => {
+      )), selectedKind === "gate" && /* @__PURE__ */ import_react8.default.createElement("section", { className: "gal-flow-loop-settings", "aria-label": l("\u95E8\u63A7\u8DEF\u5F84\u4E0E\u5FAA\u73AF") }, /* @__PURE__ */ import_react8.default.createElement("h4", null, l("PASS \xB7 \u901A\u8FC7\u540E\u7EE7\u7EED")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-flow-pass-targets" }, draft.tasks.filter((t) => t.id !== task.id && !selectedLoop?.rejectTaskIds?.includes(t.id) && !workflowAncestors(draft.tasks, task.id).has(t.id)).map((t) => /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check", key: t.id }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", checked: t.dependencies.includes(task.id), onChange: (e) => {
         if (e.target.checked) connect(t.id, task.id);
         else update({ tasks: draft.tasks.map((row) => row.id === t.id ? { ...row, dependencies: row.dependencies.filter((id) => id !== task.id) } : row) });
-      } }), t.subject || l("\u672A\u547D\u540D\u8282\u70B9")))), !draft.tasks.some((t) => t.dependencies.includes(task.id)) && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u901A\u8FC7\u540E\u7ED3\u675F\u6B64\u8DEF\u5F84")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("REJECT \xB7 \u8FD4\u56DE\u5165\u53E3"), /* @__PURE__ */ import_react8.default.createElement("select", { "aria-label": l("REJECT \u8FD4\u56DE\u5165\u53E3"), value: selectedLoop?.entryId || "", onChange: (e) => setReturn(task.id, e.target.value) }, /* @__PURE__ */ import_react8.default.createElement("option", { value: "" }, l("\u672A\u8BBE\u7F6E\u5FAA\u73AF\u8FD4\u56DE\u7EBF")), draft.tasks.filter((t) => !t.checkpoint && t.kind !== "archive" && workflowAncestors(draft.tasks, task.id).has(t.id)).map((t) => /* @__PURE__ */ import_react8.default.createElement("option", { key: t.id, value: t.id }, t.subject || l("\u672A\u547D\u540D\u8282\u70B9"))))), !selectedLoop && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u5148\u8FDE\u63A5\u4E0A\u6E38\u4EFB\u52A1\uFF0C\u518D\u4ECE\u95E8\u63A7\u5E95\u90E8 REJECT \u70B9\u62D6\u56DE\u5165\u53E3\uFF0C\u6216\u5728\u4E0A\u65B9\u9009\u62E9\u5165\u53E3\u3002")), selectedLoop && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, selectedLoop.mode === "ai" && /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u72EC\u7ACB\u5BA1\u6838 Agent"), /* @__PURE__ */ import_react8.default.createElement("select", { "aria-label": l("\u72EC\u7ACB\u5BA1\u6838 Agent"), value: selectedLoop.reviewer || "", onChange: (e) => setLoop(task.id, { reviewer: e.target.value }) }, /* @__PURE__ */ import_react8.default.createElement("option", { value: "" }, l("\u9009\u62E9\u72EC\u7ACB\u5BA1\u6838 Agent")), agents.map((a) => /* @__PURE__ */ import_react8.default.createElement("option", { key: a.id, value: a.id, disabled: draft.tasks.some((t) => loopBody.includes(t.id) && t.assignee === a.id) }, a.label)))), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09"), /* @__PURE__ */ import_react8.default.createElement("input", { "aria-label": l("\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09"), type: "number", min: 1, max: 20, value: selectedLoop.maxRounds, onChange: (e) => setLoop(task.id, { maxRounds: Number(e.target.value) }) })), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09"), /* @__PURE__ */ import_react8.default.createElement("input", { "aria-label": l("\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09"), type: "number", min: 1, max: 1440, value: selectedLoop.timeoutMinutes, onChange: (e) => setLoop(task.id, { timeoutMinutes: Number(e.target.value) }) })), /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", checked: Boolean(selectedLoop.rejectToEntry), onChange: (e) => setLoop(task.id, { rejectToEntry: e.target.checked }) }), l("\u9000\u56DE\u65F6\u4ECE\u5165\u53E3\u91CD\u8DD1")), !selectedLoop.rejectToEntry && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u5BA1\u6838\u65F6\u7531 TeamFlow \u6307\u5B9A\u8FD4\u5DE5\u4EFB\u52A1\u53CA\u5176\u4E0B\u6E38\u3002")), !!loopBody.length && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u5FAA\u73AF\u5185\u4EFB\u52A1\uFF1A"), loopBody.map((id) => draft.tasks.find((t) => t.id === id)?.subject).join(" \u2192 ")), loopIssue && /* @__PURE__ */ import_react8.default.createElement("p", { role: "status", className: "gal-error" }, l(loopIssue)), /* @__PURE__ */ import_react8.default.createElement("button", { type: "button", onClick: () => setReturn(task.id, "") }, l("\u5220\u9664 REJECT \u8FD4\u56DE\u7EBF")))), selectedKind === "archive" && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", checked: Boolean(task.archive?.copyFiles), onChange: (e) => updateTask({ archive: { ...task.archive, copyFiles: e.target.checked } }) }), l("\u590D\u5236\u6210\u679C\u6587\u4EF6")), /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u9ED8\u8BA4\u8BB0\u5F55\u8BC1\u636E\u548C\u6587\u4EF6\u6458\u8981\uFF1B\u5F00\u542F\u540E\u7531 TeamFlow \u6309\u5F52\u6863\u7B56\u7565\u590D\u5236\u6587\u4EF6\u3002")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), /* @__PURE__ */ import_react8.default.createElement("textarea", { "aria-label": l("\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), rows: 4, value: (task.archive?.paths || []).join("\n"), onChange: (e) => updateTask({ archive: { ...task.archive, paths: e.target.value.split("\n") } }), placeholder: l("\u7559\u7A7A\u4F7F\u7528\u4E0A\u6E38\u4EA4\u4ED8\u7269\u4E0E\u53D8\u66F4\u6587\u4EF6") }))), !task.checkpoint && task.kind !== "archive" && /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u8D1F\u8D23 Agent"), /* @__PURE__ */ import_react8.default.createElement(
+      } }), t.subject || l("\u672A\u547D\u540D\u8282\u70B9")))), !draft.tasks.some((t) => t.dependencies.includes(task.id)) && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u901A\u8FC7\u540E\u7ED3\u675F\u6B64\u8DEF\u5F84")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("REJECT \xB7 \u8FD4\u56DE\u5165\u53E3"), /* @__PURE__ */ import_react8.default.createElement("select", { "aria-label": l("REJECT \u8FD4\u56DE\u5165\u53E3"), value: selectedLoop?.entryId || "", onChange: (e) => setLoop(task.id, { entryId: e.target.value }) }, /* @__PURE__ */ import_react8.default.createElement("option", { value: "" }, l("\u7A0D\u540E\u8FDE\u63A5\u5FAA\u73AF\u5165\u53E3")), draft.tasks.filter((t) => !t.checkpoint && t.kind !== "archive" && !selectedLoop?.rejectTaskIds?.includes(t.id)).map((t) => /* @__PURE__ */ import_react8.default.createElement("option", { key: t.id, value: t.id }, t.subject || l("\u672A\u547D\u540D\u8282\u70B9"))))), !selectedLoop && /* @__PURE__ */ import_react8.default.createElement("button", { type: "button", onClick: () => setLoop(task.id, {}) }, l("\u914D\u7F6E REJECT \u5206\u652F")), selectedLoop && /* @__PURE__ */ import_react8.default.createElement("fieldset", { className: "gal-flow-reject-settings" }, /* @__PURE__ */ import_react8.default.createElement("legend", null, l("REJECT \u540E\u6267\u884C\u7684\u4EFB\u52A1")), /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u4EC5\u5728\u9000\u56DE\u65F6\u6267\u884C\uFF0C\u5B8C\u6210\u540E\u8FD4\u56DE\u5FAA\u73AF\u5165\u53E3\u3002\u53EF\u4ECE REJECT \u70B9\u62D6\u7EBF\u5230\u4EFB\u52A1\uFF0C\u518D\u8FDE\u63A5\u5206\u652F\u5185\u4EFB\u52A1\u3002")), draft.tasks.filter((t) => !t.checkpoint && t.kind !== "archive" && !workflowAncestors(draft.tasks, task.id).has(t.id)).map((t) => /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check", key: t.id }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", checked: Boolean(selectedLoop.rejectTaskIds?.includes(t.id)), onChange: (e) => {
+        if (e.target.checked) setReturn(task.id, t.id);
+        else update(removeRejectTask(draft.tasks, draft.loops, task.id, t.id));
+      } }), t.subject || l("\u672A\u547D\u540D\u8282\u70B9")))), selectedLoop && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, selectedLoop.mode === "ai" && /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u72EC\u7ACB\u5BA1\u6838 Agent"), /* @__PURE__ */ import_react8.default.createElement("select", { "aria-label": l("\u72EC\u7ACB\u5BA1\u6838 Agent"), value: selectedLoop.reviewer || "", onChange: (e) => setLoop(task.id, { reviewer: e.target.value }) }, /* @__PURE__ */ import_react8.default.createElement("option", { value: "" }, l("\u9009\u62E9\u72EC\u7ACB\u5BA1\u6838 Agent")), agents.map((a) => /* @__PURE__ */ import_react8.default.createElement("option", { key: a.id, value: a.id }, a.label)))), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09"), /* @__PURE__ */ import_react8.default.createElement("input", { "aria-label": l("\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09"), type: "number", min: 1, max: 20, value: selectedLoop.maxRounds, onChange: (e) => setLoop(task.id, { maxRounds: Number(e.target.value) }) })), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09"), /* @__PURE__ */ import_react8.default.createElement("input", { "aria-label": l("\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09"), type: "number", min: 1, max: 1440, value: selectedLoop.timeoutMinutes, onChange: (e) => setLoop(task.id, { timeoutMinutes: Number(e.target.value) }) })), /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", disabled: Boolean(selectedLoop.rejectTaskIds?.length), checked: Boolean(selectedLoop.rejectToEntry), onChange: (e) => setLoop(task.id, { rejectToEntry: e.target.checked }) }), l("\u9000\u56DE\u65F6\u4ECE\u5165\u53E3\u91CD\u8DD1")), !selectedLoop.rejectToEntry && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u5BA1\u6838\u65F6\u7531 TeamFlow \u6307\u5B9A\u8FD4\u5DE5\u4EFB\u52A1\u53CA\u5176\u4E0B\u6E38\u3002")), !!loopBody.length && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u5FAA\u73AF\u5185\u4EFB\u52A1\uFF1A"), loopBody.map((id) => draft.tasks.find((t) => t.id === id)?.subject).join(" \u2192 ")), loopIssue && /* @__PURE__ */ import_react8.default.createElement("p", { role: "status", className: "gal-error" }, l(loopIssue)), /* @__PURE__ */ import_react8.default.createElement("button", { type: "button", onClick: () => update({ loops: (draft.loops || []).filter((loop) => loop.gateId !== task.id) }) }, l("\u5220\u9664 REJECT \u8FD4\u56DE\u7EBF")))), selectedKind === "archive" && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", checked: Boolean(task.archive?.copyFiles), onChange: (e) => updateTask({ archive: { ...task.archive, copyFiles: e.target.checked } }) }), l("\u590D\u5236\u6210\u679C\u6587\u4EF6")), /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u9ED8\u8BA4\u8BB0\u5F55\u8BC1\u636E\u548C\u6587\u4EF6\u6458\u8981\uFF1B\u5F00\u542F\u540E\u7531 TeamFlow \u6309\u5F52\u6863\u7B56\u7565\u590D\u5236\u6587\u4EF6\u3002")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), /* @__PURE__ */ import_react8.default.createElement("textarea", { "aria-label": l("\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), rows: 4, value: (task.archive?.paths || []).join("\n"), onChange: (e) => updateTask({ archive: { ...task.archive, paths: e.target.value.split("\n") } }), placeholder: l("\u7559\u7A7A\u4F7F\u7528\u4E0A\u6E38\u4EA4\u4ED8\u7269\u4E0E\u53D8\u66F4\u6587\u4EF6") }))), !task.checkpoint && task.kind !== "archive" && /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u8D1F\u8D23 Agent"), /* @__PURE__ */ import_react8.default.createElement(
         "select",
         {
           "aria-label": l("\u8D1F\u8D23 Agent"),
@@ -5434,7 +5642,7 @@ function WorkflowWizard({
         {
           "aria-label": l(label),
           rows: 3,
-          maxLength: 64e3,
+          maxLength: MAX_WORKFLOW_TEXT_LENGTH,
           value: task.general[key],
           onChange: (e) => updateTask({
             general: { ...task.general, [key]: e.target.value }
@@ -5451,9 +5659,14 @@ function WorkflowWizard({
           onPointerDown: (e) => e.stopPropagation()
         },
         contextMenu.edge ? /* @__PURE__ */ import_react8.default.createElement("button", { onClick: () => {
-          const { edgeFrom, edgeTo, edgeReturn } = contextMenu.edge;
-          if (edgeReturn) {
-            update({ loops: (draft.loops || []).filter((loop) => loop.gateId !== edgeFrom) });
+          const { edgeFrom, edgeTo, edgeKind, edgeGate } = contextMenu.edge;
+          if (edgeKind === "return" || edgeKind === "reject-end") {
+            setLoop(edgeGate, { entryId: "" });
+            setContextMenu(null);
+            return;
+          }
+          if (edgeKind === "reject-start" || edgeKind === "reject-order") {
+            update(removeRejectTask(draft.tasks, draft.loops, edgeGate, edgeTo));
             setContextMenu(null);
             return;
           }
@@ -13590,7 +13803,7 @@ var blank = () => ({
   references: []
 });
 var when = (s, language) => s ? new Date(s).toLocaleString(language) : "";
-var fail = (e) => e?.rpcError?.message || e?.message || String(e);
+var fail2 = (e) => e?.rpcError?.message || e?.message || String(e);
 async function call(remote, name, ...args) {
   const r = await remote[name](...args);
   if (r?.ok === false) throw new Error(r.error?.message || "Gallery \u8BF7\u6C42\u5931\u8D25");
@@ -13720,7 +13933,7 @@ function GalleryContent({ remote }) {
     try {
       return await fn();
     } catch (e) {
-      setError(l(fail(e)));
+      setError(l(fail2(e)));
     } finally {
       setBusy(false);
     }
@@ -13735,7 +13948,7 @@ function GalleryContent({ remote }) {
         }
       }
     }).catch((e) => {
-      if (live) setError(l(fail(e)));
+      if (live) setError(l(fail2(e)));
     });
     return () => {
       live = false;
@@ -13766,7 +13979,7 @@ function GalleryContent({ remote }) {
           }
         }
       }).catch((e) => {
-        if (live) setError(l(fail(e)));
+        if (live) setError(l(fail2(e)));
       }).finally(() => {
         if (live) setLoading(false);
       }),
@@ -13903,7 +14116,7 @@ function GalleryContent({ remote }) {
         };
       });
     } catch (e) {
-      setEditor((x) => ({ ...x, importError: fail(e) }));
+      setEditor((x) => ({ ...x, importError: fail2(e) }));
     }
   }
   async function save() {
@@ -14547,7 +14760,7 @@ function GalleryContent({ remote }) {
       },
       l("\u4FDD\u5B58\u7528\u6237\u540D")
     ), connectionResult && /* @__PURE__ */ import_react15.default.createElement("p", { role: "status" }, l(connectionResult)), error && /* @__PURE__ */ import_react15.default.createElement("p", { role: "alert" }, l(error))),
-    /* @__PURE__ */ import_react15.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-local" }, "v0.30.0"), /* @__PURE__ */ import_react15.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-local" }, "v0.31.0"), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         disabled: busy,
