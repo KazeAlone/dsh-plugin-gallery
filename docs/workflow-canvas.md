@@ -1,6 +1,6 @@
 # Workflow 门控与循环（0.27.0）
 
-画布保存 TeamFlow main 0.2.12 的原生模板定义，不执行 Workflow。保存后可从资源详情「注册到 TeamFlow」，再由 TeamFlow 应用和执行。
+画布保存 TeamFlow main 0.2.14 的原生模板定义，不执行 Workflow。保存后可从资源详情「注册到 TeamFlow」，再由 TeamFlow 应用和执行。
 
 ## 成员与节点
 
@@ -67,3 +67,17 @@ TEAMFLOW_SOURCE=/path/to/dsh-teamflow npm test
 成员的 summary、role、executionPrompt 和任务的 general.requirements、deliverables、acceptance 均允许最多 256000 字符，前端、模板校验和模型提取结果校验一致。名称等其他限制不变；整个资源包仍受 5 MiB 限制。AI 提取请求仍保留独立的输入和输出预算。
 
 若使用中心存储，更新 Gallery 后也需重新运行 `sudo bash scripts/install-center.sh` 更新 Center 的草稿校验；数据库表无需迁移，原数据保留。TeamFlow 无需修改，建议使用 0.2.13。
+
+## 模板字段与共享上传（0.32.0）
+
+Gallery 创建页与 TeamFlow 模板库使用相同名称：模板名称、适用说明、应用前需要提供的信息、标签；成员为名称、职责概述、角色职责、通用执行指令 / PE，以及 Skill / MCP 访问开关。任务、门控、验收、归档节点均使用通用任务要求、通用交付物、通用验收要求。JSON 关键字不变，已有资源可继续编辑。
+
+TeamFlow 0.2.14 模板详情页点击「上传至共享 Gallery」，上传所选版本的原生模板快照。先在 Gallery 中连接中心服务；即使当前浏览的是内部资源库，也会明确上传到已配置的中心，不切换当前存储。可上传内置模板和个人模板，不上传运行时会话、状态或执行结果。
+
+每个源模板版本对应独立的共享资源。重复上传复用已登记的资源，保留 Gallery 中的编辑；新版本创建新资源。删除共享副本后可重新上传。同一源版本内容变化时需先另存为新版本。创建者由中心的独立用户身份确定，其他用户只可查看和使用。
+
+宿主同进程接口为 `gallery.workflowSharingStatus()` 与 `gallery.uploadWorkflowTemplate(definition, {id, version, language?})`。调用方必须在已认证的人工操作入口读取源模板，再调用上传；不作为模型工具或浏览器直接 RPC 暴露。后者返回 `{id, name, libraryId: "center", sourceVersion, reused}`。此功能沿用现有中心 HTTP 协议，无需迁移数据库。
+
+本机 `$DSH_HOME/gallery/workflow-uploads.json` 保存源版本到共享资源的对应记录，不含认证令牌。备份或迁移 DSH 时应一并保留；删除记录或上传成功后进程在记录落盘前中断，重试可能创建副本。
+
+异常中断可能遗留同目录的 `workflow-uploads.json.lock`。确认上传进程已停止并备份记录后，删除该锁目录即可重新上传。不要在仍有上传请求时清理锁。

@@ -1044,27 +1044,27 @@ export function WorkflowWizard({
                   <p>{l("已选择 ")}{selection.length}{" "}{l("个节点，拖动任一选中节点可一起移动。")}</p>
                 )}
                 <h3>{l("流程信息")}</h3>
-                <label>{l("名称")}<input
-                    aria-label={l("流程名称")}
+                <label>{l("模板名称")}<input
+                    aria-label={l("模板名称")}
                     maxLength={120}
                     value={draft.name}
                     onChange={(e) => update({ name: e.target.value })}
                   />
                 </label>
-                <label>{l("描述")}<textarea
+                <label>{l("适用说明")}<textarea
                     rows={3}
                     maxLength={2000}
                     value={draft.description}
                     onChange={(e) => update({ description: e.target.value })}
                   />
                 </label>
-                <label>{l("适用输入")}<textarea
+                <label>{l("应用前需要提供的信息")}<textarea
                     maxLength={4000}
                     value={draft.inputs}
                     onChange={(e) => update({ inputs: e.target.value })}
                   />
                 </label>
-                <label>{l("标签")}<input
+                <label>{l("标签（逗号分隔）")}<input
                     value={draft.tags.join(", ")}
                     onChange={(e) =>
                       update({
@@ -1113,9 +1113,9 @@ export function WorkflowWizard({
                 >{l("提取字段")}</button>
                 {[
                   ["name", l("名称")],
-                  ["summary", l("功能概述")],
-                  ["role", l("长期职责")],
-                  ["executionPrompt", l("通用执行指令 PE")],
+                  ["summary", l("职责概述")],
+                  ["role", l("角色职责")],
+                  ["executionPrompt", l("通用执行指令 / PE")],
                 ].map(([key, label]) => (
                   <label key={key}>
                     {l(label)}
@@ -1243,7 +1243,7 @@ export function WorkflowWizard({
                 {[
                   [
                     "requirements",
-                    task.checkpoint ? l("通用检查要求") : l("通用任务要求"),
+                    l("通用任务要求"),
                   ],
                   ["deliverables", l("通用交付物")],
                   ["acceptance", l("通用验收要求")],

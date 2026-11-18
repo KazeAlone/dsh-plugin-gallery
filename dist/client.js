@@ -37,6 +37,12 @@ module.exports = __toCommonJS(index_exports);
 
 // src/client/messages-en.mjs
 var english = {
+  \u804C\u8D23\u6982\u8FF0: "Responsibility summary",
+  \u89D2\u8272\u804C\u8D23: "Role responsibilities",
+  "\u901A\u7528\u6267\u884C\u6307\u4EE4 / PE": "General execution instructions / PE",
+  \u6A21\u677F\u540D\u79F0: "Template name",
+  \u9002\u7528\u8BF4\u660E: "When to use",
+  \u5E94\u7528\u524D\u9700\u8981\u63D0\u4F9B\u7684\u4FE1\u606F: "Information needed before use",
   "REJECT\uFF1A\u62D6\u5230\u5FAA\u73AF\u5165\u53E3\u6216\u9000\u56DE\u5206\u652F\u4EFB\u52A1\u7684\u8F93\u5165\u70B9": "REJECT: drag to the loop entry or a return-branch task input",
   "\u914D\u7F6E REJECT \u5206\u652F": "Configure REJECT branch",
   "REJECT \u540E\u6267\u884C\u7684\u4EFB\u52A1": "Tasks to run after REJECT",
@@ -5503,15 +5509,15 @@ function WorkflowWizard({
             ))
           ))
         ))
-      ), /* @__PURE__ */ import_react8.default.createElement("aside", { className: "gal-flow-inspector" }, loading && /* @__PURE__ */ import_react8.default.createElement("p", { role: "status" }, l("\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u5E93\u2026")), !task && !agent && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, selection.length > 1 && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u5DF2\u9009\u62E9 "), selection.length, " ", l("\u4E2A\u8282\u70B9\uFF0C\u62D6\u52A8\u4EFB\u4E00\u9009\u4E2D\u8282\u70B9\u53EF\u4E00\u8D77\u79FB\u52A8\u3002")), /* @__PURE__ */ import_react8.default.createElement("h3", null, l("\u6D41\u7A0B\u4FE1\u606F")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u540D\u79F0"), /* @__PURE__ */ import_react8.default.createElement(
+      ), /* @__PURE__ */ import_react8.default.createElement("aside", { className: "gal-flow-inspector" }, loading && /* @__PURE__ */ import_react8.default.createElement("p", { role: "status" }, l("\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u5E93\u2026")), !task && !agent && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, selection.length > 1 && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u5DF2\u9009\u62E9 "), selection.length, " ", l("\u4E2A\u8282\u70B9\uFF0C\u62D6\u52A8\u4EFB\u4E00\u9009\u4E2D\u8282\u70B9\u53EF\u4E00\u8D77\u79FB\u52A8\u3002")), /* @__PURE__ */ import_react8.default.createElement("h3", null, l("\u6D41\u7A0B\u4FE1\u606F")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u6A21\u677F\u540D\u79F0"), /* @__PURE__ */ import_react8.default.createElement(
         "input",
         {
-          "aria-label": l("\u6D41\u7A0B\u540D\u79F0"),
+          "aria-label": l("\u6A21\u677F\u540D\u79F0"),
           maxLength: 120,
           value: draft.name,
           onChange: (e) => update({ name: e.target.value })
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u63CF\u8FF0"), /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u9002\u7528\u8BF4\u660E"), /* @__PURE__ */ import_react8.default.createElement(
         "textarea",
         {
           rows: 3,
@@ -5519,14 +5525,14 @@ function WorkflowWizard({
           value: draft.description,
           onChange: (e) => update({ description: e.target.value })
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u9002\u7528\u8F93\u5165"), /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u5E94\u7528\u524D\u9700\u8981\u63D0\u4F9B\u7684\u4FE1\u606F"), /* @__PURE__ */ import_react8.default.createElement(
         "textarea",
         {
           maxLength: 4e3,
           value: draft.inputs,
           onChange: (e) => update({ inputs: e.target.value })
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u6807\u7B7E"), /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u6807\u7B7E\uFF08\u9017\u53F7\u5206\u9694\uFF09"), /* @__PURE__ */ import_react8.default.createElement(
         "input",
         {
           value: draft.tags.join(", "),
@@ -5555,9 +5561,9 @@ function WorkflowWizard({
         l("\u63D0\u53D6\u5B57\u6BB5")
       ), [
         ["name", l("\u540D\u79F0")],
-        ["summary", l("\u529F\u80FD\u6982\u8FF0")],
-        ["role", l("\u957F\u671F\u804C\u8D23")],
-        ["executionPrompt", l("\u901A\u7528\u6267\u884C\u6307\u4EE4 PE")]
+        ["summary", l("\u804C\u8D23\u6982\u8FF0")],
+        ["role", l("\u89D2\u8272\u804C\u8D23")],
+        ["executionPrompt", l("\u901A\u7528\u6267\u884C\u6307\u4EE4 / PE")]
       ].map(([key, label]) => /* @__PURE__ */ import_react8.default.createElement("label", { key }, l(label), key === "name" ? /* @__PURE__ */ import_react8.default.createElement(
         "input",
         {
@@ -5633,7 +5639,7 @@ function WorkflowWizard({
       )), [
         [
           "requirements",
-          task.checkpoint ? l("\u901A\u7528\u68C0\u67E5\u8981\u6C42") : l("\u901A\u7528\u4EFB\u52A1\u8981\u6C42")
+          l("\u901A\u7528\u4EFB\u52A1\u8981\u6C42")
         ],
         ["deliverables", l("\u901A\u7528\u4EA4\u4ED8\u7269")],
         ["acceptance", l("\u901A\u7528\u9A8C\u6536\u8981\u6C42")]
@@ -14760,7 +14766,7 @@ function GalleryContent({ remote }) {
       },
       l("\u4FDD\u5B58\u7528\u6237\u540D")
     ), connectionResult && /* @__PURE__ */ import_react15.default.createElement("p", { role: "status" }, l(connectionResult)), error && /* @__PURE__ */ import_react15.default.createElement("p", { role: "alert" }, l(error))),
-    /* @__PURE__ */ import_react15.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-local" }, "v0.31.0"), /* @__PURE__ */ import_react15.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-local" }, "v0.32.0"), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         disabled: busy,

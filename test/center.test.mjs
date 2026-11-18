@@ -4,10 +4,14 @@ import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomBytes } from "node:crypto";
+import { pathToFileURL } from "node:url";
+import { Readable } from "node:stream";
+import GalleryService from "../src/host.mjs";
 import pg from "pg";
 import { PostgresGalleryStore } from "../src/postgres-store.mjs";
 import { createCenterServer } from "../src/center-server.mjs";
 import { StorageManager } from "../src/storage-manager.mjs";
+import { uploadWorkflowTemplate } from "../src/workflow-sharing.mjs";
 import { RemoteGalleryStore } from "../src/remote-store.mjs";
 import { createSkillProvider } from "../src/skill-provider.mjs";
 import { galleryAgents } from "../src/agent-runtime.mjs";
@@ -566,6 +570,93 @@ test(
     b.setUsername("Bob");
     await a.configure({ type: "service", url });
     await b.configure({ type: "service", url });
+    const template = JSON.parse(
+      readFileSync(
+        new URL("./fixtures/workflow-gated.json", import.meta.url),
+        "utf8",
+      ),
+    );
+    await a.configure({ type: "internal" });
+    const shared = await uploadWorkflowTemplate(a, template, {
+      id: "personal-example",
+      version: 1,
+    });
+    assert.equal(shared.reused, false);
+    assert.equal(a.read().activeLibraryId, "local");
+    const received = await b.getResource(shared.id);
+    assert.equal(received.creator.username, "Alice");
+    assert.equal(received.canEdit, false);
+    assert.deepEqual(JSON.parse(received.files[0].content), template);
+    await assert.rejects(b.deleteResource(shared.id, 1), { status: 403 });
+    await assert.rejects(
+      b.updateResource(shared.id, { ...received, name: "Forged" }, 1),
+      { status: 403 },
+    );
+    assert.equal(
+      (
+        await uploadWorkflowTemplate(a, template, {
+          id: "personal-example",
+          version: 1,
+        })
+      ).id,
+      shared.id,
+    );
+    if (process.env.TEAMFLOW_SOURCE) {
+      const module = (name) =>
+        import(
+          pathToFileURL(join(process.env.TEAMFLOW_SOURCE, "lib", name)).href
+        );
+      const { saveTemplate } = await module("template-store.js");
+      const { installWorkflowWorkbench } = await module("workflow-runtime.js");
+      const { authenticatedWebRoutes } = await module("web-routes.js");
+      const library = join(root, "templates");
+      const source = await saveTemplate(library, template);
+      const gallery = Object.create(GalleryService.prototype);
+      gallery.store = a;
+      let route;
+      const ctx = {
+        get: (key) => (key === "gallery" ? gallery : undefined),
+        effect: (fn) => fn(),
+        agents: { get: () => undefined },
+      };
+      installWorkflowWorkbench(
+        ctx,
+        { stateDir: ".agent-teams", templateDirectory: library, maxMembers: 8 },
+        {},
+        authenticatedWebRoutes(
+          {
+            register(value) {
+              route = value;
+              return () => {};
+            },
+          },
+          () => ({ requestRejection: () => undefined }),
+        ),
+      );
+      const request = Readable.from([
+        JSON.stringify({
+          action: "template_upload_gallery",
+          templateId: source.id,
+          version: source.version,
+        }),
+      ]);
+      request.method = "POST";
+      request.headers = {};
+      let status, result;
+      await route.handler(request, {
+        writeHead: (value) => (status = value),
+        end: (value) => (result = JSON.parse(value)),
+      });
+      assert.equal(status, 200, result?.error);
+      assert.equal(result.resource.libraryId, "center");
+      const actual = await b.getResource(result.resource.id);
+      assert.equal(actual.name, source.name);
+      assert.equal(actual.canEdit, false);
+      assert.equal(actual.metadata.teamflowSource.id, source.id);
+      assert.deepEqual(JSON.parse(actual.files[0].content).loops, source.loops);
+      assert.equal(a.read().activeLibraryId, "local");
+    }
+    await a.configure({ type: "service" });
     const saved = await a.createResource(skill);
     assert.equal((await b.getResource(saved.id)).canEdit, false);
     await assert.rejects(b.updateResource(saved.id, skill, 1), { status: 403 });

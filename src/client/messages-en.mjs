@@ -1,5 +1,11 @@
 // Plugin-owned interface text. Resource content is never translated.
 export const english = {
+  职责概述: "Responsibility summary",
+  角色职责: "Role responsibilities",
+  "通用执行指令 / PE": "General execution instructions / PE",
+  模板名称: "Template name",
+  适用说明: "When to use",
+  应用前需要提供的信息: "Information needed before use",
   "REJECT：拖到循环入口或退回分支任务的输入点":
     "REJECT: drag to the loop entry or a return-branch task input",
   "配置 REJECT 分支": "Configure REJECT branch",

@@ -16,6 +16,7 @@ import {
   registerGalleryAgentListTool,
   registerGalleryAgentRunTool,
 } from "./agent-runtime.mjs";
+import { workflowSharingStatus, uploadWorkflowTemplate } from "./workflow-sharing.mjs";
 import { workflowFromResource } from "./workflow-template.mjs";
 import { syncWorkflowUsage } from "./workflow-usage.mjs";
 import { publishToTeamflow } from "./teamflow-publish.mjs";
@@ -171,6 +172,8 @@ export default class GalleryService extends TypertRemoteService {
     )
       return "请通过 gallery_mcp_search、gallery_mcp_tools 和 gallery_mcp_call 按需调用";
   }
+  workflowSharingStatus() { return workflowSharingStatus(this.store); }
+  uploadWorkflowTemplate(definition, source) { return uploadWorkflowTemplate(this.store, definition, source); }
   resourceCapabilities() {
     return {
       version: 1,
