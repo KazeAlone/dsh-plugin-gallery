@@ -1,4 +1,5 @@
-import { connectionPort, rejectPath, rejectPort } from './workflow-connections.ts'
+import { rejectPath, rejectPort } from './workflow-connections.ts'
+import { connectionPort } from './canvas-card-geometry.ts'
 import type { TeamTask } from '../types.ts'
 
 export interface CanvasPoint { x: number; y: number }

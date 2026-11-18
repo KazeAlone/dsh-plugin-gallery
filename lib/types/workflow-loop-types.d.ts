@@ -73,3 +73,5 @@ export declare function roundBodyIds(loop: WorkflowLoop): string[];
 export declare function isDraftRejectTask(team: {
     tasks: readonly Pick<TeamTask, 'checkpoint'>[];
 }, taskId: string): boolean;
+/** A configured loop may be saved as a draft, but execution must enter it from the forward graph. */
+export declare function loopHasExternalEntry(tasks: readonly Pick<TeamTask, 'id' | 'dependencies'>[], loop: Pick<WorkflowLoop, 'entryId' | 'gateId' | 'bodyIds'>): boolean;

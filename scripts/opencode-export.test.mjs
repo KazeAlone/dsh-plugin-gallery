@@ -66,6 +66,8 @@ test('invalid configuration cannot become a misleading executable package', () =
   }
   const badReviewer = loopFixture(); badReviewer.workflow.loops[0].reviewer = 'worker'; badReviewer.tasks.find(t => t.id === 'gate').assignee = 'worker'
   assert.throws(() => openCodeFiles(badReviewer), /独立审核/)
+  const missingEntry = loopFixture(); missingEntry.tasks.find(task => task.id === 'a').dependencies = []
+  assert.throws(() => openCodeFiles(missingEntry), /环外任务连接到循环入口/)
   const badLimit = loopFixture(); badLimit.workflow.loops[0].maxRounds = 21
   assert.throws(() => openCodeFiles(badLimit), /1–20/)
 })

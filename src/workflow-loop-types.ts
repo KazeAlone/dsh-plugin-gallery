@@ -90,3 +90,9 @@ export function roundBodyIds(loop: WorkflowLoop): string[] {
 export function isDraftRejectTask(team: {tasks: readonly Pick<TeamTask, 'checkpoint'>[]}, taskId: string): boolean {
   return team.tasks.some(task => task.checkpoint?.draftLoopSettings?.rejectTaskIds?.includes(taskId))
 }
+
+/** A configured loop may be saved as a draft, but execution must enter it from the forward graph. */
+export function loopHasExternalEntry(tasks: readonly Pick<TeamTask,'id'|'dependencies'>[], loop: Pick<WorkflowLoop,'entryId'|'gateId'|'bodyIds'>): boolean {
+  const entry = tasks.find(task => task.id === loop.entryId)
+  return entry?.dependencies.some(id => id !== loop.gateId && !loop.bodyIds.includes(id) && tasks.some(task => task.id === id)) ?? false
+}

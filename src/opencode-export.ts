@@ -1,4 +1,5 @@
 import type { TeamState } from './types.ts'
+import { loopHasExternalEntry } from './workflow-loop-types.ts'
 import { deriveLoop, parseLoopConfig, validateLoopGraph } from './workflow-loop-config.ts'
 
 /** Export configuration by allowlist: never serialize the live team/session. */
@@ -20,7 +21,8 @@ export function openCodeFiles(team: TeamState) {
   // Never reuse round/status/body caches from a running or archived workflow.
   const loops = (team.workflow?.loops ?? []).map((loop, i) => deriveLoop(team, parseLoopConfig(loop), `loop-${i + 1}`, 'export'))
   const fresh = { ...team, members: team.members.map(m => ({ ...m, status: 'idle' as const })), tasks: team.tasks.map(t => ({ ...t, status: 'pending' as const })), workflow: { positions: {}, discussions: {}, history: [], loops } }
-  validateLoopGraph(fresh)
+  validateLoopGraph(fresh, true)
+  if (loops.some(loop => !loopHasExternalEntry(fresh.tasks, loop))) throw new Error('请先从环外任务连接到循环入口')
   if (team.tasks.some(t => t.checkpoint?.kind === 'gate' && !loops.some(l => l.gateId === t.id))) throw new Error('门控节点必须连接返回线构成环路，才能完成配置或运行')
   // ASCII namespace derived from identity, not filenames supplied by users.
   let hash = 2166136261

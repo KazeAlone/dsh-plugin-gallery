@@ -1,4 +1,4 @@
-import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow, isDraftLoop, isUntriggeredLoopTask } from '../workflow-loop-types.ts'
+import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow, isDraftLoop, isUntriggeredLoopTask, loopHasExternalEntry } from '../workflow-loop-types.ts'
 import { previewGate, upstreamIds } from '../workflow-loop-config.ts'
 import { draftTaskId } from './workflow-draft.ts'
 import { WorkbenchGuide } from './WorkbenchGuide.tsx'
@@ -197,6 +197,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
   const taskEditing = !!editor && editor.type !== 'member'
   const unsaved = pendingDrafts(team, view.drafts,l)
   const currentDirty = unsaved.some(item => item.key === draftId)
+  const missingLoopInputs = team?.workflow?.loops?.filter(loop => !loopHasExternalEntry(team.tasks, loop)) ?? []
   const unconfigured = team?.tasks.filter(task => task.workflowConfigPending) ?? []
   const taskStatus = (task: TeamTask, _ready: string[]) => taskReadiness(team!, task, l).label
   useEffect(() => {
@@ -724,7 +725,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
       {pendingCount > 0 && <span>{pendingCount} {l(" 项修改待确认")}</span>}
       {reviewCount > 0 && <span>{reviewCount} {l(" 项等待人工验收")}</span>}
     </button>}
-    {!nativeOnly && !reviewEntryOnly && !archiveView && team?.phase === 'staged' && <button type="button" className={`${css.entry} ${css.startEntry}`} disabled={working || unsaved.length > 0 || unconfigured.length > 0 || pendingCount > 0} title={unsaved.length ? l("请先保存属性草稿") : unconfigured.length ? l("请先完成待配置节点") : pendingCount ? l("请先处理待确认的修改") : undefined} onClick={() => void perform('start')}>{l("确认并启动团队")}</button>}
+    {!nativeOnly && !reviewEntryOnly && !archiveView && team?.phase === 'staged' && <button type="button" className={`${css.entry} ${css.startEntry}`} disabled={working || unsaved.length > 0 || unconfigured.length > 0 || missingLoopInputs.length > 0 || pendingCount > 0} title={unsaved.length ? l("请先保存属性草稿") : missingLoopInputs.length ? l("请先从环外任务连接到循环入口") : unconfigured.length ? l("请先完成待配置节点") : pendingCount ? l("请先处理待确认的修改") : undefined} onClick={() => void perform('start')}>{l("确认并启动团队")}</button>}
     {!opened && !nativeOnly && !reviewEntryOnly && pendingNotice}
     {error && !opened && <div className={css.error} role="alert">{workflowMessage(error, l)}</div>}
     {!nativeOnly && reviewNotice}
@@ -747,10 +748,14 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
       }
     }}>
-      <header className={css.header}><div className={css.title}><BrandIcon size={32}/><div><strong>{team?.name ?? 'Teamflow'}</strong><span>{archiveView ? l("归档画布 · 成果与详情完整保留") : team?.phase === 'staged' ? l("准备流程 · 确认后开始执行") : l("团队工作台")}{!!team?.tasks.length && <> · {l("已完成 {0}/{1}", completed, team.tasks.length)}</>}</span></div></div>
+      <header className={css.header}><div className={css.title}><BrandIcon size={32}/><div><strong>{team?.name ?? 'Teamflow'}</strong><span>{archiveView ? l("归档画布 · 成果与详情完整保留") : team?.phase === 'staged' ? l("准备流程 · 确认后开始执行") : l("团队工作台")}{!!team?.tasks.length && <> · {l("已完成 {0}/{1}", completed, team.tasks.length)}</>}</span>
+        {!archiveView && missingLoopInputs.length > 0 && <div className={css.loopEntryWarning} role="status" data-loop-entry-warning>
+          {l('请先从环外任务连接到循环入口')}
+          {missingLoopInputs.map(loop => <button type="button" key={loop.id} onClick={() => locateTask(loop.entryId)}>{team?.tasks.find(task=>task.id===loop.entryId)?.subject ?? loop.entryId}</button>)}
+        </div>}</div></div>
         <div>{team && !galleryMode && !showOutcomes && (archiveView ? <button className={css.primary} disabled={working} onClick={() => void perform('restore_archive')}><WorkflowIcon name="edit" />{l("恢复并编辑流程")}</button> : <button data-guide="edit" aria-pressed={editing} onClick={() => {setEditing(!editing);updateView(current=>({...current,revision:current.revision+1}))}}>{editing ? <IconBranchOutline16 /> : <WorkflowIcon name="edit" />}{editing ? l("查看流程") : l("编辑流程")}</button>)}
           {team && !galleryMode && !showOutcomes && <OpenCodeExport key={team.id} sessionId={sessionId} base={data?.base} archived={archiveView} team={team} disabled={working || !!connectionError || pendingCount > 0} unsaved={unsaved.length > 0} />}
-          {!galleryMode && !showOutcomes && !archiveView && team?.phase === 'staged' && <button data-guide="run" className={css.primary} disabled={working || unsaved.length > 0 || unconfigured.length > 0 || pendingCount > 0} title={unsaved.length ? l("请先保存属性草稿") : unconfigured.length ? l("请先完成待配置节点") : pendingCount ? l("请先处理待确认的修改") : undefined} onClick={() => void perform('start')}>{l("确认并启动")}</button>}
+          {!galleryMode && !showOutcomes && !archiveView && team?.phase === 'staged' && <button data-guide="run" className={css.primary} disabled={working || unsaved.length > 0 || unconfigured.length > 0 || missingLoopInputs.length > 0 || pendingCount > 0} title={unsaved.length ? l("请先保存属性草稿") : missingLoopInputs.length ? l("请先从环外任务连接到循环入口") : unconfigured.length ? l("请先完成待配置节点") : pendingCount ? l("请先处理待确认的修改") : undefined} onClick={() => void perform('start')}>{l("确认并启动")}</button>}
           {!galleryMode && !showOutcomes && !archiveView && team?.phase !== 'staged' && team && !team.halted && <span data-guide="run" data-flow-controls title={l(zh['flow.control.hint'])}>
             <button disabled={working || unsaved.length > 0 || !flow?.canStart} onClick={() => void perform('set_flow_enabled',{enabled:true,version:flowControlVersion(team)})}>{l("开始全部")}</button>
             <button disabled={working || !flow?.canPause} onClick={() => void perform('set_flow_enabled',{enabled:false,version:flowControlVersion(team)})}>{l("暂停全部")}</button>
@@ -901,7 +906,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                   <span className={css.gateCaption}>{gateLoop ? (l.language === 'en' ? `Round ${gateLoop.round} / ${gateLoop.maxRounds}` : `第 ${gateLoop.round} / ${gateLoop.maxRounds} 轮`) : l('请连接返回线')}</span>
                 </> : <CanvasTaskCard playback={renderTaskControl(task)} onMember={name=>edit('member',name)} selectedMember={selection.type==='member'?selection.id:undefined} team={team} task={task} control={control} execution={data.execution?.[task.id]} archived={archiveView} reviewing={!!task.checkpoint && task.status==='pending' && data.busy.includes('check:'+task.id)} adapting={!archiveView && adaptationStatus==='generating' && !!task.workflowConfigPending} draft={!archiveView && adaptationStatus==='ready' && !!adaptationDiscussion?.proposal?.operations.some(op=>op.action==='update_task' && op.id===task.id)} systemOwned={task.kind==='archive'} />}
                 {task.checkpoint && <span className={css.cardMode}>{reviewModeSelect(task)}</span>}
-                {gateNode(task) && <button type="button" className={css.returnPort} data-connection-handle aria-label="REJECT" disabled={working || archiveView || !editing || !canEditLoopGate(task)}
+                {gateNode(task) && <button type="button" className={css.returnPort} data-connection-handle data-port-direction="out" aria-label="REJECT" disabled={working || archiveView || !editing || !canEditLoopGate(task)}
                   onClick={()=>{ if (selectedTask !== task.id) choose({type:'check',id:task.id}) }}
                   onPointerDown={e=>{
                     if (e.button !== 0) return
@@ -939,9 +944,9 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                       choose({type:'check',id:task.id})
                       void perform('loop_configure', {base:data.base, config, loopId:gateLoop?.id, passTargets, reconnect:true})
                     }
-                  }}>REJECT</button>}
-                <button className={`${css.port} ${css.input}`} data-connection-handle data-input-id={task.id} aria-label={l("{0} 输入端", task.subject)} />
-                <button className={`${css.port} ${css.output}`} data-connection-handle aria-label={l("{0} 输出端", task.subject)} disabled={working || archiveView || !editing || (taskEditing && !editor?.id)} title={l("从圆点拖出连接线")} onPointerDown={event => {
+                  }}>REJECT <small>OUT</small></button>}
+                <button className={`${css.port} ${css.input}`} data-connection-handle data-input-id={task.id} data-port-direction="in" aria-label={l("{0} 输入端", task.subject)} title={l("只能接收来自输出端的连线")}><span aria-hidden="true">IN</span></button>
+                <button className={`${css.port} ${css.output}`} data-connection-handle data-port-direction="out" aria-label={l("{0} 输出端", task.subject)} disabled={working || archiveView || !editing || (taskEditing && !editor?.id)} title={l("从圆点拖出连接线")} onPointerDown={event => {
                   if (event.button !== 0) return
                   event.preventDefault()
                   const target = event.currentTarget
@@ -989,13 +994,13 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                     else if (to && !issue) void saveEdit([{ action: 'update_task', id: to.id, dependencies: [...to.dependencies, task.id] }], l("连接 {0} → {1}", task.subject, to.subject))
                   }
                   target.onpointercancel = cleanup
-                }} />
+                }}><span aria-hidden="true">{gateNode(task) ? "PASS OUT" : "OUT"}</span></button>
               </article> })}
               {taskEditing && !editor?.id && <article className={`${css.node} ${css.draftNode}`} style={{ left: draftPosition.x, top: draftPosition.y }}><div className={css.drag}>{l("草稿 · 确认后加入流程")}</div><div className={css.nodeBody}><strong>{draft['subject'] || (editor?.type === 'check' ? l('验收节点') : l("新任务"))}</strong><span>{editor?.type === 'check' ? l("你与独立验收 Agent") : draft['assignee'] || l("待指定 Agent")}</span><small>{l("尚未应用")}</small></div></article>}
               {!team.tasks.length && !editor && <p className={css.empty}>{l('添加任务、门控或验收节点，或让 AI 根据目标提出流程方案。')}</p>}
             </div>
           </div>
-          <footer className={css.canvasStatus} role="status">{link ? link.issue ?? (link.to ? l("已吸附 · 松开连接") : l("拖到下游节点 · Esc 取消")) : l("{0} 个任务节点 · {1} · 滚轮缩放（以鼠标位置为中心）{2}", team.tasks.length, editing ? l("拖动空白处平移") : l("拖动画布平移"), editing ? l(" · 靠近节点显示圆点，拖动连线 · Delete 删除") : l(" · 单击节点查看详情"))}</footer>
+          <footer className={css.canvasStatus} role="status">{link ? link.issue ?? (link.to ? l("已吸附 · 松开连接") : l("拖到目标卡片左侧 IN · Esc 取消")) : l("{0} 个任务节点 · {1} · 滚轮缩放（以鼠标位置为中心）{2}", team.tasks.length, editing ? l("拖动空白处平移") : l("拖动画布平移"), editing ? l(" · 从 OUT 拖到 IN · Delete 删除") : l(" · 单击节点查看详情"))}</footer>
         </main>
         <div className={css.resizeHandle} role="separator" aria-label={l("调整右侧面板宽度")} aria-orientation="vertical" aria-valuemin={300} aria-valuemax={720} aria-valuenow={inspectorWidth} tabIndex={inspectorHidden ? -1 : 0} onPointerDown={resizeInspector} onKeyDown={event => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); setInspectorExpanded(false); setInspectorWidth(value => Math.max(300, Math.min(720, value + (event.key === 'ArrowLeft' ? 40 : -40)))) } }} />
         <section className={css.inspector} aria-label={l("属性与讨论面板")}><header tabIndex={-1} data-guide="inspector" className={css.inspectorHeader}><strong>{selection.type==='member' && selection.id ? 'Agent · '+selection.id : activeTask ? (gateNode(activeTask)?loopLabel:activeTask.checkpoint?l('验收节点'):l('任务'))+' · '+activeTask.subject : reviewingCheckpoint ? l("验收工作台") : editor ? l("编辑属性") : activeTask || selectedEdge ? l("节点与连接") : l("讨论与验收")}</strong><button aria-pressed={inspectorExpanded} onClick={() => setInspectorExpanded(!inspectorExpanded)}>{inspectorExpanded ? l("还原面板") : l("放大面板")}</button></header>

@@ -1480,6 +1480,8 @@ for (const mode of ['human','ai']) for (const phase of ['ready','reviewing']) te
   gate.checkpoint.kind = 'gate'
   for (const task of source.tasks) task.description = 'Document and verify the result'
   source.members.push({...member,name:'reviewer'})
+  source.tasks.push({...source.tasks[0],id:'loop-entry-input',status:'completed',dependencies:[]})
+  source.tasks[0].dependencies = ['loop-entry-input']
   const loop = configureLoop(source,{gateId:'gate',entryId:'t1',mode,reviewer:mode==='ai'?'reviewer':undefined,maxRounds:2,timeoutMinutes:30})
   if (phase === 'reviewing') {
     startLoop(source,loop.id)

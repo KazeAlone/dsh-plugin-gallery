@@ -133,7 +133,7 @@ test('pausing live loop work revokes its attempt and resumes the same round with
   assert.equal(work.workflowRerunContext.previousOutput, 'Saved partial draft')
   assert.ok((await readLoopHistory(f.stateRoot, saved, loop.id)).records.some(r => r.tasks.some(t => t.attemptId === token && t.output === 'Saved partial draft')))
   startLoop(saved, loop.id)
-  assert.equal(paused.status, 'running'); assert.equal(paused.round, 1); assert.equal(saved.tasks.length, 4)
+  assert.equal(paused.status, 'running'); assert.equal(paused.round, 1); assert.equal(saved.tasks.length, 5)
   assert.equal(work.workflowRerunContext.previousOutput, 'Saved partial draft')
 })
 
@@ -270,7 +270,7 @@ const task = (id, dependencies = []) => ({ id, subject: id, description: `Comple
 function fixture(mode = 'human', maxRounds = 3) {
   const team = { id: 'demo', name: 'Loop demo', captainSessionId: 'captain', phase: 'running', createdAt: 1, taskSeq: 5,
     members: ['worker', 'reviewer'].map(name => ({ id: `${name}-session`, name, summary: name, status: 'idle', joinedAt: 1 })),
-    tasks: [task('a'), task('b', ['a']), { ...task('gate', ['b']), assignee: undefined, checkpoint: { round: 1, history: [] } }, task('after', ['gate'])] }
+    tasks: [task('a',['start']), task('b', ['a']), { ...task('gate', ['b']), assignee: undefined, checkpoint: { round: 1, history: [] } }, task('after', ['gate']), {...task('start'),status:'completed'}] }
   const loop = configureLoop(team, { gateId: 'gate', entryId: 'a', mode, reviewer: mode === 'ai' ? 'reviewer' : undefined, maxRounds, timeoutMinutes: 30 })
   return { team, loop }
 }
@@ -442,7 +442,7 @@ test('partial revisions preserve unrelated branches and rerun the downstream clo
   const previous = team.tasks[0].attemptId
   decideLoop(team, loop.id, decision(team, loop, 'revise', ['b']), 'human')
   assert.equal(team.tasks[0].attemptId, previous); assert.equal(team.tasks[0].status, 'completed')
-  assert.equal(team.tasks[1].status, 'pending'); assert.equal(team.tasks.length, 4)
+  assert.equal(team.tasks[1].status, 'pending'); assert.equal(team.tasks.length, 5)
 })
 
 test('graph rejects bypass exits and ordinary dependency cycles', () => {
@@ -472,7 +472,7 @@ test('revision comparison refuses stale writers and paginated history is bounded
 
 test('explicit loops disable legacy repair-node generation', () => {
   const { team } = fixture(); const work = team.tasks[0]; work.kind = 'review'; work.status = 'failed'
-  assert.deepEqual(applyQualityFollowUp(team, work), { created: [], escalated: false }); assert.equal(team.tasks.length, 4)
+  assert.deepEqual(applyQualityFollowUp(team, work), { created: [], escalated: false }); assert.equal(team.tasks.length, 5)
 })
 
 test('actual scheduler dispatches the AI gate with a decision contract after failed business work', async t => {
@@ -533,7 +533,7 @@ test('designated AI tool validates ownership and tokens and never accepts ordina
   await assert.rejects(() => f.tool('agent_teams_update_task', { task_id: 'gate', attempt_id: gate.attemptId, status: 'completed' }), /decide_loop/)
   const decided = await f.tool('agent_teams_decide_loop', args); assert.equal(decided.status, 'paused'); assert.equal(decided.round, 1)
   const duplicate = await f.tool('agent_teams_decide_loop', args); assert.deepEqual(duplicate, decided)
-  assert.equal((await f.read()).tasks.length, 4)
+  assert.equal((await f.read()).tasks.length, 5)
 })
 
 test('loop templates preserve graph/configuration and generate new runtime identities', () => {
@@ -577,16 +577,17 @@ test('random forward DAGs revise exactly the affected closure without changing t
   let seed = 19; const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 2 ** 32 }
   for (let sample = 0; sample < 50; sample++) {
     const { team } = fixture(); delete team.workflow
-    team.tasks = [task('n0')]
+    team.tasks = [task('n0',['start'])]
     for (let i = 1; i < 8; i++) team.tasks.push(task(`n${i}`, [...new Set(['n0', ...team.tasks.filter(() => random() > .6).map(t => t.id)])]))
     team.tasks.push({ ...task('gate', team.tasks.map(t => t.id)), assignee: undefined, checkpoint: { round: 1, history: [] } })
+    team.tasks.push({...task('start'),status:'completed'})
     const loop = configureLoop(team, { gateId: 'gate', entryId: 'n0', mode: 'human', maxRounds: 3, timeoutMinutes: 30 })
     startLoop(team, loop.id); finish(team, loop.bodyIds)
     const target = `n${Math.floor(random() * 8)}`, expected = new Set([target]); let progress = true
     while (progress) { progress = false; for (const t of team.tasks.filter(t => t.id !== 'gate')) if (!expected.has(t.id) && t.dependencies.some(id => expected.has(id))) { expected.add(t.id); progress = true } }
     decideLoop(team, loop.id, decision(team, loop, 'revise', [target]), 'human')
     assert.deepEqual(new Set(team.tasks.filter(t => t.id !== 'gate' && t.status === 'pending').map(t => t.id)), expected)
-    assert.equal(team.tasks.length, 9)
+    assert.equal(team.tasks.length, 10)
   }
 })
 
@@ -1030,7 +1031,7 @@ test('ordinary canvas edges rederive a loop and REJECT retries the connected ori
     assert.equal(retried.status, 'pending')
     assert.ok(retried.workflowRerunContext?.instructions)
   }
-  assert.deepEqual(wired.tasks.map(task => task.id), ['a','b','gate','after','check-results'])
+  assert.deepEqual(wired.tasks.map(task => task.id), ['a','b','gate','after','start','check-results'])
   assert.throws(() => applyWorkflowOperations(wired, [{action:'update_task', id:'gate', dependencies:[]}]), /入口/)
   assert.deepEqual(wired.tasks.find(task => task.id === 'gate').dependencies, ['check-results'])
 })
@@ -1057,10 +1058,10 @@ test('a first-pass success does not count or run the return branch', async t => 
   const f = await routeFixture(t, team)
   const state = await f.call('state')
   assert.equal(flowControlVersion(state.activity), flowControlVersion(state.team))
-  assert.deepEqual(state.activity.tasks.map(task => task.id), ['a','b','gate','after'])
+  assert.deepEqual(state.activity.tasks.map(task => task.id), ['a','b','gate','after','start'])
   const progress = activityStatus(state.activity)
   assert.equal(progress.state, 'completed')
-  assert.equal(progress.total, 4)
+  assert.equal(progress.total, 5)
   assert.equal(progress.percent, 100)
 })
 
@@ -1085,14 +1086,14 @@ test('REJECT runs ordered tasks before the original entry, passes their results,
   assert.equal(loop.failedExecutionTaskId, 'plan')
   const f = await routeFixture(t, team)
   const state = await f.call('state')
-  assert.deepEqual(state.activity.tasks.map(task => task.id), ['a','b','gate','after','debug','plan'])
+  assert.deepEqual(state.activity.tasks.map(task => task.id), ['a','b','gate','after','start','debug','plan'])
   assert.equal(state.activity.tasks.find(task => task.id === 'plan').status, 'failed')
   assert.equal(activityStatus(state.activity).attention, 1)
   startLoop(team, loop.id)
   assert.equal(byId('debug').status, 'completed')
   finish(team, ['plan'])
   assert.equal(loopDependenciesSatisfied(team, byId('a')), true)
-  assert.deepEqual(collectCompletedDependencyOutputs(team.tasks, 'a', undefined, loopReturnDependencies(team, byId('a'))).map(result => result.output), ['debug result 1','plan result 1'])
+  assert.deepEqual(collectCompletedDependencyOutputs(team.tasks, 'a', undefined, loopReturnDependencies(team, byId('a'))).map(result => result.id), ['debug','plan','start'])
   finish(team)
   decideLoop(team, loop.id, decision(team, loop, 'revise', []), 'human')
   assert.equal(loop.round, 3)
@@ -1206,4 +1207,21 @@ test('connecting reject tasks serializes them and reverse edges are rejected', a
   assert.equal(loopDependenciesSatisfied(current, byId('a')), false)
   finish(current, ['second'])
   assert.equal(loopDependenciesSatisfied(current, byId('a')), true)
+})
+
+test('a loop without a direct upstream input can be edited, but cannot start until one is connected', async t => {
+  const {team, loop} = fixture()
+  team.tasks[0].dependencies = []
+  const f = await routeFixture(t, team)
+  const current = await f.read()
+  const start = async () => f.call('loop_start', {loopId:loop.id, base:workflowFingerprint(await f.read())})
+  const blocked = await start()
+  assert.equal(blocked.code, 409)
+  assert.match(blocked.error, /环外任务连接到循环入口/)
+  assert.equal((await f.read()).workflow.loops[0].historyCount, 0)
+  const connected = await f.call('edit', {base:workflowFingerprint(current), title:'Connect entry', operations:[
+    {action:'update_task', id:'a', dependencies:['start']},
+  ]})
+  assert.equal(connected.code, 200, connected.error)
+  assert.equal((await start()).code, 200)
 })

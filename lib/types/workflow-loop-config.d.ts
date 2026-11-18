@@ -52,4 +52,4 @@ export declare function previewGate(team: TeamState, config: LoopConfig, passTar
     error: string;
 };
 export declare function validateDraftRejectPaths(team: TeamState): void;
-export declare function validateLoopGraph(team: TeamState): void;
+export declare function validateLoopGraph(team: TeamState, requireExecutionSetup?: boolean): void;

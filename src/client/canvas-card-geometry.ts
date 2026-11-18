@@ -12,7 +12,7 @@ export function connectionTarget(tasks:TeamTask[],position:(id:string)=>Point,po
   return tasks.filter(t=>t.id!==from).map(task=>{
     const p=position(task.id),gate=diamond(task),anchor=connectionPort(p,'input',gate)
     const distance=Math.hypot(point.x-anchor.x,point.y-anchor.y)
-    const inside=point.x>=p.x-18 && point.x<=p.x+(gate?225:CARD_WIDTH)+18 && point.y>=p.y-12 && point.y<=p.y+(gate?150:CARD_HEIGHT)+12
+    const inside=point.x>=p.x-18 && point.x<=p.x+(gate?225:CARD_WIDTH)/2 && point.y>=p.y-12 && point.y<=p.y+(gate?150:CARD_HEIGHT)+12
     return {task,distance,inside}
-  }).filter(hit=>hit.inside||hit.distance<=40).sort((a,b)=>a.distance-b.distance)[0]?.task
+  }).filter(hit=>hit.inside||hit.distance<=36).sort((a,b)=>a.distance-b.distance)[0]?.task
 }

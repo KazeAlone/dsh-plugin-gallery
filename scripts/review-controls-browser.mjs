@@ -5,7 +5,7 @@ import { createInterface } from 'node:readline'
 
 const { chromium } = await import(process.env.TEAMFLOW_PLAYWRIGHT_MODULE ?? 'playwright')
 const host = spawn(process.execPath, ['scripts/loop-preview.mjs'], {
-  env: { ...process.env, TEAMFLOW_LOOP_PORT: '18387' }, stdio: ['pipe','pipe','inherit'], windowsHide: true,
+  env: { ...process.env, TEAMFLOW_LOOP_PORT: '18387', TEAMFLOW_PREVIEW_MISSING_ENTRY:'1' }, stdio: ['pipe','pipe','inherit'], windowsHide: true,
 })
 const lines = createInterface({input:host.stdout})
 let browser
@@ -87,9 +87,28 @@ try {
   await page.getByRole('button',{name:'适应画布'}).click()
   const [linked] = await Promise.all([
     page.waitForResponse(res=>res.url().endsWith('/workflow') && res.request().postDataJSON()?.action==='loop_configure'),
-    existing.getByRole('button',{name:'REJECT',exact:true}).dragTo(page.locator('[data-canvas-node="a"]')),
+    existing.getByRole('button',{name:'REJECT',exact:true}).dragTo(page.locator('[data-input-id="a"]')),
   ])
   assert.ok(linked.ok())
+  const warning = page.locator('[data-loop-entry-warning]')
+  await warning.getByRole('button',{name:'方案'}).waitFor()
+  assert.equal(await page.locator('[data-input-id="a"]').textContent(),'IN')
+  const entryOut = page.locator('[data-canvas-node="a"] [data-port-direction="out"]')
+  assert.equal(await entryOut.textContent(),'OUT')
+  const externalOut = page.locator('[data-canvas-node="entry-input"] [data-port-direction="out"]')
+  let reverseRequests = 0
+  const countEdits = req => { if (req.url().endsWith('/workflow') && req.postDataJSON()?.action === 'edit') reverseRequests++ }
+  page.on('request', countEdits)
+  await externalOut.dragTo(entryOut)
+  page.off('request', countEdits)
+  assert.equal(reverseRequests, 0)
+  await warning.getByRole('button',{name:'方案'}).waitFor()
+  const [inputLinked] = await Promise.all([
+    page.waitForResponse(res=>res.url().endsWith('/workflow') && res.request().postDataJSON()?.action==='edit'),
+    externalOut.dragTo(page.locator('[data-input-id="a"]')),
+  ])
+  assert.ok(inputLinked.ok())
+  await warning.waitFor({state:'detached'})
   await page.locator('[data-flow-branch="reject"]').waitFor()
   await page.reload()
   await page.getByRole('button',{name:'收起循环任务'}).waitFor()

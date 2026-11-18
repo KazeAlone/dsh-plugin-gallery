@@ -7,7 +7,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import type { TeamState, TeamTask } from './types.ts'
 import { resetTaskForRerun } from './task-rerun.ts'
 
-import { canEditLoopGate, isDraftLoop, isDraftRejectTask, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
+import { canEditLoopGate, isDraftLoop, isDraftRejectTask, loopHasExternalEntry, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
 export type { LoopConfig, WorkflowLoop, LoopHistoryRecord } from './workflow-loop-types.ts'
 const pending = new WeakMap<TeamState, LoopHistoryRecord[]>()
 export const loopRetryInstructions = '按原任务要求重试本轮，保留先前的执行记录。'
@@ -230,6 +230,7 @@ export function startLoop(team: TeamState, id: string, additionalRounds = 0, now
   if (!loop || !['ready', 'paused'].includes(loop.status) || team.halted || team.phase === 'staged') throw new LoopStartUnavailable('循环当前不能启动')
   if (enabledBodyIds && loop.lastDecision === 'revise') throw new LoopStartUnavailable('请先确认本轮返工范围')
   validateLoopGraph(team)
+  if (!loopHasExternalEntry(team.tasks, loop)) throw new LoopStartUnavailable('请先从环外任务连接到循环入口')
   if (!Number.isSafeInteger(additionalRounds) || additionalRounds < 0 || additionalRounds > 20 || loop.maxRounds + additionalRounds > 20) throw new LoopStartUnavailable('追加轮数必须有限，累计最多 20 轮')
   const tasks = [loop.gateId, ...loop.bodyIds].map(id => taskOf(team, id))
   if (tasks.some(t => t.id !== loop.gateId && !team.members.some(m => m.name === t.assignee && m.status !== 'removed'))) {
