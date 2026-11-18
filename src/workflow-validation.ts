@@ -52,6 +52,10 @@ function discussion(value: unknown): boolean {
 export function isWorkflowState(value: unknown): boolean {
   if(record(value) && value['explicitQuality'] !== undefined && typeof value['explicitQuality'] !== 'boolean') return false
   if(record(value) && value['loops'] !== undefined && !isWorkflowLoops(value['loops'])) return false
+  if (record(value) && value['removedLoopHistory'] !== undefined) {
+    const history = value['removedLoopHistory']
+    if (!record(history) || !Object.entries(history).every(([id, item]) => record(item) && item['id'] === id && string(item['runId']) && string(item['historyHead']))) return false
+  }
   if(record(value) && value['loopRevision'] !== undefined && (!number(value['loopRevision']) || !Number.isSafeInteger(value['loopRevision']) || value['loopRevision'] < 0)) return false
   if(record(value) && value['templateDefinition']!==undefined){try{parseTemplate(value['templateDefinition'])}catch{return false}}
   if(record(value) && value['templateSource']!==undefined){const s=value['templateSource'];if(!record(s)||!string(s['id'])||!string(s['name'])||!positive(s['version']))return false}

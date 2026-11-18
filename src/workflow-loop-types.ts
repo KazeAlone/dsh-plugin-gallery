@@ -28,13 +28,20 @@ export interface WorkflowLoop extends LoopConfig {
   lastDecision?: 'pass' | 'revise' | 'blocked'
   previousOutputs?: Record<string,string>
   reviewArtifactEvidence?: string
+  reviewRevision?: string
   queued?: boolean
   contracts?: Record<string, string>
   executionRounds?: Record<string, number>
 }
-export function canChangeGateReview(loop: WorkflowLoop, gate: TeamTask): boolean {
-  return ['ready', 'running', 'paused'].includes(loop.status) && gate.status === 'pending'
-    && !gate.reassigning && !gate.checkpoint?.decision
+export function canEditLoopGate(gate: Pick<TeamTask, 'status' | 'reassigning'>): boolean {
+  return gate.status !== 'claimed' && gate.status !== 'in_progress' && !gate.reassigning
+}
+export function isUnstartedLoop(loop: WorkflowLoop): boolean {
+  return loop.status === 'ready' && !loop.queued && !loop.contracts && !loop.historyCount
+}
+export function canAssignLoopTask(loop: WorkflowLoop, task: TeamTask): boolean {
+  return isUnstartedLoop(loop) && loop.bodyIds.includes(task.id)
+    && task.status === 'pending' && !task.attempt && !task.reassigning
 }
 export function canToggleLoopTask(loop: Pick<WorkflowLoop, 'gateId' | 'status' | 'lastDecision'>, taskId: string): boolean {
   return taskId !== loop.gateId && (loop.status === 'ready' || loop.status === 'running' || loop.status === 'paused' && loop.lastDecision !== 'revise')

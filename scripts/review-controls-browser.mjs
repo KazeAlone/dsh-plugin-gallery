@@ -84,10 +84,11 @@ try {
     page.getByRole('button',{name:'自动整理'}).click(),
   ])
   await page.getByRole('button',{name:'适应画布'}).click()
-  await existing.getByRole('button',{name:'REJECT',exact:true}).dragTo(page.locator('[data-canvas-node="a"]'))
-  const settings=page.locator('[data-loop-panel]')
-  await page.waitForFunction(()=>document.querySelector('[data-loop-panel] select[aria-label="返回连线目标（必选）"]')?.value==='a',{},{timeout:4000})
-  await settings.getByRole('button',{name:'连接返回线并创建环路'}).click()
+  const [linked] = await Promise.all([
+    page.waitForResponse(res=>res.url().endsWith('/workflow') && res.request().postDataJSON()?.action==='loop_configure'),
+    existing.getByRole('button',{name:'REJECT',exact:true}).dragTo(page.locator('[data-canvas-node="a"]')),
+  ])
+  assert.ok(linked.ok())
   await page.locator('[data-flow-branch="reject"]').waitFor()
   await page.reload()
   await page.getByRole('button',{name:'收起循环任务'}).waitFor()

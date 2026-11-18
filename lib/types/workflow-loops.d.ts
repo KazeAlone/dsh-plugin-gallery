@@ -13,7 +13,9 @@ export declare function loopInputFingerprint(team: TeamState, loop: WorkflowLoop
 export declare function validateLoopGraph(team: TeamState): void;
 export declare function configureLoop(team: TeamState, config: LoopConfig): WorkflowLoop;
 export declare function updateGateReview(team: TeamState, gateId: string, mode: LoopConfig['mode'], reviewer?: string): void;
-/** Validate edits to both branches before applying either one. */
+/** Hold future work while preserving any attempt already in flight. */
+export declare function holdLoopTask(task: TeamTask): void;
+/** Validate both routes before publishing the new configuration. */
 export declare function saveGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown): void;
 export declare function loopCanExecute(team: TeamState, task: TeamTask): boolean;
 export declare function loopDependenciesSatisfied(team: TeamState, task: TeamTask): boolean;

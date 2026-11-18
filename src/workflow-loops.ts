@@ -1,13 +1,13 @@
 import { MAX_WORKFLOW_TEXT_LENGTH } from './workflow-types.ts'
 import { excerpt, reviewResult } from './review-results.ts'
-import { deriveLoop, gateRouteTasks, parseLoopConfig, validateLoopGraph as validateLoopStructure } from './workflow-loop-config.ts'
+import { deriveLoop, planGateSettings, parseLoopConfig, validateLoopGraph as validateLoopStructure } from './workflow-loop-config.ts'
 export { parseLoopConfig } from './workflow-loop-config.ts'
 /** Structured loops: backward edges are control flow, never task dependencies. */
 import { createHash, randomUUID } from 'node:crypto'
 import type { TeamState, TeamTask } from './types.ts'
 import { resetTaskForRerun } from './task-rerun.ts'
 
-import { canChangeGateReview, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
+import { canEditLoopGate, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
 export type { LoopConfig, WorkflowLoop, LoopHistoryRecord } from './workflow-loop-types.ts'
 const pending = new WeakMap<TeamState, LoopHistoryRecord[]>()
 export const loopRetryInstructions = '按原任务要求重试本轮，保留先前的执行记录。'
@@ -30,7 +30,7 @@ export function loopInputFingerprint(team: TeamState, loop: WorkflowLoop): strin
     const task = taskOf(team, id)
     return [task.id, task.description, task.id === loop.gateId ? undefined : task.status, task.id === loop.gateId ? undefined : task.attemptId,
       task.output, task.acceptanceResults, task.commandsRun, task.findings, task.supplementalEvidence]
-  }), loop.externalInputs])
+  }), loop.externalInputs, ...(loop.reviewRevision ? [loop.reviewRevision] : [])])
 }
 function snapshot(team: TeamState, loop: WorkflowLoop, kind: LoopHistoryRecord['kind'], summary: string, tasks: TeamTask[], extra: Partial<Pick<LoopHistoryRecord, 'decision' | 'actor'>> = {}, now = Date.now()): void {
   const record: LoopHistoryRecord = { id: randomUUID(), previous: loop.historyHead, loopId: loop.id, runId: loop.runId,
@@ -76,9 +76,10 @@ export function updateGateReview(team: TeamState, gateId: string, mode: LoopConf
   const draft = structuredClone(team)
   const loop = loopsOf(draft).find(item => item.gateId === gateId)
   const gate = taskOf(draft, gateId)
-  if (draft.halted || !loop || !canChangeGateReview(loop, gate)) throw new Error('当前门控不能修改审核方式')
+  if (!loop || !canEditLoopGate(gate)) throw new Error('当前门控不能修改审核方式')
   if (mode === 'ai' && !draft.members.some(member => member.name === reviewer && member.status !== 'removed')) throw new Error('请选择有效的 AI 审核成员')
   validateLoopGraph(draft)
+  if (loop.mode !== mode || loop.reviewer !== reviewer) invalidateLoopReview(loop)
   loop.mode = mode
   loop.reviewer = mode === 'ai' ? reviewer : undefined
   assignGateReviewer(gate, loop)
@@ -87,25 +88,45 @@ export function updateGateReview(team: TeamState, gateId: string, mode: LoopConf
   team.workflow = draft.workflow
 }
 
-/** Validate edits to both branches before applying either one. */
+function invalidateLoopReview(loop: WorkflowLoop): void {
+  loop.reviewRevision = randomUUID()
+  delete loop.reviewArtifactEvidence
+}
+
+/** Hold future work while preserving any attempt already in flight. */
+export function holdLoopTask(task: TeamTask): void {
+  if (!active(task) && !terminal(task)) {
+    task.workflowPaused = true
+    task.workflowAwaitingStart = true
+    delete task.workflowLoopTaskHold
+  }
+}
+
+/** Validate both routes before publishing the new configuration. */
 export function saveGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown): void {
   const draft = structuredClone(team)
-  const previous = loopsOf(draft).find(loop => loop.gateId === config.gateId)
+  const { config: parsed, tasks, previous, loop, rewired } = planGateSettings(draft, config, passTargets)
   if (previous?.id !== loopId) throw new Error('门控配置已变化，请刷新')
-  if (draft.halted || previous && (previous.queued || !['ready', 'paused'].includes(previous.status))) throw new Error('请在启动前或暂停后配置门控')
-  const started = !!previous && (!!previous.contracts || !!previous.historyCount)
-  draft.tasks = gateRouteTasks(draft, config.gateId, passTargets, started)
-  if (previous && started) {
-    if (config.entryId !== previous.entryId || config.maxRounds < previous.round) throw new Error('已执行的循环须保留入口，轮次上限不能低于当前轮')
-    validateLoopGraph(draft)
-    const gate = taskOf(draft, config.gateId)
-    Object.assign(previous, config, { rejectToEntry: config.rejectToEntry, reviewer: config.mode === 'ai' ? config.reviewer : undefined })
-    assignGateReviewer(gate, previous)
-  } else {
-    if (previous) draft.workflow!.loops = loopsOf(draft).filter(loop => loop !== previous)
-    const updated = configureLoop(draft, config)
-    if (previous) { updated.id = previous.id; updated.runId = previous.runId }
+  draft.tasks = tasks
+  const gate = taskOf(draft, parsed.gateId)
+  draft.workflow ??= { positions: {}, discussions: {}, history: [] }
+  draft.workflow.loops = [...loopsOf(draft).filter(item => item !== previous), loop]
+  if (rewired) {
+    if (!previous) { loop.id = randomUUID(); loop.runId = randomUUID() }
+    loop.historyHead = previous?.historyHead
+    loop.historyCount = previous?.historyCount ?? 0
+    if (gate.status !== 'pending' || gate.attemptId || gate.checkpoint?.decision) resetTaskForRerun(gate, false, Date.now())
+    gate.checkpoint!.round = loop.round
+    for (const id of new Set([loop.gateId, ...loop.bodyIds, ...previous?.bodyIds ?? []])) holdLoopTask(taskOf(draft, id))
+    for (const task of draft.tasks) {
+      const before = team.tasks.find(item => item.id === task.id)!
+      if (before.dependencies.includes(gate.id) !== task.dependencies.includes(gate.id)) holdLoopTask(task)
+    }
   }
+  if (rewired || previous?.mode !== parsed.mode || previous?.reviewer !== parsed.reviewer) invalidateLoopReview(loop)
+  gate.checkpoint!.kind = 'gate'
+  if (gate.description?.trim() && !gate.adaptationIssue?.trim()) gate.workflowConfigPending = false
+  assignGateReviewer(gate, loop)
   validateLoopGraph(draft)
   team.tasks = draft.tasks
   team.workflow = draft.workflow
@@ -202,7 +223,10 @@ export function startLoop(team: TeamState, id: string, additionalRounds = 0, now
   validateLoopGraph(team)
   if (!Number.isSafeInteger(additionalRounds) || additionalRounds < 0 || additionalRounds > 20 || loop.maxRounds + additionalRounds > 20) throw new LoopStartUnavailable('追加轮数必须有限，累计最多 20 轮')
   const tasks = [loop.gateId, ...loop.bodyIds].map(id => taskOf(team, id))
-  if (tasks.some(t => t.assignee && !team.members.some(m => m.name === t.assignee && m.status !== 'removed'))) throw new LoopStartUnavailable('请先恢复有效的循环执行与审核成员')
+  if (tasks.some(t => t.id !== loop.gateId && !team.members.some(m => m.name === t.assignee && m.status !== 'removed'))) {
+    throw new LoopStartUnavailable('请先为循环内任务指定有效负责人')
+  }
+  if (loop.mode === 'ai' && !team.members.some(m => m.name === loop.reviewer && m.status !== 'removed')) throw new LoopStartUnavailable('请选择有效的 AI 审核成员')
   if (tasks.some(t => active(t))) throw new LoopStartUnavailable('请先停止仍在运行的循环任务，再继续')
   if (tasks.some(t => t.workflowConfigPending || !t.description?.trim())) throw new LoopStartUnavailable('请先完成所有循环节点的任务要求')
   if (loop.lastDecision === 'revise' && loop.round >= loop.maxRounds && !additionalRounds) throw new LoopStartUnavailable('已达轮次上限，请明确追加轮数后继续')
@@ -309,7 +333,7 @@ export function isWorkflowLoops(value: unknown): value is WorkflowLoop[] {
         && Number.isSafeInteger(l.round) && l.round >= 1 && l.round <= l.maxRounds && l.maxRounds <= 20
         && ['ready', 'running', 'reviewing', 'paused', 'passed', 'cancelled'].includes(l.status)
         && Number.isSafeInteger(l.historyCount) && l.historyCount >= 0 && map(l.captured) && map(l.externalInputs)
-        && (l.previousOutputs === undefined || map(l.previousOutputs)) && (l.contracts === undefined || map(l.contracts)) && [l.failedExecutionTaskId,l.reason,l.feedback,l.reviewer,l.lastDecisionId,l.reviewArtifactEvidence].every(optionalText)
+        && (l.previousOutputs === undefined || map(l.previousOutputs)) && (l.contracts === undefined || map(l.contracts)) && [l.failedExecutionTaskId,l.reason,l.feedback,l.reviewer,l.lastDecisionId,l.reviewArtifactEvidence,l.reviewRevision].every(optionalText)
         && (l.executionRounds === undefined || typeof l.executionRounds === 'object' && l.executionRounds !== null && !Array.isArray(l.executionRounds) && Object.values(l.executionRounds).every(round => Number.isSafeInteger(round) && round > 0 && round <= l.round))
         && [undefined,'pass','revise','blocked'].includes(l.lastDecision)
         && (l.queued === undefined || typeof l.queued === 'boolean')

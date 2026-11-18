@@ -10,7 +10,8 @@ import { validateCreateTask } from './quality-gates.ts'
 import { sanitizeKey } from './state.ts'
 import { taskIsExecuting, canRestartTask, rerunImpact, resetTaskForRerun } from './task-rerun.ts'
 import { taskNeedsConfiguration } from './task-description.ts'
-import { configureLoop, loopForTask, loopTaskContract, parseLoopConfig, validateLoopGraph } from './workflow-loops.ts'
+import { configureLoop, holdLoopTask, loopForTask, loopTaskContract, parseLoopConfig, validateLoopGraph } from './workflow-loops.ts'
+import { canAssignLoopTask, canEditLoopGate, isUnstartedLoop } from './workflow-loop-types.ts'
 
 export function workflowState(team: TeamState): WorkflowState {
   return team.workflow ??= { positions: {}, discussions: {}, history: [] }
@@ -136,9 +137,35 @@ export function checkpointInputs(team: TeamState, task: TeamTask): TeamTask[] {
 /** Apply to a detached copy: validation errors never partly modify durable state. */
 export function applyWorkflowOperations(original: TeamState, operations: WorkflowOperation[], maxMembers = 64): TeamState {
   // Saving properties is allowed while the team is halted.
-  if (original.halted && operations.some(op => op.action !== 'update_member' && op.action !== 'update_task')) throw new Error('团队已停止，请先恢复团队')
+  if (original.halted && operations.some(op => op.action !== 'update_member' && op.action !== 'update_task' && !(op.action === 'remove_task' && loopForTask(original, op.id)?.gateId === op.id))) throw new Error('团队已停止，请先恢复团队')
   const team = structuredClone(original)
   const now = Date.now()
+  // Canvas deletion removes outgoing dependencies and the node in one batch.
+  // Detach the draft loop first so those dependency edits can be validated normally.
+  const removedIds = new Set(operations.flatMap(op => op.action === 'remove_task' ? [op.id] : []))
+  const removedGates = new Set<string>()
+  for (const loop of team.workflow?.loops ?? []) {
+    if (!removedIds.has(loop.gateId) && !loop.bodyIds.some(id => removedIds.has(id))) continue
+    const gate = taskOf(team, loop.gateId)
+    if (removedIds.has(gate.id)) {
+      if (!canEditLoopGate(gate)) throw new Error('门控正在执行，请在执行结束后编辑')
+      removedGates.add(gate.id)
+      if (loop.historyHead) {
+        const workflow = workflowState(team)
+        workflow.removedLoopHistory = { ...workflow.removedLoopHistory, [loop.id]: { id: loop.id, runId: loop.runId, historyHead: loop.historyHead } }
+      }
+      for (const id of loop.bodyIds) holdLoopTask(taskOf(team, id))
+      for (const task of team.tasks.filter(task => task.dependencies.includes(gate.id))) {
+        task.dependencies = task.dependencies.filter(id => id !== gate.id)
+        holdLoopTask(task)
+      }
+    } else {
+      if (!isUnstartedLoop(loop)) throw new Error('已启动或排队的循环不能删除执行节点')
+      gate.assignee = undefined
+      gate.workflowConfigPending = true
+    }
+    team.workflow!.loops = team.workflow!.loops!.filter(item => item !== loop)
+  }
   for (const op of operations) {
     if (op.action === 'configure_loop') { configureLoop(team, op); continue }
     const loop = 'id' in op && op.id ? loopForTask(team, op.id) : undefined
@@ -146,7 +173,7 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
       if (op.action !== 'update_task') throw new Error('循环节点请使用循环控制；不能修改拓扑或单独重跑')
       const task = taskOf(team, op.id)
       if ((op.dependencies !== undefined && JSON.stringify(op.dependencies) !== JSON.stringify(task.dependencies))
-        || (op.assignee !== undefined && op.assignee !== task.assignee)) throw new Error('循环节点不能单独修改依赖或负责人')
+        || (op.assignee !== undefined && (op.assignee || undefined) !== task.assignee && !canAssignLoopTask(loop, task))) throw new Error('循环节点不能单独修改依赖或负责人')
       if (loop.contracts && loop.contracts[task.id] !== loopTaskContract(task)) throw new Error('循环任务契约已变化，请检查流程')
     }
     // Removal changes loop membership; editing an idle member's configuration does not.
@@ -226,7 +253,8 @@ export function applyWorkflowOperations(original: TeamState, operations: Workflo
       // A property save must not create a new execution record or invalidate a completed upstream result.
       if (task.status === 'pending') task.updatedAt = now
     } else if (op.action === 'remove_task') {
-      const task = taskOf(team, op.id); editable(task)
+      const task = taskOf(team, op.id)
+      if (!removedGates.has(task.id)) editable(task)
       if (team.tasks.some(t => t.dependencies.includes(task.id))) throw new Error('请先断开该任务的下游连接')
       team.tasks = team.tasks.filter(t => t.id !== task.id)
     } else if (op.action === 'rerun_task') {

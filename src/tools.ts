@@ -2016,7 +2016,10 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
         const task = requireTask(fresh, args.task_id)
         const ownedLoop = loopForTask(fresh, task.id)
         if (ownedLoop) {
-          if (!loopCanExecute(fresh, task) || !task.attemptId || args.attempt_id !== task.attemptId) throw new Error('循环已暂停或执行令牌过期，请停止本次工作')
+          // Rewiring holds new work, but a body task already in flight may still finish.
+          const finishingExistingWork = ownedLoop.status === 'ready' && ownedLoop.bodyIds.includes(task.id)
+            && ['claimed', 'in_progress'].includes(task.status) && !task.workflowPaused && !task.reassigning && !fresh.halted
+          if ((!loopCanExecute(fresh, task) && !finishingExistingWork) || !task.attemptId || args.attempt_id !== task.attemptId) throw new Error('循环已暂停或执行令牌过期，请停止本次工作')
           if (ownedLoop.gateId === task.id && (args.status !== 'in_progress' || args.output !== undefined)) throw new Error('循环门控必须通过 agent_teams_decide_loop 提交决定')
         }
         if (identity.kind === 'captain'

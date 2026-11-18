@@ -1,5 +1,5 @@
-import { canChangeGateReview, canStartLoopWithFlow } from '../workflow-loop-types.ts'
-import { upstreamIds } from '../workflow-loop-config.ts'
+import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow, isUnstartedLoop } from '../workflow-loop-types.ts'
+import { previewGate } from '../workflow-loop-config.ts'
 import { draftTaskId } from './workflow-draft.ts'
 import { WorkbenchGuide } from './WorkbenchGuide.tsx'
 import { OpenCodeExport } from './OpenCodeExport.tsx'
@@ -115,7 +115,6 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
   const [galleryMode,setGalleryMode]=useState<'browse'|'save'|undefined>(teamId?undefined:'browse')
   const entryOpened = useRef(false)
   const [showLoopSteps, setShowLoopSteps] = useState(true)
-  const [returnDraft, setReturnDraft] = useState<{gate:string;entry:string}>()
   const [editing, setEditing] = useState(false)
   const [ending, setEnding] = useState(false)
   const [archiveView, setArchiveView] = useState(archived)
@@ -189,6 +188,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
   const discussionTask = discussion.startsWith('task:') ? team?.tasks.find(t => t.id === discussion.slice(5) && !t.checkpoint) : undefined
   const activeTask = team?.tasks.find(t => t.id === selectedTask)
   const activeLoop = team?.workflow?.loops?.find(loop => loop.gateId === activeTask?.id || loop.bodyIds.includes(activeTask?.id ?? ''))
+  const loopOwnerLocked = !!activeLoop && !!activeTask && !canAssignLoopTask(activeLoop, activeTask)
   const loopLabel = l('门控节点')
   const gateNode = (task: TeamTask | undefined) => !!task && isGateTask(task, team?.workflow?.loops)
   const terminalEdit = !activeLoop && !!editor && editor.type !== 'member' && !!activeTask && canRestartTask(activeTask)
@@ -241,7 +241,6 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
   }, [entryDiscussion, team])
   function updateView(update: (current: WorkbenchView) => WorkbenchView): void { const next = update(viewRef.current); viewRef.current = next; setView(next) }
   function choose(target: WorkbenchTarget, overrides?: Record<string,string>): void {
-    setReturnDraft(draft => draft && target.type === 'check' && target.id === draft.gate ? draft : undefined)
     updateView(current => selectWorkbench(current, target, team, overrides)); setError(''); setFeedback('')
     setInspectorHidden(false)
     if (target.type === 'member') setLibrary('agents')
@@ -471,7 +470,8 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
   }
   async function deleteNode(id: string): Promise<void> {
     if (!team || working || archiveView || !editing) return
-    const updates: WorkflowOperation[] = team.tasks.filter(task => task.dependencies.includes(id)).map(task => ({ action: 'update_task', id: task.id, dependencies: task.dependencies.filter(dep => dep !== id) }))
+    const deletingGate = team.workflow?.loops?.some(loop => loop.gateId === id)
+    const updates: WorkflowOperation[] = deletingGate ? [] : team.tasks.filter(task => task.dependencies.includes(id)).map(task => ({ action: 'update_task', id: task.id, dependencies: task.dependencies.filter(dep => dep !== id) }))
     updates.push({ action: 'remove_task', id })
     const revision=viewRef.current.revision
     if (await perform('edit', { operations: updates, title: l("删除节点及其连接"), base: data?.base, positions: Object.fromEntries(team.tasks.map(task => [task.id, storedPoint(pos(task.id))])) })) {
@@ -623,7 +623,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
     const loop = team.workflow?.loops?.find(item => item.gateId === task.id)
     const mode = loop?.mode ?? task.checkpoint.mode ?? 'human'
     const members = loop ? team.members.filter(m => m.status !== 'removed' && !team.tasks.some(t => loop.bodyIds.includes(t.id) && t.assignee === m.name)) : []
-    const disabled = working || archiveView || team.halted || task.status !== 'pending' || !!task.checkpoint.decision || !!loop && !canChangeGateReview(loop, task)
+    const disabled = working || archiveView || (loop ? !canEditLoopGate(task) : !!team.halted || task.status !== 'pending' || !!task.checkpoint.decision)
     return <select aria-label={l.language === 'en' ? 'Review mode' : '审核方式'} value={mode === 'ai' && loop ? 'ai:'+loop.reviewer : mode} disabled={disabled}
       onPointerDown={e=>e.stopPropagation()} onClick={e=>e.stopPropagation()} onChange={event=>{
         const value=event.target.value
@@ -890,22 +890,37 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                   <span className={css.gateCaption}>{gateLoop ? (l.language === 'en' ? `Round ${gateLoop.round} / ${gateLoop.maxRounds}` : `第 ${gateLoop.round} / ${gateLoop.maxRounds} 轮`) : l('请连接返回线')}</span>
                 </> : <CanvasTaskCard playback={renderTaskControl(task)} onMember={name=>edit('member',name)} selectedMember={selection.type==='member'?selection.id:undefined} team={team} task={task} control={control} execution={data.execution?.[task.id]} archived={archiveView} reviewing={!!task.checkpoint && task.status==='pending' && data.busy.includes('check:'+task.id)} adapting={!archiveView && adaptationStatus==='generating' && !!task.workflowConfigPending} draft={!archiveView && adaptationStatus==='ready' && !!adaptationDiscussion?.proposal?.operations.some(op=>op.action==='update_task' && op.id===task.id)} systemOwned={task.kind==='archive'} />}
                 {task.checkpoint && <span className={css.cardMode}>{reviewModeSelect(task)}</span>}
-                {gateNode(task) && <button type="button" className={css.returnPort} data-connection-handle aria-label="REJECT" disabled={working || archiveView || !editing || !!gateLoop?.historyCount}
+                {gateNode(task) && <button type="button" className={css.returnPort} data-connection-handle aria-label="REJECT" disabled={working || archiveView || !editing || !canEditLoopGate(task)}
                   onClick={()=>{ if (selectedTask !== task.id) choose({type:'check',id:task.id}) }}
                   onPointerDown={e=>{
                     if (e.button !== 0) return
                     e.preventDefault()
                     const handle=e.currentTarget
                     handle.setPointerCapture(e.pointerId)
-                    handle.onpointermove=move=>setLink({from:task.id,returning:true,...point(move)})
-                    const cleanup=()=>{ handle.onpointermove=null; handle.onpointerup=null; handle.onpointercancel=null; setLink(undefined) }
+                    const passTargets = team.tasks.filter(node => node.dependencies.includes(task.id)).map(node => node.id)
+                    const update = (move: {clientX: number; clientY: number}) => {
+                      const at = point(move)
+                      const target = connectionTarget(canvasTasks, canvasPos, at, task.id, gateNode)
+                      const config = target && {
+                        gateId: task.id, entryId: target.id, mode: gateLoop?.mode ?? task.checkpoint?.mode ?? 'human',
+                        reviewer: gateLoop?.reviewer, maxRounds: gateLoop?.maxRounds ?? 3,
+                        timeoutMinutes: gateLoop?.timeoutMinutes ?? 30, rejectToEntry: gateLoop?.rejectToEntry ?? !gateLoop,
+                      }
+                      const issue = config ? workflowMessage(previewGate(team, config, passTargets).error, l) : ''
+                      const end = target && !issue ? connectionPort(canvasPos(target.id), 'input', gateNode(target)) : at
+                      setLink({from:task.id, returning:true, ...end, to:target?.id, issue})
+                      return {config, issue}
+                    }
+                    handle.onpointermove=update
+                    const cleanup=()=>{ handle.onpointermove=null; handle.onpointerup=null; handle.onpointercancel=null; if (handle.hasPointerCapture(e.pointerId)) handle.releasePointerCapture(e.pointerId); setLink(undefined) }
                     handle.onpointercancel=cleanup
                     handle.onpointerup=up=>{
+                      const {config, issue} = update(up)
                       cleanup()
-                      const target=connectionTarget(team.tasks,pos,point(up),task.id,gateNode)
-                      if (!target) return
-                      if (target.checkpoint || !upstreamIds(team.tasks,task.id).has(target.id)) { setError(l.language==='en'?'Choose an upstream task':'请选择已连接的上游任务'); return }
-                      choose({type:'check',id:task.id}); setReturnDraft({gate:task.id,entry:target.id})
+                      if (!config) return
+                      if (issue) { setError(issue); return }
+                      choose({type:'check',id:task.id})
+                      void perform('loop_configure', {base:data.base, config, loopId:gateLoop?.id, passTargets})
                     }
                   }}>REJECT</button>}
                 <button className={`${css.port} ${css.input}`} data-connection-handle data-input-id={task.id} aria-label={l("{0} 输入端", task.subject)} />
@@ -950,7 +965,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
             {currentDirty && <small className={css.hint}>{l("讨论使用已保存的资料；当前草稿会保留。")}</small>}
           </div>}
           {activeTask?.checkpoint && !gateNode(activeTask) && !selectedEdge && <label>{l.language === 'en' ? 'Review mode' : '审核方式'} {reviewModeSelect(activeTask)}</label>}
-          {activeTask && !selectedEdge && <LoopPanel onSelectTask={locateTask} key={team.id + ':' + activeTask.id} modeSelect={reviewModeSelect(activeLoop ? team.tasks.find(task => task.id === activeLoop.gateId) : activeTask)} returnDraft={returnDraft?.gate===activeTask.id ? returnDraft : undefined} team={team} task={activeTask} sessionId={sessionId} base={data.base} archived={archiveView} busy={working} perform={perform} />}
+          {activeTask && !selectedEdge && <LoopPanel onSelectTask={locateTask} key={team.id + ':' + activeTask.id} modeSelect={reviewModeSelect(activeLoop ? team.tasks.find(task => task.id === activeLoop.gateId) : activeTask)} team={team} task={activeTask} sessionId={sessionId} base={data.base} archived={archiveView} busy={working} perform={perform} />}
           {selectedEdge && <aside className={css.editor} aria-label={l("交接详情")}><strong>{team.tasks.find(task => task.id === selectedEdge.from)?.subject} → {team.tasks.find(task => task.id === selectedEdge.to)?.subject}</strong><p>{l("上游完成后，下游才开始。编辑时按 Delete 删除；已开始的下游需先停止。")}</p><button disabled={working || archiveView || !editing} onClick={() => void deleteEdge()}>{l("删除连线")}</button></aside>}
           {activeTask && !editor && !selectedEdge && <aside className={css.editor} aria-label={activeTask.checkpoint ? gateNode(activeTask) ? loopLabel : l('验收节点') : l("任务属性")}><header className={css.taskHeading}>
             <small>{activeTask.checkpoint ? gateNode(activeTask) ? loopLabel : l('验收节点') : l("任务属性")} · {activeTask.id}</small>
@@ -1020,7 +1035,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
         {terminalEdit && activeTask && <><p className={css.notice}>{l("选择重跑将开启新一轮执行，原有状态与结果保存在历史执行记录中。以下下游先等待新结果：")}{rerunImpact(team.tasks,activeTask.id).descendants.map(task=>task.subject).join('、') || l("无")}{l("。可在任意下游节点选择「运行到此节点」，按依赖执行；人工检查仍需确认，其他分支保留。")}{team.phase === 'staged' ? l("请先查看流程并确认启动团队，再重跑。") : ''}</p></>}
         {editor.type === 'member' ? <>{field('name', l("名称"))}<div className={css.memberModelSettings}><strong>{l("模型与 Thinking")}</strong>{modelDirectory && t ? <StagedModelPicker directory={modelDirectory} t={t} provider={draft['provider'] ?? ''} model={draft['model'] ?? ''} reasoningEffort={draft['reasoningEffort'] ?? ''} busy={working} onChange={selection => setDraft(prev => ({ ...prev, ...selection, routeChanged: 'yes' }))} /> : <p className={css.hint}>{l("模型目录暂不可用，请从会话右上角的流程入口打开画布。")}</p>}</div>{field('summary', l("Summary · 功能概述"), true)}{field('role', l("角色职责"), true)}{field('executionPrompt', l("通用执行指令 / PE"), true)}{field('specificPrompt', l("本次补充指令（可选）"), true)}
           {galleryAccessKeys.map(key => <label className={css.galleryPermission} key={key}><input type="checkbox" checked={draft[key] !== 'false'} disabled={working} onChange={event => setDraft(prev => ({ ...prev, [key]: String(event.target.checked) }))} />{key === 'gallerySkill' ? l("允许使用 Gallery Skill") : l("允许使用 Gallery MCP")}</label>)}</>
-          : <>{field('subject', l("任务名称"))}{field('description', l("任务要求 / 验收要求"), true)}{activeTask?.adaptationIssue && <section className={css.adaptationIssue}>{field('adaptationIssue', l("需要确认的问题（处理后清空）"), true)}{draft['adaptationIssue']?.trim() ? <><p>{l("请先补充任务要求，再明确标记问题已解决。仅修改任务正文不会自动清除问题。")}</p><button type="button" disabled={working} onClick={() => setDraft({...draft,adaptationIssue:''})}>{l("已解决，清除问题")}</button></> : <p role="status">{l("问题已标记解决，保存后生效。")}</p>}</section>}{activeTask?.kind==='archive'&&<><p>{l('自动保存上游成果、执行版本、评审和循环历史引用。文件路径留空时使用上游声明的交付物与变更路径。')}</p><label><input type="checkbox" checked={draft['copyFiles']==='true'} onChange={e=>setDraft({...draft,copyFiles:String(e.target.checked)})}/>{l('复制可审计文件（单文件 2 MiB，总计 32 MiB）')}</label>{field('archivePaths',l('归档文件范围（工作区相对路径，每行一项）'),true)}</>}{editor.type !== 'check' && activeTask?.kind!=='archive' && <label>{l("执行 Agent")}<select disabled={!!activeLoop} value={draft['assignee'] ?? ''} onChange={e => setDraft({ ...draft, assignee: e.target.value })}><option value="">{l("由空闲成员领取")}</option>{team.members.filter(m => m.status !== 'removed').map(m => <option key={m.name}>{m.name}</option>)}</select></label>}
+          : <>{field('subject', l("任务名称"))}{field('description', l("任务要求 / 验收要求"), true)}{activeTask?.adaptationIssue && <section className={css.adaptationIssue}>{field('adaptationIssue', l("需要确认的问题（处理后清空）"), true)}{draft['adaptationIssue']?.trim() ? <><p>{l("请先补充任务要求，再明确标记问题已解决。仅修改任务正文不会自动清除问题。")}</p><button type="button" disabled={working} onClick={() => setDraft({...draft,adaptationIssue:''})}>{l("已解决，清除问题")}</button></> : <p role="status">{l("问题已标记解决，保存后生效。")}</p>}</section>}{activeTask?.kind==='archive'&&<><p>{l('自动保存上游成果、执行版本、评审和循环历史引用。文件路径留空时使用上游声明的交付物与变更路径。')}</p><label><input type="checkbox" checked={draft['copyFiles']==='true'} onChange={e=>setDraft({...draft,copyFiles:String(e.target.checked)})}/>{l('复制可审计文件（单文件 2 MiB，总计 32 MiB）')}</label>{field('archivePaths',l('归档文件范围（工作区相对路径，每行一项）'),true)}</>}{editor.type !== 'check' && activeTask?.kind!=='archive' && <label>{l("执行 Agent")}<select disabled={loopOwnerLocked} value={draft['assignee'] ?? ''} onChange={e => setDraft({ ...draft, assignee: e.target.value })}><option value="">{activeLoop ? l("未分配") : l("由空闲成员领取")}</option>{team.members.filter(m => m.status !== 'removed').map(m => <option key={m.name}>{m.name}</option>)}</select></label>}
             <p className={css.hint}>{l("节点已在画布中，靠近节点后可拖动右侧圆点连线。修改名称或要求后点击保存。")}</p></>}
         {editor.type !== 'member' && activeTask && <>{renderReadiness(activeTask)}{!terminalEdit && <>{renderTaskControl(activeTask)}{renderRerunPath(activeTask)}</>}</>}
         {editor.type !== 'member' && activeTask && <><TaskRecord task={activeTask} team={team} expanded={false} showContract={false} /><ArchiveRecords key={`${team.id}:${activeTask.id}`} sessionId={sessionId} team={team} task={activeTask} archived={archiveView}/></>}
@@ -1031,7 +1046,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
           {terminalEdit && <button type="submit" data-rerun-task disabled={working || team.halted || team.phase === 'staged' || !!draft['adaptationIssue']?.trim() || !draft['rerunInstructions']?.trim()}>{l("保存并重跑此任务")}</button>}
           {editor.type === 'member' && editor.id && rerunnableTasks(team.tasks,editor.id).some(task=>task.id===draft['rerunTaskId']) && <button type="submit" data-rerun="true" disabled={working}>{l("保存成员并编辑重跑要求")}</button>}
           {editor.id && editor.type !== 'member' && !activeLoop && !gateNode(activeTask) && !terminalEdit && !activeTask?.workflowConfigPending && !activeTask?.workflowRerunRequired && team.tasks.find(task => task.id === editor.id)?.workflowPaused && <button type="submit" data-resume="true" disabled={working || (activeTask?.workflowRerunRequired && activeTask.dependencies.some(id => team.tasks.find(task => task.id === id)?.status !== 'completed'))}>{activeTask?.workflowRerunRequired ? editor.type === 'check' ? l("使用新结果重新验收") : l("使用新结果执行") : editor.type === 'check' ? l("保存并开始验收") : l("保存并开始执行")}</button>}
-          {editor.id && editor.type !== 'member' && !activeLoop && !terminalEdit && activeTask?.status === 'pending' && <button type="button" disabled={working} onClick={() => void deleteNode(editor.id!)}>{l("删除节点")}</button>}
+          {editor.id && editor.type !== 'member' && activeTask && (activeLoop?.gateId === activeTask.id ? canEditLoopGate(activeTask) : (!activeLoop || isUnstartedLoop(activeLoop)) && !terminalEdit && activeTask.status === 'pending') && <button type="button" disabled={working} title={activeLoop ? l("删除节点会解除当前循环配置") : undefined} onClick={() => void deleteNode(editor.id!)}>{l("删除节点")}</button>}
           {editor.type === 'check' && !gateNode(activeTask) && editor.id && data.ready.includes(editor.id) && <button type="button" disabled={working} onClick={() => void openReview(editor.id!)}>{l("开始验收 ↗")}</button>}<button type="button" onClick={cancelEdit}>{l("放弃修改")}</button>
           {editor.type === 'member' && editor.id && <button type="button" disabled={working} onClick={() => void saveEdit([{ action: 'remove_member', name: editor.id! }], l("移除 {0}", editor.id), true)}>{l("移除成员")}</button>}</footer>
       </form>}

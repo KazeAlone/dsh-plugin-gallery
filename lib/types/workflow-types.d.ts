@@ -135,6 +135,11 @@ export interface WorkflowDiscussion {
 }
 export interface WorkflowState {
     loops?: import('./workflow-loop-types.ts').WorkflowLoop[];
+    removedLoopHistory?: Record<string, {
+        id: string;
+        runId: string;
+        historyHead: string;
+    }>;
     loopRevision?: number;
     /** New canvases execute only explicitly configured review nodes. */
     explicitQuality?: boolean;

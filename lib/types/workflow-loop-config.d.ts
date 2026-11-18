@@ -1,12 +1,50 @@
 import type { LoopConfig } from './workflow-loop-types.ts';
-import type { WorkflowLoop } from './workflow-loop-types.ts';
+import { type WorkflowLoop } from './workflow-loop-types.ts';
 export declare function parseLoopConfig(raw: unknown): LoopConfig;
 import type { TeamState, TeamTask } from './types.ts';
 export declare function upstreamIds(tasks: readonly TeamTask[], gateId: string): Set<string>;
 export declare function deriveLoop(team: TeamState, config: LoopConfig, id: string, runId: string): WorkflowLoop;
 export declare function reviewerConflicts(team: TeamState, bodyIds: string[], reviewer: string): TeamTask[];
 /** Apply the draft PASS edges to a new task list for both preview and save. */
-export declare function gateRouteTasks(team: TeamState, gateId: string, passTargets: unknown, started: boolean): TeamTask[];
+export declare function gateRouteTasks(team: TeamState, gateId: string, passTargets: unknown): TeamTask[];
+export declare function planGateSettings(team: TeamState, raw: LoopConfig, passTargets: unknown): {
+    config: LoopConfig;
+    tasks: TeamTask[];
+    previous: WorkflowLoop | undefined;
+    loop: {
+        round: number;
+        id: string;
+        bodyIds: string[];
+        runId: string;
+        status: "ready" | "running" | "reviewing" | "paused" | "passed" | "cancelled";
+        reason?: string;
+        failedExecutionTaskId?: string;
+        feedback?: string;
+        requestedTaskIds?: string[];
+        startedAt?: number;
+        reviewStartedAt?: number;
+        historyHead?: string;
+        historyCount: number;
+        captured: Record<string, string>;
+        externalInputs: Record<string, string>;
+        lastDecisionId?: string;
+        lastDecision?: "pass" | "revise" | "blocked";
+        previousOutputs?: Record<string, string>;
+        reviewArtifactEvidence?: string;
+        reviewRevision?: string;
+        queued?: boolean;
+        contracts?: Record<string, string>;
+        executionRounds?: Record<string, number>;
+        gateId: string;
+        entryId: string;
+        mode: "human" | "ai";
+        reviewer?: string;
+        rejectToEntry?: boolean;
+        maxRounds: number;
+        timeoutMinutes: number;
+    };
+    rewired: boolean;
+};
 export declare function previewGate(team: TeamState, config: LoopConfig, passTargets: string[]): {
     bodyIds: string[];
     error: string;

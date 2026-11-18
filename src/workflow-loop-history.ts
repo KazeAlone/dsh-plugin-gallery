@@ -61,7 +61,7 @@ export async function writeLoopTeam(root: string, team: TeamState): Promise<void
       }
     }
     // Check referenced heads before publishing a state that could schedule work.
-    for (const loop of loopsOf(team)) if (loop.historyHead) {
+    for (const loop of [...loopsOf(team), ...Object.values(team.workflow?.removedLoopHistory ?? {})]) if (loop.historyHead) {
       if (!recordId(loop.historyHead) || !(await stat(join(history, `${loop.historyHead}.json`))).isFile()) throw new Error('循环历史引用不匹配')
     }
     const next = { ...team, workflow: { ...team.workflow!, loopRevision: current + 1 } }
@@ -88,7 +88,7 @@ export async function readHistoryRecord(root: string, teamId: string, id: string
   return record
 }
 export async function readLoopHistory(root: string, team: TeamState, loopId: string, cursor?: string): Promise<{ records: LoopHistoryRecord[]; next?: string }> {
-  const loop = loopsOf(team).find(l => l.id === loopId)
+  const loop = loopsOf(team).find(l => l.id === loopId) ?? Object.values(team.workflow?.removedLoopHistory ?? {}).find(l => l.id === loopId)
   if (!loop) throw new Error('循环不存在')
   let next = cursor ?? loop.historyHead
   const records: LoopHistoryRecord[] = [], seen = new Set<string>()

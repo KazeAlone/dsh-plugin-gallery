@@ -28,11 +28,14 @@ export interface WorkflowLoop extends LoopConfig {
     lastDecision?: 'pass' | 'revise' | 'blocked';
     previousOutputs?: Record<string, string>;
     reviewArtifactEvidence?: string;
+    reviewRevision?: string;
     queued?: boolean;
     contracts?: Record<string, string>;
     executionRounds?: Record<string, number>;
 }
-export declare function canChangeGateReview(loop: WorkflowLoop, gate: TeamTask): boolean;
+export declare function canEditLoopGate(gate: Pick<TeamTask, 'status' | 'reassigning'>): boolean;
+export declare function isUnstartedLoop(loop: WorkflowLoop): boolean;
+export declare function canAssignLoopTask(loop: WorkflowLoop, task: TeamTask): boolean;
 export declare function canToggleLoopTask(loop: Pick<WorkflowLoop, 'gateId' | 'status' | 'lastDecision'>, taskId: string): boolean;
 export declare function canRetryLoopTask(loop: Pick<WorkflowLoop, 'gateId' | 'status' | 'lastDecision'>, task: {
     id: string;
