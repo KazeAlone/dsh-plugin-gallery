@@ -1,3 +1,4 @@
+import { isUntriggeredLoopTask } from './workflow-loop-types.ts'
 /** Workflow completion is separate from archiving and human approval. */
 import type { TeamState } from './types.ts'
 import { TERMINAL_TASK_STATUSES } from './types.ts'
@@ -7,7 +8,7 @@ export function assertWorkflowArchivable(team: TeamState): void {
   // A default quality policy alone does not turn a tool-created team into an edited workbench workflow.
   const policyOnly = team.workflow?.explicitQuality && Object.keys(team.workflow).every(key => ['explicitQuality','positions','discussions','history'].includes(key)) && !Object.keys(team.workflow.positions).length && !Object.keys(team.workflow.discussions).length && !team.workflow.history.length
   if ((!team.workflow || policyOnly) && !team.tasks.some(task=>task.checkpoint)) return
-  const unfinished=team.tasks.filter(task=>!TERMINAL_TASK_STATUSES.includes(task.status))
+  const unfinished=team.tasks.filter(task=>!isUntriggeredLoopTask(team, task.id) && !TERMINAL_TASK_STATUSES.includes(task.status))
   if(unfinished.length) throw new Error(`流程还有未完成节点，不能归档：${unfinished.map(task=>`${task.id} ${task.subject}`).join('、')}。聊天中的“验收通过”不会完成正式人工审批；请在团队与流程打开验收材料并点击“通过验收”。明确放弃时，先由用户停止团队，再归档。`)
 }
 

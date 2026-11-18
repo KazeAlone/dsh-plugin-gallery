@@ -5,6 +5,7 @@ export interface LoopConfig {
   mode: 'human' | 'ai'
   reviewer?: string
   rejectToEntry?: boolean
+  rejectTaskIds?: string[]
   maxRounds: number
   timeoutMinutes: number
 }
@@ -69,4 +70,14 @@ export interface LoopHistoryRecord {
   artifactEvidence?: string
   members?: Pick<TeamMember, 'id'|'name'|'provider'|'model'|'reasoningEffort'|'activeProvider'|'activeModel'>[]
   executionRounds?: Record<string, number>
+}
+
+/** A return branch participates only after the first reject. */
+export function isUntriggeredLoopTask(team: { workflow?: { loops?: readonly Pick<WorkflowLoop, 'round' | 'rejectTaskIds'>[] } }, taskId: string): boolean {
+  return team.workflow?.loops?.some(loop => loop.round === 1 && loop.rejectTaskIds?.includes(taskId)) ?? false
+}
+export function roundBodyIds(loop: WorkflowLoop): string[] {
+  return loop.round === 1 && loop.rejectTaskIds?.length
+    ? loop.bodyIds.filter(id => !loop.rejectTaskIds!.includes(id))
+    : loop.bodyIds
 }

@@ -40,6 +40,7 @@ export declare function planGateSettings(team: TeamState, raw: LoopConfig, passT
         mode: "human" | "ai";
         reviewer?: string;
         rejectToEntry?: boolean;
+        rejectTaskIds?: string[];
         maxRounds: number;
         timeoutMinutes: number;
     };

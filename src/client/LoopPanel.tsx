@@ -20,14 +20,16 @@ export function LoopPanel({ team, task, sessionId, base, archived, busy, perform
   const [entry, setEntry] = useState(loop?.entryId ?? ''), [reviewer, setReviewer] = useState(loop?.reviewer ?? '')
   const mode = loop?.mode ?? task.checkpoint?.mode ?? 'human'
   const [rounds, setRounds] = useState(loop?.maxRounds ?? 3), [timeout, setTimeoutMinutes] = useState(loop?.timeoutMinutes ?? 30), [extra, setExtra] = useState(1)
+  const [returnIds, setReturnIds] = useState<string[]>(loop?.rejectTaskIds ?? [])
   const [rejectToEntry, setRejectToEntry] = useState(loop ? !!loop.rejectToEntry : true)
   const [passTargets, setPassTargets] = useState(() => team.tasks.filter(t => t.dependencies.includes(task.id)).map(t => t.id))
   const savedPassTargets = JSON.stringify(team.tasks.filter(t => t.dependencies.includes(task.id)).map(t => t.id))
+  const savedReturnIds = JSON.stringify(loop?.rejectTaskIds ?? [])
   useEffect(() => {
-    setEntry(loop?.entryId ?? ''); setReviewer(loop?.reviewer ?? '')
+    setReturnIds(JSON.parse(savedReturnIds)); setEntry(loop?.entryId ?? ''); setReviewer(loop?.reviewer ?? '')
     setRounds(loop?.maxRounds ?? 3); setTimeoutMinutes(loop?.timeoutMinutes ?? 30)
     setRejectToEntry(loop ? !!loop.rejectToEntry : true); setPassTargets(JSON.parse(savedPassTargets))
-  }, [team.id, task.id, loop?.id, loop?.entryId, loop?.mode, loop?.reviewer, loop?.maxRounds, loop?.timeoutMinutes, loop?.rejectToEntry, savedPassTargets])
+  }, [team.id, task.id, loop?.id, loop?.entryId, loop?.mode, loop?.reviewer, loop?.maxRounds, loop?.timeoutMinutes, loop?.rejectToEntry, savedPassTargets, savedReturnIds])
   const [note, setNote] = useState(''), [targets, setTargets] = useState<string[]>(loop ? [loop.entryId] : []), [error, setError] = useState(''), [loading, setLoading] = useState(false)
   const [materials, setMaterials] = useState<RoundResults & { artifactEvidence: string; fingerprint: string; runId: string; files?: ArtifactDigest[] }>()
   const [history, setHistory] = useState<{ records: LoopHistoryRecord[]; next?: string }>(), [comparison, setComparison] = useState<LoopHistoryRecord>()
@@ -51,7 +53,7 @@ export function LoopPanel({ team, task, sessionId, base, archived, busy, perform
     try { await fn() } catch (err) { if (scopeRef.current === scope) setError(err instanceof Error ? err.message : String(err)) } finally { if (scopeRef.current === scope) setLoading(false) }
   }
   const blocked = busy || loading
-  const config = { gateId: task.id, entryId: entry, rejectToEntry, mode, reviewer: mode === 'ai' ? reviewer : undefined, maxRounds: rounds, timeoutMinutes: timeout }
+  const config = { gateId: task.id, entryId: entry, rejectToEntry: !!returnIds.length || rejectToEntry, rejectTaskIds: returnIds, mode, reviewer: mode === 'ai' ? reviewer : undefined, maxRounds: rounds, timeoutMinutes: timeout }
   const editing = !archived && canEditLoopGate(task) && (!loop || loop.gateId === task.id)
   const preview = editing && entry ? previewGate(team, config, passTargets) : { bodyIds: [], error: '' }
   const statuses = { ready: tr('等待启动', 'Ready'), running: tr('执行中', 'Running'), reviewing: tr('审核中', 'Reviewing'), paused: tr('已暂停', 'Paused'), passed: tr('已通过', 'Passed'), cancelled: tr('已结束', 'Cancelled') }
@@ -65,11 +67,24 @@ export function LoopPanel({ team, task, sessionId, base, archived, busy, perform
     {error && <p role="alert">{error}</p>}
     {editing && <details open={!loop || undefined}><summary>{tr('配置 IF 路径与审核', 'Configure IF routes and review')}</summary><div className={css.settings}>
       <fieldset><legend>{tr('PASS · 通过后继续', 'PASS · Continue to')}</legend>
-        {team.tasks.filter(t => t.id !== task.id && !ancestors.has(t.id)).map(t => <label key={t.id} className={css.check}><input type="checkbox" checked={passTargets.includes(t.id)} onChange={e => setPassTargets(ids => e.target.checked ? [...ids, t.id] : ids.filter(id => id !== t.id))}/>{t.subject}</label>)}
+        {team.tasks.filter(t => t.id !== task.id && !ancestors.has(t.id) && !returnIds.includes(t.id)).map(t => <label key={t.id} className={css.check}><input type="checkbox" checked={passTargets.includes(t.id)} onChange={e => setPassTargets(ids => e.target.checked ? [...ids, t.id] : ids.filter(id => id !== t.id))}/>{t.subject}</label>)}
         {!passTargets.length && <small>{tr('通过后结束此路径', 'This path ends on pass')}</small>}
       </fieldset>
       <label>REJECT · {tr('返回连线目标（必选）', 'Return target (required)')}<select aria-label={tr('返回连线目标（必选）', 'Return target (required)')} value={entry} onChange={e => setEntry(e.target.value)}><option value="">{tr('选择上游任务', 'Select an upstream task')}</option>{team.tasks.filter(t => !t.checkpoint && ancestors.has(t.id)).map(t => <option key={t.id} value={t.id}>{t.subject}</option>)}</select></label>
-      <label className={css.check}><input type="checkbox" checked={rejectToEntry} onChange={e => setRejectToEntry(e.target.checked)} />{tr('退回时从所选入口重跑；取消勾选可在审核时指定返工任务', 'Restart at the selected entry on reject. Uncheck to choose tasks during review.')}</label>
+      <fieldset><legend>{tr('仅退回时执行', 'Run only on reject')}</legend>
+        <p>{tr('按顺序添加任务。全部完成后回到所选入口。', 'Add tasks in order. Return to the selected entry after all of them finish.')}</p>
+        {returnIds.map((id, index) => <div key={id}>
+          {index + 1}. {team.tasks.find(node => node.id === id)?.subject ?? id}
+          <button type="button" onClick={() => setReturnIds(ids => ids.filter(item => item !== id))}>{tr('从退回路径移除', 'Remove from reject path')}</button>
+        </div>)}
+        <select aria-label={tr('添加退回任务', 'Add reject task')} value="" onChange={e => { const id = e.currentTarget.value; if (id) setReturnIds(ids => [...ids, id]) }}>
+          <option value="">{tr('添加退回任务', 'Add reject task')}</option>
+          {team.tasks.filter(node => !node.checkpoint && node.kind !== 'archive' && !ancestors.has(node.id) && !returnIds.includes(node.id) && !passTargets.includes(node.id)
+            && !team.workflow?.loops?.some(other => other.id !== loop?.id && other.bodyIds.includes(node.id)))
+            .map(node => <option key={node.id} value={node.id}>{node.subject}</option>)}
+        </select>
+      </fieldset>
+      <label className={css.check}><input type="checkbox" disabled={!!returnIds.length} checked={config.rejectToEntry} onChange={e => setRejectToEntry(e.target.checked)} />{tr('退回时从所选入口重跑；取消勾选可在审核时指定返工任务', 'Restart at the selected entry on reject. Uncheck to choose tasks during review.')}</label>
       {!loop && mode === 'ai' && <label>{tr('独立审核成员', 'Independent reviewer')}<select aria-label={tr('独立审核成员', 'Independent reviewer')} value={reviewer} onChange={e => setReviewer(e.target.value)}><option value="">{tr('选择审核成员', 'Choose reviewer')}</option>{team.members.filter(m => m.status !== 'removed').map(m => {
         const owned = reviewerConflicts(team, preview.bodyIds, m.name).map(t => t.subject)
         return <option key={m.name} value={m.name} disabled={!!owned.length}>{m.name}{owned.length ? ' · ' + tr('负责', 'Owns') + ' ' + owned.join(', ') : ''}</option>

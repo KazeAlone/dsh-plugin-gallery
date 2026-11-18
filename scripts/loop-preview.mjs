@@ -1,8 +1,8 @@
 /** Real workbench + HTTP reducer/persistence/scheduler. Only execution/model outputs are simulated. */
 import { createServer } from 'node:http'
 import { mkdir, mkdtemp } from 'node:fs/promises'
-import { readFileSync, writeFileSync } from 'node:fs'
-import { resolve, join } from 'node:path'
+import { readFileSync, realpathSync, writeFileSync } from 'node:fs'
+import { resolve, join, relative } from 'node:path'
 import { build } from 'tsdown'
 import { createTeamDir, readTeam, withTeamLock, writeTeam } from '../lib/state.js'
 import { installWorkflowWorkbench } from '../lib/workflow-runtime.js'
@@ -15,9 +15,13 @@ const port = Number(process.env.TEAMFLOW_LOOP_PORT ?? 8384)
 const bundle = resolve('node_modules/loop-ui')
 await mkdir(bundle, { recursive: true }); await mkdir('output', { recursive: true })
 const workspace = await mkdtemp(resolve('output/loop-preview-')), root = join(workspace, '.agent-teams')
-writeFileSync(join(bundle, 'entry.tsx'), `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import {WorkflowWorkbench} from '../../lib/client/WorkflowWorkbench.js';import {en,zh} from '../../lib/client/locales.js';
+const importFromBundle = path => {
+  const specifier = relative(realpathSync(bundle), resolve(path)).split('\\').join('/')
+  return specifier.startsWith('.') ? specifier : './' + specifier
+}
+writeFileSync(join(bundle, 'entry.tsx'), `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import {WorkflowWorkbench} from '${importFromBundle('lib/client/WorkflowWorkbench.js')}';import {en,zh} from '${importFromBundle('lib/client/locales.js')}';
 function App(){const [language,setLanguage]=useState('zh');const t=key=>(language==='en'?en:zh)[key]??key;return <><select aria-label="Preview language" style={{position:'fixed',right:12,top:8,zIndex:2147483647}} value={language} onChange={e=>setLanguage(e.target.value)}><option value="zh">中文</option><option value="en">English</option></select><WorkflowWorkbench sessionId="captain" teamId="demo" initiallyOpen embeddedContext t={t}/></>};createRoot(document.getElementById('root')!).render(<App/>);`)
-writeFileSync(join(bundle, 'config.mjs'), `import base from '../../tsdown.config.ts';const menu={name:'preview-menu',resolveId(id){if(id==='@deepseek-ai/dsh-client-ui-primitives')return '\\0preview-menu'},load(id){if(id==='\\0preview-menu')return "import React from 'react';export const MarkdownText=undefined;export function Modal(){return null}export function Menu({anchor}){return anchor}"}};export default {...base,plugins:[menu,...base.plugins],name:'loop-preview',entry:['${bundle.replaceAll('\\','/')}/entry.tsx'],outDir:'${bundle.replaceAll('\\','/')}',format:'iife',sourcemap:false,deps:{alwaysBundle:()=>true},outputOptions:{entryFileNames:'app.js'}}`)
+writeFileSync(join(bundle, 'config.mjs'), `import base from '${importFromBundle('tsdown.config.ts')}';const menu={name:'preview-menu',resolveId(id){if(id==='@deepseek-ai/dsh-client-ui-primitives')return '\\0preview-menu'},load(id){if(id==='\\0preview-menu')return "import React from 'react';export const MarkdownText=undefined;export function Modal(){return null}export function Menu({anchor}){return anchor}"}};export default {...base,plugins:[menu,...base.plugins],name:'loop-preview',entry:['${bundle.replaceAll('\\','/')}/entry.tsx'],outDir:'${bundle.replaceAll('\\','/')}',format:'iife',sourcemap:false,deps:{alwaysBundle:()=>true},outputOptions:{entryFileNames:'app.js'}}`)
 await build({ config: join(bundle, 'config.mjs') })
 const task = (id, subject, dependencies = [], checkpoint = false) => ({ id, subject, description: `完成并验证：${subject}`, dependencies, assignee: checkpoint ? undefined : 'worker', kind: 'work', status: 'pending', attempt: 0, createdAt: 1, updatedAt: 1,
   workflowPaused: true, workflowAwaitingStart: true, ...(checkpoint ? { workflowConfigPending: process.env.TEAMFLOW_PREVIEW_REVIEW_KIND !== 'acceptance', checkpoint: { kind: process.env.TEAMFLOW_PREVIEW_REVIEW_KIND === 'acceptance' ? 'acceptance' : 'gate', round: 1, history: [] } } : {}) })

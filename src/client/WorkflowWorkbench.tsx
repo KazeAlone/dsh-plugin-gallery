@@ -1,5 +1,5 @@
-import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow } from '../workflow-loop-types.ts'
-import { previewGate } from '../workflow-loop-config.ts'
+import { canAssignLoopTask, canEditLoopGate, canStartLoopWithFlow, isUntriggeredLoopTask } from '../workflow-loop-types.ts'
+import { previewGate, upstreamIds } from '../workflow-loop-config.ts'
 import { draftTaskId } from './workflow-draft.ts'
 import { WorkbenchGuide } from './WorkbenchGuide.tsx'
 import { OpenCodeExport } from './OpenCodeExport.tsx'
@@ -419,6 +419,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
     return <section className={css.readiness} data-rerun-path tabIndex={-1} aria-label={l('重跑路径')}><strong>{l('从上游运行到此节点')}</strong><p>{path.map(item=>item.subject).join(' → ')}</p><p>{l('按依赖顺序执行，独立分支可并行；经过人工检查时等待你确认，确认后继续。不会启动目标之外的其他待重跑分支。')}</p>{issue&&<p role="alert">{workflowMessage(issue,l)}</p>}<button type="button" disabled={working||!!unsaved.length||!!issue} title={unsaved.length?l('请先保存属性草稿'):undefined} onClick={()=>void perform('resume_rerun_path',{taskId:task.id,base:data?.base})}>{l('运行到此节点')}</button></section>
   }
   function renderTaskControl(task: TeamTask) {
+    if (team && isUntriggeredLoopTask(team, task.id)) return null
     if (!team || archiveView) return null
     const control = taskControlState(team, {...task, workflowAwaitingStart:awaitsFirstStart(task)})
     if (control.canRerun) return <button type="button" data-node-rerun disabled={working} onPointerDown={event=>event.stopPropagation()} onClick={event=>{event.stopPropagation();edit('task',task.id)}}>{l("修改并重跑")}</button>
@@ -842,7 +843,7 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                   {(!compactLoops || team.tasks.find(task => task.id === t.id)?.dependencies.includes(dep)) && <path className={css.edgeHit} d={path} role="button" tabIndex={0} aria-label={l("交接：{0} → {1}", team.tasks.find(task => task.id === dep)?.subject ?? dep, t.subject)} aria-pressed={selectedEdge?.from === dep && selectedEdge.to === t.id} onClick={() => { choose({ type:'edge',from:dep,to:t.id }) }} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); choose({ type:'edge',from:dep,to:t.id }) } }} />}
                 </g> }))}
                 {reviewHistoryEdges(canvasTasks).map(edge => <g key={`history:${edge.from}:${edge.to}`} className={css.historyEdge} data-review-history-edge><path d={connectionPath(connectionPort(canvasPos(edge.from),'output',gateNode(team.tasks.find(t=>t.id===edge.from))),connectionPort(canvasPos(edge.to),'input',gateNode(team.tasks.find(t=>t.id===edge.to))))} markerEnd="url(#workflow-arrow)"/><text x={(canvasPos(edge.from).x+CARD_WIDTH+canvasPos(edge.to).x)/2} y={(canvasPos(edge.from).y+canvasPos(edge.to).y)/2+42} textAnchor="middle" fontSize="11">{l('历史路径')}</text></g>)}
-                {loopRegions.map(region => <g key={region.loop.id} className={css.edge} data-flow-branch="reject"><path d={region.returnPath} strokeDasharray="7 5" markerEnd="url(#workflow-arrow-reject)"/><text x={region.label.x} y={region.label.y} textAnchor="middle" fontSize="13" fontWeight="650">REJECT · {l.language==='en'?'Revise with feedback':'按意见改进'} · {region.loop.round}/{region.loop.maxRounds}</text></g>)}
+                {loopRegions.map(region => <g key={region.loop.id} className={css.edge} data-flow-branch="reject">{region.returnPaths.map((path, index) => <path key={index} d={path} strokeDasharray="7 5" markerEnd="url(#workflow-arrow-reject)"/>)}<text x={region.label.x} y={region.label.y} textAnchor="middle" fontSize="13" fontWeight="650">REJECT · {l.language==='en'?'Revise with feedback':'按意见改进'} · {region.loop.round}/{region.loop.maxRounds}</text></g>)}
                 {link && <path d={connectionPath(link.returning ? {x:canvasPos(link.from).x+112.5,y:canvasPos(link.from).y+150} : connectionPort(canvasPos(link.from),'output', gateNode(team.tasks.find(task => task.id === link.from))),link)} />}
               </svg>
               {!archiveView && loopRegions.map(({loop,x,bottom}) => {
@@ -901,10 +902,13 @@ function Workbench({ sessionId: entrySessionId, teamId, archived = false, waitin
                     const update = (move: {clientX: number; clientY: number}) => {
                       const at = point(move)
                       const target = connectionTarget(canvasTasks, canvasPos, at, task.id, gateNode)
+                      const inForwardPath = target && upstreamIds(team.tasks, task.id).has(target.id)
+                      const attachOnReject = target && gateLoop && !inForwardPath && !target.checkpoint && target.kind !== 'archive'
                       const config = target && {
-                        gateId: task.id, entryId: target.id, mode: gateLoop?.mode ?? task.checkpoint?.mode ?? 'human',
+                        gateId: task.id, entryId: attachOnReject ? gateLoop.entryId : target.id, mode: gateLoop?.mode ?? task.checkpoint?.mode ?? 'human',
                         reviewer: gateLoop?.reviewer, maxRounds: gateLoop?.maxRounds ?? 3,
                         timeoutMinutes: gateLoop?.timeoutMinutes ?? 30, rejectToEntry: true,
+                        rejectTaskIds: attachOnReject ? [...new Set([...gateLoop.rejectTaskIds ?? [], target.id])] : gateLoop?.rejectTaskIds,
                       }
                       const issue = config ? workflowMessage(previewGate(team, config, passTargets).error, l) : ''
                       const end = target && !issue ? connectionPort(canvasPos(target.id), 'input', gateNode(target)) : at

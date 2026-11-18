@@ -37,6 +37,8 @@ export declare const zh: {
     'task.control.blocked': string;
     'task.control.queued': string;
     'task.control.staged': string;
+    'task.control.rejectOnly': string;
+    'task.control.notTriggered': string;
     'task.control.stopped': string;
     'task.control.rerunRequired': string;
     'task.control.rerunWaiting': string;
@@ -312,6 +314,8 @@ export declare const en: {
     'task.control.blocked': string;
     'task.control.queued': string;
     'task.control.staged': string;
+    'task.control.rejectOnly': string;
+    'task.control.notTriggered': string;
     'task.control.stopped': string;
     'task.control.rerunRequired': string;
     'task.control.rerunWaiting': string;

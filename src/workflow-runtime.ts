@@ -1,3 +1,4 @@
+import { roundBodyIds } from './workflow-loop-types.ts'
 import { writeOpenCodeProject } from './opencode-project.ts'
 import { canRetryLoopTask, canStartLoopWithFlow, canToggleLoopTask } from './workflow-loop-types.ts'
 import { MAX_WORKFLOW_TEXT_LENGTH, MAX_WORKFLOW_REQUEST_BYTES } from './workflow-types.ts'
@@ -262,7 +263,7 @@ export function installWorkflowWorkbench(ctx: Context, config: ToolsConfig, runt
         const previous = await previousReview(root, team.id, loop)
         const results = (tasks: TeamState['tasks']) => {
           const gate = tasks.find(task => task.id === loop.gateId)
-          return tasks.filter(task => loop.bodyIds.includes(task.id)).map(task => reviewResult(task, gate))
+          return tasks.filter(task => roundBodyIds(loop).includes(task.id)).map(task => reviewResult(task, gate))
         }
         reply(200, { artifactEvidence: evidence, files: [], fingerprint: loopInputFingerprint(team, loop), runId: loop.runId, round: loop.round,
           executionRounds: loop.executionRounds, tasks: results(team.tasks), previous: previous && { round: previous.round, tasks: results(previous.tasks) } })

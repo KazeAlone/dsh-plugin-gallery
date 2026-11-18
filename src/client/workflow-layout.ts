@@ -8,7 +8,7 @@ export function reviewHistoryEdges(tasks: readonly Pick<TeamTask, 'id'|'dependen
   return tasks.flatMap(task => [...new Set(task.checkpoint?.history.flatMap(entry => entry.inputIds ?? []) ?? [])]
     .filter(id => ids.has(id) && !task.dependencies.includes(id)).map(from => ({ from, to: task.id })))
 }
-export interface LayoutLoop { gateId: string; entryId: string; bodyIds?: readonly string[] }
+export interface LayoutLoop { gateId: string; entryId: string; bodyIds?: readonly string[]; rejectTaskIds?: readonly string[] }
 
 /** Template configs carry entry/gate IDs; runtime loops also carry the derived body. */
 export function loopBodyIds(tasks: readonly LayoutTask[], loop: LayoutLoop): string[] {
@@ -18,6 +18,7 @@ export function loopBodyIds(tasks: readonly LayoutTask[], loop: LayoutLoop): str
   byId.get(loop.gateId)?.dependencies.forEach(visit)
   const body = new Set([loop.entryId]); let changed = true
   while (changed) { changed = false; for (const task of tasks) if (ancestors.has(task.id) && !body.has(task.id) && task.dependencies.some(id => body.has(id))) { body.add(task.id); changed = true } }
+  for (const id of loop.rejectTaskIds ?? []) body.add(id)
   return tasks.filter(task => body.has(task.id)).map(task => task.id)
 }
 
@@ -61,8 +62,16 @@ export function loopRegion(tasks: readonly LayoutTask[], loop: LayoutLoop, posit
   const x = Math.min(...points.map(p => p.x)) - 20, y = Math.min(...points.map(p => p.y)) - 28
   const right = Math.max(...points.map(p => p.x)) + cardWidth + 20, bottom = Math.max(...points.map(p => p.y)) + cardHeight + 90
   const gate = position(loop.gateId), entry = position(loop.entryId), lane = bottom - 35
-  return { x, y, width: right - x, height: bottom - y, bottom,
-    returnPath: `M${gate.x + 112.5},${gate.y + 150} V${lane - 18} Q${gate.x + 112.5},${lane} ${gate.x + 94.5},${lane} H${entry.x + cardWidth/2 + 18} Q${entry.x + cardWidth/2},${lane} ${entry.x + cardWidth/2},${lane - 18} V${entry.y + cardHeight}`,
+  const returnPath = `M${gate.x + 112.5},${gate.y + 150} V${lane - 18} Q${gate.x + 112.5},${lane} ${gate.x + 94.5},${lane} H${entry.x + cardWidth/2 + 18} Q${entry.x + cardWidth/2},${lane} ${entry.x + cardWidth/2},${lane - 18} V${entry.y + cardHeight}`
+  const stops = [loop.gateId, ...loop.rejectTaskIds ?? [], loop.entryId].map(position)
+  const returnPaths = loop.rejectTaskIds?.length ? stops.slice(1).map((point, i) => {
+    const from = stops[i]!
+    const sx = from.x + cardWidth / 2, ex = point.x + cardWidth / 2
+    const sy = from.y + cardHeight, ey = point.y + cardHeight
+    const bend = lane + i * 6
+    return `M${sx},${sy} C${sx},${bend} ${ex},${bend} ${ex},${ey}`
+  }) : [returnPath]
+  return { x, y, width: right - x, height: bottom - y, bottom, returnPath, returnPaths,
     label: { x: (gate.x + entry.x) / 2 + 112.5, y: lane - 10 } }
 }
 

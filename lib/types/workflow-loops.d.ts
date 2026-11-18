@@ -19,6 +19,8 @@ export declare function holdLoopTask(task: TeamTask): void;
 export declare function saveGateSettings(team: TeamState, config: LoopConfig, passTargets: unknown, loopId?: unknown, dependenciesChanged?: boolean): void;
 export declare function loopCanExecute(team: TeamState, task: TeamTask): boolean;
 export declare function loopDependenciesSatisfied(team: TeamState, task: TeamTask): boolean;
+/** Virtual REJECT edges never enter the ordinary dependency graph. */
+export declare function loopReturnDependencies(team: TeamState, task: TeamTask): string[];
 /** Called before every durable write and from the scheduler watchdog. Never creates tasks. */
 export declare function reconcileLoops(team: TeamState, now?: number, failedTurnId?: string): boolean;
 export declare class LoopStartUnavailable extends Error {

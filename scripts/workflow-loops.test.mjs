@@ -4,18 +4,20 @@ import { mkdtemp, rm, readFile, writeFile, mkdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { saveGateSettings, configureLoop, decideLoop, startLoop, reconcileLoops, loopInputFingerprint, loopCanExecute, pauseLoop, pendingLoopHistory } from '../lib/workflow-loops.js'
+import { saveGateSettings, configureLoop, decideLoop, startLoop, reconcileLoops, loopInputFingerprint, loopCanExecute, loopDependenciesSatisfied, loopReturnDependencies, pauseLoop, pendingLoopHistory } from '../lib/workflow-loops.js'
 import { readLoopHistory } from '../lib/workflow-loop-history.js'
 import { previewGate, reviewerConflicts } from '../lib/workflow-loop-config.js'
 import { createTeamDir, readTeam, writeTeam } from '../lib/state.js'
 import { validateWorkflowGraph, applyWorkflowOperations } from '../lib/workflow.js'
 import { applyQualityFollowUp, registerAgentTeamsTools } from '../lib/tools.js'
-import { installTeamScheduler } from '../lib/scheduler.js'
+import { collectCompletedDependencyOutputs, installTeamScheduler } from '../lib/scheduler.js'
 import { installWorkflowWorkbench } from '../lib/workflow-runtime.js'
 import { Readable } from 'node:stream'
 import { workflowFingerprint } from '../lib/workflow.js'
 import { templateSeed, instantiateTemplate } from '../lib/templates.js'
 import { beginTaskAttempt, archiveTeamDir } from '../lib/state.js'
+import { activityStatus } from '../lib/client/activity-status.js'
+import { assertWorkflowArchivable } from '../lib/workflow-lifecycle.js'
 import { taskControlState, flowControlState, flowControlVersion } from '../lib/client/task-control.js'
 
 test('loop controls preserve completed state, block node reruns, and distinguish AI from human review', () => {
@@ -1029,4 +1031,78 @@ test('ordinary canvas edges rederive a loop and REJECT retries the connected ori
   assert.deepEqual(wired.tasks.map(task => task.id), ['a','b','gate','after','check-results'])
   assert.throws(() => applyWorkflowOperations(wired, [{action:'update_task', id:'gate', dependencies:[]}]), /入口/)
   assert.deepEqual(wired.tasks.find(task => task.id === 'gate').dependencies, ['check-results'])
+})
+
+function rejectPathFixture() {
+  const {team, loop} = fixture()
+  team.tasks.push(task('debug'), task('plan', ['debug']))
+  saveGateSettings(team, {...loop, rejectTaskIds:['debug','plan']}, ['after'], loop.id)
+  return {team, loop:team.workflow.loops[0]}
+}
+
+test('a first-pass success does not count or run the return branch', async t => {
+  const {team, loop} = rejectPathFixture()
+  const debug = team.tasks.find(task => task.id === 'debug')
+  startLoop(team, loop.id)
+  assert.equal(loopCanExecute(team, debug), false)
+  assert.equal(taskControlState(team, debug).label, 'task.control.rejectOnly')
+  finish(team)
+  assert.equal(loop.status, 'reviewing')
+  decideLoop(team, loop.id, decision(team, loop, 'pass', []), 'human')
+  finish(team, ['after'])
+  assert.equal(taskControlState(team, debug).label, 'task.control.notTriggered')
+  assert.doesNotThrow(() => assertWorkflowArchivable(team))
+  const f = await routeFixture(t, team)
+  const state = await f.call('state')
+  assert.equal(flowControlVersion(state.activity), flowControlVersion(state.team))
+  assert.deepEqual(state.activity.tasks.map(task => task.id), ['a','b','gate','after'])
+  const progress = activityStatus(state.activity)
+  assert.equal(progress.state, 'completed')
+  assert.equal(progress.total, 4)
+  assert.equal(progress.percent, 100)
+})
+
+test('REJECT runs ordered tasks before the original entry, passes their results, and retries after failure', async t => {
+  const {team, loop} = rejectPathFixture()
+  startLoop(team, loop.id)
+  finish(team)
+  decideLoop(team, loop.id, decision(team, loop, 'revise', []), 'human')
+  const byId = id => team.tasks.find(task => task.id === id)
+  assert.equal(loop.round, 2)
+  assert.equal(loopCanExecute(team, byId('debug')), true)
+  assert.equal(loopDependenciesSatisfied(team, byId('debug')), true)
+  assert.equal(loopDependenciesSatisfied(team, byId('plan')), false)
+  assert.equal(loopDependenciesSatisfied(team, byId('a')), false)
+  assert.match(byId('debug').workflowRerunContext.instructions, /a result 1/)
+  finish(team, ['debug'])
+  assert.equal(loopDependenciesSatisfied(team, byId('plan')), true)
+  assert.equal(loopDependenciesSatisfied(team, byId('a')), false)
+  byId('plan').status = 'failed'
+  reconcileLoops(team)
+  assert.equal(loop.status, 'paused')
+  assert.equal(loop.failedExecutionTaskId, 'plan')
+  const f = await routeFixture(t, team)
+  const state = await f.call('state')
+  assert.deepEqual(state.activity.tasks.map(task => task.id), ['a','b','gate','after','debug','plan'])
+  assert.equal(state.activity.tasks.find(task => task.id === 'plan').status, 'failed')
+  assert.equal(activityStatus(state.activity).attention, 1)
+  startLoop(team, loop.id)
+  assert.equal(byId('debug').status, 'completed')
+  finish(team, ['plan'])
+  assert.equal(loopDependenciesSatisfied(team, byId('a')), true)
+  assert.deepEqual(collectCompletedDependencyOutputs(team.tasks, 'a', undefined, loopReturnDependencies(team, byId('a'))).map(result => result.output), ['debug result 1','plan result 1'])
+  finish(team)
+  decideLoop(team, loop.id, decision(team, loop, 'revise', []), 'human')
+  assert.equal(loop.round, 3)
+  for (const id of ['debug','plan','a']) assert.equal(byId(id).status, 'pending')
+})
+
+test('reject paths reject shared ownership, forward work and backward edges', () => {
+  const {team, loop} = rejectPathFixture()
+  team.tasks.push(task('second'), {...task('gate2', ['second']), assignee:undefined, checkpoint:{kind:'gate',round:1,history:[]}})
+  const second = {gateId:'gate2', entryId:'second', mode:'human', maxRounds:3, timeoutMinutes:10, rejectTaskIds:['debug']}
+  assert.throws(() => saveGateSettings(team, second, []), /共享节点/)
+  assert.throws(() => saveGateSettings(team, {...loop, rejectTaskIds:['a']}, ['after'], loop.id), /首轮路径/)
+  assert.throws(() => saveGateSettings(team, {...loop, rejectTaskIds:['plan','debug']}, ['after'], loop.id), /更早的任务/)
+  assert.deepEqual(team.workflow.loops[0].rejectTaskIds, ['debug','plan'])
 })

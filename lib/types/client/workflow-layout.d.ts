@@ -13,6 +13,7 @@ export interface LayoutLoop {
     gateId: string;
     entryId: string;
     bodyIds?: readonly string[];
+    rejectTaskIds?: readonly string[];
 }
 /** Template configs carry entry/gate IDs; runtime loops also carry the derived body. */
 export declare function loopBodyIds(tasks: readonly LayoutTask[], loop: LayoutLoop): string[];
@@ -25,6 +26,7 @@ export declare function loopRegion(tasks: readonly LayoutTask[], loop: LayoutLoo
     height: number;
     bottom: number;
     returnPath: string;
+    returnPaths: string[];
     label: {
         x: number;
         y: number;

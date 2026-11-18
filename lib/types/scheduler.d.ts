@@ -74,7 +74,7 @@ export interface DispatchTicket {
  * Recursively collect `status=completed` ancestors of `taskId` in topological
  * order (dependencies before dependents). Cycles stop that branch only.
  */
-export declare function collectCompletedDependencyOutputs(tasks: readonly TeamTask[], taskId: string, warn?: (message: string) => void): DependencyOutput[];
+export declare function collectCompletedDependencyOutputs(tasks: readonly TeamTask[], taskId: string, warn?: (message: string) => void, extraDependencies?: readonly string[]): DependencyOutput[];
 /** Format completed-dependency outputs with per-item and total truncation. */
 export declare function formatDependencyOutputs(items: readonly DependencyOutput[]): string;
 export declare function assignmentPrompt(ticket: DispatchTicket, stateDir: string, teamId: string, workOrderWarnings?: readonly string[]): string;

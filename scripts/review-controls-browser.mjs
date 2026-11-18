@@ -123,6 +123,29 @@ try {
     await page.keyboard.press('Delete')
     await page.locator('[data-canvas-node="'+id+'"]').waitFor({state:'detached',timeout:3000})
   }
+  const branch = []
+  for (let index = 0; index < 2; index++) {
+    const before = await page.locator('[data-canvas-node]').count()
+    await page.locator('[data-guide="task"]').click()
+    await page.waitForFunction(n => document.querySelectorAll('[data-canvas-node]').length === n + 1, before)
+    branch.push(await page.locator('[data-task-selected="true"]').getAttribute('data-canvas-node'))
+  }
+  await existing.locator('[data-card-task="gate"]').click()
+  const loopPanel = page.locator('[data-loop-panel]')
+  const gateSettings = loopPanel.locator('details').filter({hasText:'配置 IF 路径与审核'})
+  if (await gateSettings.getAttribute('open') === null) await gateSettings.locator('summary').click()
+  for (const id of branch) await loopPanel.getByRole('combobox', {name:'添加退回任务'}).selectOption(id, {timeout:5000})
+  const [configured] = await Promise.all([
+    page.waitForResponse(res=>res.url().endsWith('/workflow') && res.request().postDataJSON()?.action==='loop_configure'),
+    loopPanel.getByRole('button', {name:'保存 IF 配置'}).click(),
+  ])
+  assert.ok(configured.ok())
+  const savedBranch = await configured.json()
+  assert.deepEqual(savedBranch.team.workflow.loops[0].rejectTaskIds, branch)
+  assert.ok(branch.every(id => !savedBranch.activity.tasks.some(task => task.id === id)))
+  await page.waitForFunction(() => document.querySelectorAll('[data-flow-branch="reject"] path').length === 3)
+  await page.reload()
+  await page.waitForFunction(() => document.querySelectorAll('[data-flow-branch="reject"] path').length === 3)
   await page.setViewportSize({width:840,height:900})
   await page.locator('[data-guide="task"]').click()
   const mobileNode=page.locator('[data-task-selected="true"]')

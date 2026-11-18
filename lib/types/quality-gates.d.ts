@@ -1,8 +1,3 @@
-/**
- * Pure quality-gate rules: contracts, path audit, completion, follow-up,
- * coverage, and resume. Tools and persistence call these; they do not I/O.
- * @module dsh-agent-teams/quality-gates
- */
 import { type AcceptanceResult, type ArtifactDigest, type ArtifactScopeGap, type ArtifactSnapshot, type CommandResult, type FindingSeverity, type ReviewFinding, type ReviewPolicy, type ReviewVerdict, type TaskKind, type TaskEvidence, type TaskRevision, type TaskStatus, type TeamState, type TeamTask } from './types.ts';
 declare const QUALITY_KINDS: readonly TaskKind[];
 declare const WRITE_KINDS: readonly TaskKind[];

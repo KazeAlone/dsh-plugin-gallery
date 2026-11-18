@@ -7,7 +7,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import type { TeamState, TeamTask } from './types.ts'
 import { resetTaskForRerun } from './task-rerun.ts'
 
-import { canEditLoopGate, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
+import { canEditLoopGate, roundBodyIds, isUntriggeredLoopTask, type LoopConfig, type WorkflowLoop, type LoopHistoryRecord } from './workflow-loop-types.ts'
 export type { LoopConfig, WorkflowLoop, LoopHistoryRecord } from './workflow-loop-types.ts'
 const pending = new WeakMap<TeamState, LoopHistoryRecord[]>()
 export const loopRetryInstructions = '按原任务要求重试本轮，保留先前的执行记录。'
@@ -26,7 +26,7 @@ function taskOf(team: TeamState, id: string): TeamTask {
   return task
 }
 export function loopInputFingerprint(team: TeamState, loop: WorkflowLoop): string {
-  return hash([loop.runId, loop.round, [loop.gateId, ...loop.bodyIds].map(id => {
+  return hash([loop.runId, loop.round, [loop.gateId, ...roundBodyIds(loop)].map(id => {
     const task = taskOf(team, id)
     return [task.id, task.description, task.id === loop.gateId ? undefined : task.status, task.id === loop.gateId ? undefined : task.attemptId,
       task.output, task.acceptanceResults, task.commandsRun, task.findings, task.supplementalEvidence]
@@ -135,15 +135,22 @@ export function loopCanExecute(team: TeamState, task: TeamTask): boolean {
   if (!loop) return !task.checkpoint
   if (team.halted || team.phase === 'staged') return false
   if (task.id === loop.gateId) return loop.mode === 'ai' && loop.status === 'reviewing'
-  return loop.status === 'running'
+  return loop.status === 'running' && !isUntriggeredLoopTask(team, task.id)
 }
 export function loopDependenciesSatisfied(team: TeamState, task: TeamTask): boolean {
   const loop = loopForTask(team, task.id)
   if (loop?.gateId === task.id) return loop.status === 'reviewing'
-  return task.dependencies.every(id => team.tasks.some(t => t.id === id && t.status === 'completed'))
+  return [...task.dependencies, ...loopReturnDependencies(team, task)].every(id => team.tasks.some(t => t.id === id && t.status === 'completed'))
+}
+/** Virtual REJECT edges never enter the ordinary dependency graph. */
+export function loopReturnDependencies(team: TeamState, task: TeamTask): string[] {
+  const loop = loopForTask(team, task.id)
+  if (!loop || loop.round < 2 || loop.gateId === task.id || !loop.rejectTaskIds?.length) return []
+  const index = loop.rejectTaskIds.indexOf(task.id)
+  return index < 0 ? loop.rejectTaskIds : loop.rejectTaskIds.slice(0, index)
 }
 function captureExecutions(team: TeamState, loop: WorkflowLoop, now: number): void {
-  for (const id of loop.bodyIds) {
+  for (const id of roundBodyIds(loop)) {
     const task = taskOf(team, id)
     if (!terminal(task)) continue
     const signature = inputVersion(task)
@@ -185,11 +192,11 @@ export function reconcileLoops(team: TeamState, now = Date.now(), failedTurnId?:
     if (!['running', 'reviewing'].includes(loop.status)) continue
     const before = JSON.stringify(loop)
     captureExecutions(team, loop, now)
-    const body = loop.bodyIds.map(id => taskOf(team, id)), gate = taskOf(team, loop.gateId)
+    const body = roundBodyIds(loop).map(id => taskOf(team, id)), gate = taskOf(team, loop.gateId)
     // failMemberOpenAttempt persists the adapter's final turn error with a
     // "(code ...)" suffix. Recognize it on reload as well as on the first write.
     const failedExecution = gate.status === 'failed' ? gate : body.find(task => task.status === 'failed'
-      && (task.id === failedTurnId || /\(code [\w.-]+\)\s*$/u.test(task.output ?? '')
+      && (loop.rejectTaskIds?.includes(task.id) || task.id === failedTurnId || /\(code [\w.-]+\)\s*$/u.test(task.output ?? '')
         || /^(?:HTTP(?:\/\d(?:\.\d)?)?\s+5\d\d\b|500\s+Internal Server Error\b)/iu.test(task.output ?? '')))
     const external = [...new Set(body.flatMap(t => t.dependencies).concat(gate.dependencies).filter(id => !loop.bodyIds.includes(id) && id !== gate.id))]
     if (external.some(id => loop.externalInputs[id] !== inputVersion(taskOf(team, id)))) pause(team, loop, '外部输入已变化，请检查后重新启动循环', now)
@@ -268,7 +275,8 @@ export function startLoop(team: TeamState, id: string, additionalRounds = 0, now
 }
 function nextRound(team: TeamState, loop: WorkflowLoop, requested: string[], feedback: string, now: number): void {
   loop.previousOutputs = Object.fromEntries(loop.bodyIds.map(id => [id, excerpt(taskOf(team,id).output,1000) ?? '']))
-  const affected = new Set(requested)
+  const returnIds = loop.rejectTaskIds ?? []
+  const affected = new Set([...returnIds, ...requested])
   let changed = true
   while (changed) { changed = false; for (const id of loop.bodyIds) if (!affected.has(id) && taskOf(team, id).dependencies.some(dep => affected.has(dep))) { affected.add(id); changed = true } }
   for (const id of [...affected, loop.gateId]) {
@@ -276,7 +284,9 @@ function nextRound(team: TeamState, loop: WorkflowLoop, requested: string[], fee
     resetTaskForRerun(task, false, now)
     // History is persisted independently; do not grow the hot team record.
     delete task.stoppedAttempts
-    if (id !== loop.gateId) task.workflowRerunContext = { instructions: feedback, previousOutput, previousAttemptId,
+    if (id !== loop.gateId) task.workflowRerunContext = { instructions: returnIds.includes(id)
+        ? `${feedback}\n\n上一轮任务结果（JSON）：${JSON.stringify(Object.fromEntries(loop.bodyIds.filter(taskId => !returnIds.includes(taskId)).map(taskId => [taskId, loop.previousOutputs?.[taskId]])))}`
+        : feedback, previousOutput, previousAttemptId,
       previousStatus: ['completed', 'failed', 'cancelled'].includes(previousStatus) ? previousStatus as 'completed' | 'failed' | 'cancelled' : 'pending', requestedAt: now }
     delete loop.captured[id]
   }
@@ -291,11 +301,11 @@ export function decideLoop(team: TeamState, id: string, input: { decisionId: str
   reconcileLoops(team, now)
   if (loop.status !== 'reviewing' || team.halted || team.phase === 'staged' || input.runId !== loop.runId || input.round !== loop.round || input.fingerprint !== loopInputFingerprint(team, loop)) throw new Error('评审轮次或材料已变化，请刷新后重试')
   if (!input.decisionId || !['pass', 'revise', 'blocked'].includes(input.decision) || !input.note.trim() || input.note.length > MAX_WORKFLOW_TEXT_LENGTH) throw new Error('请提交有效决定和具体审核意见')
-  const gate = taskOf(team, loop.gateId), tasks = loop.bodyIds.map(t => taskOf(team, t))
+  const gate = taskOf(team, loop.gateId), tasks = roundBodyIds(loop).map(t => taskOf(team, t))
   if (tasks.some(active)) throw new Error('仍有任务执行，不能切换轮次')
   if (input.decision === 'pass' && tasks.some(t => t.status !== 'completed' || t.commandsRun?.some(c => c.status === 'failed') || t.acceptanceResults?.some(c => c.status === 'failed'))) throw new Error('必需任务或验证未通过，不能放行')
   const targets = input.decision === 'revise' && loop.rejectToEntry ? [loop.entryId] : input.taskIds
-  if (input.decision === 'revise' && (!targets.length || targets.some(t => !loop.bodyIds.includes(t)))) throw new Error('请选择循环内的返工任务')
+  if (input.decision === 'revise' && (!targets.length || targets.some(t => (!loop.bodyIds.includes(t) || loop.rejectTaskIds?.includes(t))))) throw new Error('请选择循环内的返工任务')
   captureExecutions(team, loop, now)
   snapshot(team, loop, 'decision', input.note.trim(), [...tasks, gate], { actor, decision: input.decision }, now)
   loop.lastDecisionId = input.decisionId; loop.lastDecision = input.decision; loop.feedback = input.note.trim(); loop.requestedTaskIds = [...new Set(targets)]
@@ -319,7 +329,7 @@ export function pauseLoop(team: TeamState, id: string, cancel = false, reason?: 
 export function loopPrompt(team: TeamState, task: TeamTask): string | undefined {
   const loop = loopForTask(team, task.id)
   if (!loop || loop.gateId !== task.id) return undefined
-  return `You are the designated loop reviewer. Assess each gate criterion against the reported results. Compare metrics or functional changes when requested. Request specific missing evidence when needed. Gate requirements: ${excerpt(task.description,4000)} ${JSON.stringify(task.acceptance ?? []).slice(0,2000)}. Do not implement changes or create repair/review nodes. Submit agent_teams_decide_loop with loop_id=${loop.id}, run_id=${loop.runId}, round=${loop.round}, fingerprint=${loopInputFingerprint(team, loop)}, your attempt_id, a unique decision_id, decision=pass|revise|blocked, a specific note with findings, required fixes and revalidation criteria, and task_ids (existing body task IDs to revise). Do NOT complete this gate via update_task. Pass only if every required task and check passed. Use revise for actionable changes; blocked for missing evidence or out-of-scope changes. Round ${loop.round}/${loop.maxRounds}. Previous feedback: ${JSON.stringify(loop.feedback ?? '')}\nCurrent result summaries (bounded; compare delivered functionality, baseline and current metrics, and changes since the previous round; use agent_teams_status for complete reports, and choose blocked when evidence is insufficient):\n${JSON.stringify(loop.bodyIds.map(id => { const t = taskOf(team, id); return { id, subject: t.subject, status: t.status, requirements: JSON.stringify({ description: t.description, objective: t.objective, acceptance: t.acceptance, verify: t.verify, inScope: t.inScope, outOfScope: t.outOfScope }).slice(0, 2000), summary: excerpt(JSON.stringify(reviewResult(t,task)),Math.max(1000,Math.floor(32000/loop.bodyIds.length))), previousOutput: excerpt(loop.previousOutputs?.[id],1000), summaryMayBeTruncated: true } }))}`
+  return `You are the designated loop reviewer. Assess each gate criterion against the reported results. Compare metrics or functional changes when requested. Request specific missing evidence when needed. Gate requirements: ${excerpt(task.description,4000)} ${JSON.stringify(task.acceptance ?? []).slice(0,2000)}. Do not implement changes or create repair/review nodes. Submit agent_teams_decide_loop with loop_id=${loop.id}, run_id=${loop.runId}, round=${loop.round}, fingerprint=${loopInputFingerprint(team, loop)}, your attempt_id, a unique decision_id, decision=pass|revise|blocked, a specific note with findings, required fixes and revalidation criteria, and task_ids (existing body task IDs to revise). Do NOT complete this gate via update_task. Pass only if every required task and check passed. Use revise for actionable changes; blocked for missing evidence or out-of-scope changes. Round ${loop.round}/${loop.maxRounds}. Previous feedback: ${JSON.stringify(loop.feedback ?? '')}\nCurrent result summaries (bounded; compare delivered functionality, baseline and current metrics, and changes since the previous round; use agent_teams_status for complete reports, and choose blocked when evidence is insufficient):\n${JSON.stringify(roundBodyIds(loop).map(id => { const t = taskOf(team, id); return { id, subject: t.subject, status: t.status, requirements: JSON.stringify({ description: t.description, objective: t.objective, acceptance: t.acceptance, verify: t.verify, inScope: t.inScope, outOfScope: t.outOfScope }).slice(0, 2000), summary: excerpt(JSON.stringify(reviewResult(t,task)),Math.max(1000,Math.floor(32000/loop.bodyIds.length))), previousOutput: excerpt(loop.previousOutputs?.[id],1000), summaryMayBeTruncated: true } }))}`
 }
 export function isWorkflowLoops(value: unknown): value is WorkflowLoop[] {
   if (!Array.isArray(value) || value.length > 100) return false

@@ -7,8 +7,11 @@ export function parseLoopConfig(raw: unknown): LoopConfig {
   const maxRounds = Number(value.maxRounds), timeoutMinutes = Number(value.timeoutMinutes)
   if (!Number.isSafeInteger(maxRounds) || maxRounds < 1 || maxRounds > 20) throw new Error('轮次上限必须为 1–20，包含首次执行')
   if (!Number.isSafeInteger(timeoutMinutes) || timeoutMinutes < 1 || timeoutMinutes > 1440) throw new Error('执行超时必须为 1–1440 分钟')
+  const returnIds = value['rejectTaskIds']
+  if (returnIds !== undefined && (!Array.isArray(returnIds) || returnIds.length > 31 || returnIds.some(id => typeof id !== 'string' || !id) || new Set(returnIds).size !== returnIds.length)) throw new Error('退回路径中的任务无效或重复')
   return { gateId: value.gateId, entryId: value.entryId, mode: value.mode as LoopConfig['mode'], maxRounds, timeoutMinutes,
-    ...(value.rejectToEntry === true ? { rejectToEntry: true } : {}),
+    ...(value.rejectToEntry === true || Array.isArray(returnIds) && returnIds.length ? { rejectToEntry: true } : {}),
+    ...(Array.isArray(returnIds) && returnIds.length ? { rejectTaskIds: returnIds as string[] } : {}),
     ...(typeof value.reviewer === 'string' && value.reviewer.trim() ? { reviewer: value.reviewer.trim() } : {}) }
 }
 
@@ -30,6 +33,10 @@ export function deriveLoop(team: TeamState, config: LoopConfig, id: string, runI
   if (!ancestors.has(config.entryId)) throw new Error('循环入口必须位于门控上游')
   const body = new Set([config.entryId]); let changed = true
   while (changed) { changed = false; for (const task of team.tasks) if (ancestors.has(task.id) && !body.has(task.id) && task.dependencies.some(id => body.has(id))) { body.add(task.id); changed = true } }
+  for (const id of config.rejectTaskIds ?? []) {
+    if (id === config.gateId || ancestors.has(id)) throw new Error('退回任务不能同时位于首轮路径')
+    body.add(id)
+  }
   return { ...config, id, runId, bodyIds: [...body], round: 1, status: 'ready', historyCount: 0, captured: {}, externalInputs: {} }
 }
 export function reviewerConflicts(team: TeamState, bodyIds: string[], reviewer: string) {
@@ -52,10 +59,14 @@ export function planGateSettings(team: TeamState, raw: LoopConfig, passTargets: 
   const gate = taskOf(team, config.gateId)
   if (!gate.checkpoint || !canEditLoopGate(gate)) throw new Error('门控正在执行，请在执行结束后编辑')
   const previous = loopsOf(team).find(loop => loop.gateId === config.gateId)
+  for (const id of config.rejectTaskIds ?? []) {
+    if (!previous?.rejectTaskIds?.includes(id) && !canEditLoopGate(taskOf(team, id))) throw new Error('请先停止要加入退回路径的任务')
+  }
   const tasks = gateRouteTasks(team, gate.id, passTargets)
   const candidate = { ...team, tasks }
   const region = deriveLoop(candidate, config, previous?.id ?? gate.id, previous?.runId ?? gate.id)
   const rewired = dependenciesChanged || !previous || previous.entryId !== config.entryId
+    || JSON.stringify(previous.rejectTaskIds ?? []) !== JSON.stringify(config.rejectTaskIds ?? [])
     || region.bodyIds.length !== previous.bodyIds.length || region.bodyIds.some(id => !previous.bodyIds.includes(id))
     || tasks.some((task, i) => task !== team.tasks[i])
   const round = rewired ? 1 : previous!.round
@@ -115,10 +126,23 @@ export function validateLoopGraph(team: TeamState): void {
       seen.add(to)
       return taskOf(team, to).dependencies.some(dep => body.has(dep) && reaches(from, dep, seen))
     }
+    const returnIds = loop.rejectTaskIds ?? []
+    const forwardInputs = returnIds.length ? upstreamIds(team.tasks, loop.gateId) : new Set<string>()
+    if (returnIds.some(id => !body.has(id) || id === loop.entryId) || (returnIds.length && !loop.rejectToEntry)) throw new Error('退回路径中的任务无效或重复')
     for (const id of body) {
       const task = taskOf(team, id)
       if (task.kind === 'archive') throw new Error('成果归档节点应放在循环门控的 PASS 路径之后')
       if ((loop.status !== 'ready' || loop.queued) && (!task.assignee || !team.members.some(m => m.name === task.assignee && (m.status !== 'removed' || ['paused','passed','cancelled'].includes(loop.status))))) throw new Error('请先为循环内任务指定有效负责人')
+      const returnIndex = returnIds.indexOf(id)
+      if (returnIndex >= 0) {
+        const earlier = returnIds.slice(0, returnIndex)
+        const later = returnIds.slice(returnIndex + 1)
+        if (task.checkpoint || task.dependencies.some(dep => !earlier.includes(dep) && !(forwardInputs.has(dep) && !body.has(dep)))
+          || team.tasks.some(other => other.dependencies.includes(id) && !later.includes(other.id))) {
+          throw new Error('退回任务只能依赖已完成的首轮外部输入或同一路径中更早的任务，输出不能绕过门控')
+        }
+        continue
+      }
       if (task.checkpoint || !reaches(loop.entryId, id) || !reaches(id, gate.id)) throw new Error('循环区域必须从入口可达并汇合到唯一门控')
       if (team.tasks.some(t => !body.has(t.id) && t.id !== gate.id && t.dependencies.includes(id))) throw new Error('循环内的输出必须经过门控才能连接环外')
     }

@@ -1,7 +1,7 @@
 import { cancelTaskArchive } from './task-archive.ts'
 import { parseTaskArchive, taskArchiveParameter } from './task-archive-config.ts'
 import { drainMemberChildren } from './harness-compat.ts'
-import { configureLoop, decideLoop, loopCanExecute, loopDependenciesSatisfied, loopForTask, loopInputFingerprint, loopsOf, pauseLoop, startLoop } from './workflow-loops.ts'
+import { configureLoop, decideLoop, loopCanExecute, loopDependenciesSatisfied, loopReturnDependencies, loopForTask, loopInputFingerprint, loopsOf, pauseLoop, startLoop } from './workflow-loops.ts'
 import { loopArtifactEvidence } from './workflow-loop-evidence.ts'
 /**
  * The `agent_teams_*` model-facing tools.
@@ -440,7 +440,7 @@ function taskDetails(team: TeamState, task: TeamTask): string {
     `In scope: ${(task.inScope ?? []).join(', ')}; Out of scope: ${(task.outOfScope ?? []).join(', ')}`,
     `Acceptance: ${(task.acceptance ?? []).join('; ')}`,
     `Verify: ${(task.verify ?? []).join('; ')}`,
-    `Dependency results:\n${formatDependencyOutputs(collectCompletedDependencyOutputs(team.tasks, task.id))}`,
+    `Dependency results:\n${formatDependencyOutputs(collectCompletedDependencyOutputs(team.tasks, task.id, undefined, loopReturnDependencies(team, task)))}`,
   ].join('\n')
 }
 
@@ -1001,6 +1001,7 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
           loops: { type: 'array', description: 'Optional disjoint gated loops. IDs reference tasks in this plan. Each body must exit only through its gate. Defaults: maxRounds=3, timeoutMinutes=30.', items: { type: 'object', additionalProperties: false, properties: {
             gateId: { type: 'string', required: true }, entryId: { type: 'string', required: true },
             mode: { type: 'string', enum: ['human', 'ai'], required: true },
+            rejectTaskIds: { type: 'array', items: { type: 'string' }, description: 'Optional ordered tasks that only execute on reject, before returning to entryId.' },
             reviewer: { type: 'string', description: 'AI mode requires an independent member who owns no task inside this loop.' },
             maxRounds: { type: 'number', description: 'Finite total rounds including first, 1–20; exhaustion pauses for user action.' },
             timeoutMinutes: { type: 'number', description: 'Execution/review timeout, 1–1440 minutes.' },
@@ -1885,7 +1886,7 @@ export function registerAgentTeamsTools(ctx: Context, config: ToolsConfig, openR
           }
         }
         if (loopForTask(fresh, task.id) && !loopCanExecute(fresh, task)) throw new Error('循环当前不允许执行此节点')
-        const pending = loopDependenciesSatisfied(fresh, task) ? [] : unsatisfiedDependencies(fresh.tasks, task.dependencies)
+        const pending = loopDependenciesSatisfied(fresh, task) ? [] : unsatisfiedDependencies(fresh.tasks, [...task.dependencies, ...loopReturnDependencies(fresh, task)])
         if (pending.length > 0) {
           throw new Error(`task ${task.id} is blocked by unfinished dependencies: ${pending.join(', ')} — complete them first`)
         }
@@ -2696,7 +2697,7 @@ async function initializeProfileTeam(input: {
   profileName: string
   inlinePlan?: Omit<import('./profiles.ts').TeamProfileConfig, 'tasks'> & {
     tasks?: (import('./profiles.ts').TeamProfileTaskConfig & { checkpoint?: boolean; kind?: string; archive?: unknown })[]
-    loops?: { gateId: string; entryId: string; mode: string; reviewer?: string; maxRounds?: number; timeoutMinutes?: number }[]
+    loops?: { gateId: string; entryId: string; mode: string; rejectTaskIds?: string[]; reviewer?: string; maxRounds?: number; timeoutMinutes?: number }[]
   }
   description?: string
   staged: boolean
@@ -2800,6 +2801,7 @@ async function initializeProfileTeam(input: {
   for (const config of input.inlinePlan?.loops ?? []) {
     configureLoop(draft, {
       ...config, mode: config.mode as 'human' | 'ai',
+      rejectTaskIds: config.rejectTaskIds?.map(id => seedToActual.get(id.trim()) ?? id),
       gateId: seedToActual.get(config.gateId.trim()) ?? config.gateId,
       entryId: seedToActual.get(config.entryId.trim()) ?? config.entryId,
       maxRounds: config.maxRounds ?? 3, timeoutMinutes: config.timeoutMinutes ?? 30,

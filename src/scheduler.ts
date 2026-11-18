@@ -38,7 +38,7 @@ import {
 import { contractStaleness, isVerdictKind, taskKindOf, verdictScopePatterns } from './quality-gates.ts'
 import { digestWorkspacePaths, snapshotWorkspacePaths } from './artifacts.ts'
 import type { TeamMember, TeamState, TeamTask } from './types.ts'
-import { loopCanExecute, loopDependenciesSatisfied, loopForTask, loopPrompt, loopsOf, pauseLoop, reconcileLoops } from './workflow-loops.ts'
+import { loopCanExecute, loopDependenciesSatisfied, loopReturnDependencies, loopForTask, loopPrompt, loopsOf, pauseLoop, reconcileLoops } from './workflow-loops.ts'
 import { loopArtifactEvidence } from './workflow-loop-evidence.ts'
 import { drainMemberChildren } from './harness-compat.ts'
 import { recordRetiredMemberIds } from './state.ts'
@@ -122,6 +122,7 @@ export function collectCompletedDependencyOutputs(
   tasks: readonly TeamTask[],
   taskId: string,
   warn?: (message: string) => void,
+  extraDependencies: readonly string[] = [],
 ): DependencyOutput[] {
   const byId = new Map(tasks.map(task => [task.id, task]))
   const visiting = new Set<string>()
@@ -144,6 +145,7 @@ export function collectCompletedDependencyOutputs(
     visited.add(id)
   }
 
+  for (const dependency of extraDependencies) walk(dependency)
   walk(taskId)
   return ordered
     .filter(task => task.status === 'completed')
@@ -539,6 +541,7 @@ export function installTeamScheduler(ctx: Context, config: SchedulerConfig): Tea
               fresh.tasks,
               task.id,
               (message) => ctx.logger.warn(message),
+              loopReturnDependencies(fresh, task),
             ),
           }
         })
