@@ -473,7 +473,9 @@ test('#174/#161: a directory pattern that is a symlink out of the workspace is n
     assert.equal(readSlash.gaps.length, 1, `no gap reported: ${JSON.stringify(readSlash.gaps)}`)
     assert.match(readSlash.gaps[0].reason, /outside the workspace|resolves outside/iu)
     const readPlain = artifacts.readArtifactScope(root, ['escape'])
-    assert.equal(readPlain.artifacts[0].unreadable, true)
+    assert.deepEqual(readPlain.artifacts, [], 'an external directory must not produce artifact entries')
+    assert.ok(readPlain.gaps.length > 0)
+    assert.match(readPlain.gaps[0].reason, /outside the workspace|resolves outside/iu)
     // A nested pattern through the same symlink is refused too.
     const readNested = artifacts.readArtifactScope(root, ['escape/nested/'])
     assert.deepEqual(readNested.artifacts, [])

@@ -188,7 +188,8 @@ test('inline plans atomically create optional human and AI loops with durable ta
       { gateId: 'ai-gate', entryId: 'draft', mode: 'ai', reviewer: 'reviewer', maxRounds: 2, timeoutMinutes: 5 },
       { gateId: 'human-gate', entryId: 'design', mode: 'human' },
     ] }
-    const invalid = structuredClone(plan); invalid.loops[0].reviewer = 'writer'
+    // Draft reviewers are editable; use a missing node for an atomic hard failure.
+    const invalid = structuredClone(plan); invalid.loops[0].gateId = 'missing-gate'
     const rejected = await fixture.execute(captain, { name: 'invalid-loop', approval: 'required', plan: invalid })
     assert.equal(rejected.isError, true)
     assert.equal(await fixture.exists('invalid-loop'), false)

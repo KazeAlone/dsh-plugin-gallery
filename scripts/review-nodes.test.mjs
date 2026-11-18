@@ -14,9 +14,16 @@ import { activityStatus } from '../lib/client/activity-status.js'
 const task = (id, dependencies = []) => ({ id, subject:id, description:`Do and verify ${id}`, dependencies, assignee:'worker', status:'pending', attempt:0, createdAt:1, updatedAt:1 })
 const fixture = () => ({ id:'reviews', name:'Review nodes', captainSessionId:'captain', phase:'running', taskSeq:5, createdAt:1,
   members:['worker','reviewer'].map(name=>({id:'',name,summary:name,status:'idle',joinedAt:1})), tasks:[task('a'),task('b',['a'])] })
+// Executable loops now require a completed task outside the return region.
+const executableFixture = () => {
+  const team = fixture()
+  team.tasks[0].dependencies = ['input']
+  team.tasks.unshift({ ...task('input'), status: 'completed', output: 'Initial input' })
+  return team
+}
 const add = (team, kind) => applyWorkflowOperations(team, parseWorkflowOperations([{ action:'add_task',id:'review',subject:'Review',description:'Review results',checkpoint:true,checkpointKind:kind,dependencies:['b'] }]))
 const config = {gateId:'review',entryId:'a',mode:'human',maxRounds:3,timeoutMinutes:30}
-const finish = team => { for(const t of team.tasks.filter(t=>!t.checkpoint && t.id!=='after')) Object.assign(t,{status:'completed',output:`Result ${t.id}`,updatedAt:Date.now()});reconcileLoops(team) }
+const finish = team => { for(const t of team.tasks.filter(t=>!t.checkpoint && t.id!=='after' && t.id!=='input')) Object.assign(t,{status:'completed',output:`Result ${t.id}`,updatedAt:Date.now()});reconcileLoops(team) }
 const decide = (team,loop,decision) => decideLoop(team,loop.id,{decisionId:randomUUID(),runId:loop.runId,round:loop.round,fingerprint:loopInputFingerprint(team,loop),decision,note:'Check boundaries',taskIds:decision==='revise'?['a']:[]},'human')
 const materials='Current reviewed evidence', evidence=workflowMaterialEvidence(materials)
 
@@ -38,7 +45,7 @@ test('gate drafts cannot become ordinary acceptance or execute without a return 
 
 test('human and AI gates preserve node identities on return, then release the same exit',()=>{
   for(const mode of ['human','ai']){
-    const team=add(fixture(),'gate');team.tasks.push(task('after',['review']))
+    const team=add(executableFixture(),'gate');team.tasks.push(task('after',['review']))
     const loop=configureLoop(team,{...config,mode,reviewer:mode==='ai'?'reviewer':undefined})
     const ids=team.tasks.map(t=>t.id)
     startLoop(team,loop.id);finish(team);decide(team,loop,'revise')
@@ -53,7 +60,7 @@ test('human and AI gates preserve node identities on return, then release the sa
 
 test('outer card follows PASS exits across loop rounds and never treats REJECT as an endpoint',()=>{
   for(const mode of ['human','ai']) for(const hasExit of [false,true]){
-    const team=add(fixture(),'gate')
+    const team=add(executableFixture(),'gate')
     const exit=task('after',['review'])
     if(hasExit)team.tasks.push(exit)
     const loop=configureLoop(team,{...config,mode,reviewer:mode==='ai'?'reviewer':undefined})
