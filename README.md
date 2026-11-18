@@ -202,7 +202,7 @@ Defaults work without extra configuration. Set these options under the `teamflow
 | --- | --- | --- |
 | `stateDir` | `.agent-teams` | Team records within the workspace |
 | `templateDirectory` | `~/.dsh-teamflow/templates` | Personal template library shared across projects |
-| `maxMembers` | `8` | Maximum members per team |
+| `maxMembers` | `64` | Maximum members per team |
 | `memberMaxDepth` | `0` | Nested subagents disabled; `1` permits one descendant level |
 | `memberProvider` | `spawn` | Subagent runtime backend, not the LLM provider |
 | `slashCommand` | `true` | Enable `/teamflow` command activation |

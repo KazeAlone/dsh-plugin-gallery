@@ -211,7 +211,7 @@ dsh --profile web
 | --- | --- | --- |
 | `stateDir` | `.agent-teams` | 工作区内的团队记录目录 |
 | `templateDirectory` | `~/.dsh-teamflow/templates` | 跨项目共用的个人模板库 |
-| `maxMembers` | `8` | 单个团队的成员上限 |
+| `maxMembers` | `64` | 单个团队的成员上限 |
 | `memberMaxDepth` | `0` | 默认禁止成员创建嵌套子代理；设为 `1` 可开放一层 |
 | `memberProvider` | `spawn` | 子代理运行后端，不是模型服务商 |
 | `slashCommand` | `true` | 启用 `/teamflow` 命令入口 |

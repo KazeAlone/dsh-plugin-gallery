@@ -134,7 +134,7 @@ export function checkpointInputs(team: TeamState, task: TeamTask): TeamTask[] {
   return results
 }
 /** Apply to a detached copy: validation errors never partly modify durable state. */
-export function applyWorkflowOperations(original: TeamState, operations: WorkflowOperation[], maxMembers = 8): TeamState {
+export function applyWorkflowOperations(original: TeamState, operations: WorkflowOperation[], maxMembers = 64): TeamState {
   // Saving properties is allowed while the team is halted.
   if (original.halted && operations.some(op => op.action !== 'update_member' && op.action !== 'update_task')) throw new Error('团队已停止，请先恢复团队')
   const team = structuredClone(original)
