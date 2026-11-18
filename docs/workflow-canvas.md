@@ -74,10 +74,10 @@ Gallery 创建页与 TeamFlow 模板库使用相同名称：模板名称、适�
 
 在支持此功能的 TeamFlow 模板详情页点击「上传至 Gallery」，将所选版本的原生模板快照保存到 Gallery 当前使用的本地库或中心库。可上传内置模板和个人模板。
 
-每个源模板版本对应独立的共享资源。重复上传复用已登记的资源，保留 Gallery 中的编辑；新版本创建新资源。删除共享副本后可重新上传。同一源版本内容变化时需先另存为新版本。创建者由中心的独立用户身份确定，其他用户只可查看和使用。
+每个源模板版本在目标库中对应一个独立的 Workflow 资源。向同一本地库重复上传，或以同一用户身份向同一中心库重复上传，会复用已登记的副本，保留在 Gallery 中所做的编辑。新版本会创建新副本，删除目标库中的副本后也可重新上传。同一源版本内容变化时需先另存为新版本。上传到中心库时，当前中心用户成为资源所有者，其他用户可以查看和使用该副本。
 
-宿主同进程接口为 `gallery.workflowSharingStatus()` 与 `gallery.uploadWorkflowTemplate(definition, {id, version, language?})`。调用方必须在已认证的人工操作入口读取源模板，再调用上传；不作为模型工具或浏览器直接 RPC 暴露。后者返回 `{id, name, libraryId: "center", sourceVersion, reused}`。此功能沿用现有中心 HTTP 协议，无需迁移数据库。
+宿主同进程接口为 `gallery.workflowSharingStatus()` 与 `gallery.uploadWorkflowTemplate(definition, {id, version, language?})`。调用方必须在已认证的人工操作入口读取源模板，再调用上传。接口仅供宿主进程内调用。后者返回 `{id, name, libraryId, sourceVersion, reused}`，其中 `libraryId` 表示实际写入的库，取值为 `"local"` 或 `"center"`。`reused` 表示本次是否复用了已有副本。中心库上传沿用现有中心 HTTP 协议，无需迁移数据库。
 
-本机 `$DSH_HOME/gallery/workflow-uploads.json` 保存源版本到共享资源的对应记录，不含认证令牌。备份或迁移 DSH 时应一并保留；删除记录或上传成功后进程在记录落盘前中断，重试可能创建副本。
+本机 `$DSH_HOME/gallery/workflow-uploads.json` 保存源版本与目标库副本的对应记录，不含认证令牌。备份或迁移 DSH 时应一并保留。删除记录或上传成功后进程在记录落盘前中断，重试可能创建副本。
 
 异常中断可能遗留同目录的 `workflow-uploads.json.lock`。确认上传进程已停止并备份记录后，删除该锁目录即可重新上传。不要在仍有上传请求时清理锁。
