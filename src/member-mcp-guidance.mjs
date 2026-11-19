@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 export function memberMcpGuidance(agent, store, runtime, allowed) {
   if (!allowed || !runtime) return '';
   const tools = agent.ctx.get('tools')?.schemas(agent) || [];
-  const rows = store.adapter().read().resources.filter(row => row.type === 'mcp');
+  const rows = (runtime.resources ?? store.adapter().read().resources).filter(row => row.type === 'mcp');
   const services = rows.flatMap(row => {
     const visible = tools.filter(tool => runtime.resourceForTool(tool.name) === row.id);
     if (!visible.length) return [];

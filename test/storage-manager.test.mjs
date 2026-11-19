@@ -74,12 +74,12 @@ test("旧多库配置不会影响默认库，确认后只保存单库配置", (t
     ["local"],
   );
 });
-test("不可用后端及未知库不改变配置", (t) => {
+test("未填写的中心连接及未知库不改变配置", (t) => {
   const { manager } = setup(t);
   manager.configure();
   const saved = readFileSync(manager.path, "utf8");
   assert.throws(() => manager.testConnection({ type: "service" }), {
-    code: "PROVIDER_UNAVAILABLE",
+    code: "INVALID_URL",
   });
   assert.throws(() => manager.testConnection({ libraryId: "../outside" }), {
     code: "LIBRARY_NOT_FOUND",

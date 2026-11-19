@@ -80,22 +80,24 @@ export function skillContentWithAttachments(resource, directory) {
   );
   return `${body.trimEnd()}\n\n## Gallery 附件\n以下文件与 SKILL.md 同属一个 Skill，按需读取；相对路径以本 Skill 的资源目录为基准。\n${entries.join("\n")}\n`;
 }
-export function createSkillProvider(store, allowed = () => true) {
+export function createSkillProvider(
+  store,
+  allowed = () => true,
+  listed = allowed,
+) {
   return {
     name: GALLERY_SKILL_PROVIDER,
     async list({ signal, scope } = {}) {
       signal?.throwIfAborted();
-      if (!allowed(scope)) return [];
-      return store
-        .adapter()
-        .read()
-        .resources.map(skillCandidate)
+      if (!allowed(scope) || !listed(scope)) return [];
+      return (await store.adapter().read("skill")).resources
+        .map(skillCandidate)
         .filter(Boolean);
     },
     async get(candidate, { signal, scope } = {}) {
       signal?.throwIfAborted();
       if (!allowed(scope)) return undefined;
-      const resource = store.getResource(candidate.locator);
+      const resource = await store.getResource(candidate.locator);
       const current = skillCandidate(resource);
       if (!current || current.name !== candidate.name) return undefined;
       const path = materializeSkill(store.directory, resource);

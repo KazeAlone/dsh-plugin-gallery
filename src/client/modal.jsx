@@ -1,7 +1,12 @@
 import React, { useEffect, useRef } from "react";
 
 /** Keep keyboard interaction within the foremost Gallery dialog. */
-export function Modal({ children, onClose, confirmation = false }) {
+export function Modal({
+  children,
+  onClose,
+  confirmation = false,
+  variant = "",
+}) {
   const root = useRef(null);
   const close = useRef(onClose);
   close.current = onClose;
@@ -11,6 +16,8 @@ export function Modal({ children, onClose, confirmation = false }) {
       '[role="dialog"], [role="alertdialog"]',
     );
     const previous = document.activeElement;
+    const oldOverflow = document.body.style.overflow;
+    if (variant === "paper-detail") document.body.style.overflow = "hidden";
     const focusable = () =>
       [
         ...dialog.querySelectorAll(
@@ -59,6 +66,8 @@ export function Modal({ children, onClose, confirmation = false }) {
     document.addEventListener("keydown", handleKey);
     return () => {
       document.removeEventListener("keydown", handleKey);
+      if (variant === "paper-detail")
+        document.body.style.overflow = oldOverflow;
       if (previous?.isConnected) previous.focus();
     };
   }, []);
@@ -66,8 +75,19 @@ export function Modal({ children, onClose, confirmation = false }) {
     <div
       ref={root}
       data-gallery-modal
+      onMouseDown={
+        variant === "paper-detail"
+          ? (event) => {
+              if (event.target === event.currentTarget) close.current?.();
+            }
+          : undefined
+      }
       className={
-        confirmation ? "gal-overlay gal-confirm-overlay" : "gal-overlay"
+        confirmation
+          ? "gal-overlay gal-confirm-overlay"
+          : variant === "paper-detail"
+            ? "gal-overlay gal-paper-detail-overlay"
+            : "gal-overlay"
       }
     >
       {children}

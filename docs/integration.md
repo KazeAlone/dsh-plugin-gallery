@@ -13,21 +13,21 @@
 
 `revision` 用于防止多窗口覆盖，不是历史版本。Gallery 不执行资源内容；消费方自行管理转换与执行生命周期。
 
-原 `GalleryClient` 及 HTTP 服务模块暂时保留供后续统一存储扩展，不用于默认宿主运行链路。
+原 v1 HTTP/SQLite 服务模块保留但不用于默认链路；中心服务使用独立 v2 API，详见[中心存储](center-storage.md)。
 
 ## 存储适配边界
 
-宿主经 `StorageManager` 将资源操作委托给具体适配器。当前仅注册内部文件适配器；中心服务尚不可启用。内部存储固定使用一个默认库，不再提供新增连接接口。不再读取或切换旧版额外资源库；activeLibraryId 固定为 local。
+宿主经 `StorageManager` 将资源操作委托给具体适配器。注册内部文件适配器及 PostgreSQL 中心服务适配器。内部存储固定一个默认库，不读取旧版额外资源库；activeLibraryId 为 local 或 center。宿主方法始终返回 Promise；直接使用 StorageManager 时，内部资源操作同步、中心操作异步，消费者统一 await。
 
 资源详情和列表项增加 `libraryId`。`resolveReference` 与 `getSnapshot` 接受 `{libraryId?,id,digest?}`，指定库时不会退回当前库；`getResource(id,{libraryId})` 也可读取指定库。未指定库的旧调用仍使用当前库。metadata 中的业务引用格式由消费插件解释；标准 references 数组现在保留 libraryId。
 
 浏览器通过 owner RPC 调用：
 
 - `uiStorageSettings()`：读取连接列表、当前库、后端可用性和能力。
-- `uiTestStorage(payload)`：检查指定本地库文件格式；这是读取检查，不保证后续写入权限或磁盘空间。
-- `uiConfigureStorage()`：确认使用默认内部存储，并保存单库配置。
+- `uiTestStorage(payload)`：type=internal 检查本地格式；type=service 使用 url/token 检查中心服务认证和数据库就绪，不修改当前选择。
+- `uiConfigureStorage(payload)`：保存 type=internal 或 type=service。中心配置接受 url/token/allowStdio/caCertificate，验证连接成功后切换；已有同址 token 留空可保留。
 
-当前支持读取、新建、编辑，不支持历史、共享和自动迁移。后续后端必须遵循同一资源数据结构及 revision 冲突语义；中心服务凭据不得返回浏览器或写入普通连接配置。
+当前支持读取、新建、编辑、删除和中心共享，不支持历史与自动迁移。两种后端遵循同一资源结构及 revision 冲突语义；首次接入密钥仅用于注册，中心签发的独立用户凭证写入宿主 0600 配置，不由设置接口返回浏览器；资源修改/删除在服务端按 creator.userId 检查。显示用户名不是权限依据。
 
 ## Skill 实际使用计数
 
@@ -112,3 +112,15 @@ uiExtractWorkflowAgent 仅向 owner 开放，通过宿主的 agentDefaultModel �
 TeamFlow 在成员激活时调用 setMemberAccess；当 galleryMcp 明确为 true，Gallery 在该成员的 systemPrompt 作用域注册一段提示词。每次组装时读取成员有效工具列表与当前 Gallery 服务描述，仅包含可见的 Gallery MCP 工具，建议相关调研优先检索知识库，覆盖不足或调用失败再说明并补充外部资料。不包含环境变量映射或密钥，不读取对话内容。开关关闭、权限记录更换或成员清理后，不再提供该指引；工具限制保持原有执行检查。
 
 这是模型选择引导，不是强制执行顺序；没有相关工具时不注入，也不自动执行写操作。已通过开关、有效工具过滤、提示清理和完整测试套件；尚未进行真实模型调研行为的端到端验证。
+
+
+## 门控、循环与归档（0.27.0）
+
+模板验证与注册保留 checkpointKind、reviewMode、archive 和顶层 loops。普通依赖无环；返工关系由 loops 指定，上游执行区域按入口与门控推导，不保存运行时 bodyIds/status/runId。规则与 TeamFlow main 0.2.12 对齐：最多 16 个独立循环、轮次 1–20、超时 1–1440 分钟；禁止共享或嵌套、环内审核/归档、绕过门控的输出及审核人执行环内任务。
+
+保存时按 Agent 内部 ID 转换 loops.reviewer 与任务 assignee 为模板成员名，重开时反向还原。发布仍通过 workflowFromResource 统一验证，归档配置和循环关系不会因再次注册丢失。操作见[Workflow 画布](workflow-canvas.md)。
+
+
+## 按需资源访问（0.30.0）
+
+新增五个固定搜索/加载/调用工具及同进程 API。通过 `resourceCapabilities()` 检测能力，`setMemberAccess(agent, {..., resourceMode: "discovery"})` 为指定成员启用。原来两个开关仍控制 Skill/MCP 权限；未指定新模式时保留原生行为。消费方不应继续注入全量目录。具体参数、分页上限、权限与原生 MCP 嵌套执行契约见[按需访问说明](resource-discovery.md)。

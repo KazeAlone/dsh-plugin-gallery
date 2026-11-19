@@ -1,3 +1,4 @@
+import { MAX_WORKFLOW_TEXT_LENGTH } from "./workflow-template.mjs";
 import { demand } from "./model.mjs";
 export function parseWorkflowAgent(text) {
   const raw = JSON.parse(
@@ -11,7 +12,7 @@ export function parseWorkflowAgent(text) {
     const value = raw[key];
     demand(
       typeof value === "string" &&
-        value.length <= (key === "name" ? 80 : 16000),
+        value.length <= (key === "name" ? 80 : MAX_WORKFLOW_TEXT_LENGTH),
       400,
       "INVALID_EXTRACTION",
       `模型返回的 ${key} 格式不正确`,

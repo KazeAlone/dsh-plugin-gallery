@@ -1,3 +1,4 @@
+import { useGalleryText } from "./i18n.jsx";
 import { createResourceIdentifier } from "./resource-id.mjs";
 import { ResourceBasics } from "./resource-basics.jsx";
 import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
@@ -30,6 +31,7 @@ function Preview({ text }) {
   );
 }
 export function SkillWizard({ resource, importedResource, onClose, onSave }) {
+  const l = useGalleryText();
   const draft = resource || importedResource;
   const [cover, setCover] = useState(draft?.metadata?.cover ?? "");
   const [initial] = useState(() => readSkill(draft));
@@ -67,11 +69,11 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
     ),
   ];
   const issues = [
-    ...(parsedTags.length > 20 ? ["最多添加 20 个标签。"] : []),
+    ...(parsedTags.length > 20 ? [l("最多添加 20 个标签。")] : []),
     ...(parsedTags.some((tag) => tag.length > 40)
-      ? ["每个标签最多 40 个字符。"]
+      ? [l("每个标签最多 40 个字符。")]
       : []),
-    ...(!displayName.trim() || displayName.length > 160 ? ["请填写名称，最多 160 字符。"] : []),
+    ...(!displayName.trim() || displayName.length > 160 ? [l("请填写名称，最多 160 字符。")] : []),
     ...(initial.error ? [initial.error] : []),
     ...skillIssues(name, description, linkedBody, files),
   ];
@@ -92,9 +94,9 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
     try {
       const incoming = [];
       if (files.length + list.length > 99)
-        throw new Error("最多添加 99 个附属文件。");
+        throw new Error(l("最多添加 99 个附属文件。"));
       if ([...list].reduce((sum, f) => sum + f.size, 0) > 5 * 1024 * 1024)
-        throw new Error("上传文件总大小不能超过 5 MiB。");
+        throw new Error(l("上传文件总大小不能超过 5 MiB。"));
       for (const file of list) {
         const bytes = new Uint8Array(await file.arrayBuffer());
         let content, encoding;
@@ -160,18 +162,18 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
         className="gal-dialog gal-skill-wizard"
         role="dialog"
         aria-modal="true"
-        aria-label={resource ? "编辑 Skill" : "新建 Skill"}
+        aria-label={resource ? l("编辑 Skill") : l("新建 Skill")}
         tabIndex={-1}
       >
         <header className="gal-dialog-head">
           <h2>
-            <Glyph name="skill" /> {resource ? "编辑 Skill" : "新建 Skill"}
+            <Glyph name="skill" /> {resource ? l("编辑 Skill") : l("新建 Skill")}
           </h2>
-          <button aria-label="关闭编辑" disabled={busy} onClick={onClose}>
+          <button aria-label={l("关闭编辑")} disabled={busy} onClick={onClose}>
             <Glyph name="close" />
           </button>
         </header>
-        <nav className="gal-skill-steps gal-three-steps" aria-label="创建进度">
+        <nav className="gal-skill-steps gal-three-steps" aria-label={l("创建进度")}>
           {steps.map((title, i) => (
             <button
               key={title}
@@ -180,34 +182,30 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
               onClick={() => go(i)}
             >
               <span>{i < step ? "✓" : i + 1}</span>
-              {title}
+              {l(title)}
             </button>
           ))}
         </nav>
         <div className="gal-dialog-body gal-skill-layout">
           <main>
             <h3 ref={heading} tabIndex={-1}>
-              {steps[step]}
+              {l(steps[step])}
             </h3>
             {step === 0 && <ResourceBasics name={displayName} onName={setDisplayName} description={description} onDescription={setDescription} identifier={name} onIdentifier={setName} busy={busy} />}
             {step === 1 && (
               <div className="gal-skill-fields">
-                <p>
-                  写清适用场景、执行步骤和交付结果，可以附上输入与输出示例。
-                </p>
+                <p>{l("写清适用场景、执行步骤和交付结果，可以附上输入与输出示例。")}</p>
                 <button
                   aria-pressed={preview}
                   onClick={() => setPreview(!preview)}
                 >
-                  {preview ? "继续编辑" : "预览正文"}
+                  {preview ? l("继续编辑") : l("预览正文")}
                 </button>
                 {preview ? (
                   <Preview text={body} />
                 ) : (
-                  <label>
-                    执行指引
-                    <textarea
-                      aria-label="执行指引"
+                  <label>{l("执行指引")}<textarea
+                      aria-label={l("执行指引")}
                       className="gal-skill-code"
                       rows={15}
                       value={body}
@@ -216,7 +214,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                   </label>
                 )}
                 <details className="gal-skill-fields">
-                  <summary>附属文件与选项 · {files.length} 个附件</summary>
+                  <summary>{l("附属文件与选项 · ")}{files.length}{l(" 个附件")}</summary>
                   <div className="gal-skill-folders">
                     {folders.map(([folder, title, hint, icon]) => (
                       <section
@@ -229,13 +227,11 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                         }}
                       >
                         <Glyph name={icon} size={28} />
-                        <h3>{title}</h3>
+                        <h3>{l(title)}</h3>
                         <code>{folder}/</code>
-                        <p>{hint}</p>
-                        <label className="gal-upload">
-                          上传或拖入
-                          <input
-                            aria-label={`上传${title}`}
+                        <p>{l(hint)}</p>
+                        <label className="gal-upload">{l("上传或拖入")}<input
+                            aria-label={l("上传{0}", l(title))}
                             type="file"
                             multiple
                             disabled={busy}
@@ -248,16 +244,12 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                         <button
                           disabled={busy || files.length >= 99}
                           onClick={() => newFile(folder)}
-                        >
-                          新建文件
-                        </button>
+                        >{l("新建文件")}</button>
                         <span>
                           {
                             files.filter((f) => f.path.startsWith(folder + "/"))
                               .length
-                          }{" "}
-                          个文件
-                        </span>
+                          }{" "}{l("个文件")}</span>
                       </section>
                     ))}
                   </div>
@@ -274,7 +266,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                               {f.path}
                             </button>
                             <button
-                              aria-label={`删除 ${f.path}`}
+                              aria-label={l("删除 {0}", f.path)}
                               disabled={busy}
                               onClick={() => {
                                 setFiles(files.filter((_, j) => i !== j));
@@ -289,9 +281,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                     )}
                     {current && (
                       <fieldset disabled={busy} className="gal-skill-fields">
-                        <label>
-                          文件路径
-                          <input
+                        <label>{l("文件路径")}<input
                             value={current.path}
                             onChange={(e) =>
                               setFiles(
@@ -305,10 +295,8 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                           />
                         </label>
                         {current.encoding === "utf8" ? (
-                          <label>
-                            文件内容
-                            <textarea
-                              aria-label="文件内容"
+                          <label>{l("文件内容")}<textarea
+                              aria-label={l("文件内容")}
                               rows={8}
                               value={current.content}
                               onChange={(e) =>
@@ -323,7 +311,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                             />
                           </label>
                         ) : (
-                          <p>二进制附件将原样保存。</p>
+                          <p>{l("二进制附件将原样保存。")}</p>
                         )}
                       </fieldset>
                     )}
@@ -337,7 +325,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                   <Glyph name="skill" size={36} />
                   <h2>{name}</h2>
                   <p>{description}</p>
-                  <span>{files.length + 1} 个文件 · 整体保存</span>
+                  <span>{files.length + 1}{l(" 个文件 · 整体保存")}</span>
                 </div>
                 <ResourceCoverPicker
                   resource={{
@@ -349,16 +337,14 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                   }}
                   onChange={setCover}
                 />
-                <label>
-                  标签（选填）
-                  <input
-                    aria-label="标签"
+                <label>{l("标签（选填）")}<input
+                    aria-label={l("标签")}
                     value={tags}
                     onChange={(e) => setTags(e.target.value)}
-                    placeholder="例如：开发，代码审查"
+                    placeholder={l("例如：开发，代码审查")}
                   />
                 </label>
-                <p>用逗号分隔，最多 20 个标签。</p>
+                <p>{l("用逗号分隔，最多 20 个标签。")}</p>
                 {!!parsedTags.length && (
                   <div className="gal-tags">
                     {parsedTags.map((tag) => (
@@ -369,26 +355,26 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                 {issues.length ? (
                   <div role="alert" className="gal-error">
                     {issues.map((x) => (
-                      <p key={x}>{x}</p>
+                      <p key={x}>{l(x)}</p>
                     ))}
                   </div>
                 ) : (
-                  <p className="gal-skill-ok">✓ 格式检查通过，可以保存</p>
+                  <p className="gal-skill-ok">{l("✓ 格式检查通过，可以保存")}</p>
                 )}
                 <details>
-                  <summary>查看 SKILL.md</summary>
+                  <summary>{l("查看 SKILL.md")}</summary>
                   <pre className="gal-skill-preview">{document}</pre>
                 </details>
               </div>
             )}
             {error && (
               <p role="alert" className="gal-error">
-                {error}
+                {l(error)}
               </p>
             )}
           </main>
           <details open className="gal-skill-tree">
-            <summary>文件结构</summary>
+            <summary>{l("文件结构")}</summary>
             <strong>
               <Glyph name="folder" /> {name || "my-skill"}/
             </strong>
@@ -417,7 +403,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
         </div>
         <footer className="gal-skill-footer">
           <button disabled={busy} onClick={step ? () => go(step - 1) : onClose}>
-            {step ? "上一步" : "取消"}
+            {step ? l("上一步") : l("取消")}
           </button>
           {step < 2 ? (
             <button
@@ -428,9 +414,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
                 (step === 1 && !bodyValid)
               }
               onClick={() => go(step + 1)}
-            >
-              下一步
-              <Glyph name="arrow" />
+            >{l("下一步")}<Glyph name="arrow" />
             </button>
           ) : (
             <button
@@ -438,7 +422,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
               disabled={busy || !!issues.length}
               onClick={save}
             >
-              {busy ? "保存中…" : "保存 Skill"}
+              {busy ? l("保存中…") : l("保存 Skill")}
             </button>
           )}
         </footer>

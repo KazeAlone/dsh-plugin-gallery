@@ -1,8 +1,11 @@
+import { Agent } from "undici";
 import { demand, GalleryError } from "./model.mjs";
 export function serviceUrl(value) {
   let url;
   try {
-    url = new URL(value);
+    const address = typeof value === "string" ? value.trim() : "";
+    demand(address, 400, "INVALID_URL", "共享服务地址无效");
+    url = new URL(address.includes("://") ? address : "http://" + address);
   } catch {
     demand(false, 400, "INVALID_URL", "共享服务地址无效");
   }
@@ -17,20 +20,42 @@ export function serviceUrl(value) {
     "服务地址只能包含协议、主机与端口",
   );
   demand(
-    url.protocol === "https:" ||
-      (url.protocol === "http:" &&
-        ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)),
+    ["https:", "http:"].includes(url.protocol),
     400,
     "INSECURE_URL",
-    "远程共享服务必须使用 HTTPS，本机允许 HTTP",
+    "中心服务地址仅支持 HTTP 或 HTTPS",
   );
   return url.origin;
 }
+
+/** A protocol change on the same endpoint must preserve the DSH's identity. */
+export function sameCenterEndpoint(first, second) {
+  if (!first || !second) return false;
+  return new URL(serviceUrl(first)).host === new URL(serviceUrl(second)).host;
+}
+const certificateDispatchers = new Map();
+function certificateDispatcher(ca) {
+  if (!ca) return undefined;
+  if (!certificateDispatchers.has(ca)) {
+    if (certificateDispatchers.size >= 16) {
+      const oldest = certificateDispatchers.keys().next().value;
+      void certificateDispatchers
+        .get(oldest)
+        .close()
+        .catch(() => {});
+      certificateDispatchers.delete(oldest);
+    }
+    certificateDispatchers.set(ca, new Agent({ connect: { ca } }));
+  }
+  return certificateDispatchers.get(ca);
+}
 /** Host-side SDK. Credentials must never be sent to the browser UI. */
 export class GalleryClient {
-  constructor({ url, credential, timeoutMs = 15000 }) {
+  constructor({ url, credential, timeoutMs = 15000, caCertificate = "" }) {
     this.url = serviceUrl(url);
     this.credential = credential;
+    this.caCertificate = caCertificate;
+    this.dispatcher = certificateDispatcher(caCertificate);
     this.timeoutMs = timeoutMs;
   }
   async request(
@@ -39,6 +64,7 @@ export class GalleryClient {
   ) {
     const response = await fetch(this.url + path, {
       method,
+      ...(this.dispatcher ? { dispatcher: this.dispatcher } : {}),
       redirect: "error",
       signal: signal
         ? AbortSignal.any([signal, AbortSignal.timeout(this.timeoutMs)])
@@ -51,7 +77,16 @@ export class GalleryClient {
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
-    const value = await response.json();
+    let value;
+    try {
+      value = await response.json();
+    } catch {
+      throw new GalleryError(
+        response.ok ? 502 : response.status,
+        "INVALID_SERVICE_RESPONSE",
+        "中心服务未返回 JSON，请检查服务地址和 HTTPS 反向代理配置",
+      );
+    }
     if (!response.ok)
       throw new GalleryError(
         response.status,

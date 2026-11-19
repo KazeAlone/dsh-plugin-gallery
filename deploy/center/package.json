@@ -1,0 +1,9 @@
+{
+  "name": "dsh-gallery-center-runtime",
+  "version": "0.29.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pg": "^8.23.1"
+  }
+}

@@ -2,23 +2,24 @@ import { parseDocument } from "yaml";
 import { skillDocument } from "./skill-format.mjs";
 import { agentDocument } from "./agent-format.mjs";
 import { createResourceIdentifier } from "./resource-id.mjs";
+import { workflowFromResource, workflowTemplateIssues } from "../workflow-template.mjs";
 
 export const IMPORT_LIMIT = 5 * 1024 * 1024;
+// JSON escaping can expand text to six times its original size.
+export const WORKFLOW_BUNDLE_LIMIT = 6 * IMPORT_LIMIT + 1024 * 1024;
 const validPath = (path) =>
   typeof path === "string" &&
   !/^[\\/]|[\\\x00-\x1f]/.test(path) &&
   !/^[a-z]:/i.test(path) &&
   path.split("/").every((p) => p && p !== "." && p !== "..");
-export function importResourceFiles(type, input, label = "") {
-  if (!["skill", "agent"].includes(type))
-    throw Error("仅支持导入 Skill 和 Agent");
+function validateImportFiles(input, limit = IMPORT_LIMIT) {
   if (!Array.isArray(input) || !input.length || input.length > 100)
     throw Error("请选择一个资源，最多 100 个文件");
   const seen = new Set();
   let total = 0;
   for (const f of input) {
     if (
-      !validPath(f.path) ||
+      !validPath(f?.path) ||
       seen.has(f.path) ||
       !["utf8", "base64"].includes(f.encoding) ||
       typeof f.content !== "string"
@@ -37,7 +38,70 @@ export function importResourceFiles(type, input, label = "") {
         ? (f.content.length * 3) / 4
         : new TextEncoder().encode(f.content).length;
   }
-  if (total > IMPORT_LIMIT) throw Error("资源文件总大小不能超过 5 MiB");
+  if (total > limit)
+    throw Error(limit === IMPORT_LIMIT ? "资源文件总大小不能超过 5 MiB" : "资源文件超出大小限制");
+}
+
+function importWorkflow(source) {
+  validateImportFiles(source.files);
+  const definition = workflowFromResource(source, { draft: true });
+  const saved = source.metadata?.workflowCanvas;
+  const savedAgents = Array.isArray(saved?.agents) ? saved.agents : [];
+  const position = (point, fallback) =>
+    Number.isFinite(point?.x) && Number.isFinite(point?.y)
+      ? { x: point.x, y: point.y }
+      : fallback;
+  const agents = definition.members.map((member, index) => {
+    const previous = savedAgents.find(
+      (node) => (node?.memberName || node?.id) === member.name,
+    );
+    return {
+      id: createResourceIdentifier("a"),
+      memberName: member.name,
+      label: member.name,
+      resourceId: "",
+      skills: [],
+      mcps: [],
+      position: position(previous?.position, { x: 40, y: 70 + index * 155 }),
+    };
+  });
+  const taskPositions = Object.fromEntries(
+    definition.tasks.map((task, index) => [
+      task.id,
+      position(
+        saved?.taskPositions?.[task.id] ?? definition.positions[`task:${task.id}`],
+        { x: 380 + (index % 3) * 270, y: 80 + Math.floor(index / 3) * 180 },
+      ),
+    ]),
+  );
+  const warnings = workflowTemplateIssues(definition);
+  const draft = warnings.length > 0;
+  if (savedAgents.some((node) => node?.resourceId || node?.skills?.length || node?.mcps?.length) || source.references?.length)
+    warnings.push("已保留成员快照。如需使用原资源库中的引用，请在当前库重新选择资源。");
+  return {
+    resource: {
+      type: "workflow",
+      name: definition.name,
+      description: definition.description,
+      tags: definition.tags,
+      files: [{ path: "workflow.json", encoding: "utf8", content: JSON.stringify(definition) }],
+      metadata: {
+        ...(typeof source.metadata?.cover === "string" && source.metadata.cover.length <= 64
+          ? { cover: source.metadata.cover }
+          : {}),
+        format: "dsh-teamflow-template-v1",
+        workflowCanvas: { version: 1, draft, taskPositions, agents },
+      },
+      references: [],
+    },
+    warnings,
+  };
+}
+
+export function importResourceFiles(type, input, label = "") {
+  if (!["skill", "agent", "workflow"].includes(type))
+    throw Error("仅支持导入 Skill、Agent 和 Workflow");
+  validateImportFiles(input, type === "workflow" ? WORKFLOW_BUNDLE_LIMIT : IMPORT_LIMIT);
   if (input.length === 1 && /\.json$/i.test(input[0].path)) {
     let bundle;
     try {
@@ -46,11 +110,12 @@ export function importResourceFiles(type, input, label = "") {
       throw Error("资源包 JSON 无法解析");
     }
     if (
-      bundle.format !== "dsh-gallery-resource" ||
+      bundle?.format !== "dsh-gallery-resource" ||
       ![1, 2].includes(bundle.schemaVersion) ||
       bundle.resource?.type !== type
     )
       throw Error("请选择同类型的 Gallery 导出资源包");
+    if (type === "workflow") return importWorkflow(bundle.resource);
     const result = importResourceFiles(
       type,
       bundle.resource.files,
@@ -75,6 +140,7 @@ export function importResourceFiles(type, input, label = "") {
       },
     };
   }
+  if (type === "workflow") throw Error("请选择一个 Workflow .gallery.json 资源包");
   const canonical = type === "skill" ? "SKILL.md" : "AGENT.md";
   let candidates = input.filter((f) => f.path.split("/").at(-1) === canonical);
   if (!candidates.length && input.length === 1 && /\.md$/i.test(input[0].path))
@@ -233,12 +299,13 @@ export function importResourceFiles(type, input, label = "") {
   return { resource, warnings };
 }
 
-export async function readBrowserResourceFiles(list) {
+export async function readBrowserResourceFiles(list, type) {
   const files = Array.from(list || []);
   if (!files.length || files.length > 100)
     throw Error("最多选择 100 个文件，请单独选择资源目录");
-  if (files.reduce((s, f) => s + f.size, 0) > IMPORT_LIMIT)
-    throw Error("资源文件总大小不能超过 5 MiB");
+  const limit = type === "workflow" ? WORKFLOW_BUNDLE_LIMIT : IMPORT_LIMIT;
+  if (files.reduce((s, f) => s + f.size, 0) > limit)
+    throw Error(limit === IMPORT_LIMIT ? "资源文件总大小不能超过 5 MiB" : "资源文件超出大小限制");
   return Promise.all(
     files.map(async (f) => {
       const bytes = new Uint8Array(await f.arrayBuffer());

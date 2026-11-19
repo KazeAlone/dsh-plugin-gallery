@@ -34,7 +34,838 @@ __export(index_exports, {
   inject: () => inject
 });
 module.exports = __toCommonJS(index_exports);
-var import_react12 = __toESM(require("react"), 1);
+
+// src/client/messages-en.mjs
+var english = {
+  \u804C\u8D23\u6982\u8FF0: "Responsibility summary",
+  \u89D2\u8272\u804C\u8D23: "Role responsibilities",
+  "\u901A\u7528\u6267\u884C\u6307\u4EE4 / PE": "General execution instructions / PE",
+  \u6A21\u677F\u540D\u79F0: "Template name",
+  \u9002\u7528\u8BF4\u660E: "When to use",
+  \u5E94\u7528\u524D\u9700\u8981\u63D0\u4F9B\u7684\u4FE1\u606F: "Information needed before use",
+  "REJECT\uFF1A\u62D6\u5230\u5FAA\u73AF\u5165\u53E3\u6216\u9000\u56DE\u5206\u652F\u4EFB\u52A1\u7684\u8F93\u5165\u70B9": "REJECT: drag to the loop entry or a return-branch task input",
+  "\u914D\u7F6E REJECT \u5206\u652F": "Configure REJECT branch",
+  "REJECT \u540E\u6267\u884C\u7684\u4EFB\u52A1": "Tasks to run after REJECT",
+  "\u4EC5\u5728\u9000\u56DE\u65F6\u6267\u884C\uFF0C\u5B8C\u6210\u540E\u8FD4\u56DE\u5FAA\u73AF\u5165\u53E3\u3002\u53EF\u4ECE REJECT \u70B9\u62D6\u7EBF\u5230\u4EFB\u52A1\uFF0C\u518D\u8FDE\u63A5\u5206\u652F\u5185\u4EFB\u52A1\u3002": "Run only after rejection, then return to the loop entry. Drag from REJECT to a task and connect branch tasks.",
+  "\u53EF\u4FDD\u5B58\u8349\u7A3F \xB7 \u8865\u5168\u540E\u6CE8\u518C\u5230 TeamFlow": "Save drafts \xB7 Complete before registering with TeamFlow",
+  \u7A0D\u540E\u8FDE\u63A5\u5FAA\u73AF\u5165\u53E3: "Connect the loop entry later",
+  \u4EC5\u9000\u56DE\u65F6\u6267\u884C: "REJECT only",
+  "REJECT \u53EA\u80FD\u8FDE\u63A5\u666E\u901A\u4EFB\u52A1": "REJECT can only connect to regular tasks",
+  \u8BF7\u9009\u62E9\u4E24\u4E2A\u4E0D\u540C\u7684\u4EFB\u52A1\u8282\u70B9: "Choose two different task nodes",
+  \u9000\u56DE\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\u65E0\u6548\u6216\u91CD\u590D: "Return tasks are invalid or duplicated",
+  \u9000\u56DE\u4EFB\u52A1\u4E0D\u80FD\u540C\u65F6\u4F4D\u4E8E\u9996\u8F6E\u8DEF\u5F84: "Return tasks cannot also be on the first-pass path",
+  \u9000\u56DE\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\u4E0D\u5B58\u5728: "A return task does not exist",
+  \u8BF7\u9009\u62E9\u6709\u6548\u7684\u5FAA\u73AF\u5165\u53E3\u4EFB\u52A1: "Choose a valid loop entry task",
+  \u5FAA\u73AF\u4E0E\u9000\u56DE\u8DEF\u5F84\u5FC5\u987B\u7531\u666E\u901A\u6267\u884C\u4EFB\u52A1\u7EC4\u6210: "Loops and return paths must contain regular execution tasks",
+  "\u9000\u56DE\u4EFB\u52A1\u53EA\u80FD\u4F9D\u8D56\u9996\u8F6E\u5916\u90E8\u8F93\u5165\u6216\u540C\u4E00\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\uFF0C\u8F93\u51FA\u4E0D\u80FD\u7ED5\u8FC7\u95E8\u63A7": "Return tasks may depend only on external first-pass inputs or tasks in the same return path; outputs must pass the gate",
+  "\u5220\u9664 {0} \u4E2A\u8282\u70B9": "Delete {0} nodes",
+  " \u4E2A\u8282\u70B9": " nodes",
+  " \u6B21": " calls",
+  "AI \u5BA1\u6838": "AI review",
+  "{0} \u5FC5\u987B\u662F\u5E03\u5C14\u503C": "{0} must be a boolean",
+  \u4E0D\u652F\u6301\u5D4C\u5957\u6216\u5171\u4EAB\u8282\u70B9\u7684\u5FAA\u73AF: "Loops cannot be nested or share tasks.",
+  \u4EA4\u4ED8\u7269: "Deliverables",
+  \u4EBA\u5DE5\u5BA1\u6838: "Human review",
+  \u4ECE\u96F6\u521B\u5EFA: "Create from scratch",
+  \u4EFB\u52A1: "Task",
+  \u4EFB\u52A1\u8282\u70B9: "Task node",
+  \u4EFB\u52A1\u8981\u6C42: "Task requirements",
+  "\u4FDD\u5B58\u4E2D\u2026": "Saving\u2026",
+  \u5173\u95ED: "Close",
+  \u5220\u9664: "Delete",
+  \u5220\u9664\u8282\u70B9: "Delete node",
+  \u5220\u9664\u8FDE\u7EBF: "Delete connection",
+  \u53D6\u6D88: "Cancel",
+  \u540D\u79F0: "Name",
+  "\u5904\u7406\u4E2D\u2026": "Working\u2026",
+  \u5FAA\u73AF\u5165\u53E3\u5FC5\u987B\u4F4D\u4E8E\u95E8\u63A7\u4E0A\u6E38: "Choose a return target upstream of the gate.",
+  \u5FAA\u73AF\u5185\u7684\u8F93\u51FA\u5FC5\u987B\u7ECF\u8FC7\u95E8\u63A7\u624D\u80FD\u8FDE\u63A5\u73AF\u5916: "Route all outgoing loop dependencies through the gate.",
+  \u6210\u5458: "Member",
+  \u6210\u5458\u540D\u79F0: "Member name",
+  \u6210\u679C\u5F52\u6863: "Archive results",
+  "\u6267\u884C\u8D85\u65F6\u5FC5\u987B\u4E3A 1\u20131440 \u5206\u949F": "Set a timeout from 1 to 1440 minutes.",
+  \u65B0\u4EFB\u52A1: "New task",
+  \u672A\u8BB0\u5F55: "Not recorded",
+  "\u67E5\u770B {0}": "View {0}",
+  \u67E5\u770B\u6D41\u7A0B: "View workflow",
+  \u6807\u7B7E\u7B5B\u9009: "Filter by tag",
+  \u6A21\u677F\u5BA1\u6838\u8282\u70B9\u7C7B\u578B\u65E0\u6548: "Invalid template review node kind.",
+  \u6D41\u7A0B\u540D\u79F0: "Workflow name",
+  \u6DFB\u52A0: "Add ",
+  \u6E05\u9664\u7B5B\u9009: "Clear filters",
+  \u7531\u7A7A\u95F2\u6210\u5458\u9886\u53D6: "Claimed by an available member",
+  \u7F16\u8F91: "Edit ",
+  \u89D2\u8272: "Role",
+  \u8BF7\u5148\u4E3A\u5FAA\u73AF\u5185\u4EFB\u52A1\u6307\u5B9A\u6709\u6548\u8D1F\u8D23\u4EBA: "Assign an active owner to each task in the loop.",
+  "\u8BF7\u9009\u62E9\u6709\u6548\u7684 AI \u5BA1\u6838\u6210\u5458": "Choose an active AI reviewer.",
+  \u8D1F\u8D23\u4EBA: "Assignee",
+  "\u8F6E\u6B21\u4E0A\u9650\u5FC5\u987B\u4E3A 1\u201320\uFF0C\u5305\u542B\u9996\u6B21\u6267\u884C": "Set a round limit from 1 to 20, including the first execution.",
+  \u8FD4\u56DE: "Back",
+  \u9000\u51FA\u5168\u5C4F: "Exit full screen",
+  \u901A\u7528\u4EA4\u4ED8\u7269: "General deliverables",
+  \u901A\u7528\u4EFB\u52A1\u8981\u6C42: "General task requirements",
+  \u901A\u7528\u8282\u70B9\u540D\u79F0: "General node name",
+  \u901A\u7528\u9A8C\u6536\u8981\u6C42: "General acceptance criteria",
+  \u9A8C\u6536: "Acceptance",
+  \u9A8C\u6536\u8282\u70B9: "Acceptance node",
+  " / \u8D44\u6E90\u8BE6\u60C5": " / Resource details",
+  " Workflow \u753B\u5E03": " Workflow canvas",
+  " {0} \u4E2A": " {0} items",
+  " \xB7 {0} \u4E2A\u5DE5\u5177": " \xB7 {0} tools",
+  " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58": " files \xB7 Saved as a bundle",
+  " \u4E2A\u8D44\u6E90": " resources",
+  " \u4E2A\u8D44\u6E90 \u2192": " resources \u2192",
+  " \u4E2A\u9644\u4EF6": " attachments",
+  " \u4E3B\u6587\u4EF6\u4F1A\u81EA\u52A8\u8BC6\u522B\uFF1B": " The main file is detected automatically; ",
+  " \u672C\u5730\u8FDB\u7A0B": " Local process",
+  " \u6B21\u8C03\u7528": " calls",
+  " \u7684 Markdown \u6587\u4EF6\u3001\u5B8C\u6574\u8D44\u6E90\u6587\u4EF6\u5939\uFF0C\u6216 Gallery \u5BFC\u51FA\u7684 JSON \u8D44\u6E90\u5305\u3002": " Markdown file, complete resource folder, or Gallery JSON export.",
+  " \u7D2F\u8BA1\u8C03\u7528\u6B21\u6570": " Total calls",
+  " \u8FDC\u7A0B HTTP": " Remote HTTP",
+  "AGENT.md \u5FC5\u987B\u662F UTF-8 \u6587\u672C\u3002": "AGENT.md must be UTF-8 text.",
+  "AGENT.md \u6216\u552F\u4E00\u7684 Markdown": "AGENT.md or a single Markdown file",
+  "AGENT.md \u6587\u4EF6\u5934\u65E0\u6CD5\u89E3\u6790\uFF1A{0}": "Cannot parse the AGENT.md frontmatter: {0}",
+  "AI \u5BA1\u6838\u6210\u5458\u4E0D\u80FD\u8D1F\u8D23\u5FAA\u73AF\u5185\u4EFB\u52A1\uFF0C\u8BF7\u9009\u62E9\u72EC\u7ACB\u5BA1\u6838\u6210\u5458": "The AI reviewer must not execute tasks inside the loop. Choose an independent reviewer.",
+  "Agent \u5DF2\u4FDD\u5B58\u3002": "Agent saved.",
+  "Agent \u6210\u5458": "Agent members",
+  "Agent \u6210\u5458\u5217\u8868": "Agent member list",
+  "Agent \u6307\u5F15\u8FC7\u957F\uFF0C\u8BF7\u7CBE\u7B80\u5230 60000 \u5B57\u7B26\u4EE5\u5185\u518D\u63D0\u53D6": "Agent instructions exceed 60,000 characters. Shorten them before extracting fields.",
+  "Captain\uFF08\u4E3B\u4F1A\u8BDD\uFF09": "Captain (main conversation)",
+  "DSH Skill \u670D\u52A1\u672A\u542F\u7528\uFF0C\u8BF7\u4F7F\u7528\u652F\u6301 Skill \u7684\u9884\u8BBE\u3002": "DSH Skills is unavailable. Use a preset with Skill support.",
+  "DSH spawn \u5B50 Agent \u670D\u52A1\u672A\u542F\u7528": "DSH spawn subagents are unavailable",
+  "DSH \u5185\u90E8\u5B58\u50A8": "DSH internal storage",
+  "Gallery Agent {0} \u5DF2\u542F\u52A8\uFF0C\u5B50\u4F1A\u8BDD {1}\u3002\u7ED3\u679C\u4F1A\u8FD4\u56DE\u5F53\u524D\u4F1A\u8BDD\u3002": "Gallery Agent {0} started in child conversation {1}. Results will return here.",
+  "Gallery Agent \u4E0D\u5B58\u5728\u6216\u914D\u7F6E\u65E0\u6548": "Gallery Agent is missing or invalid",
+  "Gallery \u4E2D\u6CA1\u6709\u53EF\u7528 Agent\u3002": "No usable Gallery Agents.",
+  "Gallery \u8BF7\u6C42\u5931\u8D25": "Gallery request failed",
+  "HTTP \u8BA4\u8BC1\u65B9\u5F0F": "HTTP authentication",
+  "IP \u5730\u5740\u90E8\u7F72\u65F6\uFF0C\u4E0A\u4F20\u7BA1\u7406\u5458\u63D0\u4F9B\u7684 gallery-center-ca.crt\uFF1B\u4F7F\u7528\u53D7\u4FE1\u4EFB\u7684\u516C\u53F8\u8BC1\u4E66\u65F6\u53EF\u7559\u7A7A\u3002": "For an IP address deployment, upload gallery-center-ca.crt from your administrator. Leave empty for a trusted company certificate.",
+  "JSON \u683C\u5F0F\u65E0\u6548": "Invalid JSON",
+  "MCP \u5730\u5740": "MCP URL",
+  "MCP \u5DF2\u4FDD\u5B58\u3002": "MCP saved.",
+  "MCP \u8D44\u6E90\u4E0D\u5B58\u5728": "MCP resource not found",
+  "MCP \u901A\u8FC7\u5BBF\u4E3B\u6CE8\u518C\u4E3A mcp__<serverName>__<tool> \u5DE5\u5177\uFF1B\u8BA4\u8BC1\u4FE1\u606F\u5728\u7F16\u8F91\u5411\u5BFC\u4E2D\u76F4\u63A5\u586B\u5199\uFF0C\u65E0\u9700\u9884\u5148\u8BBE\u7F6E\u5BBF\u4E3B\u73AF\u5883\u53D8\u91CF\u3002": "MCP services register as mcp__<serverName>__<tool> tools. Enter credentials in the editor; no host environment variables are required.",
+  "MCP \u914D\u7F6E\u65E0\u6548": "Invalid MCP configuration",
+  "Markdown \u6B63\u6587\u4E0D\u80FD\u4E3A\u7A7A": "Markdown content must not be empty",
+  "Markdown \u7684 YAML \u6587\u4EF6\u5934\u65E0\u6CD5\u89E3\u6790": "Cannot parse the Markdown YAML frontmatter",
+  "Markdown \u7684 YAML \u6587\u4EF6\u5934\u672A\u6B63\u786E\u7ED3\u675F": "Markdown YAML frontmatter is not closed",
+  "PASS \xB7 \u901A\u8FC7\u540E\u7EE7\u7EED": "PASS \xB7 Continue to",
+  "PASS\uFF1A\u8FDE\u63A5\u901A\u8FC7\u540E\u6267\u884C\u7684\u8282\u70B9": "PASS: connect the next node after approval",
+  "REJECT \xB7 \u8FD4\u56DE\u5165\u53E3": "REJECT \xB7 Return to",
+  "REJECT \xB7 \u8FD4\u5DE5": "REJECT \xB7 Revise",
+  "REJECT \u8FD4\u56DE": "REJECT return",
+  "REJECT \u8FD4\u56DE\u5165\u53E3": "REJECT return entry",
+  "REJECT \u9700\u8981\u8FD4\u56DE\u95E8\u63A7\u4E0A\u6E38\u7684\u6267\u884C\u4EFB\u52A1\uFF1B\u8BF7\u5148\u8FDE\u63A5\u4EFB\u52A1\u5230\u95E8\u63A7\u7684\u6B63\u5411\u8DEF\u5F84": "REJECT must return to an upstream execution task. Connect the forward path to the gate first.",
+  "REJECT\uFF1A\u62D6\u5230\u4E0A\u6E38\u4EFB\u52A1\u7684\u8F93\u5165\u70B9": "REJECT: drag to an upstream task input",
+  "SKILL.md \u5FC5\u987B\u662F UTF-8 \u6587\u672C\u3002": "SKILL.md must be UTF-8 text.",
+  "SKILL.md \u6587\u4EF6\u5934\u65E0\u6CD5\u89E3\u6790\uFF1A{0}": "Cannot parse the SKILL.md frontmatter: {0}",
+  "Skill \u548C MCP \u5F15\u7528\u4FDD\u7559\u5728 Gallery \u4E2D\uFF1BTeamFlow \u6309 Agent \u8282\u70B9\u5F00\u5173\u542F\u7528\u8D44\u6E90\u3002": "Skill and MCP references stay in Gallery. TeamFlow enables them using the Agent switches.",
+  "Skill \u5DF2\u4FDD\u5B58\u3002": "Skill saved.",
+  "Streamable HTTP \u5730\u5740": "Streamable HTTP URL",
+  "TeamFlow \u6A21\u677F \xB7 \u4FDD\u5B58\u540E\u53EF\u6CE8\u518C\u4F7F\u7528": "TeamFlow template \xB7 Save, then register to use",
+  "TeamFlow \u6A21\u677F\u5E93\u6B63\u88AB\u5176\u4ED6\u8FDB\u7A0B\u5199\u5165": "Another process is writing to the TeamFlow template library",
+  "Workflow \u5DF2\u4FDD\u5B58\u3002": "Workflow saved.",
+  "YAML \u6587\u4EF6\u5934\u5FC5\u987B\u662F\u5BF9\u8C61": "YAML frontmatter must be an object",
+  "[\u5DF2\u9690\u85CF]": "[Hidden]",
+  "config.json \u5FC5\u987B\u662F\u5B9E\u9645\u6587\u4EF6": "config.json must be a regular file",
+  "config.json \u5FC5\u987B\u662F\u6709\u6548\u7684 JSON \u5BF9\u8C61": "config.json must be a valid JSON object",
+  "copyFiles \u5FC5\u987B\u662F\u5E03\u5C14\u503C": "copyFiles must be a boolean",
+  "metadata \u5FC5\u987B\u4E3A\u4E0D\u8D85\u8FC7 50 KB \u7684 JSON \u5BF9\u8C61": "metadata must be a JSON object of at most 50 KB",
+  "references / assets \u53CA config.json": "references / assets and config.json",
+  "workflow.json \u4E0D\u662F\u6709\u6548 JSON": "workflow.json is not valid JSON",
+  "{0} Agent \xB7 {1} \u6D41\u7A0B\u8282\u70B9 \xB7 {2} \u5FAA\u73AF": "Agents: {0} \xB7 Nodes: {1} \xB7 Loops: {2}",
+  "{0} \xB7 {1} \xB7 \u7D2F\u8BA1\u8C03\u7528 {2} \u6B21": "{0} \xB7 {1} \xB7 {2} total calls",
+  "{0} \u4E0D\u80FD\u4E3A\u7A7A\u6216\u8D85\u8FC7 {1} \u5B57\u7B26": "{0} must be nonempty and at most {1} characters",
+  "{0} \u5FC5\u987B\u4E3A 1\u2013{1} \u5B57\u7B26": "{0} must contain 1\u2013{1} characters",
+  "{0} \u683C\u5F0F\u65E0\u6548": "Invalid {0}",
+  "{0} \u683C\u5F0F\u65E0\u6548\u6216\u8FC7\u957F": "Invalid or oversized {0}",
+  "{0} \u8C03\u7528\u699C": "{0} call rankings",
+  "{0} \u8D44\u6E90": "{0} resources",
+  "{0} \u9879": "{0} items",
+  "\u2713 \u5DF2\u901A\u8FC7\u8FDE\u63A5\u6D4B\u8BD5": "\u2713 Connection test passed",
+  "\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58": "\u2713 Format checks passed. Ready to save.",
+  "\u2713 \u8FDE\u63A5\u6210\u529F": "\u2713 Connected",
+  \u4E0A\u4E00\u6B65: "Back",
+  \u4E0A\u4E00\u7EA7: "Up one level",
+  \u4E0A\u4E00\u9875: "Previous page",
+  "\u4E0A\u4F20{0}": "Upload {0}",
+  \u4E0A\u4F20\u6216\u62D6\u5165: "Upload or drag files",
+  \u4E0A\u4F20\u6587\u4EF6: "Upload files",
+  \u4E0A\u4F20\u6587\u4EF6\u5939: "Upload folder",
+  "\u4E0A\u4F20\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB\u3002": "Uploads must not exceed 5 MiB in total.",
+  \u4E0A\u4F20\u8D44\u6E90\u6587\u4EF6: "Upload resource file",
+  \u4E0A\u4F20\u8D44\u6E90\u6587\u4EF6\u5939: "Upload resource folder",
+  \u4E0B\u4E00\u6B65: "Next",
+  "\u4E0B\u4E00\u6B65 ": "Next ",
+  \u4E0B\u4E00\u9875: "Next page",
+  \u4E0B\u8F7D\u8D44\u6E90: "Download resource",
+  \u4E0D\u652F\u6301\u5BFC\u5165\u7279\u6B8A\u6587\u4EF6: "Special files cannot be imported",
+  \u4E0D\u652F\u6301\u5BFC\u5165\u7B26\u53F7\u94FE\u63A5: "Symbolic links cannot be imported",
+  \u4E2A\u6587\u4EF6: " files",
+  "\u4E2A\u8282\u70B9\uFF0C\u62D6\u52A8\u4EFB\u4E00\u9009\u4E2D\u8282\u70B9\u53EF\u4E00\u8D77\u79FB\u52A8\u3002": " nodes. Drag any selected node to move them together.",
+  \u4E2D\u5FC3\u670D\u52A1: "Center service",
+  "\u4E2D\u5FC3\u670D\u52A1\u64CD\u4F5C\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u670D\u52A1\u548C\u6570\u636E\u5E93\u72B6\u6001": "Center operation failed. Check the service and database status.",
+  "\u4E2D\u5FC3\u670D\u52A1\u672A\u8FD4\u56DE JSON\uFF0C\u8BF7\u68C0\u67E5\u670D\u52A1\u5730\u5740\u548C HTTPS \u53CD\u5411\u4EE3\u7406\u914D\u7F6E": "The center returned a non-JSON response. Check the URL and HTTPS reverse proxy.",
+  \u4E2D\u5FC3\u670D\u52A1\u672A\u8FD4\u56DE\u6709\u6548\u8EAB\u4EFD: "The center did not return a valid identity",
+  \u4E2D\u5FC3\u670D\u52A1\u8BBF\u95EE\u5BC6\u94A5\u65E0\u6548: "Invalid center access key",
+  "\u4E2D\u5FC3\u670D\u52A1\u8BBF\u95EE\u5BC6\u94A5\u81F3\u5C11\u9700\u8981 32 \u4F4D": "The center access key must contain at least 32 characters",
+  \u4E2D\u5FC3\u670D\u52A1\u8EAB\u4EFD\u54CD\u5E94\u65E0\u6548: "Invalid center identity response",
+  "\u4E2D\u5FC3\u670D\u52A1\u9700\u8981 64 \u4F4D\u5341\u516D\u8FDB\u5236\u52A0\u5BC6\u5BC6\u94A5": "The center requires a 64-digit hexadecimal encryption key",
+  \u4E2D\u5FC3\u8D44\u6E90\u5E93: "Center library",
+  \u4E3A\u8D44\u6E90\u8D77\u4E00\u4E2A\u4FBF\u4E8E\u8BC6\u522B\u7684\u540D\u79F0: "Give the resource a recognizable name",
+  "\u4E3B Markdown \u6587\u4EF6\u5FC5\u987B\u662F UTF-8 \u6587\u672C": "The main Markdown file must be UTF-8 text",
+  "\u4E3B\u6587\u4EF6\u4E3A\u4E8C\u8FDB\u5236\u5185\u5BB9\uFF0C\u8BF7\u5BFC\u51FA\u67E5\u770B\u3002": "The main file is binary. Export it to view.",
+  "\u4E3B\u9898 \xB7 {0}": "Theme \xB7 {0}",
+  "\u4E5F\u53EF\u4EE5\u8DF3\u8FC7\u68C0\u67E5\uFF0C\u4FDD\u5B58\u4E3A\u5F85\u9A8C\u8BC1\u914D\u7F6E\u3002": "You can skip the test and save an unverified configuration.",
+  \u4E8C\u8FDB\u5236: "Binary",
+  "\u4E8C\u8FDB\u5236\u6587\u4EF6\u5DF2\u4E0A\u4F20\uFF0C\u53EF\u79FB\u9664\u540E\u91CD\u65B0\u4E0A\u4F20\u66FF\u6362\u3002": "Binary file uploaded. Remove it to upload a replacement.",
+  "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u4E0B\u8F7D\u7684\u8D44\u6E90\u5305\u4E2D\u3002": "Binary attachments are included in the downloaded bundle.",
+  "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u5BFC\u51FA\u7684\u8D44\u6E90\u5305\u4E2D\u3002": "Binary attachments are included in the exported bundle.",
+  "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5C06\u539F\u6837\u4FDD\u5B58\u3002": "Binary attachments will be saved unchanged.",
+  "\u4E8C\u8FDB\u5236\u9644\u4EF6\u968F\u8D44\u6E90\u4FDD\u5B58\u3002": "Binary attachments are saved with the resource.",
+  "\u4EC5 Workflow \u53EF\u4EE5\u5B89\u88C5\u5230 TeamFlow": "Only Workflows can be registered with TeamFlow",
+  "\u4EC5\u652F\u6301 Skill \u548C Agent": "Only Skill and Agent are supported",
+  "\u4EC5\u652F\u6301\u5BFC\u5165 Skill \u548C Agent": "Only Skills and Agents can be imported",
+  "\u4EC5\u652F\u6301\u5BFC\u5165 Skill\u3001Agent \u548C Workflow": "Only Skills, Agents, and Workflows can be imported",
+  "\u8D44\u6E90\u6587\u4EF6\u8D85\u51FA\u5927\u5C0F\u9650\u5236": "Resource files exceed the size limit",
+  "\u8BF7\u9009\u62E9\u4E00\u4E2A Workflow .gallery.json \u8D44\u6E90\u5305": "Choose one Workflow .gallery.json bundle",
+  "\u5728\u7A7A\u767D\u753B\u5E03\u4E0A\u6DFB\u52A0\u5E76\u8FDE\u63A5\u8282\u70B9\u3002": "Add and connect nodes on a blank canvas.",
+  "\u8BF7\u5728\u670D\u52A1\u5668\u76EE\u5F55\u4E2D\u9009\u62E9\u4E00\u4E2A Workflow .gallery.json \u8D44\u6E90\u5305": "Select one Workflow .gallery.json bundle in the server directory.",
+  "\u9009\u62E9\u4E00\u4E2A\u8D44\u6E90\u5305\uFF0C\u6216\u8BFB\u53D6\u4EC5\u542B\u4E00\u4E2A .gallery.json \u7684\u76EE\u5F55": "Select a bundle or read a folder containing a single .gallery.json file.",
+  "\u6253\u5F00\u753B\u5E03": "Open canvas",
+  "\u5DF2\u4FDD\u7559\u6210\u5458\u5FEB\u7167\u3002\u5982\u9700\u4F7F\u7528\u539F\u8D44\u6E90\u5E93\u4E2D\u7684\u5F15\u7528\uFF0C\u8BF7\u5728\u5F53\u524D\u5E93\u91CD\u65B0\u9009\u62E9\u8D44\u6E90\u3002": "Member snapshots were kept. To restore resource links, select the resources in this library.",
+  \u4ECE\u524D\u7F6E\u8282\u70B9\u7684\u8F93\u51FA\u5706\u70B9\u62D6\u52A8\u5230\u540E\u7EED\u8282\u70B9\u7684\u8F93\u5165\u5706\u70B9: "Drag an output port to the next node's input port",
+  "\u4ECE\u5DE6\u4FA7\u6210\u5458\u5217\u8868\u914D\u7F6E Agent\uFF0C\u70B9\u51FB\u4EFB\u52A1\u4E0A\u7684\u8D1F\u8D23\u4EBA\u4E5F\u53EF\u7F16\u8F91\u6210\u5458\u3002\u753B\u5E03\u8FDE\u7EBF\u8868\u793A\u4F9D\u8D56\u548C REJECT \u8FD4\u5DE5\u8DEF\u5F84\u3002": "Configure Agents in the member list, or click a task owner. Canvas connections show dependencies and REJECT return paths.",
+  "\u4ECE\u672C\u673A\u6587\u4EF6\u6216\u670D\u52A1\u5668\u76EE\u5F55\u8BFB\u53D6\u3002": "Read from local files or a server directory.",
+  "\u4ECE\u8D44\u6599\u5230\u7ED3\u8BBA\uFF0C": "From sources to insights,",
+  \u4F4D\u7F6E: "Position",
+  "\u4F5C\u8005 ": "Author ",
+  \u4F7F\u7528\u6B21\u6570\u5DF2\u8FBE\u4E0A\u9650: "Usage count has reached its limit",
+  \u4F7F\u7528\u7EDF\u8BA1\u6570\u636E\u65E0\u6548: "Invalid usage statistics",
+  "\u4F8B\u5982\uFF1A\u5F00\u53D1\uFF0C\u4EE3\u7801\u5BA1\u67E5": "For example: development, code review",
+  "\u4F8B\u5982\uFF1A\u6587\u4EF6\uFF0C\u641C\u7D22": "For example: files, search",
+  "\u4F8B\u5982\uFF1A\u7814\u7A76\uFF0C\u5206\u6790": "For example: research, analysis",
+  \u4F9D\u8D56: "Dependencies",
+  "\u4F9D\u8D56 ID": "Dependency ID",
+  "\u4FDD\u5B58 Agent": "Save Agent",
+  "\u4FDD\u5B58 MCP": "Save MCP",
+  "\u4FDD\u5B58 Skill": "Save Skill",
+  "\u4FDD\u5B58 Workflow": "Save Workflow",
+  \u4FDD\u5B58\u7528\u6237\u540D: "Save username",
+  \u4FDD\u5B58\u8D44\u6E90: "Save resource",
+  \u503C: "Value",
+  "\u5141\u8BB8\u4E2D\u5FC3 stdio MCP \u5728\u6B64 DSH \u6267\u884C\u672C\u673A\u547D\u4EE4\uFF08\u4EC5\u4FE1\u4EFB\u8D44\u6E90\u4F5C\u8005\u65F6\u5F00\u542F\uFF09": "Allow center stdio MCP commands on this DSH host (only for trusted resource authors)",
+  "\u5141\u8BB8\u4F7F\u7528 Gallery MCP": "Allow Gallery MCP",
+  "\u5141\u8BB8\u4F7F\u7528 Gallery Skill": "Allow Gallery Skills",
+  "\u5148\u8FDE\u63A5\u4E0A\u6E38\u4EFB\u52A1\uFF0C\u518D\u4ECE\u95E8\u63A7\u5E95\u90E8 REJECT \u70B9\u62D6\u56DE\u5165\u53E3\uFF0C\u6216\u5728\u4E0A\u65B9\u9009\u62E9\u5165\u53E3\u3002": "Connect upstream tasks first, then drag REJECT back to an entry task or select an entry above.",
+  \u5168\u5C4F\u753B\u5E03: "Full screen",
+  \u5168\u90E8: "All",
+  \u5168\u90E8\u6807\u7B7E: "All tags",
+  \u5168\u90E8\u8D44\u6E90: "All resources",
+  \u5171\u4EAB\u670D\u52A1\u5185\u90E8\u9519\u8BEF: "Internal shared-service error",
+  \u5171\u4EAB\u670D\u52A1\u5730\u5740\u65E0\u6548: "Invalid shared-service URL",
+  \u5171\u4EAB\u670D\u52A1\u8BF7\u6C42\u5931\u8D25: "Shared-service request failed",
+  \u5173\u95ED\u521B\u5EFA: "Close creation",
+  \u5173\u95ED\u5B58\u50A8\u8BBE\u7F6E: "Close storage settings",
+  \u5173\u95ED\u63D0\u793A: "Dismiss notification",
+  \u5173\u95ED\u7F16\u8F91: "Close editor",
+  \u5173\u95ED\u8BE6\u60C5: "Close details",
+  \u5173\u95ED\u9519\u8BEF: "Dismiss error",
+  "\u5185\u5BB9\u6458\u8981\u5FC5\u987B\u4E3A SHA-256 \u5341\u516D\u8FDB\u5236\u5B57\u7B26\u4E32": "Content digest must be a hexadecimal SHA-256 string",
+  \u5199\u4F5C\u4E0E\u6587\u6863: "Writing & documents",
+  "\u5199\u6E05\u804C\u8D23\u3001\u5904\u7406\u8FB9\u754C\u3001\u4F55\u65F6\u56DE\u62A5\u548C\u4EA4\u4ED8\u683C\u5F0F\u3002": "Define responsibilities, boundaries, reporting points and output format.",
+  "\u5199\u6E05\u9002\u7528\u573A\u666F\u3001\u6267\u884C\u6B65\u9AA4\u548C\u4EA4\u4ED8\u7ED3\u679C\uFF0C\u53EF\u4EE5\u9644\u4E0A\u8F93\u5165\u4E0E\u8F93\u51FA\u793A\u4F8B\u3002": "Describe when to use this Skill, the execution steps and expected output. Include examples if useful.",
+  "\u5206\u7C7B\u8C03\u7528\u699C ": "Category rankings ",
+  \u5206\u9875\u53C2\u6570\u65E0\u6548: "Invalid pagination",
+  \u5207\u6362\u4E3B\u9898: "Switch theme",
+  "\u5207\u6362\u540E\u663E\u793A\u5BF9\u5E94\u8D44\u6E90\u5E93\uFF1B\u5DF2\u6709\u8D44\u6E90\u4FDD\u7559\u5728\u539F\u5904\uFF0C\u4E0D\u81EA\u52A8\u8FC1\u79FB\u3002": "Switching displays the selected library. Existing resources stay in their original storage and are not migrated automatically.",
+  \u5207\u6362\u6D45\u8272: "Light mode",
+  \u5207\u6362\u6DF1\u8272: "Dark mode",
+  "\u521B\u5EFA {0}": "Create {0}",
+  "\u521B\u5EFA\u8005\uFF1A": "Creator: ",
+  "\u521B\u5EFA\u8005\uFF1A{0}": "Creator: {0}",
+  \u521B\u5EFA\u8FDB\u5EA6: "Creation progress",
+  "\u5220\u9664 REJECT \u8FD4\u56DE\u7EBF": "Delete REJECT return",
+  "\u5220\u9664 {0}": "Delete {0}",
+  "\u5220\u9664\u300C{0}\u300D\uFF1F\u8D44\u6E90\u548C\u7D2F\u8BA1\u8C03\u7528\u8BB0\u5F55\u5C06\u88AB\u5220\u9664\uFF0C\u65E0\u6CD5\u6062\u590D\u3002": "Delete \u201C{0}\u201D? The resource and its usage records will be permanently removed.",
+  \u5220\u9664\u6210\u5458: "Remove member",
+  "\u5220\u9664\u8BA4\u8BC1\u5B57\u6BB5 {0}": "Remove authentication field {0}",
+  \u5220\u9664\u8D44\u6E90: "Delete resource",
+  \u5237\u65B0: "Refresh",
+  \u5237\u65B0\u8D44\u6E90: "Refresh resources",
+  \u529F\u80FD\u6982\u8FF0: "Summary",
+  \u52A0\u8F7D\u5931\u8D25: "Failed to load",
+  "\u5305\u542B SKILL.md \u5728\u5185\u6700\u591A 100 \u4E2A\u6587\u4EF6\u3002": "Up to 100 files, including SKILL.md.",
+  "\u539F\u6709 Skill \u548C MCP \u5F15\u7528\u4FDD\u7559\u5728 Gallery \u4E2D\u3002TeamFlow \u6309 Agent \u8282\u70B9\u7684\u4E24\u4E2A\u5F00\u5173\u542F\u7528\u8D44\u6E90\u3002": "Existing Skill and MCP references stay in Gallery. TeamFlow enables them using the two Agent switches.",
+  "\u539F\u795E \xB7 \u5192\u9669\u624B\u518C": "Genshin \xB7 Adventurer's Handbook",
+  "\u539F\u8C03\u7528\u6807\u8BC6\u4E0D\u7B26\u5408\u683C\u5F0F\uFF0C\u5DF2\u751F\u6210\u65B0\u6807\u8BC6\uFF0C\u53EF\u5728\u9AD8\u7EA7\u8BBE\u7F6E\u4FEE\u6539": "The previous identifier was invalid. A new one was generated; you can change it in Advanced settings.",
+  "\u53C2\u6570\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09": "Arguments (one per line)",
+  \u53C2\u8003\u8D44\u6599: "References",
+  "\u53CC\u51FB\u6587\u4EF6\u5939\u8FDB\u5165 \xB7 \u672A\u9009\u4E2D\u65F6\u8BFB\u53D6\u5F53\u524D\u76EE\u5F55": "Double-click folders to open \xB7 Read uses the current directory when nothing is selected",
+  \u53D1\u73B0: "Discover",
+  "\u53D1\u73B0\u591A\u4E2A\u8D44\u6E90\uFF0C\u8BF7\u9009\u62E9\u5176\u4E2D\u4E00\u4E2A\u8D44\u6E90\u76EE\u5F55\u6216 Markdown \u6587\u4EF6": "Multiple resources found. Select one resource directory or Markdown file.",
+  \u53D1\u73B0\u8D44\u6E90: "Discover resources",
+  \u53D6\u6D88\u8FDE\u7EBF: "Cancel connection",
+  \u53D8\u91CF\u540D: "Variable name",
+  \u53EA\u80FD\u7F16\u8F91\u6216\u5220\u9664\u81EA\u5DF1\u521B\u5EFA\u7684\u8D44\u6E90: "You can only edit or delete your own resources",
+  \u53EA\u80FD\u7F16\u8F91\u81EA\u5DF1\u4E0A\u4F20\u7684\u8D44\u6E90: "You can only edit resources you uploaded",
+  "\u53EF\u4E0A\u4F20\u5DF2\u6709\u6587\u4EF6\uFF0C\u4E5F\u53EF\u76F4\u63A5\u521B\u5EFA\u6587\u672C\u6587\u4EF6\u3002": "Upload files or create text files directly.",
+  "\u540D\u79F0\u7528\u4E8E\u5C55\u793A\uFF0C\u63CF\u8FF0\u7528\u4E8E\u5E2E\u52A9\u7528\u6237\u548C Agent \u5224\u65AD\u4F55\u65F6\u4F7F\u7528\u3002": "The name identifies the resource; the description helps users and Agents decide when to use it.",
+  "\u540D\u79F0\u987B\u4E3A 1\u201364 \u4E2A\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u6216\u8FDE\u5B57\u7B26\uFF0C\u4E0D\u80FD\u4EE5\u8FDE\u5B57\u7B26\u5F00\u5934\u6216\u7ED3\u5C3E\u3002": "The identifier must be 1\u201364 lowercase letters, digits or hyphens, without leading or trailing hyphens.",
+  \u542F\u52A8\u53C2\u6570: "Startup arguments",
+  \u542F\u52A8\u53C2\u6570\u65E0\u6548: "Invalid startup arguments",
+  \u542F\u52A8\u547D\u4EE4: "Startup command",
+  "\u56FE\u5F62\u5C01\u9762\u3001\u5206\u7C7B\u699C\u5355\u4E0E\u4FA7\u8FB9\u8BE6\u60C5": "Graphic covers, category rankings and side details",
+  "\u5728 DSH \u4F1A\u8BDD\u8F93\u5165 /gallery\uFF0C\u9009\u62E9\u6B64 Skill\uFF0C\u8865\u5145\u4EFB\u52A1\u5E76\u53D1\u9001\u3002": "Enter /gallery in a DSH conversation, select this Skill, add your task and send.",
+  "\u5728\u4F1A\u8BDD\u4E2D\u8BF7\u6C42\u4F7F\u7528 Gallery Agent\u300C{0}\u300D\u6267\u884C\u4EFB\u52A1\u3002\u5BBF\u4E3B\u9700\u542F\u7528 gallery_agent_list\u3001gallery_agent_run \u53CA\u5B50 Agent \u529F\u80FD\u3002": "Ask the conversation to use Gallery Agent \u201C{0}\u201D for a task. The host requires gallery_agent_list, gallery_agent_run and subagent support.",
+  "\u5728\u7F16\u8F91\u5411\u5BFC\u4E2D\u67E5\u770B\u4EFB\u52A1\u3001Agent\u3001\u4EBA\u5DE5\u8282\u70B9\u53CA\u8FDE\u63A5\u5173\u7CFB\u3002\u6CE8\u518C\u5230 TeamFlow \u540E\uFF0C\u53EF\u4ECE\u6A21\u677F\u5E93\u5E94\u7528\u5230\u4F1A\u8BDD\u3002": "View tasks, Agents, review nodes and connections in the editor. Register with TeamFlow to apply it to a conversation.",
+  \u57FA\u672C\u4FE1\u606F: "Basics",
+  "\u586B\u5199 Gallery \u4E2D\u5FC3\u670D\u52A1\u5730\u5740\uFF0C\u4E0D\u662F\u6570\u636E\u5E93\u7AEF\u53E3\u3002\u8FDC\u7A0B\u8FDE\u63A5\u4F7F\u7528 HTTPS\u3002": "Enter the Gallery center service URL, not the database port. Remote connections require HTTPS.",
+  "\u586B\u5199\u53EF\u590D\u7528\u7684\u901A\u7528\u8981\u6C42\uFF1B\u5177\u4F53\u9879\u76EE\u7684\u4EFB\u52A1\u8BF4\u660E\u5728\u5E94\u7528\u6A21\u677F\u540E\u751F\u6210\u3002": "Write reusable requirements. Project-specific instructions are generated when applying the template.",
+  "\u586B\u5199\u57FA\u672C\u4FE1\u606F\uFF0C\u7F16\u5199\u6307\u5F15\u5E76\u6DFB\u52A0\u9644\u4EF6\u3002": "Enter basic information, write instructions and add attachments.",
+  \u586B\u5199\u5B9E\u9645\u503C: "Enter the actual value",
+  "\u586B\u5199\u670D\u52A1\u8FDB\u7A0B\u9700\u8981\u7684\u73AF\u5883\u53D8\u91CF\u53CA\u5176\u5B9E\u9645\u503C\u3002": "Enter environment variables required by the service process and their actual values.",
+  "\u586B\u5199\u8BF7\u6C42\u5934\u540D\u79F0\u53CA\u5176\u5B8C\u6574\u503C\uFF0C\u4F8B\u5982 X-API-Key\u3002": "Enter header names and full values, such as X-API-Key.",
+  \u58A8\u7EFF\u9EC4\u94DC: "Forest & Brass",
+  \u590D\u5236\u6210\u679C\u6587\u4EF6: "Copy output files",
+  \u59D3\u540D: "Name",
+  \u5B58\u50A8\u8BBE\u7F6E: "Storage settings",
+  "\u5B58\u50A8\u8BBE\u7F6E \xB7 ": "Storage settings \xB7 ",
+  \u5B58\u50A8\u8BBE\u7F6E\u5DF2\u4FDD\u5B58: "Storage settings saved",
+  "\u5B58\u50A8\u914D\u7F6E\u65E0\u6548\uFF0C\u8BF7\u5148\u5907\u4EFD\u68C0\u67E5": "Invalid storage configuration. Back up and inspect it first.",
+  "\u5B58\u50A8\u914D\u7F6E\u6B63\u5728\u66F4\u65B0\uFF0C\u8BF7\u91CD\u8BD5": "Storage configuration is being updated. Try again.",
+  \u5B8C\u6210: "Done",
+  \u5BA1\u6838: "Review",
+  \u5BA1\u6838\u5224\u65AD: "Review decision",
+  \u5BA1\u6838\u65B9\u5F0F: "Review mode",
+  "\u5BA1\u6838\u65F6\u7531 TeamFlow \u6307\u5B9A\u8FD4\u5DE5\u4EFB\u52A1\u53CA\u5176\u4E0B\u6E38\u3002": "TeamFlow will choose the tasks to revise and their descendants during review.",
+  "\u5BBF\u4E3B\u7F3A\u5C11\u73AF\u5883\u53D8\u91CF {0}": "Missing host environment variable {0}",
+  "\u5BFC\u5165\u540E\u53EF\u68C0\u67E5\u548C\u7F16\u8F91\uFF0C\u786E\u8BA4\u4FDD\u5B58\u540E\u624D\u52A0\u5165\u8D44\u6E90\u5E93\u3002": "Review and edit the import before saving it to the library.",
+  \u5BFC\u5165\u5DF2\u6709: "Import existing",
+  "\u5BFC\u5165\u5DF2\u6709 {0}": "Import existing {0}",
+  \u5BFC\u5165\u672C\u673A\u6587\u4EF6: "Import local file",
+  \u5BFC\u5165\u672C\u673A\u6587\u4EF6\u5939: "Import local folder",
+  \u5BFC\u5165\u6765\u6E90: "Import source",
+  \u5BFC\u5165\u9884\u89C8: "Import preview",
+  \u5BFC\u51FA: "Export",
+  \u5C01\u9762: "Cover",
+  \u5C1A\u672A\u9A8C\u8BC1\u8FDE\u63A5: "Connection not verified",
+  "\u5DE5\u4F5C\u533A ": "Workspace ",
+  \u5DE5\u4F5C\u6D41: "Workflow",
+  \u5DE5\u4F5C\u76EE\u5F55: "Working directory",
+  \u5DE5\u4F5C\u76EE\u5F55\u65E0\u6548: "Invalid working directory",
+  "\u5DE5\u4F5C\u76EE\u5F55\uFF08\u9009\u586B\uFF09": "Working directory (optional)",
+  "\u5DF2\u4FDD\u5B58 Token\uFF0C\u539F\u503C\u4E0D\u56DE\u663E\u3002": "Token saved. Its original value is hidden.",
+  "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u4FDD\u7559": "Saved; leave empty to keep",
+  "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u4FDD\u7559\u539F\u5BC6\u94A5": "Saved; leave empty to keep the current key",
+  "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u7EE7\u7EED\u4F7F\u7528\uFF1B\u586B\u5199\u53EF\u66FF\u6362": "Saved; leave empty to keep, or enter a replacement",
+  "\u5DF2\u6CE8\u518C\u5230 TeamFlow\uFF1A{0} v{1}": "Registered with TeamFlow: {0} v{1}",
+  "\u5DF2\u8BFB\u53D6 \xB7 ": "Loaded \xB7 ",
+  "\u5DF2\u9009\u4E2D\uFF1A{0}": "Selected: {0}",
+  "\u5DF2\u9009\u62E9 ": "Selected ",
+  \u5DF2\u901A\u8FC7\u8FDE\u63A5\u68C0\u67E5: "Connection test passed",
+  "\u5DF2\u901A\u8FC7\u8FDE\u63A5\u68C0\u67E5 \xB7 {0}": "Connection test passed \xB7 {0}",
+  \u5F00\u53D1\u4E0E\u5BA1\u67E5: "Development & review",
+  \u5F00\u542F: "On",
+  "\u5F15\u7528 ID": "Reference ID",
+  \u5F15\u7528\u5FC5\u987B\u4E3A\u5BF9\u8C61: "Reference must be an object",
+  \u5F15\u7528\u7684\u6587\u4EF6: "Referenced file",
+  "\u5F15\u7528\u7684\u6587\u4EF6\u4E0D\u5B58\u5728\uFF1A{0}": "Referenced file not found: {0}",
+  \u5F52\u6863: "Archive",
+  \u5F52\u6863\u6210\u679C\u4E0E\u6587\u4EF6: "Archive outputs and files",
+  \u5F52\u6863\u8282\u70B9\u4E0D\u80FD\u8BBE\u7F6E\u8D1F\u8D23\u4EBA\u6216\u95E8\u63A7: "Archive nodes cannot have an assignee or gate",
+  \u5F52\u6863\u8BC1\u636E\u4E0E\u6458\u8981: "Archive evidence and digests",
+  \u5F52\u6863\u8DEF\u5F84: "Archive paths",
+  "\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09": "Archive paths (one per line)",
+  \u5F52\u6863\u914D\u7F6E: "Archive configuration",
+  "\u5F53\u524D Gallery \u5916\u89C2": "Current Gallery appearance",
+  \u5F53\u524D\u8EAB\u4EFD\u670D\u52A1\u4E0D\u63D0\u4F9B\u63A5\u5165\u7801\u5151\u6362: "The current identity service does not redeem access codes",
+  "\u5F53\u524D\u8EAB\u4EFD\uFF1A": "Current identity: ",
+  "\u5FAA\u73AF\u5185\u4EFB\u52A1\uFF1A": "Loop tasks: ",
+  \u5FAA\u73AF\u533A\u57DF\u5FC5\u987B\u7531\u6267\u884C\u4EFB\u52A1\u7EC4\u6210\u5E76\u6C47\u5408\u5230\u552F\u4E00\u95E8\u63A7: "The loop must contain execution tasks that converge at one gate",
+  \u5FAA\u73AF\u533A\u57DF\u65E0\u6548: "Invalid loop region",
+  "\u5FAA\u73AF\u9700\u8981\u72EC\u7ACB\u95E8\u63A7\uFF0C\u9A8C\u6536\u8282\u70B9\u4E0D\u80FD\u4F5C\u4E3A\u5FAA\u73AF\u95E8\u63A7": "A loop needs a separate gate; acceptance nodes cannot act as loop gates",
+  "\u6062\u590D\u8EAB\u4EFD\u5FC5\u987B\u6307\u5B9A\u5DF2\u5B58\u5728\u7684 subject": "Identity recovery requires an existing subject",
+  \u6210\u5458\u540D\u79F0\u91CD\u590D\u6216\u65E0\u6548: "Duplicate or invalid member name",
+  "\u6210\u679C\u5F52\u6863\u8282\u70B9\u5E94\u653E\u5728\u95E8\u63A7\u7684 PASS \u8DEF\u5F84\u4E4B\u540E": "Archive nodes must follow the gate's PASS path",
+  \u6267\u884C\u4EFB\u52A1\u9700\u8981\u8FD0\u884C\u7684\u4EE3\u7801: "Code required to execute tasks",
+  \u6267\u884C\u6307\u4EE4: "Execution instructions",
+  \u6267\u884C\u6307\u5F15: "Instructions",
+  \u6267\u884C\u65F6\u9700\u8981\u67E5\u9605\u7684\u6587\u6863: "Documents to consult during execution",
+  "\u62D6\u52A8\u8FDE\u7EBF\uFF1A\u677E\u5F00\u5230\u53E6\u4E00\u8282\u70B9\u7684\u5706\u70B9": "Connecting: release over another node's port",
+  \u6309\u7528\u9014\u81EA\u52A8\u9009\u62E9: "Choose automatically by purpose",
+  \u6309\u7D2F\u8BA1\u8C03\u7528\u6B21\u6570: "By total calls",
+  "\u6362\u4E00\u4E2A\u5173\u952E\u8BCD\uFF0C\u6216\u6E05\u9664\u7B5B\u9009\u540E\u518D\u8BD5\u8BD5\u3002": "Try another keyword or clear the filters.",
+  "\u6392\u540D / \u8D44\u6E90": "Rank / Resource",
+  \u63A5\u5165\u7801\u65E0\u6548: "Invalid access code",
+  "\u63A5\u5165\u7801\u65E0\u6548\u3001\u5DF2\u4F7F\u7528\u6216\u5DF2\u8FC7\u671F": "Access code is invalid, used or expired",
+  "\u63A5\u5165\u7801\u6709\u6548\u671F\u5E94\u4E3A 60 \u79D2\u81F3 7 \u5929": "Access codes must expire in 60 seconds to 7 days",
+  \u63A5\u53E3\u4E0D\u5B58\u5728: "Endpoint not found",
+  \u63CF\u8FF0: "Description",
+  "\u63CF\u8FF0\u4E0D\u80FD\u8D85\u8FC7 10000 \u5B57\u7B26": "Description must not exceed 10,000 characters",
+  "\u63CF\u8FF0\u5C1A\u672A\u586B\u5199\uFF0C\u53EF\u5728\u4E0B\u4E00\u6B65\u8865\u5145\u3002": "No description found. Add it in the next step.",
+  \u63D0\u53D6\u5B57\u6BB5: "Extract fields",
+  "\u63D0\u53D6\u7684 {0} \u4E0D\u80FD\u4E3A\u7A7A": "Extracted {0} must not be empty",
+  "\u63D0\u53D6\u7684\u540D\u79F0\u53EA\u80FD\u5305\u542B\u6587\u5B57\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u8FDE\u5B57\u7B26\uFF0C\u4E0D\u80FD\u4E3A captain": "The extracted name may only contain letters, digits, underscores or hyphens, and cannot be captain",
+  \u641C\u7D22\u4E0E\u7814\u7A76: "Search & research",
+  \u641C\u7D22\u8D44\u6E90: "Search resources",
+  "\u641C\u7D22\u8D44\u6E90\u3001\u7528\u6237\u540D\u6216\u6807\u7B7E\u2026": "Search resources, usernames or tags\u2026",
+  "\u641C\u7D22\u8D44\u6E90\u3001\u7528\u9014\u6216\u4F5C\u8005": "Search resources, purposes or authors",
+  "\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Agent\uFF1F": "Discard unsaved Agent changes?",
+  "\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 MCP\uFF1F": "Discard unsaved MCP changes?",
+  "\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Skill\uFF1F": "Discard unsaved Skill changes?",
+  "\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Workflow\uFF1F": "Discard unsaved Workflow changes?",
+  "\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684\u4FEE\u6539\uFF1F": "Discard unsaved changes?",
+  \u6570\u636E\u4E0E\u5206\u6790: "Data & analysis",
+  "\u6570\u636E\u5E93\u7531\u66F4\u65B0\u7248\u672C\u521B\u5EFA\uFF0C\u8BF7\u5347\u7EA7\u63D2\u4EF6": "The database was created by a newer version. Upgrade the plugin.",
+  "\u6574\u7406\u5E76\u5F52\u6863\u4E0A\u6E38\u4EFB\u52A1\u7684\u6210\u679C\u548C\u8BC1\u636E\u3002": "Organize and archive upstream outputs and evidence.",
+  "\u6587\u4EF6 {0}": "File {0}",
+  \u6587\u4EF6\u5185\u5BB9: "File content",
+  "\u6587\u4EF6\u5934\u5FC5\u987B\u662F YAML \u5BF9\u8C61": "Frontmatter must be a YAML object",
+  \u6587\u4EF6\u5939: "Folder",
+  \u6587\u4EF6\u5FC5\u987B\u4E3A\u5BF9\u8C61: "File must be an object",
+  "\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB\u3002": "Total file size must not exceed 5 MiB.",
+  "\u6587\u4EF6\u603B\u91CF\u4E0D\u80FD\u8D85\u8FC7 5 MiB": "Total file size must not exceed 5 MiB",
+  \u6587\u4EF6\u6570\u91CF: "File count",
+  "\u6587\u4EF6\u6765\u81EA\u5F53\u524D\u6D4F\u89C8\u5668\u6240\u5728\u7684\u7535\u8111\uFF1B\u8BFB\u53D6 DSH \u4E3B\u673A\u4E0A\u7684\u6587\u4EF6\u8BF7\u5207\u6362\u5230\u670D\u52A1\u5668\u76EE\u5F55\u3002": "These files come from the browser's computer. Switch to Server directory to read files on the DSH host.",
+  \u6587\u4EF6\u7ED3\u6784: "File structure",
+  \u6587\u4EF6\u8DEF\u5F84: "File path",
+  "\u6587\u4EF6\u8DEF\u5F84\u3001\u7F16\u7801\u65E0\u6548\u6216\u5B58\u5728\u91CD\u590D\u6587\u4EF6": "Invalid or duplicate file path or encoding",
+  \u6587\u4EF6\u8DEF\u5F84\u5FC5\u987B\u4E3A\u5B89\u5168\u7684\u76F8\u5BF9\u8DEF\u5F84: "File paths must be safe relative paths",
+  "\u6587\u4EF6\u8DEF\u5F84\u65E0\u6548\uFF1A{0}": "Invalid file path: {0}",
+  "\u6587\u4EF6\u8DEF\u5F84\u91CD\u590D\uFF1A{0}": "Duplicate file path: {0}",
+  "\u6587\u4EF6\u9700\u8981 utf8 \u6216 base64 \u5185\u5BB9": "Files require utf8 or base64 content",
+  \u6587\u672C: "Text",
+  \u65B0\u5EFA: "New",
+  "\u65B0\u5EFA ": "New ",
+  "\u65B0\u5EFA Agent": "New Agent",
+  "\u65B0\u5EFA MCP": "New MCP",
+  "\u65B0\u5EFA Skill": "New Skill",
+  "\u65B0\u5EFA Workflow": "New Workflow",
+  \u65B0\u5EFA\u6587\u4EF6: "New file",
+  \u65B0\u5EFA\u6587\u672C: "New text",
+  \u65B0\u5EFA\u8D44\u6E90: "New resource",
+  \u65B0\u6587\u4EF6\u8DEF\u5F84: "New file path",
+  "\u65B0\u6587\u4EF6\u8DEF\u5F84\uFF0C\u4F8B\u5982 SKILL.md": "New file path, e.g. SKILL.md",
+  \u65B0\u8D44\u6E90\u7684\u521B\u5EFA\u8005\u540D\u79F0: "Creator name for new resources",
+  "\u65B9\u6CD5\u3001\u89D2\u8272\u3001\u5DE5\u5177\u4E0E\u6D41\u7A0B\uFF0C\u5728\u8FD9\u91CC\u5404\u5C31\u5176\u4F4D\u3002": "Methods, roles, tools and workflows in one place.",
+  "\u65E0\u6548 base64 \u6587\u4EF6": "Invalid base64 file",
+  \u65E0\u6548\u6392\u5E8F\u65B9\u5F0F: "Invalid sort order",
+  \u65E0\u6548\u7B5B\u9009\u8303\u56F4: "Invalid scope filter",
+  \u65E0\u6807\u7B7E: "No tags",
+  "\u65E0\u6CD5\u8BFB\u53D6 Gallery Skill": "Cannot load Gallery Skills",
+  \u65E0\u9700\u8BA4\u8BC1: "No authentication",
+  "\u661F\u7A7A\u3001\u7F8A\u76AE\u7EB8\u4E0E\u5143\u7D20\u7EB9\u7AE0": "Starlight, parchment and elemental emblems",
+  "\u661F\u8F68\u3001\u6D41\u661F\u4E0E\u5B9D\u77F3\u699C\u5355": "Orbits, shooting stars and gem rankings",
+  "\u666E\u901A\u4F9D\u8D56\u4E0D\u80FD\u5F62\u6210\u5FAA\u73AF\uFF0C\u8BF7\u4F7F\u7528\u95E8\u63A7 REJECT \u8FD4\u56DE\u7EBF": "Normal dependencies must be acyclic. Use a gate REJECT return path.",
+  \u6682\u505C\u52A8\u6548: "Pause animation",
+  \u6682\u65E0\u63CF\u8FF0: "No description",
+  \u6682\u65E0\u8D44\u6E90: "No resources yet",
+  \u6696\u7EB8: "Warm Paper",
+  "\u66F4\u65B0\u4E8E ": "Updated ",
+  \u66F4\u65B0\u65F6\u95F4: "Updated",
+  "\u6700\u591A 100 \u4E2A\u8D44\u6E90\u5F15\u7528": "Up to 100 resource references",
+  "\u6700\u591A 20 \u4E2A\u6807\u7B7E": "Up to 20 tags",
+  "\u6700\u591A 20 \u4E2A\u6807\u7B7E\uFF0C\u6BCF\u4E2A\u6700\u591A 40 \u5B57\u3002": "Up to 20 tags, each at most 40 characters.",
+  "\u6700\u591A\u4E0A\u4F20 100 \u4E2A\u6587\u4EF6": "Up to 100 uploaded files",
+  "\u6700\u591A\u6DFB\u52A0 20 \u4E2A\u6807\u7B7E\u3002": "Up to 20 tags.",
+  "\u6700\u591A\u6DFB\u52A0 32 \u4E2A Agent": "Up to 32 Agents",
+  "\u6700\u591A\u6DFB\u52A0 32 \u4E2A\u6D41\u7A0B\u8282\u70B9": "Up to 32 flow nodes",
+  "\u6700\u591A\u6DFB\u52A0 99 \u4E2A\u9644\u5C5E\u6587\u4EF6\u3002": "Up to 99 attachments.",
+  "\u6700\u591A\u9009\u62E9 100 \u4E2A\u6587\u4EF6\uFF0C\u8BF7\u5355\u72EC\u9009\u62E9\u8D44\u6E90\u76EE\u5F55": "Select up to 100 files. Select a resource directory separately.",
+  "\u6700\u591A\u914D\u7F6E 16 \u4E2A\u5FAA\u73AF": "Up to 16 loops",
+  "\u6700\u8FD1\u66F4\u65B0 \u2193": "Recently updated \u2193",
+  "\u670D\u52A1\u5668\u540D\u79F0\u5DF2\u88AB\u5176\u4ED6 MCP \u8D44\u6E90\u4F7F\u7528": "Another MCP resource uses this server name",
+  "\u670D\u52A1\u5668\u540D\u79F0\u987B\u4E3A 1\u201332 \u4F4D\u5B57\u6BCD\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u8FDE\u5B57\u7B26": "Server names must contain 1\u201332 letters, digits, underscores or hyphens",
+  \u670D\u52A1\u5668\u6587\u4EF6: "Server files",
+  \u670D\u52A1\u5668\u76EE\u5F55: "Server directory",
+  \u670D\u52A1\u5668\u8BC1\u4E66\u5185\u5BB9\u65E0\u6548: "Invalid server certificate",
+  "\u670D\u52A1\u5668\u8BC1\u4E66\uFF08\u53EF\u9009\uFF09": "Server certificate (optional)",
+  "\u670D\u52A1\u5668\u8DEF\u5F84\u4E0D\u5B58\u5728\uFF0C\u8BF7\u68C0\u67E5\u7EDD\u5BF9\u8DEF\u5F84": "Server path not found. Check the absolute path.",
+  "\u586B\u5199\u670D\u52A1\u5668 IP \u548C\u7AEF\u53E3\u5373\u53EF\uFF0C\u65E0\u9700\u63A5\u5165\u5BC6\u94A5\u6216\u8BC1\u4E66\u3002": "Enter the server IP and port. No access key or certificate needed.",
+  "\u4E2D\u5FC3\u670D\u52A1\u5730\u5740\u4EC5\u652F\u6301 HTTP \u6216 HTTPS": "The center address must use HTTP or HTTPS",
+  "\u4E2D\u5FC3\u670D\u52A1\u5C1A\u672A\u5F00\u542F\u514D\u5BC6\u63A5\u5165\uFF0C\u8BF7\u5728\u670D\u52A1\u5668\u8FD0\u884C\u65B0\u7248\u90E8\u7F72\u811A\u672C": "Update the center deployment script on the server to enable automatic enrollment.",
+  \u670D\u52A1\u5730\u5740: "Service URL",
+  "\u670D\u52A1\u5730\u5740\u53EA\u80FD\u5305\u542B\u534F\u8BAE\u3001\u4E3B\u673A\u4E0E\u7AEF\u53E3": "Service URLs may only contain a protocol, host and port",
+  \u672A\u547D\u540D\u8282\u70B9: "Untitled node",
+  "\u672A\u5BFC\u5165\uFF1A{0}": "Not imported: {0}",
+  "\u672A\u627E\u5230 {0}\uFF0C\u8BF7\u5355\u72EC\u9009\u62E9\u8D44\u6E90\u76EE\u5F55\u6216 Markdown \u6587\u4EF6": "{0} not found. Select a resource directory or Markdown file.",
+  "\u672A\u627E\u5230 {0}\uFF0C\u8BF7\u6307\u5B9A\u5355\u4E2A\u8D44\u6E90\u76EE\u5F55\u6216\u6587\u4EF6": "{0} not found. Specify one resource directory or file.",
+  "\u672A\u627E\u5230\u63CF\u8FF0\uFF0C\u8BF7\u5728\u57FA\u672C\u4FE1\u606F\u4E2D\u8865\u5145": "No description found. Add one in Basics.",
+  "\u672A\u6307\u5B9A Agent": "No Agent assigned",
+  \u672A\u8BBE\u7F6E\u5FAA\u73AF\u8FD4\u56DE\u7EBF: "No loop return path",
+  "\u672A\u9A8C\u8BC1 \xB7 \u4FDD\u5B58\u540E\u53EF\u91CD\u65B0\u68C0\u67E5\u8FDE\u63A5": "Unverified \xB7 You can test the connection after saving",
+  \u672A\u9A8C\u8BC1\u8FDE\u63A5: "Connection unverified",
+  \u672C\u5730\u5B58\u50A8: "Local storage",
+  \u672C\u5730\u7528\u6237: "Local user",
+  \u672C\u5730\u8D44\u6E90\u5E93: "Local library",
+  "\u672C\u5730\u8D44\u6E90\u6587\u4EF6\u683C\u5F0F\u65E0\u6548\uFF0C\u8BF7\u5148\u5907\u4EFD\u68C0\u67E5": "Invalid local resource file. Back up and inspect it first.",
+  \u672C\u5730\u8FDB\u7A0B: "Local process",
+  \u672C\u673A\u6587\u4EF6: "Local files",
+  \u67D4\u548C\u6D45\u8272: "Soft light colors",
+  "\u67E5\u770B ": "View ",
+  "\u67E5\u770B AGENT.md": "View AGENT.md",
+  "\u67E5\u770B SKILL.md": "View SKILL.md",
+  "\u67E5\u770B config.json": "View config.json",
+  "\u67E5\u770B mcp.json": "View mcp.json",
+  \u67E5\u770B\u5DE5\u4F5C\u6D41\u4E2D\u7684\u5206\u5DE5\u4E0E\u534F\u4F5C: "View workflow responsibilities and collaboration",
+  "\u67E5\u770B\u8C03\u7528\u65B9\u5F0F \u2197": "How to use \u2197",
+  "\u67E5\u770B\u8D44\u6E90\u5185\u7684\u6587\u4EF6\u53CA\u9644\u4EF6\u5185\u5BB9\u3002": "View files and attachments in this resource.",
+  \u6807\u7B7E: "Tags",
+  "\u6807\u7B7E\uFF08\u9009\u586B\uFF09": "Tags (optional)",
+  "\u6807\u7B7E\uFF0C\u7528\u9017\u53F7\u5206\u9694": "Tags, separated by commas",
+  "\u68C0\u67E5\u4E2D\u2026": "Checking\u2026",
+  \u68C0\u67E5\u4FDD\u5B58: "Review & save",
+  \u68C0\u67E5\u5B58\u50A8: "Check storage",
+  "\u68C0\u67E5\u7ED3\u679C\u662F\u5386\u53F2\u8BB0\u5F55\uFF0C\u4E0D\u4EE3\u8868\u670D\u52A1\u5F53\u524D\u5728\u7EBF\u3002\u53EF\u5728\u7F16\u8F91\u5411\u5BFC\u4E2D\u91CD\u65B0\u68C0\u6D4B\u3002": "This is a past test result, not a live status. Test again in the editor if needed.",
+  \u68C0\u67E5\u8FDE\u63A5: "Test connection",
+  \u6982\u89C8: "Overview",
+  \u6A21\u578B\u8FD4\u56DE\u5185\u5BB9\u8FC7\u957F: "The model response is too long",
+  "\u6A21\u578B\u8FD4\u56DE\u7684 {0} \u683C\u5F0F\u4E0D\u6B63\u786E": "Invalid {0} in the model response",
+  "\u6A21\u578B\u914D\u7F6E\u5DF2\u5FFD\u7565\uFF0CAgent \u6CBF\u7528\u5BBF\u4E3B\u6A21\u578B": "Model configuration ignored. The Agent uses the host model.",
+  \u6A21\u677F: "Template",
+  "\u6A21\u677F\u3001\u56FE\u7247\u53CA\u5176\u4ED6\u7D20\u6750": "Templates, images and other assets",
+  \u6A21\u677F\u4EFB\u52A1\u7C7B\u578B\u65E0\u6548: "Invalid template task type",
+  \u6A21\u677F\u5BA1\u6838\u65B9\u5F0F\u65E0\u6548: "Invalid template review mode",
+  \u6B21: " times",
+  \u6B21\u5143\u653E\u6620\u5BA4: "Anime Cinema",
+  "\u6B63\u5728\u52A0\u8F7D\u2026": "Loading\u2026",
+  "\u6B63\u5728\u52A0\u8F7D\u8D44\u6E90\u2026": "Loading resources\u2026",
+  "\u6B63\u5728\u6253\u5F00\u670D\u52A1\u5668\u76EE\u5F55\u2026": "Opening server directory\u2026",
+  "\u6B63\u5728\u6253\u5F00\u672C\u5730\u8D44\u6E90\u5E93\u2026": "Opening local library\u2026",
+  "\u6B63\u5728\u8BFB\u53D6\u76EE\u5F55\u2026": "Reading directory\u2026",
+  "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u2026": "Reading resource\u2026",
+  "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u5E93\u2026": "Loading library\u2026",
+  "\u6B64 TeamFlow \u6210\u5458\u672A\u542F\u7528 Gallery MCP": "Gallery MCP is disabled for this TeamFlow member",
+  \u6B64\u5B58\u50A8\u65B9\u5F0F\u5C1A\u672A\u63A5\u5165: "This storage provider is not connected yet",
+  \u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u6587\u4EF6\u5939: "No importable files or folders in this directory",
+  "\u6B64\u8D44\u6E90\u539F\u6765\u5F15\u7528\u5BBF\u4E3B\u73AF\u5883\u53D8\u91CF\u3002\u5B57\u6BB5\u540D\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u586B\u5199\u5B9E\u9645\u8BA4\u8BC1\u503C\u540E\u4FDD\u5B58\uFF0C\u6216\u79FB\u9664\u4E0D\u518D\u4F7F\u7528\u7684\u5B57\u6BB5\u3002": "This resource used host environment variables. Field names were kept; enter actual credentials or remove unused fields before saving.",
+  "\u6B64\u8D44\u6E90\u6CA1\u6709\u6587\u4EF6\u3002": "This resource has no files.",
+  "\u6B64\u8D44\u6E90\u6CA1\u6709\u9644\u5C5E\u6587\u4EF6\u3002": "This resource has no attachments.",
+  "\u6BCF\u4E2A\u6807\u7B7E\u6700\u591A 40 \u4E2A\u5B57\u7B26\u3002": "Each tag may contain at most 40 characters.",
+  \u6BCF\u4E2A\u8282\u70B9\u90FD\u9700\u8981\u586B\u5199\u901A\u7528\u4EFB\u52A1\u8981\u6C42: "Every node needs reusable task requirements",
+  "\u6BCF\u7C7B TOP 3": "TOP 3 per category",
+  "\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09": "Round timeout (minutes)",
+  \u6C89\u6D78\u5F0F\u8D44\u6E90\u821E\u53F0: "Immersive resource stage",
+  \u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90: "No matching resources",
+  \u6CA1\u6709\u627E\u5230\u5339\u914D\u7684\u8D44\u6E90: "No matching resources found",
+  "\u6CE8\u518C\u5230 TeamFlow": "Register with TeamFlow",
+  "\u6CE8\u518C\u5230 TeamFlow \u2197": "Register with TeamFlow \u2197",
+  \u6D41\u7A0B\u4FE1\u606F: "Flow information",
+  "\u6D4F\u89C8 ": "Browse ",
+  "\u6D4F\u89C8 Workflow": "Browse Workflow",
+  \u6D4F\u89C8\u8D44\u6E90: "Browse resources",
+  \u6DF1\u8272\u5C55\u5385: "Dark exhibition",
+  \u6DFB\u52A0Agent\u6210\u5458: "Add Agent member",
+  "\u6DFB\u52A0{0}\u8282\u70B9": "Add {0} node",
+  "\u6DFB\u52A0\u6210\u5458\uFF0C\u518D\u4E3A\u4EFB\u52A1\u5206\u914D\u8D1F\u8D23\u4EBA\u3002": "Add members, then assign task owners.",
+  \u6DFB\u52A0\u6587\u672C\u6587\u4EF6: "Add text file",
+  \u6F2B\u753B\u5370\u5237: "Comic Print",
+  "\u72EC\u7ACB\u5BA1\u6838 Agent": "Independent reviewer Agent",
+  "\u732B\u8033\u8033\u673A\u3001\u6F2B\u753B\u5206\u955C\u4E0E\u50CF\u7D20\u661F\u5149": "Cat-ear headphones, comic panels and pixel starlight",
+  \u73AF\u5883\u53D8\u91CF: "Environment variables",
+  \u73AF\u5883\u53D8\u91CF\u5F15\u7528\u53EA\u80FD\u586B\u5199\u53D8\u91CF\u540D: "Environment references may only contain variable names",
+  \u73AF\u5883\u53D8\u91CF\u5F15\u7528\u65E0\u6548: "Invalid environment references",
+  "\u7528\u4E8E\u7CFB\u7EDF\u8C03\u7528\uFF0C\u5DF2\u81EA\u52A8\u751F\u6210\uFF0C\u4E00\u822C\u65E0\u9700\u4FEE\u6539\u3002": "Generated automatically for system invocation. Usually no changes are needed.",
+  \u7528\u6237\u540D: "Username",
+  "\u7528\u6237\u540D\u5DF2\u4FDD\u5B58\uFF0C\u7528\u4E8E\u4E4B\u540E\u521B\u5EFA\u7684\u8D44\u6E90\u3002": "Username saved for resources created from now on.",
+  "\u7528\u6237\u540D\u987B\u4E3A 1\u201380 \u4E2A\u5B57\u7B26": "Usernames must contain 1\u201380 characters",
+  "\u7528\u9017\u53F7\u5206\u9694\uFF0C\u6700\u591A 20 \u4E2A\u6807\u7B7E\u3002": "Separate tags with commas. Up to 20 tags.",
+  \u753B\u5E03\u4F4D\u7F6E: "Canvas position",
+  \u753B\u5E03\u4F4D\u7F6E\u65E0\u6548: "Invalid canvas position",
+  \u753B\u5E03\u53F3\u952E\u83DC\u5355: "Canvas context menu",
+  \u753B\u5E03\u7F29\u653E: "Canvas zoom",
+  "\u7559\u7A7A\u4F7F\u7528 DSH \u9ED8\u8BA4\u76EE\u5F55": "Leave empty to use the DSH default directory",
+  \u7559\u7A7A\u4F7F\u7528\u4E0A\u6E38\u4EA4\u4ED8\u7269\u4E0E\u53D8\u66F4\u6587\u4EF6: "Leave empty to use upstream deliverables and changed files",
+  \u76EE\u5F55\u5FEB\u6377\u5165\u53E3\u65E0\u6548: "Invalid directory shortcut",
+  "\u76EE\u5F55\u6761\u76EE\u8FC7\u591A\uFF0C\u8BF7\u8F93\u5165\u66F4\u5177\u4F53\u7684\u7EDD\u5BF9\u8DEF\u5F84": "Too many entries. Enter a more specific absolute path.",
+  \u786E\u8BA4: "Confirm",
+  \u786E\u8BA4\u64CD\u4F5C: "Confirm action",
+  "\u79FB\u52A8 {0}": "Move {0}",
+  \u79FB\u9664\u5DF2\u9009\u8BC1\u4E66: "Remove selected certificate",
+  \u79FB\u9664\u6587\u4EF6: "Remove file",
+  \u7A7A\u95F4\u6807\u8BC6: "Space identifier",
+  "\u7B5B\u9009\u8303\u56F4\u53EA\u80FD\u4E3A all \u6216 mine": "Scope must be all or mine",
+  \u7B80\u4ECB: "Summary",
+  \u7C7B\u578B: "Type",
+  \u7C97\u58A8\u5206\u955C\u4E0E\u5F69\u8272\u7F51\u70B9: "Bold ink panels and colorful halftones",
+  "\u7C98\u8D34 Token\uFF0C\u65E0\u9700\u586B\u5199 Bearer \u524D\u7F00": "Paste the token without the Bearer prefix",
+  \u7D20\u6750\u6A21\u677F: "Assets & templates",
+  "\u7D2F\u8BA1\u8C03\u7528 {0} \u6B21": "{0} total calls",
+  \u7D2F\u8BA1\u8C03\u7528\u6B21\u6570: "Total calls",
+  "\u7EB8\u5883 \xB7 Paper": "Paper Gallery",
+  \u7EE7\u7EED\u52A8\u6548: "Resume animation",
+  \u7EE7\u7EED\u7F16\u8F91: "Continue editing",
+  \u7F16\u5199\u6307\u5F15: "Write instructions",
+  "\u7F16\u8F91 Agent": "Edit Agent",
+  "\u7F16\u8F91 Agent \xB7 {0}": "Edit Agent \xB7 {0}",
+  "\u7F16\u8F91 MCP": "Edit MCP",
+  "\u7F16\u8F91 Skill": "Edit Skill",
+  "\u7F16\u8F91 Workflow": "Edit Workflow",
+  "\u7F16\u8F91\u8D1F\u8D23\u4EBA \xB7 {0}": "Edit owner \xB7 {0}",
+  \u7F16\u8F91\u8D44\u6E90: "Edit resource",
+  \u7F29\u653E: "Zoom",
+  "\u7F3A\u5C11 workflow.json": "workflow.json is missing",
+  "\u81EA\u5B9A\u4E49\u8BF7\u6C42\u5934 / API Key": "Custom headers / API key",
+  \u8282\u70B9: "Node",
+  "\u8282\u70B9 ID": "Node ID",
+  "\u8282\u70B9 ID \u6216\u7C7B\u578B\u65E0\u6548": "Invalid node ID or type",
+  \u8282\u70B9\u4F9D\u8D56\u7F3A\u5931: "Missing dependency node",
+  \u8282\u70B9\u4F9D\u8D56\u7F3A\u5931\u6216\u91CD\u590D: "Missing or duplicate dependencies",
+  \u8282\u70B9\u4F9D\u8D56\u91CD\u590D: "Duplicate dependencies",
+  \u8282\u70B9\u540D\u79F0: "Node name",
+  \u8282\u70B9\u5E8F\u53F7\u8D85\u51FA\u8303\u56F4: "Node sequence is out of range",
+  \u8282\u70B9\u8D1F\u8D23\u4EBA\u4E0D\u5B58\u5728\u6216\u4EBA\u5DE5\u8282\u70B9\u5206\u914D\u4E86\u8D1F\u8D23\u4EBA: "The assignee does not exist, or a human node has an assignee",
+  "\u82F1\u6587\u6807\u8BC6\u987B\u4E3A 1\u201364 \u4E2A\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u6216\u8FDE\u5B57\u7B26\u3002": "The identifier must be 1\u201364 lowercase letters, digits or hyphens.",
+  \u884C\u4E3A\u6307\u5F15: "Behavior instructions",
+  \u884C\u4E3A\u6307\u5F15\u4E0E\u9644\u4EF6: "Instructions & attachments",
+  \u89D2\u8272\u4E0E\u804C\u8D23: "Role & responsibilities",
+  \u8BA4\u8BC1\u4FE1\u606F\u683C\u5F0F\u65E0\u6548: "Invalid authentication values",
+  "\u8BA4\u8BC1\u503C {0}": "Authentication value {0}",
+  "\u8BA4\u8BC1\u503C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D DSH \u4E3B\u673A\uFF0C\u4E0D\u663E\u793A\u5728\u8D44\u6E90\u6587\u4EF6\u3001\u5BFC\u51FA\u5305\u548C\u6A21\u578B\u63D0\u793A\u8BCD\u4E2D\u3002\u7F16\u8F91\u65F6\u7559\u7A7A\u4FDD\u7559\u5DF2\u4FDD\u5B58\u7684\u503C\uFF0C\u5220\u9664\u5B57\u6BB5\u6216\u5173\u95ED\u8BA4\u8BC1\u5C06\u5728\u4FDD\u5B58\u540E\u79FB\u9664\u3002": "Credentials are stored on this DSH host and hidden from resource files, exports and model prompts. Leave empty to keep saved values. Removing a field or disabling authentication removes its saved value on save.",
+  \u8BA4\u8BC1\u503C\u5FC5\u987B\u5BF9\u5E94\u5DF2\u914D\u7F6E\u7684\u5B57\u6BB5: "Credential values must match configured fields",
+  "\u8BA4\u8BC1\u5B57\u6BB5 {0}": "Authentication field {0}",
+  \u8BA4\u8BC1\u5B57\u6BB5\u4E0D\u80FD\u91CD\u590D\u6216\u540C\u65F6\u5F15\u7528\u73AF\u5883\u53D8\u91CF: "Authentication fields cannot be duplicated or also reference environment variables",
+  \u8BA4\u8BC1\u5B57\u6BB5\u540D\u79F0\u65E0\u6548: "Invalid authentication field name",
+  \u8BA4\u8BC1\u65B9\u5F0F: "Authentication",
+  \u8BA4\u8BC1\u65B9\u5F0F\u65E0\u6548: "Invalid authentication method",
+  "\u8BA9\u534F\u4F5C\u6709\u4E00\u6761\u6E05\u6670\u7684\u8DEF\u7EBF\u3002": "Give collaboration a clear path.",
+  \u8BBF\u95EE\u5BC6\u94A5: "Access key",
+  "\u8BC1\u4E66\u5DF2\u9009\u53D6\uFF0C\u68C0\u67E5\u8FDE\u63A5\u540E\u70B9\u51FB\u5B8C\u6210\u4FDD\u5B58": "Certificate selected. Test the connection, then click Done to save.",
+  "\u8BC1\u4E66\u6587\u4EF6\u4E0D\u80FD\u8D85\u8FC7 32 KiB": "Certificate files must not exceed 32 KiB",
+  "\u8BD5\u8BD5\u5176\u4ED6\u5173\u952E\u8BCD\u6216\u5206\u7C7B\u3002": "Try another keyword or category.",
+  \u8BE5\u6587\u4EF6\u5DF2\u5B58\u5728: "This file already exists",
+  \u8BE6\u60C5\u5185\u5BB9: "Details",
+  \u8BED\u8A00\u4E0E\u7FFB\u8BD1: "Language & translation",
+  "\u8BF4\u660E\u5B83\u80FD\u505A\u4EC0\u4E48\uFF0C\u4EE5\u53CA\u4EC0\u4E48\u65F6\u5019\u4F7F\u7528": "Describe what it does and when to use it",
+  "\u8BF7\u4E3A\u6BCF\u4E2A\u6210\u5458\u9009\u62E9\u8D44\u6E90\u5E93\u4E2D\u7684 Agent": "Choose a Gallery Agent for every member",
+  "\u8BF7\u5148\u5728 DSH \u7684\u6A21\u578B\u8BBE\u7F6E\u4E2D\u914D\u7F6E\u9ED8\u8BA4\u6A21\u578B\uFF0C\u518D\u63D0\u53D6\u5B57\u6BB5": "Configure a default model in DSH before extracting fields",
+  \u8BF7\u5148\u586B\u5199\u5E76\u9A8C\u8BC1\u8EAB\u4EFD: "Enter and verify your identity first",
+  \u8BF7\u5148\u9A8C\u8BC1\u8EAB\u4EFD: "Verify your identity first",
+  "\u8BF7\u586B\u5199\u4E2D\u5FC3\u670D\u52A1\u8BBF\u95EE\u5BC6\u94A5\uFF08\u81F3\u5C11 16 \u4F4D\uFF09": "Enter a center access key of at least 16 characters",
+  "\u8BF7\u586B\u5199\u540D\u79F0\uFF0C\u6700\u591A 160 \u5B57\u7B26\u3002": "Enter a name of at most 160 characters.",
+  "\u8BF7\u586B\u5199\u63CF\u8FF0\uFF0C\u6700\u591A 1024 \u5B57\u3002": "Enter a description of at most 1024 characters.",
+  \u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u901A\u7528\u4EFB\u52A1\u8981\u6C42\u6216\u901A\u7528\u68C0\u67E5\u8981\u6C42: "Enter reusable task or review requirements for every node",
+  "\u8BF7\u586B\u5199\u81EA\u5DF1\u7684\u884C\u4E3A\u6307\u5F15\u3002": "Write your own behavior instructions.",
+  "\u8BF7\u586B\u5199\u8BA4\u8BC1\u5B57\u6BB5 {0} \u7684\u503C": "Enter a value for authentication field {0}",
+  "\u8BF7\u5C06 Gallery \u63D2\u4EF6\u548C\u4E2D\u5FC3\u670D\u52A1\u66F4\u65B0\u5230\u652F\u6301\u72EC\u7ACB\u8EAB\u4EFD\u7684\u7248\u672C": "Update Gallery and its center service to a version with individual identities",
+  \u8BF7\u63D0\u4F9B\u5177\u4F53\u4EFB\u52A1: "Provide a specific task",
+  "\u8BF7\u66F4\u65B0 Gallery \u63D2\u4EF6\u5E76\u4FDD\u5B58\u4E2D\u5FC3\u8FDE\u63A5\uFF0C\u4EE5\u5EFA\u7ACB\u72EC\u7ACB\u8EAB\u4EFD": "Update Gallery and save the center connection to create an individual identity",
+  \u8BF7\u68C0\u67E5\u8BA4\u8BC1\u4FE1\u606F\u683C\u5F0F: "Check the authentication format",
+  \u8BF7\u6C42\u5185\u5BB9\u8FC7\u5927: "Request body is too large",
+  \u8BF7\u6C42\u5934: "Headers",
+  \u8BF7\u6C42\u5934\u540D\u79F0: "Header name",
+  \u8BF7\u6C42\u5FC5\u987B\u4E3A\u5BF9\u8C61: "Request must be an object",
+  \u8BF7\u6C42\u8FC7\u5927: "Request is too large",
+  "\u8BF7\u7F16\u5199\u4F60\u7684\u6267\u884C\u6307\u5F15\uFF0C\u66FF\u6362\u9ED8\u8BA4\u6A21\u677F\u5185\u5BB9\u3002": "Write your own instructions to replace the default template.",
+  "\u8BF7\u8F93\u5165\u663E\u793A\u540D\u79F0\uFF08\u6700\u591A 160 \u5B57\uFF09\u3002": "Enter a display name of at most 160 characters.",
+  "\u8BF7\u8F93\u5165\u6709\u6548\u7684 HTTP MCP \u7AEF\u70B9": "Enter a valid HTTP MCP endpoint",
+  \u8BF7\u8F93\u5165\u670D\u52A1\u5668\u4E0A\u7684\u7EDD\u5BF9\u8DEF\u5F84: "Enter an absolute server path",
+  \u8BF7\u8F93\u5165\u672C\u5730\u670D\u52A1\u542F\u52A8\u547D\u4EE4: "Enter a local startup command",
+  "\u8BF7\u8F93\u5165\u7B80\u4ECB\uFF08\u6700\u591A 1024 \u5B57\uFF09\u3002": "Enter a summary of at most 1024 characters.",
+  "\u8BF7\u9009\u62E9 Agent": "Choose an Agent",
+  "\u8BF7\u9009\u62E9\u4E00\u4E2A\u8D44\u6E90\uFF0C\u6700\u591A 100 \u4E2A\u6587\u4EF6": "Select one resource with up to 100 files",
+  "\u8BF7\u9009\u62E9\u540C\u7C7B\u578B\u7684 Gallery \u5BFC\u51FA\u8D44\u6E90\u5305": "Select a Gallery export of the same resource type",
+  "\u8BF7\u9009\u62E9\u6709\u6548\u7684 PEM \u683C\u5F0F CA \u6839\u8BC1\u4E66": "Select a valid PEM CA root certificate",
+  \u8BF7\u9009\u62E9\u670D\u52A1\u5668\u6587\u4EF6\u5939: "Select a server folder",
+  "\u8BF7\u9009\u62E9\u670D\u52A1\u5668\u76EE\u5F55\uFF1B\u8FDC\u7A0B\u4ED3\u5E93\u5BFC\u5165\u5DF2\u79FB\u9664": "Select a server directory. Remote repository imports were removed.",
+  "\u8BF7\u901A\u8FC7 DSH \u63D2\u4EF6\u8BBF\u95EE\u5171\u4EAB\u670D\u52A1": "Access the shared service through the DSH plugin",
+  "\u8BF7\u914D\u7F6E\u5FAA\u73AF\u5165\u53E3\u3001\u95E8\u63A7\u548C\u5BA1\u6838\u65B9\u5F0F": "Configure a loop entry, gate and review mode",
+  \u8BFB\u53D6: "Read",
+  "\u8C03\u7528\u6700\u591A \u2193": "Most called \u2193",
+  \u8C03\u7528\u6807\u8BC6: "Invocation identifier",
+  \u8C03\u7528\u699C: "Rankings",
+  \u8C03\u7528\u6B21\u6570: "Call count",
+  \u8C03\u7528\u7EDF\u8BA1\u7684\u8D44\u6E90\u7C7B\u578B\u4E0D\u5339\u914D: "Usage resource type does not match",
+  "\u8D1F\u8D23 Agent": "Responsible Agent",
+  \u8D44\u6E90\u4E00\u89C8: "Resource overview",
+  \u8D44\u6E90\u4E0D\u5B58\u5728: "Resource not found",
+  \u8D44\u6E90\u5206\u7C7B: "Resource categories",
+  \u8D44\u6E90\u521B\u5EFA\u540E\u4E0D\u53EF\u66F4\u6539\u7C7B\u578B: "Resource type cannot be changed after creation",
+  \u8D44\u6E90\u52A0\u8F7D\u5931\u8D25: "Failed to load resource",
+  \u8D44\u6E90\u5305: "Resource bundle",
+  "\u8D44\u6E90\u5305 JSON \u65E0\u6CD5\u89E3\u6790": "Cannot parse the resource bundle JSON",
+  "\u8D44\u6E90\u5305\u7C7B\u578B\u4E0D\u5339\u914D\uFF0C\u8BF7\u5728 {0} \u5206\u7C7B\u4E2D\u5BFC\u5165\u3002": "Resource bundle type mismatch. Import it in the {0} category.",
+  \u8D44\u6E90\u540D\u79F0: "Resource name",
+  "\u8D44\u6E90\u5DF2\u4FDD\u5B58\u3002": "Resource saved.",
+  "\u8D44\u6E90\u5DF2\u5220\u9664\u3002": "Resource deleted.",
+  "\u8D44\u6E90\u5DF2\u66F4\u65B0\uFF0C\u8BF7\u5237\u65B0\u540E\u518D\u5220\u9664": "Resource updated. Refresh before deleting.",
+  "\u8D44\u6E90\u5DF2\u66F4\u65B0\uFF0C\u8BF7\u5237\u65B0\u540E\u518D\u7F16\u8F91": "Resource updated. Refresh before editing.",
+  "\u8D44\u6E90\u5DF2\u66F4\u65B0\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u8D44\u6E90": "Resource updated. Select it again.",
+  "\u8D44\u6E90\u5DF2\u66F4\u65B0\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u8D44\u6E90\u6216\u4F7F\u7528\u7F16\u6392\u8FD0\u884C\u65F6\u4FDD\u5B58\u7684\u5185\u5BB9\u5FEB\u7167": "Resource updated. Select it again or use the saved execution snapshot.",
+  "\u8D44\u6E90\u5DF2\u6709\u5F52\u5C5E\uFF0C\u4E0D\u80FD\u901A\u8FC7\u8BE5\u547D\u4EE4\u91CD\u65B0\u5206\u914D": "This resource already has an owner and cannot be reassigned by this command",
+  "\u8D44\u6E90\u5E93 Agent": "Gallery Agent",
+  "\u8D44\u6E90\u5E93 ID": "Library ID",
+  "\u8D44\u6E90\u5E93 \xB7 ": "Library \xB7 ",
+  \u8D44\u6E90\u5E93\u4E0D\u5B58\u5728: "Library not found",
+  \u8D44\u6E90\u5E93\u53EF\u7528: "Library is available",
+  \u8D44\u6E90\u5E93\u5B58\u50A8: "Library storage",
+  "\u8D44\u6E90\u5E93\u6682\u65E0 Agent\uFF0C\u8BF7\u5148\u5728 Agent \u5206\u7C7B\u521B\u5EFA\u3002": "No Agents in this library. Create one in the Agent category first.",
+  "\u8D44\u6E90\u5E93\u6682\u65F6\u4E0D\u53EF\u7528\uFF0C\u8BF7\u68C0\u67E5\u63D0\u793A\u540E\u5237\u65B0\u3002": "Library unavailable. Check the message and refresh.",
+  "\u8D44\u6E90\u5E93\u6B63\u5728\u4FDD\u5B58\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5": "Library is being saved. Try again shortly.",
+  \u8D44\u6E90\u5F15\u7528\u91CD\u590D: "Duplicate resource references",
+  \u8D44\u6E90\u5FC5\u987B\u662F\u5BF9\u8C61: "Resource must be an object",
+  \u8D44\u6E90\u6392\u5E8F: "Resource order",
+  "\u8D44\u6E90\u63CF\u8FF0\uFF08\u9009\u586B\uFF09": "Resource description (optional)",
+  "\u8D44\u6E90\u6587\u4EF6 ": "Resource file ",
+  "\u8D44\u6E90\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB": "Resource files must not exceed 5 MiB in total",
+  "\u8D44\u6E90\u6587\u4EF6\u603B\u91CF\u4E0D\u80FD\u8D85\u8FC7 5 MiB": "Total resource file size must not exceed 5 MiB",
+  "\u8D44\u6E90\u6700\u591A 100 \u4E2A\u6587\u4EF6": "Up to 100 files per resource",
+  \u8D44\u6E90\u76EE\u5F55\u5C42\u7EA7\u6216\u6570\u91CF\u8FC7\u591A: "Too many resource directories or nesting levels",
+  \u8D44\u6E90\u7C7B\u578B: "Resource type",
+  "\u8D44\u6E90\u7C7B\u578B\u5FC5\u987B\u662F skill\u3001agent\u3001mcp \u6216 workflow": "Resource type must be skill, agent, mcp or workflow",
+  "\u8D44\u6E90\u7F3A\u5C11\u6709\u6548 AGENT.md": "Resource is missing a valid AGENT.md",
+  \u8D44\u6E90\u8BE6\u60C5: "Resource details",
+  "\u8D44\u6E90\u9644\u5C5E\u76EE\u5F55\u542B\u7B26\u53F7\u94FE\u63A5\uFF0C\u8BF7\u79FB\u9664\u540E\u518D\u5BFC\u5165": "An attachment directory contains symbolic links. Remove them before importing.",
+  \u8DDF\u968F\u7CFB\u7EDF: "Follow system",
+  "\u8DEF\u5F84\u4E2D\u7684\u67D0\u4E00\u7EA7\u4E0D\u662F\u6587\u4EF6\u5939\uFF0C\u8BF7\u68C0\u67E5\u670D\u52A1\u5668\u8DEF\u5F84": "A path component is not a directory. Check the server path.",
+  "\u8DEF\u5F84\u5305\u542B\u5FAA\u73AF\u7B26\u53F7\u94FE\u63A5\uFF0C\u8BF7\u9009\u62E9\u5B9E\u9645\u76EE\u5F55": "The path contains a symbolic-link loop. Select the actual directory.",
+  "\u8DEF\u5F84\u91CD\u590D\uFF1A{0}": "Duplicate path: {0}",
+  "\u8EAB\u4EFD\u4E0D\u5B58\u5728\uFF0C\u8BF7\u5148\u5151\u6362\u63A5\u5165\u7801": "Identity not found. Redeem an access code first.",
+  "\u8EAB\u4EFD\u51ED\u8BC1\u65E0\u6548\uFF0C\u8BF7\u4F7F\u7528\u7EF4\u62A4\u8005\u63D0\u4F9B\u7684\u65B0\u63A5\u5165\u7801\u6062\u590D\u8EAB\u4EFD": "Invalid identity credential. Use a new access code from the maintainer to recover.",
+  \u8EAB\u4EFD\u6807\u8BC6: "Subject identifier",
+  \u8EAB\u4EFD\u7B7E\u53D1\u65B9: "Identity issuer",
+  "\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09": "Round limit (including first)",
+  \u8F85\u52A9\u811A\u672C: "Scripts",
+  \u8F93\u5165: "Input",
+  \u8F93\u5165\u8D44\u6E90\u540D\u79F0: "Enter a resource name",
+  "\u8F93\u5165\uFF1A\u8FDE\u63A5\u524D\u7F6E\u8282\u70B9": "Input: connect a preceding node",
+  "\u8F93\u51FA\uFF1A\u8FDE\u63A5\u540E\u7EED\u8282\u70B9": "Output: connect a following node",
+  "\u8FD0\u884C DSH \u7684\u7CFB\u7EDF\u8D26\u53F7\u65E0\u6743\u8BFB\u53D6\u6B64\u670D\u52A1\u5668\u8DEF\u5F84": "The DSH system account cannot read this server path",
+  \u8FD4\u56DE\u4E0A\u4E00\u7EA7: "Go up one level",
+  \u8FD9\u91CC\u8FD8\u6CA1\u6709\u8D44\u6E90: "No resources here yet",
+  \u8FDB\u5165\u521B\u5EFA\u5411\u5BFC: "Continue to editor",
+  "\u8FDC\u7A0B HTTP": "Remote HTTP",
+  "\u8FDC\u7A0B\u5171\u4EAB\u670D\u52A1\u5FC5\u987B\u4F7F\u7528 HTTPS\uFF0C\u672C\u673A\u5141\u8BB8 HTTP": "Remote shared services require HTTPS. Local HTTP is allowed.",
+  \u8FDE\u5165: "Input",
+  \u8FDE\u51FA: "Output",
+  \u8FDE\u63A5\u4E0E\u81EA\u52A8\u5316: "Connections & automation",
+  "\u8FDE\u63A5\u65B9\u5F0F\u987B\u4E3A stdio \u6216 streamable-http": "Transport must be stdio or streamable-http",
+  "\u8FDE\u63A5\u65B9\u6CD5\u3001\u89D2\u8272\u4E0E\u5DE5\u5177\uFF0C\u6784\u5EFA\u4F60\u7684\u5DE5\u4F5C\u6D41\u3002": "Connect methods, roles and tools to build your workflow.",
+  \u8FDE\u63A5\u68C0\u67E5: "Connection test",
+  "\u8FDE\u63A5\u6D4B\u8BD5\u4F1A\u5C1D\u8BD5\u542F\u52A8\u6216\u8BBF\u95EE\u8BE5\u670D\u52A1\uFF0C\u5E76\u8BFB\u53D6\u5B83\u63D0\u4F9B\u7684\u5DE5\u5177\u3002\u5B8C\u6210\u540E\u4F1A\u65AD\u5F00\u6D4B\u8BD5\u8FDE\u63A5\u3002": "Connection tests start or access the service and read its tools, then disconnect.",
+  \u8FDE\u63A5\u914D\u7F6E\u4E0E\u6D4B\u8BD5: "Connection & test",
+  \u9000\u56DE\u65F6\u4ECE\u5165\u53E3\u91CD\u8DD1: "Restart at the entry on rejection",
+  \u9002\u7528\u8F93\u5165: "Applicable input",
+  "\u9009\u62E9 Agent": "Choose Agent",
+  "\u9009\u62E9 Gallery Skill": "Choose a Gallery Skill",
+  "\u9009\u62E9\u4E00\u4E2A ": "Choose a ",
+  \u9009\u62E9\u4E3B\u9898: "Choose theme",
+  "\u9009\u62E9\u5206\u7C7B\u540E\u65B0\u5EFA\u8D44\u6E90\u3002": "Choose a category to create a resource.",
+  "\u9009\u62E9\u5206\u7C7B\uFF0C\u521B\u5EFA\u4F60\u7684\u7B2C\u4E00\u4E2A\u8D44\u6E90\u3002": "Choose a category and create your first resource.",
+  \u9009\u62E9\u6587\u4EF6: "Choose file",
+  \u9009\u62E9\u6587\u4EF6\u4EE5\u67E5\u770B\u6216\u7F16\u8F91: "Select a file to view or edit",
+  \u9009\u62E9\u6587\u4EF6\u5939: "Choose folder",
+  "\u9009\u62E9\u72EC\u7ACB\u5BA1\u6838 Agent": "Choose an independent reviewer Agent",
+  \u9009\u62E9\u8D44\u6E90\u5E76\u914D\u7F6E\u6210\u5458: "Choose a resource and configure the member",
+  \u9009\u62E9\u8D44\u6E90\u5E93\u5B58\u50A8: "Choose library storage",
+  "\u901A\u7528\u6267\u884C\u6307\u4EE4 PE": "General execution prompt (PE)",
+  \u901A\u7528\u68C0\u67E5\u8981\u6C42: "General review requirements",
+  \u901A\u8FC7\u540E\u7ED3\u675F\u6B64\u8DEF\u5F84: "This path ends on pass",
+  \u914D\u7F6E\u5185\u5BB9: "Configuration",
+  "\u914D\u7F6E\u957F\u671F\u804C\u8D23\u4E0E\u901A\u7528\u6307\u4EE4\uFF1B\u672C\u6B21\u8865\u5145\u6307\u4EE4\u5728\u5E94\u7528\u6A21\u677F\u65F6\u586B\u5199\u3002": "Configure reusable responsibilities and instructions. Add task-specific instructions when applying the template.",
+  \u91CD\u65B0\u52A0\u8F7D: "Reload",
+  \u91CD\u7F6E\u89C6\u56FE: "Reset view",
+  \u938F\u91D1\u661F\u7A79: "Gilded Cosmos",
+  \u957F\u671F\u804C\u8D23: "Ongoing responsibilities",
+  \u95E8\u63A7: "Gate",
+  \u95E8\u63A7\u5224\u65AD: "Decision gate",
+  \u95E8\u63A7\u8DEF\u5F84\u4E0E\u5FAA\u73AF: "Gate routes & loop",
+  \u9644\u4EF6\u7F16\u7801\u65E0\u6548: "Invalid attachment encoding",
+  \u9644\u5C5E\u6587\u4EF6: "Attachments",
+  "\u9644\u5C5E\u6587\u4EF6\u4E0E\u9009\u9879 \xB7 ": "Attachments & options \xB7 ",
+  "\u9644\u5C5E\u6587\u4EF6\u6700\u591A 98 \u4E2A\u3002": "Up to 98 attachments.",
+  \u9644\u5C5E\u76EE\u5F55\u5FC5\u987B\u662F\u5B9E\u9645\u6587\u4EF6\u5939: "Attachment directories must be real folders",
+  "\u968F\u8D44\u6E90\u5E26\u5165\u3002\u5BFC\u5165\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D\u6267\u884C\u6587\u4EF6\u3002": "are included. Import reads files without executing them.",
+  "\u9700\u8981 1\u201332 \u4E2A\u4E0D\u540C\u7684\u8282\u70B9": "1\u201332 distinct nodes are required",
+  "\u9700\u8981 DSH \u4F1A\u8BDD\u624D\u80FD\u8C03\u7528 Gallery Agent": "A DSH conversation is required to invoke a Gallery Agent",
+  "\u9700\u8981 JSON \u8BF7\u6C42": "A JSON request is required",
+  \u9700\u8981\u4E2D\u5FC3\u670D\u52A1\u63A5\u5165\u5BC6\u94A5: "Center enrollment key required",
+  \u9700\u8981\u53EF\u4FE1\u7684\u5E73\u53F0\u51ED\u8BC1\u9A8C\u8BC1\u5668: "A trusted platform credential verifier is required",
+  "\u9700\u8981\u552F\u4E00\u7684\u5B9E\u9645\u4F7F\u7528\u6807\u8BC6 usageId\uFF081\u2013200 \u5B57\u7B26\uFF09": "A unique usageId of 1\u2013200 characters is required",
+  "\u9700\u8981\u6709\u6548\u7684\u4FEE\u6539\u6821\u9A8C\u503C revision": "A valid expected revision is required",
+  \u9700\u8981\u72EC\u7ACB\u7528\u6237\u8EAB\u4EFD: "Individual user identity required",
+  "\u9700\u8981\u786E\u8BA4\u7684\u5185\u5BB9\uFF08": "Items to review (",
+  "\u9700\u8981\u8D44\u6E90 ID": "Resource ID required",
+  \u9713\u8679\u73BB\u7483: "Neon Glass",
+  \u9884\u89C8\u6307\u5F15: "Preview instructions",
+  \u9884\u89C8\u6B63\u6587: "Preview content",
+  \u9996\u6B21\u586B\u5199\u4E2D\u5FC3\u670D\u52A1\u63A5\u5165\u5BC6\u94A5: "Enter the center enrollment key for first use",
+  "\u9996\u6B21\u63A5\u5165\u540E\u81EA\u52A8\u4FDD\u5B58\u6B64 DSH \u7684\u72EC\u7ACB\u8EAB\u4EFD\u3002\u6240\u6709\u6210\u5458\u53EF\u67E5\u770B\u548C\u4F7F\u7528\u8D44\u6E90\uFF0C\u4EC5\u521B\u5EFA\u8005\u53EF\u7F16\u8F91\u548C\u5220\u9664\u3002": "Your DSH saves an individual identity after joining. All members can view and use resources; only the creator can edit or delete.",
+  \u9A8C\u6536\u6807\u51C6: "Acceptance criteria",
+  \u9A8C\u6536\u786E\u8BA4: "Final acceptance",
+  \u9AD8\u7EA7\u8BBE\u7F6E: "Advanced settings",
+  "\u9ED8\u8BA4\u8BB0\u5F55\u8BC1\u636E\u548C\u6587\u4EF6\u6458\u8981\uFF1B\u5F00\u542F\u540E\u7531 TeamFlow \u6309\u5F52\u6863\u7B56\u7565\u590D\u5236\u6587\u4EF6\u3002": "By default, record evidence and file digests. Enable copying to let TeamFlow archive files under its policy.",
+  "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09": " (resource unavailable)"
+};
+
+// src/client/locale.mjs
+var normalizeLanguage = (value) => /^en(?:[-_]|$)/i.test(value || "") ? "en" : "zh";
+var format = (text2, values) => text2.replace(
+  /\{(\d+)\}/g,
+  (token, index) => Number(index) < values.length ? String(values[Number(index)] ?? "") : token
+);
+var escape = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+var reverse = new Map(
+  Object.entries(english).map(([source, value]) => [value, source])
+);
+var patterns = Object.entries(english).filter(([source]) => /\{\d+\}/.test(source)).flatMap(
+  ([source, value]) => [source, value].map((pattern) => {
+    const order = [];
+    const regex = pattern.split(/(\{\d+\})/g).map(
+      (part) => /^\{\d+\}$/.test(part) ? (order.push(Number(part.slice(1, -1))), "(.*?)") : escape(part)
+    ).join("");
+    return { source, regex: new RegExp("^" + regex + "$", "s"), order };
+  })
+);
+function createGalleryText(code = "zh") {
+  const language = normalizeLanguage(code);
+  const translate = (source, ...values) => {
+    if (typeof source !== "string") return source;
+    if (["Gallery", "Skill", "Agent", "MCP", "Workflow"].includes(source))
+      return source;
+    let key = Object.hasOwn(english, source) ? source : reverse.get(source);
+    if (!key && !values.length)
+      for (const pattern of patterns) {
+        const match = pattern.regex.exec(source);
+        if (!match) continue;
+        key = pattern.source;
+        pattern.order.forEach((index, i) => {
+          values[index] = match[i + 1];
+        });
+        break;
+      }
+    if ([
+      "{0} \u5FC5\u987B\u4E3A 1\u2013{1} \u5B57\u7B26",
+      "{0} \u4E0D\u80FD\u4E3A\u7A7A\u6216\u8D85\u8FC7 {1} \u5B57\u7B26",
+      "{0} \u683C\u5F0F\u65E0\u6548",
+      "{0} \u683C\u5F0F\u65E0\u6548\u6216\u8FC7\u957F",
+      "{0} \u5FC5\u987B\u662F\u5E03\u5C14\u503C"
+    ].includes(key || source)) {
+      const labelKey = Object.hasOwn(english, values[0] || "") ? values[0] : reverse.get(values[0]);
+      if (labelKey)
+        values[0] = language === "en" ? english[labelKey] : labelKey;
+    }
+    return format(
+      language === "en" ? english[key || source] ?? source : key || source,
+      values
+    );
+  };
+  return Object.assign(translate, { language });
+}
+
+// src/client/i18n.jsx
+var import_react = __toESM(require("react"), 1);
+var GalleryLocaleContext = (0, import_react.createContext)(createGalleryText("zh"));
+function GalleryLocale({ t, children }) {
+  const language = normalizeLanguage(t?.("language.code"));
+  const value = (0, import_react.useMemo)(() => createGalleryText(language), [language]);
+  return /* @__PURE__ */ import_react.default.createElement(GalleryLocaleContext.Provider, { value }, children);
+}
+var useGalleryText = () => (0, import_react.useContext)(GalleryLocaleContext);
+
+// src/client/index.jsx
+var import_react15 = __toESM(require("react"), 1);
 
 // src/descriptors.mjs
 var json = {
@@ -74,7 +905,7 @@ var methods = {
   uiSetUsername: ["payload"],
   uiStorageSettings: [],
   uiTestStorage: ["payload"],
-  uiConfigureStorage: []
+  uiConfigureStorage: ["payload"]
 };
 var DESCRIPTORS = Object.entries(methods).map(([method, names2]) => ({
   id: `dsh-plugin-gallery#gallery/${method}`,
@@ -275,6 +1106,7 @@ var styles_default = `.gal {
 .gal-theme-swatch.system { background: linear-gradient(135deg, #f5f6f7 50%, #25292f 50%); }
 .gal-theme-swatch.atelier { background: linear-gradient(135deg, #0d1b17 60%, #c5a773 60%); }
 .gal-theme-swatch.paper { background: linear-gradient(135deg, #f8f4e9 60%, #ad6549 60%); }
+.gal-theme-swatch.neon { background: linear-gradient(135deg, #27134b 35%, #c845e2 65%, #36d5b8); }
 .gal-toolbar {
   display: flex;
   align-items: center;
@@ -757,7 +1589,7 @@ var styles_default = `.gal {
 .gal-storage-providers {
   margin-bottom: 24px;
 }
-.gal-storage-providers > div {
+.gal-storage-providers > :is(div, button) {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -769,7 +1601,7 @@ var styles_default = `.gal {
   font-weight: 500;
 }
 .gal-storage-providers span,
-.gal-storage-providers > div:not(.active) {
+.gal-storage-providers > :is(div, button):not(.active) {
   color: var(--g-muted);
 }
 .gal-storage .gal-dialog-body > p {
@@ -1668,6 +2500,139 @@ fieldset.gal-skill-fields {
 .gal[data-theme="paper"] .gal-resource-visual.mcp { --visual-ink: #527a80; --visual-bg: #e6f0ef; }
 .gal[data-theme="paper"] .gal-resource-visual.workflow { --visual-ink: #a5784f; --visual-bg: #f2e9dd; }
 
+/* Neon Glass changes the page composition as well as its palette. */
+.gal[data-theme="neon"] {
+  --g-bg: #0d0a1c;
+  --g-card: #201533;
+  --g-soft: #2b1b43;
+  --g-hover: #382452;
+  --g-ink: #fbf3ff;
+  --g-muted: #c4b3d5;
+  --g-line: #65477d;
+  --g-control: #9a75b2;
+  --g-accent: #e981ef;
+  --g-on-accent: #21102f;
+  --g-ring: #80efd6;
+  --g-error: #ffb7c3;
+  --g-error-bg: #452038;
+  --g-success: #9cf1d7;
+  --g-success-bg: #153f3a;
+  --g-overlay: #090617c9;
+  color-scheme: dark;
+  background-color: var(--g-bg);
+  background-image: radial-gradient(circle at 80% 0%, #57197b67 0, transparent 34%), radial-gradient(circle at 8% 72%, #164e5959 0, transparent 38%);
+  background-attachment: fixed;
+}
+.gal[data-theme="neon"] .gal-header {
+  position: relative;
+  z-index: 3;
+  min-height: 170px;
+  padding: 26px 30px;
+  align-items: flex-start;
+  overflow: visible;
+  border: 1px solid #9562b08c;
+  border-radius: 22px;
+  background: radial-gradient(circle at 70% 40%, #7832a173, transparent 30%), linear-gradient(110deg, #341b54e6, #18122ede 58%, #172b39d9);
+  box-shadow: inset 0 1px #f6d8ff4d, 0 16px 50px #05020b80;
+  isolation: isolate;
+}
+.gal[data-theme="neon"] .gal-header::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: 116px;
+  height: 116px;
+  left: min(57%, 650px);
+  top: 25px;
+  border: 2px solid #ac93ffb3;
+  border-radius: 27px;
+  transform: rotate(-25deg);
+  box-shadow: 0 0 34px #b94affb0, inset 0 0 28px #9a4aff87, 0 0 0 13px #ab79ff1a;
+  pointer-events: none;
+}
+.gal[data-theme="neon"] .gal-header h1 {
+  font-size: clamp(36px, 5vw, 58px);
+  font-weight: 750;
+  letter-spacing: -.045em;
+  text-shadow: 0 0 26px #f076ff8a;
+}
+.gal[data-theme="neon"] .gal-header h1 svg { width: 40px; height: 40px; filter: drop-shadow(0 0 12px #d868ff); }
+.gal[data-theme="neon"] .gal-header-actions { position: relative; z-index: 2; }
+.gal[data-theme="neon"] .gal-theme-menu { background: #241839f2; backdrop-filter: blur(20px); }
+.gal[data-theme="neon"] .gal-toolbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; border: 0; }
+.gal[data-theme="neon"] .gal-filters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.gal[data-theme="neon"] .gal-filters button {
+  min-height: 72px;
+  border: 1px solid #765697a8;
+  border-radius: 16px;
+  background: #35254b96;
+  box-shadow: inset 0 1px #ffffff25;
+  color: var(--g-ink);
+  font-size: 15px;
+  font-weight: 600;
+  backdrop-filter: blur(14px);
+}
+.gal[data-theme="neon"] .gal-filters button svg { width: 26px; height: 26px; color: #c590f4; }
+.gal[data-theme="neon"] .gal-filters button.active {
+  border-color: #ef9afa;
+  background: linear-gradient(130deg, #8b3cbd, #602fa3 70%, #383c79);
+  box-shadow: 0 0 24px #ba4ae477, inset 0 1px #ffe6ff78;
+}
+.gal[data-theme="neon"] .gal-filters button.active svg { color: #fff1ff; }
+.gal[data-theme="neon"] .gal-search-wrap { width: min(100%, 400px); }
+.gal[data-theme="neon"] input.gal-search { max-width: none; border-radius: 22px; border-color: #8766a9; background: #1b1430bd; backdrop-filter: blur(14px); }
+.gal[data-theme="neon"] .gal-list-heading { padding: 12px 0 20px; font-size: 15px; color: #e8d6f5; }
+.gal[data-theme="neon"] .gal-board {
+  --rank-color: #d494fa; --rank-tint: #50276b80;
+  border: 1px solid #9960b9a8;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #3d2358bc, #1b1535d9 55%, #142835bb);
+  box-shadow: inset 0 1px #ffffff2f, 0 14px 38px #0803138c;
+  backdrop-filter: blur(18px);
+}
+.gal[data-theme="neon"] .gal-board.agent { --rank-color: #ef95dc; --rank-tint: #642b5c80; }
+.gal[data-theme="neon"] .gal-board.mcp { --rank-color: #75ebd4; --rank-tint: #1b655f80; }
+.gal[data-theme="neon"] .gal-board.workflow { --rank-color: #b69aff; --rank-tint: #45358a80; }
+.gal[data-theme="neon"] .gal-board-head { min-height: 94px; background: linear-gradient(110deg, var(--rank-tint), transparent); }
+.gal[data-theme="neon"] .gal-board-icon { border-radius: 14px; box-shadow: 0 0 20px var(--rank-tint); }
+.gal[data-theme="neon"] .gal-board-head h2 { font-size: 21px; }
+.gal[data-theme="neon"] .rank-1 { border: 1px solid var(--rank-color); border-radius: 11px; box-shadow: inset 0 0 24px var(--rank-tint), 0 0 14px var(--rank-tint); }
+.gal[data-theme="neon"] button.gal-resource-card {
+  border-color: #8b62a9;
+  border-radius: 18px;
+  background: #251a3ac9;
+  box-shadow: inset 0 1px #ffffff33, 0 12px 32px #06030d91;
+  backdrop-filter: blur(16px);
+}
+.gal[data-theme="neon"] button.gal-resource-card:hover:not(:disabled) { border-color: #dc9afb; background: #302047; box-shadow: 0 0 25px #a543ce63; }
+.gal[data-theme="neon"] .gal-resource-visual.skill { --visual-ink: #d894fa; --visual-bg: #39204e; }
+.gal[data-theme="neon"] .gal-resource-visual.agent { --visual-ink: #f0a1df; --visual-bg: #452043; }
+.gal[data-theme="neon"] .gal-resource-visual.mcp { --visual-ink: #87f0d8; --visual-bg: #163b45; }
+.gal[data-theme="neon"] .gal-resource-visual.workflow { --visual-ink: #bea8ff; --visual-bg: #292456; }
+.gal[data-theme="neon"] .gal-resource-visual { height: 158px; background-image: radial-gradient(circle at 50% 55%, currentColor 0, transparent 63%); background-blend-mode: soft-light; }
+.gal[data-theme="neon"] .gal-resource-drawing { top: 33px; filter: drop-shadow(0 0 10px currentColor); }
+.gal[data-theme="neon"] .gal-dialog { border: 1px solid #8f61ac; box-shadow: 0 24px 70px #030207e0, 0 0 35px #8a42b33b; }
+@media (max-width: 800px) {
+  .gal[data-theme="neon"] .gal-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gal[data-theme="neon"] .gal-header { min-height: 140px; }
+  .gal[data-theme="neon"] .gal-header::after { width: 82px; height: 82px; left: 57%; }
+}
+@media (max-width: 520px) {
+  .gal[data-theme="neon"] .gal-header { min-height: 110px; padding: 18px; border-radius: 16px; }
+  .gal[data-theme="neon"] .gal-header h1 { font-size: 30px; }
+  .gal[data-theme="neon"] .gal-header h1 svg { width: 28px; height: 28px; }
+  .gal[data-theme="neon"] .gal-header::after { width: 56px; height: 56px; left: 60%; top: 24px; }
+  .gal[data-theme="neon"] .gal-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .gal[data-theme="neon"] .gal-filters button { min-height: 58px; font-size: 13px; }
+  .gal[data-theme="neon"] .gal-filters button:first-child { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gal[data-theme="neon"] .gal-filters button,
+  .gal[data-theme="neon"] button.gal-resource-card { transition: transform 160ms, box-shadow 160ms, border-color 160ms, background-color 160ms; }
+  .gal[data-theme="neon"] .gal-filters button:hover:not(:disabled),
+  .gal[data-theme="neon"] button.gal-resource-card:hover:not(:disabled) { transform: translateY(-2px); }
+}
+
 /* Astral Gold keeps moving decoration separate from the resource content. */
 .gal[data-theme="astral"] {
   --g-bg: #0b0d1c;
@@ -1930,6 +2895,56 @@ fieldset.gal-skill-fields {
   border-bottom: 2px solid var(--g-ink);
 }
 
+/* Original anime clubroom theme. */
+.gal[data-theme="anime"] {
+  --g-bg: #18162b; --g-card: #25213d; --g-soft: #332c4e;
+  --g-hover: #40355b; --g-ink: #fff3fa; --g-muted: #c9bbdc;
+  --g-line: #68547e; --g-control: #ab91bf; --g-accent: #ffafd3;
+  --g-on-accent: #34213e; --g-ring: #9df5e1; --g-overlay: #100b24bf;
+  --g-error: #ffc2ba; --g-error-bg: #4c293c;
+  --g-success: #b1f2d9; --g-success-bg: #23453d;
+  color-scheme: dark;
+  background-image: radial-gradient(#c2a4eb12 1px, transparent 1px), linear-gradient(145deg, #27203c, #17192e);
+  background-size: 12px 12px, auto;
+}
+.gal-theme-swatch.anime { background: linear-gradient(135deg, #b9a8f0 35%, #ffafd3 35% 65%, #94efdf 65%); }
+.gal[data-theme="anime"] .gal-header {
+  position: relative; isolation: isolate; z-index: 3; min-height: 174px;
+  padding: 28px; align-items: flex-start; border: 2px solid #bfa3df;
+  border-radius: 22px 22px 8px 22px;
+  background: repeating-linear-gradient(-45deg, #ffffff05 0 2px, transparent 2px 12px), linear-gradient(110deg, #4b335b, #2d3656);
+  box-shadow: 6px 6px 0 #0d1022, inset 0 0 0 5px #ffffff08;
+}
+.gal[data-theme="anime"] .gal-header h1 { font-size: clamp(30px, 4vw, 48px); letter-spacing: -.035em; color: #fff3fa; text-shadow: 3px 3px #9d618c; }
+.gal-anime-mascot { position: absolute; height: 180px; width: 240px; right: 19%; bottom: 0; pointer-events: none; z-index: -1; }
+.gal[data-theme="anime"] .gal-header-actions { position: relative; z-index: 2; }
+.gal[data-theme="anime"] .gal-theme-menu { max-height: min(500px, 70vh); overflow: auto; background: #2a2340; }
+.gal[data-theme="anime"] .gal-toolbar { display: grid; grid-template-columns: 1fr; gap: 18px; border: 0; }
+.gal[data-theme="anime"] .gal-filters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.gal[data-theme="anime"] .gal-filters button { min-height: 58px; border: 1px solid #88709f; border-radius: 14px 14px 5px 14px; background: #302943; color: #e2d4ee; }
+.gal[data-theme="anime"] .gal-filters button.active { color: #30203d; background: #ffb0d3; border-color: #ffe0ed; box-shadow: 3px 3px 0 #82527e; }
+.gal[data-theme="anime"] .gal-filters button svg { width: 23px; height: 23px; }
+.gal[data-theme="anime"] .gal-search-wrap { width: min(100%, 420px); }
+.gal[data-theme="anime"] input.gal-search { max-width: none; border-radius: 18px; }
+.gal[data-theme="anime"] .gal-board { --rank-color: #ffb0d3; --rank-tint: #4c2e49; border: 2px solid #a67fba; border-radius: 18px 18px 6px 18px; box-shadow: 5px 5px 0 #0e1021; }
+.gal[data-theme="anime"] .gal-board.agent { --rank-color: #c2afff; --rank-tint: #3a305a; }
+.gal[data-theme="anime"] .gal-board.mcp { --rank-color: #91eadc; --rank-tint: #254a49; }
+.gal[data-theme="anime"] .gal-board.workflow { --rank-color: #f3d28f; --rank-tint: #4a4033; }
+.gal[data-theme="anime"] .gal-board-head { background: repeating-linear-gradient(-45deg, #ffffff05 0 2px, transparent 2px 8px), var(--rank-tint); }
+.gal[data-theme="anime"] .gal-board-icon { border-radius: 12px; transform: rotate(-5deg); background: #201a32; }
+.gal[data-theme="anime"] .rank-1 { outline: 1px solid var(--rank-color); outline-offset: -1px; border-radius: 12px; }
+.gal[data-theme="anime"] button.gal-resource-card { border: 2px solid #9879ad; border-radius: 18px 18px 6px 18px; box-shadow: 5px 5px 0 #101021; }
+.gal[data-theme="anime"] button.gal-resource-card:hover:not(:disabled) { border-color: #ffb0d3; }
+.gal[data-theme="anime"] .gal-resource-visual { background-image: radial-gradient(#ffffff14 1px, transparent 1px); background-size: 8px 8px; }
+.gal[data-theme="anime"] .gal-dialog { border: 2px solid #b593cc; border-radius: 18px; box-shadow: 8px 8px 0 #0e1021; }
+@media (max-width: 700px) {
+  .gal[data-theme="anime"] .gal-header { min-height: 150px; padding: 20px; }
+  .gal-anime-mascot { right: 8%; height: 140px; width: 187px; }
+  .gal[data-theme="anime"] .gal-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gal[data-theme="anime"] .gal-filters button:first-child { grid-column: 1 / -1; }
+  .gal[data-theme="anime"] .gal-header-actions { gap: 6px; }
+}
+
 /* Adventure handbook: celestial navy, parchment panels and elemental accents. */
 .gal[data-theme="teyvat"] {
   --g-bg: #f0e9da; --g-card: #f8f2e5; --g-soft: #e7deca;
@@ -2097,7 +3112,8 @@ fieldset.gal-skill-fields {
 }
 
 /* Keep category creation actions the same size for all four resource labels. */
-.gal .gal-list-actions > button.gal-primary {
+.gal .gal-list-actions > button.gal-primary,
+.gal[data-theme="folio"] .pb-list-actions > button.pb-primary {
   box-sizing: border-box;
   flex: 0 0 144px;
   width: 144px;
@@ -2153,13 +3169,78 @@ fieldset.gal-skill-fields {
 .gal .gal-file-status>span:first-child {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
 .gal .gal-file-status>span:last-child {flex-shrink:0;}
 @media(max-width:600px){.gal .gal-file-status{flex-direction:column;gap:3px;}.gal .gal-directory-list{height:260px;}.gal .gal-server-toolbar{gap:7px;}}
+
+.gal-storage-providers > button { text-align: left; cursor: pointer; font: inherit; }
+.gal-storage-providers > button.active { border-color: var(--g-accent); }
+
+.gal .gal-storage-providers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.gal .gal-storage-providers > button { width: 100%; min-height: 56px; padding: 12px; border: 1px solid var(--g-line); white-space: normal; }
+.gal .gal-storage-providers > button.active { border-color: var(--g-accent); color: var(--g-ink); background: var(--g-soft); }
+.gal label.gal-storage-consent { flex-direction: row; align-items: flex-start; font-weight: 400; font-size: 13px; }
+.gal .gal-storage-consent input { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 3px; padding: 0; }
+
+/* TeamFlow gate/acceptance/archive nodes keep the same drag and port geometry. */
+.gal-flow-node.gate { isolation: isolate; border: 0; background: transparent; box-shadow: none; text-align: center; padding: 8px 32px; }
+.gal-flow-node.gate::before { content: ''; position: absolute; inset: 0; z-index: -1; background: color-mix(in srgb, var(--g-card) 90%, #c1963d); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); filter: drop-shadow(0 2px 2px #0003); }
+.gal .gal-flow-node.gate .gal-flow-grip { justify-content: center; min-height: 24px; font-size: 11px; }
+.gal .gal-flow-node.gate .gal-flow-node-title { text-align: center; }
+.gal-flow-node.gate > p { margin: 2px 0; }
+.gal-flow-node.archive { border-top-color: #477f9c; border-radius: 6px 6px 18px 18px; }
+.gal .gal-flow-ports .gal-flow-port-reject { left: 50%; top: auto; bottom: -7px; transform: translateX(-50%); border-color: #ba625e; }
+.gal .gal-flow-port-reject span { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); color: var(--g-ink); font-size: 10px; font-weight: 700; white-space: nowrap; }
+.gal-flow-edges path.gal-flow-reject-edge { stroke: #ba625e; stroke-dasharray: 7 5; }
+.gal-flow-edges path.gal-flow-pass-edge { stroke: #498f7e; }
+.gal-flow-edges text { fill: var(--g-ink); font-size: 11px; font-weight: 700; paint-order: stroke; stroke: var(--g-bg); stroke-width: 4px; stroke-linejoin: round; }
+.gal .gal-flow-inspector label.gal-flow-check { flex-direction: row; align-items: flex-start; font-weight: 400; gap: 8px; }
+.gal .gal-flow-check input { width: 16px; height: 16px; flex: 0 0 16px; padding: 0; margin-top: 3px; }
+.gal-flow-loop-settings { padding: 12px; margin-bottom: 16px; border: 1px solid var(--g-line); border-radius: 8px; }
+.gal-flow-loop-settings h4 { margin: 0 0 12px; }
+.gal-flow-loop-settings p { font-size: 12px; color: var(--g-muted); overflow-wrap: anywhere; }
+.gal-flow-pass-targets { max-height: 160px; overflow: auto; }
+
+/* Agent roster mirrors TeamFlow: members are separate from the task graph. */
+.gal-flow-body { grid-template-columns: 190px minmax(0, 1fr) 300px; }
+.gal-flow-roster { min-width: 0; min-height: 0; overflow-y: auto; border-right: 1px solid var(--g-line); background: var(--g-card); padding: 14px 10px; }
+.gal-flow-roster > header { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 12px; font-size: 13px; }
+.gal-flow-roster > header > span { color: var(--g-muted); font-variant-numeric: tabular-nums; }
+.gal-flow-roster-list { display: flex; flex-direction: column; gap: 8px; }
+.gal .gal-flow-member { width: 100%; align-items: flex-start; justify-content: flex-start; padding: 10px 8px; gap: 9px; text-align: left; border-color: transparent; border-radius: 9px; min-width: 0; }
+.gal .gal-flow-member[aria-pressed="true"] { background: var(--g-soft); border-color: var(--g-ring); color: var(--g-ink); }
+.gal-flow-avatar { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex: 0 0 28px; border-radius: 9px; color: var(--g-ink); background: var(--g-soft); font-weight: 700; font-size: 12px; }
+.gal-flow-member-copy { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+.gal-flow-member-copy > strong, .gal-flow-member-copy > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gal-flow-member-copy > strong { font-size: 13px; }
+.gal-flow-member-copy > small, .gal-flow-roster-list > p { color: var(--g-muted); font-size: 12px; }
+.gal-flow-member-meta { display: flex; align-items: center; gap: 6px; color: var(--g-muted); font-size: 11px; }
+.gal-flow-member-meta > span:first-child { margin-right: auto; }
+.gal-flow-member-meta [data-enabled="false"] { opacity: .3; }
+.gal-flow-member-meta [data-enabled="true"] { color: var(--g-ink); }
+.gal .gal-flow-assignee { display: flex; width: 100%; min-height: 24px; padding: 0; gap: 6px; justify-content: flex-start; border: 0; background: transparent; color: var(--g-muted); font-size: 12px; }
+.gal .gal-flow-assignee > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gal .gal-flow-assignee .gal-flow-avatar { width: 20px; height: 20px; flex-basis: 20px; border-radius: 6px; font-size: 10px; }
+.gal .gal-flow-assignee small { margin-left: auto; font-size: 10px; }
+.gal .gal-flow-node.gate .gal-flow-assignee { justify-content: center; }
+.gal .gal-flow-node.gate .gal-flow-assignee small { margin-left: 0; }
+.gal-flow-node[data-member-match="true"] { outline: 2px solid #4b9985; outline-offset: 3px; }
+@media (min-width: 761px) and (max-width: 1100px) { .gal-flow-body { grid-template-columns: 150px minmax(0, 1fr) 270px; } }
+@media (max-width: 760px) {
+  .gal-flow-body { grid-template-columns: 1fr; grid-template-rows: auto minmax(220px, 1fr) minmax(150px, .8fr); }
+  .gal-flow-roster { overflow: hidden; padding: 8px; border-right: 0; border-bottom: 1px solid var(--g-line); }
+  .gal-flow-roster > header { display: none; }
+  .gal-flow-roster-list { flex-direction: row; overflow-x: auto; gap: 6px; }
+  .gal .gal-flow-member { width: 160px; flex: 0 0 160px; padding: 6px; }
+  .gal-flow-member-copy > small { display: none; }
+}
+
+.gal-flow-reject-settings { border: 1px solid var(--g-line); border-radius: 8px; padding: 10px; margin: 12px 0; }
+.gal-flow-node.gal-flow-reject-task { border-style: dashed; border-color: #ba625e; }
 `;
 
 // src/client/leaderboards.jsx
-var import_react2 = __toESM(require("react"), 1);
+var import_react3 = __toESM(require("react"), 1);
 
 // src/client/icons.jsx
-var import_react = __toESM(require("react"), 1);
+var import_react2 = __toESM(require("react"), 1);
 var paths = {
   skill: ["M5 3h10l4 4v14H5z", "M14 3v5h5", "M8 12h8M8 16h5"],
   agent: [
@@ -2203,7 +3284,7 @@ var paths = {
   close: ["M6 6l12 12M6 18L18 6"]
 };
 function Glyph({ name, size = 18, className = "" }) {
-  return /* @__PURE__ */ import_react.default.createElement(
+  return /* @__PURE__ */ import_react2.default.createElement(
     "svg",
     {
       className,
@@ -2218,11 +3299,11 @@ function Glyph({ name, size = 18, className = "" }) {
       "aria-hidden": "true",
       focusable: "false"
     },
-    (paths[name] || paths.file).map((d, i) => /* @__PURE__ */ import_react.default.createElement("path", { key: i, d }))
+    (paths[name] || paths.file).map((d, i) => /* @__PURE__ */ import_react2.default.createElement("path", { key: i, d }))
   );
 }
 function ResourceVisual({ type }) {
-  return /* @__PURE__ */ import_react.default.createElement("span", { className: `gal-resource-visual ${type}`, "aria-hidden": "true" }, /* @__PURE__ */ import_react.default.createElement(
+  return /* @__PURE__ */ import_react2.default.createElement("span", { className: `gal-resource-visual ${type}`, "aria-hidden": "true" }, /* @__PURE__ */ import_react2.default.createElement(
     "svg",
     {
       className: "gal-resource-drawing",
@@ -2233,7 +3314,7 @@ function ResourceVisual({ type }) {
       strokeLinecap: "round",
       strokeLinejoin: "round"
     },
-    type === "skill" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement(
+    type === "skill" && /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "85",
@@ -2243,7 +3324,7 @@ function ResourceVisual({ type }) {
         rx: "5",
         fill: "var(--g-card)"
       }
-    ), /* @__PURE__ */ import_react.default.createElement("path", { d: "M99 30h25M99 42h43M99 52h36M99 62h43M99 72h25" }), /* @__PURE__ */ import_react.default.createElement(
+    ), /* @__PURE__ */ import_react2.default.createElement("path", { d: "M99 30h25M99 42h43M99 52h36M99 62h43M99 72h25" }), /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "149",
@@ -2253,8 +3334,8 @@ function ResourceVisual({ type }) {
         rx: "7",
         fill: "var(--g-card)"
       }
-    ), /* @__PURE__ */ import_react.default.createElement("path", { d: "M158 60l4 4 8-9" })),
-    type === "agent" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("path", { d: "M66 50h27M147 50h27M120 24V12M120 76v12" }), /* @__PURE__ */ import_react.default.createElement(
+    ), /* @__PURE__ */ import_react2.default.createElement("path", { d: "M158 60l4 4 8-9" })),
+    type === "agent" && /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement("path", { d: "M66 50h27M147 50h27M120 24V12M120 76v12" }), /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "93",
@@ -2264,8 +3345,8 @@ function ResourceVisual({ type }) {
         rx: "13",
         fill: "var(--g-card)"
       }
-    ), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "109", cy: "45", r: "3" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "131", cy: "45", r: "3" }), /* @__PURE__ */ import_react.default.createElement("path", { d: "M109 60h22" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "59", cy: "50", r: "7", fill: "var(--g-card)" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "181", cy: "50", r: "7", fill: "var(--g-card)" }), /* @__PURE__ */ import_react.default.createElement("circle", { cx: "120", cy: "10", r: "3" })),
-    type === "mcp" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("path", { d: "M72 27l29 16M72 73l29-16M139 43l29-16M139 57l29 16" }), /* @__PURE__ */ import_react.default.createElement(
+    ), /* @__PURE__ */ import_react2.default.createElement("circle", { cx: "109", cy: "45", r: "3" }), /* @__PURE__ */ import_react2.default.createElement("circle", { cx: "131", cy: "45", r: "3" }), /* @__PURE__ */ import_react2.default.createElement("path", { d: "M109 60h22" }), /* @__PURE__ */ import_react2.default.createElement("circle", { cx: "59", cy: "50", r: "7", fill: "var(--g-card)" }), /* @__PURE__ */ import_react2.default.createElement("circle", { cx: "181", cy: "50", r: "7", fill: "var(--g-card)" }), /* @__PURE__ */ import_react2.default.createElement("circle", { cx: "120", cy: "10", r: "3" })),
+    type === "mcp" && /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement("path", { d: "M72 27l29 16M72 73l29-16M139 43l29-16M139 57l29 16" }), /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "100",
@@ -2275,7 +3356,7 @@ function ResourceVisual({ type }) {
         rx: "10",
         fill: "var(--g-card)"
       }
-    ), /* @__PURE__ */ import_react.default.createElement("path", { d: "M114 40v8M126 40v8M111 48h18v5a9 9 0 0 1-18 0zM120 62v8" }), /* @__PURE__ */ import_react.default.createElement(
+    ), /* @__PURE__ */ import_react2.default.createElement("path", { d: "M114 40v8M126 40v8M111 48h18v5a9 9 0 0 1-18 0zM120 62v8" }), /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "56",
@@ -2285,7 +3366,7 @@ function ResourceVisual({ type }) {
         rx: "5",
         fill: "var(--g-card)"
       }
-    ), /* @__PURE__ */ import_react.default.createElement(
+    ), /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "56",
@@ -2295,7 +3376,7 @@ function ResourceVisual({ type }) {
         rx: "5",
         fill: "var(--g-card)"
       }
-    ), /* @__PURE__ */ import_react.default.createElement(
+    ), /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "162",
@@ -2305,7 +3386,7 @@ function ResourceVisual({ type }) {
         rx: "5",
         fill: "var(--g-card)"
       }
-    ), /* @__PURE__ */ import_react.default.createElement(
+    ), /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "162",
@@ -2316,7 +3397,7 @@ function ResourceVisual({ type }) {
         fill: "var(--g-card)"
       }
     )),
-    type === "workflow" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("path", { d: "M71 35h29q10 0 10 10v15q0 10 10 10h38M148 63l8 7-8 7" }), /* @__PURE__ */ import_react.default.createElement(
+    type === "workflow" && /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement("path", { d: "M71 35h29q10 0 10 10v15q0 10 10 10h38M148 63l8 7-8 7" }), /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "43",
@@ -2326,7 +3407,7 @@ function ResourceVisual({ type }) {
         rx: "6",
         fill: "var(--g-card)"
       }
-    ), /* @__PURE__ */ import_react.default.createElement(
+    ), /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "101",
@@ -2336,7 +3417,7 @@ function ResourceVisual({ type }) {
         rx: "6",
         fill: "var(--g-card)"
       }
-    ), /* @__PURE__ */ import_react.default.createElement(
+    ), /* @__PURE__ */ import_react2.default.createElement(
       "rect",
       {
         x: "158",
@@ -2346,8 +3427,8 @@ function ResourceVisual({ type }) {
         rx: "6",
         fill: "var(--g-card)"
       }
-    ), /* @__PURE__ */ import_react.default.createElement("path", { d: "M55 35h12M113 54h12M170 71h12" }))
-  ), /* @__PURE__ */ import_react.default.createElement("span", { className: "gal-visual-type" }, /* @__PURE__ */ import_react.default.createElement(Glyph, { name: type, size: 14 }), type === "mcp" ? "MCP" : type === "workflow" ? "Workflow" : type === "agent" ? "Agent" : "Skill"), /* @__PURE__ */ import_react.default.createElement(Glyph, { name: "arrow", className: "gal-card-arrow", size: 17 }));
+    ), /* @__PURE__ */ import_react2.default.createElement("path", { d: "M55 35h12M113 54h12M170 71h12" }))
+  ), /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-visual-type" }, /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: type, size: 14 }), type === "mcp" ? "MCP" : type === "workflow" ? "Workflow" : type === "agent" ? "Agent" : "Skill"), /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: "arrow", className: "gal-card-arrow", size: 17 }));
 }
 
 // src/client/leaderboards.jsx
@@ -2358,31 +3439,32 @@ var names = {
   workflow: "Workflow"
 };
 function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
-  return /* @__PURE__ */ import_react2.default.createElement("div", { className: "gal-leaderboards" }, Object.entries(names).map(([type, label]) => {
+  const l = useGalleryText();
+  return /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-leaderboards" }, Object.entries(names).map(([type, label]) => {
     const board = boards.find((b) => b.type === type) || {
       items: [],
       total: 0
     };
     const maximum = board.items[0]?.usageCount || 0;
-    return /* @__PURE__ */ import_react2.default.createElement(
+    return /* @__PURE__ */ import_react3.default.createElement(
       "section",
       {
         key: type,
         className: `gal-board ${type}`,
-        "aria-label": `${label} \u8C03\u7528\u699C`
+        "aria-label": l("{0} \u8C03\u7528\u699C", label)
       },
-      /* @__PURE__ */ import_react2.default.createElement("header", { className: "gal-board-head" }, /* @__PURE__ */ import_react2.default.createElement("div", { className: "gal-board-icon" }, /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: type, size: 26 })), /* @__PURE__ */ import_react2.default.createElement("div", null, /* @__PURE__ */ import_react2.default.createElement("h2", null, label), /* @__PURE__ */ import_react2.default.createElement("span", null, board.total, " \u4E2A\u8D44\u6E90")), /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-board-top" }, "TOP 10")),
-      /* @__PURE__ */ import_react2.default.createElement("div", { className: "gal-board-columns" }, /* @__PURE__ */ import_react2.default.createElement("span", null, "\u6392\u540D / \u8D44\u6E90"), /* @__PURE__ */ import_react2.default.createElement("span", null, "\u8C03\u7528\u6B21\u6570")),
-      board.items.length ? /* @__PURE__ */ import_react2.default.createElement("ol", { className: "gal-board-list" }, board.items.map((r, i) => /* @__PURE__ */ import_react2.default.createElement("li", { key: r.id }, /* @__PURE__ */ import_react2.default.createElement(
+      /* @__PURE__ */ import_react3.default.createElement("header", { className: "gal-board-head" }, /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-board-icon" }, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: type, size: 26 })), /* @__PURE__ */ import_react3.default.createElement("div", null, /* @__PURE__ */ import_react3.default.createElement("h2", null, l(label)), /* @__PURE__ */ import_react3.default.createElement("span", null, board.total, l(" \u4E2A\u8D44\u6E90"))), /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-board-top" }, "TOP 10")),
+      /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-board-columns" }, /* @__PURE__ */ import_react3.default.createElement("span", null, l("\u6392\u540D / \u8D44\u6E90")), /* @__PURE__ */ import_react3.default.createElement("span", null, l("\u8C03\u7528\u6B21\u6570"))),
+      board.items.length ? /* @__PURE__ */ import_react3.default.createElement("ol", { className: "gal-board-list" }, board.items.map((r, i) => /* @__PURE__ */ import_react3.default.createElement("li", { key: r.id }, /* @__PURE__ */ import_react3.default.createElement(
         "button",
         {
           className: `gal-rank-row rank-${i + 1}`,
           disabled: busy,
           onClick: () => onOpen(r),
-          title: `${r.name} \xB7 ${r.creator?.username || "\u672A\u8BB0\u5F55"} \xB7 \u7D2F\u8BA1\u8C03\u7528 ${r.usageCount ?? 0} \u6B21`
+          title: l("{0} \xB7 {1} \xB7 \u7D2F\u8BA1\u8C03\u7528 {2} \u6B21", r.name, r.creator?.username || l("\u672A\u8BB0\u5F55"), r.usageCount ?? 0)
         },
-        /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-rank-number" }, i === 0 && /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: "trophy", size: 16 }), /* @__PURE__ */ import_react2.default.createElement("span", null, String(i + 1).padStart(2, "0"))),
-        /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-rank-info" }, /* @__PURE__ */ import_react2.default.createElement("strong", null, r.name), /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-rank-author" }, /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: "user", size: 12 }), r.creator?.username || "\u672A\u8BB0\u5F55"), /* @__PURE__ */ import_react2.default.createElement("span", { className: "gal-rank-track", "aria-hidden": "true" }, /* @__PURE__ */ import_react2.default.createElement(
+        /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-rank-number" }, i === 0 && /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "trophy", size: 16 }), /* @__PURE__ */ import_react3.default.createElement("span", null, String(i + 1).padStart(2, "0"))),
+        /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-rank-info" }, /* @__PURE__ */ import_react3.default.createElement("strong", null, r.name), /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-rank-author" }, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "user", size: 12 }), r.creator?.username || l("\u672A\u8BB0\u5F55")), /* @__PURE__ */ import_react3.default.createElement("span", { className: "gal-rank-track", "aria-hidden": "true" }, /* @__PURE__ */ import_react3.default.createElement(
           "span",
           {
             style: {
@@ -2390,22 +3472,22 @@ function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
             }
           }
         ))),
-        /* @__PURE__ */ import_react2.default.createElement(
+        /* @__PURE__ */ import_react3.default.createElement(
           "span",
           {
             className: "gal-rank-count",
-            "aria-label": `\u7D2F\u8BA1\u8C03\u7528 ${r.usageCount ?? 0} \u6B21`
+            "aria-label": l("\u7D2F\u8BA1\u8C03\u7528 {0} \u6B21", r.usageCount ?? 0)
           },
-          (r.usageCount ?? 0).toLocaleString()
+          (r.usageCount ?? 0).toLocaleString(l.language)
         )
-      )))) : /* @__PURE__ */ import_react2.default.createElement("div", { className: "gal-board-empty" }, /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: type, size: 36 }), /* @__PURE__ */ import_react2.default.createElement("p", null, filtered ? "\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90" : "\u6682\u65E0\u8D44\u6E90")),
-      /* @__PURE__ */ import_react2.default.createElement("button", { className: "gal-board-more", onClick: () => onCategory(type) }, "\u67E5\u770B ", label, /* @__PURE__ */ import_react2.default.createElement(Glyph, { name: "arrow", size: 16 }))
+      )))) : /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-board-empty" }, /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: type, size: 36 }), /* @__PURE__ */ import_react3.default.createElement("p", null, filtered ? l("\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90") : l("\u6682\u65E0\u8D44\u6E90"))),
+      /* @__PURE__ */ import_react3.default.createElement("button", { className: "gal-board-more", onClick: () => onCategory(type) }, l("\u67E5\u770B "), l(label), /* @__PURE__ */ import_react3.default.createElement(Glyph, { name: "arrow", size: 16 }))
     );
   }));
 }
 
 // src/client/gallery-trigger.mjs
-function createGalleryTrigger(remote, icon) {
+function createGalleryTrigger(remote, icon, getText = () => createGalleryText("zh")) {
   return {
     trigger: "/",
     name: "Gallery",
@@ -2417,7 +3499,7 @@ function createGalleryTrigger(remote, icon) {
           {
             name: "gallery",
             label: "Gallery",
-            description: "\u9009\u62E9 Gallery Skill",
+            description: getText()("\u9009\u62E9 Gallery Skill"),
             icon,
             value: "open",
             drill: true
@@ -2427,7 +3509,7 @@ function createGalleryTrigger(remote, icon) {
       const result = await remote.uiSkillCatalog();
       signal?.throwIfAborted();
       if (result?.ok === false)
-        throw new Error(result.error?.message || "\u65E0\u6CD5\u8BFB\u53D6 Gallery Skill");
+        throw new Error(getText()(result.error?.message || "\u65E0\u6CD5\u8BFB\u53D6 Gallery Skill"));
       const rows = result?.ok === true ? result.value : result;
       const search = key.startsWith("gallery/") ? key.slice(8) : "";
       return rows.filter(
@@ -2464,13 +3546,14 @@ function createResourceIdentifier(type, cryptoApi = globalThis.crypto) {
 }
 
 // src/client/resource-basics.jsx
-var import_react3 = __toESM(require("react"), 1);
+var import_react4 = __toESM(require("react"), 1);
 function ResourceBasics({ name, onName, description, onDescription, identifier, onIdentifier, identifierMax = 64, busy = false }) {
-  return /* @__PURE__ */ import_react3.default.createElement("div", { className: "gal-skill-fields gal-resource-basics" }, /* @__PURE__ */ import_react3.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react3.default.createElement("input", { "aria-label": "\u540D\u79F0", maxLength: 160, value: name, disabled: busy, placeholder: "\u4E3A\u8D44\u6E90\u8D77\u4E00\u4E2A\u4FBF\u4E8E\u8BC6\u522B\u7684\u540D\u79F0", onChange: (e) => onName(e.target.value) })), /* @__PURE__ */ import_react3.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react3.default.createElement("textarea", { "aria-label": "\u63CF\u8FF0", rows: 4, maxLength: 1024, value: description, disabled: busy, placeholder: "\u8BF4\u660E\u5B83\u80FD\u505A\u4EC0\u4E48\uFF0C\u4EE5\u53CA\u4EC0\u4E48\u65F6\u5019\u4F7F\u7528", onChange: (e) => onDescription(e.target.value) })), /* @__PURE__ */ import_react3.default.createElement("p", null, "\u540D\u79F0\u7528\u4E8E\u5C55\u793A\uFF0C\u63CF\u8FF0\u7528\u4E8E\u5E2E\u52A9\u7528\u6237\u548C Agent \u5224\u65AD\u4F55\u65F6\u4F7F\u7528\u3002"), /* @__PURE__ */ import_react3.default.createElement("details", null, /* @__PURE__ */ import_react3.default.createElement("summary", null, "\u9AD8\u7EA7\u8BBE\u7F6E"), /* @__PURE__ */ import_react3.default.createElement("label", null, "\u8C03\u7528\u6807\u8BC6", /* @__PURE__ */ import_react3.default.createElement("input", { "aria-label": "\u8C03\u7528\u6807\u8BC6", maxLength: identifierMax, value: identifier, disabled: busy, onChange: (e) => onIdentifier(e.target.value) })), /* @__PURE__ */ import_react3.default.createElement("p", null, "\u7528\u4E8E\u7CFB\u7EDF\u8C03\u7528\uFF0C\u5DF2\u81EA\u52A8\u751F\u6210\uFF0C\u4E00\u822C\u65E0\u9700\u4FEE\u6539\u3002")));
+  const l = useGalleryText();
+  return /* @__PURE__ */ import_react4.default.createElement("div", { className: "gal-skill-fields gal-resource-basics" }, /* @__PURE__ */ import_react4.default.createElement("label", null, l("\u540D\u79F0"), /* @__PURE__ */ import_react4.default.createElement("input", { "aria-label": l("\u540D\u79F0"), maxLength: 160, value: name, disabled: busy, placeholder: l("\u4E3A\u8D44\u6E90\u8D77\u4E00\u4E2A\u4FBF\u4E8E\u8BC6\u522B\u7684\u540D\u79F0"), onChange: (e) => onName(e.target.value) })), /* @__PURE__ */ import_react4.default.createElement("label", null, l("\u63CF\u8FF0"), /* @__PURE__ */ import_react4.default.createElement("textarea", { "aria-label": l("\u63CF\u8FF0"), rows: 4, maxLength: 1024, value: description, disabled: busy, placeholder: l("\u8BF4\u660E\u5B83\u80FD\u505A\u4EC0\u4E48\uFF0C\u4EE5\u53CA\u4EC0\u4E48\u65F6\u5019\u4F7F\u7528"), onChange: (e) => onDescription(e.target.value) })), /* @__PURE__ */ import_react4.default.createElement("p", null, l("\u540D\u79F0\u7528\u4E8E\u5C55\u793A\uFF0C\u63CF\u8FF0\u7528\u4E8E\u5E2E\u52A9\u7528\u6237\u548C Agent \u5224\u65AD\u4F55\u65F6\u4F7F\u7528\u3002")), /* @__PURE__ */ import_react4.default.createElement("details", null, /* @__PURE__ */ import_react4.default.createElement("summary", null, l("\u9AD8\u7EA7\u8BBE\u7F6E")), /* @__PURE__ */ import_react4.default.createElement("label", null, l("\u8C03\u7528\u6807\u8BC6"), /* @__PURE__ */ import_react4.default.createElement("input", { "aria-label": l("\u8C03\u7528\u6807\u8BC6"), maxLength: identifierMax, value: identifier, disabled: busy, onChange: (e) => onIdentifier(e.target.value) })), /* @__PURE__ */ import_react4.default.createElement("p", null, l("\u7528\u4E8E\u7CFB\u7EDF\u8C03\u7528\uFF0C\u5DF2\u81EA\u52A8\u751F\u6210\uFF0C\u4E00\u822C\u65E0\u9700\u4FEE\u6539\u3002"))));
 }
 
 // src/client/resource-cover.jsx
-var import_react4 = __toESM(require("react"), 1);
+var import_react5 = __toESM(require("react"), 1);
 var covers = [
   { id: "writing", label: "\u5199\u4F5C\u4E0E\u6587\u6863", keywords: /写作|周报|文档|总结|摘要|writing|document|summary/, hue: 36, path: "M13 5h20l9 9v29H13z M33 5v10h9 M20 23h15m-15 7h15m-15 7h10" },
   { id: "code", label: "\u5F00\u53D1\u4E0E\u5BA1\u67E5", keywords: /代码|开发|审查|编程|code|review|github|gitlab/, hue: 229, path: "M18 12 6 24l12 12m12-24 12 12-12 12M28 8l-8 32" },
@@ -2491,16 +3574,17 @@ function resolveCover(resource) {
   return { hue: [35, 165, 197, 231, 276, 328][hash % 6], initial: [...name][0].toUpperCase() };
 }
 function CoverDrawing({ cover }) {
-  return /* @__PURE__ */ import_react4.default.createElement("svg", { viewBox: "0 0 48 48", "aria-hidden": "true" }, cover.path ? /* @__PURE__ */ import_react4.default.createElement("path", { d: cover.path, fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" }) : /* @__PURE__ */ import_react4.default.createElement("text", { x: "24", y: "25", textAnchor: "middle", dominantBaseline: "central", fill: "currentColor", fontSize: "30", fontWeight: "650" }, cover.initial));
+  return /* @__PURE__ */ import_react5.default.createElement("svg", { viewBox: "0 0 48 48", "aria-hidden": "true" }, cover.path ? /* @__PURE__ */ import_react5.default.createElement("path", { d: cover.path, fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" }) : /* @__PURE__ */ import_react5.default.createElement("text", { x: "24", y: "25", textAnchor: "middle", dominantBaseline: "central", fill: "currentColor", fontSize: "30", fontWeight: "650" }, cover.initial));
 }
 function ResourceCover({ resource }) {
-  if (!hasResourceCover(resource.type)) return /* @__PURE__ */ import_react4.default.createElement(ResourceVisual, { type: resource.type });
+  if (!hasResourceCover(resource.type)) return /* @__PURE__ */ import_react5.default.createElement(ResourceVisual, { type: resource.type });
   const cover = resolveCover(resource);
-  return /* @__PURE__ */ import_react4.default.createElement("span", { className: "gal-resource-visual gal-purpose-cover", style: { "--cover-hue": cover.hue }, "aria-hidden": "true" }, /* @__PURE__ */ import_react4.default.createElement("span", { className: "gal-visual-type" }, /* @__PURE__ */ import_react4.default.createElement(Glyph, { name: resource.type, size: 14 }), { skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" }[resource.type]), /* @__PURE__ */ import_react4.default.createElement("span", { className: "gal-purpose-drawing" }, /* @__PURE__ */ import_react4.default.createElement(CoverDrawing, { cover })));
+  return /* @__PURE__ */ import_react5.default.createElement("span", { className: "gal-resource-visual gal-purpose-cover", style: { "--cover-hue": cover.hue }, "aria-hidden": "true" }, /* @__PURE__ */ import_react5.default.createElement("span", { className: "gal-visual-type" }, /* @__PURE__ */ import_react5.default.createElement(Glyph, { name: resource.type, size: 14 }), { skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" }[resource.type]), /* @__PURE__ */ import_react5.default.createElement("span", { className: "gal-purpose-drawing" }, /* @__PURE__ */ import_react5.default.createElement(CoverDrawing, { cover })));
 }
 function ResourceCoverPicker({ resource, onChange }) {
+  const l = useGalleryText();
   const value = covers.some(({ id }) => id === resource.cover) ? resource.cover : "";
-  return /* @__PURE__ */ import_react4.default.createElement("div", { className: "gal-cover-picker" }, /* @__PURE__ */ import_react4.default.createElement("label", null, "\u5C01\u9762", /* @__PURE__ */ import_react4.default.createElement("select", { value, onChange: (event) => onChange(event.target.value) }, /* @__PURE__ */ import_react4.default.createElement("option", { value: "" }, "\u6309\u7528\u9014\u81EA\u52A8\u9009\u62E9"), covers.map(({ id, label }) => /* @__PURE__ */ import_react4.default.createElement("option", { key: id, value: id }, label)))), /* @__PURE__ */ import_react4.default.createElement(ResourceCover, { resource }));
+  return /* @__PURE__ */ import_react5.default.createElement("div", { className: "gal-cover-picker" }, /* @__PURE__ */ import_react5.default.createElement("label", null, l("\u5C01\u9762"), /* @__PURE__ */ import_react5.default.createElement("select", { value, onChange: (event) => onChange(event.target.value) }, /* @__PURE__ */ import_react5.default.createElement("option", { value: "" }, l("\u6309\u7528\u9014\u81EA\u52A8\u9009\u62E9")), covers.map(({ id, label }) => /* @__PURE__ */ import_react5.default.createElement("option", { key: id, value: id }, l(label))))), /* @__PURE__ */ import_react5.default.createElement(ResourceCover, { resource }));
 }
 function withResourceCover(metadata, cover) {
   const { cover: previous, ...rest } = metadata ?? {};
@@ -2508,20 +3592,27 @@ function withResourceCover(metadata, cover) {
 }
 
 // src/client/mcp-wizard.jsx
-var import_react6 = __toESM(require("react"), 1);
+var import_react7 = __toESM(require("react"), 1);
 
 // src/client/modal.jsx
-var import_react5 = __toESM(require("react"), 1);
-function Modal({ children, onClose, confirmation = false }) {
-  const root = (0, import_react5.useRef)(null);
-  const close = (0, import_react5.useRef)(onClose);
+var import_react6 = __toESM(require("react"), 1);
+function Modal({
+  children,
+  onClose,
+  confirmation = false,
+  variant = ""
+}) {
+  const root = (0, import_react6.useRef)(null);
+  const close = (0, import_react6.useRef)(onClose);
   close.current = onClose;
-  (0, import_react5.useEffect)(() => {
+  (0, import_react6.useEffect)(() => {
     const overlay = root.current;
     const dialog = overlay.querySelector(
       '[role="dialog"], [role="alertdialog"]'
     );
     const previous = document.activeElement;
+    const oldOverflow = document.body.style.overflow;
+    if (variant === "paper-detail") document.body.style.overflow = "hidden";
     const focusable = () => [
       ...dialog.querySelectorAll(
         'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), summary, [tabindex="0"]'
@@ -2557,15 +3648,20 @@ function Modal({ children, onClose, confirmation = false }) {
     document.addEventListener("keydown", handleKey);
     return () => {
       document.removeEventListener("keydown", handleKey);
+      if (variant === "paper-detail")
+        document.body.style.overflow = oldOverflow;
       if (previous?.isConnected) previous.focus();
     };
   }, []);
-  return /* @__PURE__ */ import_react5.default.createElement(
+  return /* @__PURE__ */ import_react6.default.createElement(
     "div",
     {
       ref: root,
       "data-gallery-modal": true,
-      className: confirmation ? "gal-overlay gal-confirm-overlay" : "gal-overlay"
+      onMouseDown: variant === "paper-detail" ? (event) => {
+        if (event.target === event.currentTarget) close.current?.();
+      } : void 0,
+      className: confirmation ? "gal-overlay gal-confirm-overlay" : variant === "paper-detail" ? "gal-overlay gal-paper-detail-overlay" : "gal-overlay"
     },
     children
   );
@@ -2575,13 +3671,14 @@ function Modal({ children, onClose, confirmation = false }) {
 var steps = ["\u57FA\u672C\u4FE1\u606F", "\u8FDE\u63A5\u914D\u7F6E\u4E0E\u6D4B\u8BD5", "\u68C0\u67E5\u4FDD\u5B58"];
 var parseLines = (value) => value.split("\n").map((x) => x.trim()).filter(Boolean);
 function McpWizard({ resource, onClose, onSave, onCheck }) {
-  const [cover, setCover] = (0, import_react6.useState)(resource?.metadata?.cover ?? "");
+  const l = useGalleryText();
+  const [cover, setCover] = (0, import_react7.useState)(resource?.metadata?.cover ?? "");
   const saved = resource?.metadata?.mcp || {};
-  const [step, setStep] = (0, import_react6.useState)(0), [name, setName] = (0, import_react6.useState)(resource?.name || ""), [description, setDescription] = (0, import_react6.useState)(resource?.description || ""), [serverName, setServerName] = (0, import_react6.useState)(
+  const [step, setStep] = (0, import_react7.useState)(0), [name, setName] = (0, import_react7.useState)(resource?.name || ""), [description, setDescription] = (0, import_react7.useState)(resource?.description || ""), [serverName, setServerName] = (0, import_react7.useState)(
     () => saved.serverName || createResourceIdentifier("mcp")
-  ), [transport, setTransport] = (0, import_react6.useState)(saved.transport || "stdio"), [command, setCommand] = (0, import_react6.useState)(saved.command || ""), [args, setArgs] = (0, import_react6.useState)((saved.args || []).join("\n")), [cwd, setCwd] = (0, import_react6.useState)(saved.cwd || ""), [url, setUrl] = (0, import_react6.useState)(saved.url || ""), [authType, setAuthType] = (0, import_react6.useState)(
+  ), [transport, setTransport] = (0, import_react7.useState)(saved.transport || "stdio"), [command, setCommand] = (0, import_react7.useState)(saved.command || ""), [args, setArgs] = (0, import_react7.useState)((saved.args || []).join("\n")), [cwd, setCwd] = (0, import_react7.useState)(saved.cwd || ""), [url, setUrl] = (0, import_react7.useState)(saved.url || ""), [authType, setAuthType] = (0, import_react7.useState)(
     saved.authType || (saved.credentialKeys?.length || Object.keys(saved.envRefs || {}).length ? "headers" : "none")
-  ), [token, setToken] = (0, import_react6.useState)(""), [entries, setEntries] = (0, import_react6.useState)(
+  ), [token, setToken] = (0, import_react7.useState)(""), [entries, setEntries] = (0, import_react7.useState)(
     () => [
       .../* @__PURE__ */ new Set([
         ...saved.credentialKeys || [],
@@ -2594,11 +3691,11 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
       value: "",
       saved: resource?.mcpCredentialKeys?.includes(key) || false
     }))
-  ), [tags, setTags] = (0, import_react6.useState)((resource?.tags || []).join(", ")), [testResult, setTestResult] = (0, import_react6.useState)(
+  ), [tags, setTags] = (0, import_react7.useState)((resource?.tags || []).join(", ")), [testResult, setTestResult] = (0, import_react7.useState)(
     Object.keys(saved.envRefs || {}).length ? null : resource?.metadata?.mcpVerification ?? null
-  ), [error, setError] = (0, import_react6.useState)(""), [busy, setBusy] = (0, import_react6.useState)(false);
-  const heading = (0, import_react6.useRef)(null);
-  (0, import_react6.useEffect)(() => {
+  ), [error, setError] = (0, import_react7.useState)(""), [busy, setBusy] = (0, import_react7.useState)(false);
+  const heading = (0, import_react7.useRef)(null);
+  (0, import_react7.useEffect)(() => {
     heading.current?.focus();
   }, [step]);
   const validName = !!name.trim() && name.length <= 160 && !!description.trim();
@@ -2654,7 +3751,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
       tags.split(/[,，]/).map((x) => x.trim()).filter(Boolean)
     )
   ];
-  async function check() {
+  async function check2() {
     setBusy(true);
     setError("");
     try {
@@ -2701,17 +3798,17 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
       setBusy(false);
     }
   }
-  return /* @__PURE__ */ import_react6.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react6.default.createElement(
+  return /* @__PURE__ */ import_react7.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react7.default.createElement(
     "section",
     {
       className: "gal-dialog gal-skill-wizard",
       role: "dialog",
       "aria-modal": "true",
-      "aria-label": resource ? "\u7F16\u8F91 MCP" : "\u65B0\u5EFA MCP",
+      "aria-label": resource ? l("\u7F16\u8F91 MCP") : l("\u65B0\u5EFA MCP"),
       tabIndex: -1
     },
-    /* @__PURE__ */ import_react6.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react6.default.createElement("h2", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "mcp" }), " ", resource ? "\u7F16\u8F91 MCP" : "\u65B0\u5EFA MCP"), /* @__PURE__ */ import_react6.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react6.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps.map((title, i) => /* @__PURE__ */ import_react6.default.createElement(
+    /* @__PURE__ */ import_react7.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react7.default.createElement("h2", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "mcp" }), " ", resource ? l("\u7F16\u8F91 MCP") : l("\u65B0\u5EFA MCP")), /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": l("\u5173\u95ED\u7F16\u8F91"), disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))),
+    /* @__PURE__ */ import_react7.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": l("\u521B\u5EFA\u8FDB\u5EA6") }, steps.map((title, i) => /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         key: title,
@@ -2719,10 +3816,10 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         disabled: busy || i > 0 && !validName || i > 1 && !validConnection,
         onClick: () => setStep(i)
       },
-      /* @__PURE__ */ import_react6.default.createElement("span", null, i < step ? "\u2713" : i + 1),
-      title
+      /* @__PURE__ */ import_react7.default.createElement("span", null, i < step ? "\u2713" : i + 1),
+      l(title)
     ))),
-    /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react6.default.createElement("main", null, /* @__PURE__ */ import_react6.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps[step]), step === 0 && /* @__PURE__ */ import_react6.default.createElement(
+    /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react7.default.createElement("main", null, /* @__PURE__ */ import_react7.default.createElement("h3", { ref: heading, tabIndex: -1 }, l(steps[step])), step === 0 && /* @__PURE__ */ import_react7.default.createElement(
       ResourceBasics,
       {
         name,
@@ -2737,7 +3834,7 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         identifierMax: 32,
         busy
       }
-    ), step === 1 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-mcp-transport" }, /* @__PURE__ */ import_react6.default.createElement(
+    ), step === 1 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-mcp-transport" }, /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         "aria-pressed": transport === "stdio",
@@ -2746,9 +3843,9 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
           setTestResult(null);
         }
       },
-      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "settings" }),
-      " \u672C\u5730\u8FDB\u7A0B"
-    ), /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "settings" }),
+      l(" \u672C\u5730\u8FDB\u7A0B")
+    ), /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         "aria-pressed": transport === "streamable-http",
@@ -2757,54 +3854,54 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
           setTestResult(null);
         }
       },
-      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "link" }),
-      " \u8FDC\u7A0B HTTP"
-    )), transport === "stdio" ? /* @__PURE__ */ import_react6.default.createElement(import_react6.default.Fragment, null, /* @__PURE__ */ import_react6.default.createElement("label", null, "\u542F\u52A8\u547D\u4EE4", /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "link" }),
+      l(" \u8FDC\u7A0B HTTP")
+    )), transport === "stdio" ? /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("label", null, l("\u542F\u52A8\u547D\u4EE4"), /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
-        "aria-label": "\u542F\u52A8\u547D\u4EE4",
+        "aria-label": l("\u542F\u52A8\u547D\u4EE4"),
         value: command,
         onChange: change(setCommand),
         placeholder: "npx"
       }
-    )), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u53C2\u6570\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09", /* @__PURE__ */ import_react6.default.createElement(
+    )), /* @__PURE__ */ import_react7.default.createElement("label", null, l("\u53C2\u6570\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), /* @__PURE__ */ import_react7.default.createElement(
       "textarea",
       {
-        "aria-label": "\u542F\u52A8\u53C2\u6570",
+        "aria-label": l("\u542F\u52A8\u53C2\u6570"),
         rows: 4,
         value: args,
         onChange: change(setArgs),
         placeholder: "-y\\n@modelcontextprotocol/server-filesystem"
       }
-    )), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u5DE5\u4F5C\u76EE\u5F55\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react6.default.createElement(
+    )), /* @__PURE__ */ import_react7.default.createElement("label", null, l("\u5DE5\u4F5C\u76EE\u5F55\uFF08\u9009\u586B\uFF09"), /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
-        "aria-label": "\u5DE5\u4F5C\u76EE\u5F55",
+        "aria-label": l("\u5DE5\u4F5C\u76EE\u5F55"),
         value: cwd,
         onChange: change(setCwd),
-        placeholder: "\u7559\u7A7A\u4F7F\u7528 DSH \u9ED8\u8BA4\u76EE\u5F55"
+        placeholder: l("\u7559\u7A7A\u4F7F\u7528 DSH \u9ED8\u8BA4\u76EE\u5F55")
       }
-    ))) : /* @__PURE__ */ import_react6.default.createElement("label", null, "Streamable HTTP \u5730\u5740", /* @__PURE__ */ import_react6.default.createElement(
+    ))) : /* @__PURE__ */ import_react7.default.createElement("label", null, l("Streamable HTTP \u5730\u5740"), /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
-        "aria-label": "MCP \u5730\u5740",
+        "aria-label": l("MCP \u5730\u5740"),
         type: "url",
         value: url,
         onChange: change(setUrl),
         placeholder: "https://example.com/mcp"
       }
-    )), Object.keys(saved.envRefs || {}).length > 0 && /* @__PURE__ */ import_react6.default.createElement("p", { role: "note" }, "\u6B64\u8D44\u6E90\u539F\u6765\u5F15\u7528\u5BBF\u4E3B\u73AF\u5883\u53D8\u91CF\u3002\u5B57\u6BB5\u540D\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u586B\u5199\u5B9E\u9645\u8BA4\u8BC1\u503C\u540E\u4FDD\u5B58\uFF0C\u6216\u79FB\u9664\u4E0D\u518D\u4F7F\u7528\u7684\u5B57\u6BB5\u3002"), /* @__PURE__ */ import_react6.default.createElement(import_react6.default.Fragment, null, transport === "streamable-http" && /* @__PURE__ */ import_react6.default.createElement("label", null, "\u8BA4\u8BC1\u65B9\u5F0F", /* @__PURE__ */ import_react6.default.createElement(
+    )), Object.keys(saved.envRefs || {}).length > 0 && /* @__PURE__ */ import_react7.default.createElement("p", { role: "note" }, l("\u6B64\u8D44\u6E90\u539F\u6765\u5F15\u7528\u5BBF\u4E3B\u73AF\u5883\u53D8\u91CF\u3002\u5B57\u6BB5\u540D\u5DF2\u4FDD\u7559\uFF0C\u8BF7\u586B\u5199\u5B9E\u9645\u8BA4\u8BC1\u503C\u540E\u4FDD\u5B58\uFF0C\u6216\u79FB\u9664\u4E0D\u518D\u4F7F\u7528\u7684\u5B57\u6BB5\u3002")), /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, transport === "streamable-http" && /* @__PURE__ */ import_react7.default.createElement("label", null, l("\u8BA4\u8BC1\u65B9\u5F0F"), /* @__PURE__ */ import_react7.default.createElement(
       "select",
       {
-        "aria-label": "HTTP \u8BA4\u8BC1\u65B9\u5F0F",
+        "aria-label": l("HTTP \u8BA4\u8BC1\u65B9\u5F0F"),
         value: authType,
         disabled: busy,
         onChange: change(setAuthType)
       },
-      /* @__PURE__ */ import_react6.default.createElement("option", { value: "none" }, "\u65E0\u9700\u8BA4\u8BC1"),
-      /* @__PURE__ */ import_react6.default.createElement("option", { value: "bearer" }, "Bearer Token"),
-      /* @__PURE__ */ import_react6.default.createElement("option", { value: "headers" }, "\u81EA\u5B9A\u4E49\u8BF7\u6C42\u5934 / API Key")
-    )), transport === "streamable-http" && authType === "bearer" ? /* @__PURE__ */ import_react6.default.createElement("label", null, "Token", /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement("option", { value: "none" }, l("\u65E0\u9700\u8BA4\u8BC1")),
+      /* @__PURE__ */ import_react7.default.createElement("option", { value: "bearer" }, "Bearer Token"),
+      /* @__PURE__ */ import_react7.default.createElement("option", { value: "headers" }, l("\u81EA\u5B9A\u4E49\u8BF7\u6C42\u5934 / API Key"))
+    )), transport === "streamable-http" && authType === "bearer" ? /* @__PURE__ */ import_react7.default.createElement("label", null, "Token", /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
         "aria-label": "Bearer Token",
@@ -2813,35 +3910,35 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         value: token,
         disabled: busy,
         onChange: change(setToken),
-        placeholder: tokenSaved ? "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u7EE7\u7EED\u4F7F\u7528\uFF1B\u586B\u5199\u53EF\u66FF\u6362" : "\u7C98\u8D34 Token\uFF0C\u65E0\u9700\u586B\u5199 Bearer \u524D\u7F00"
+        placeholder: tokenSaved ? l("\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u7EE7\u7EED\u4F7F\u7528\uFF1B\u586B\u5199\u53EF\u66FF\u6362") : l("\u7C98\u8D34 Token\uFF0C\u65E0\u9700\u586B\u5199 Bearer \u524D\u7F00")
       }
-    ), tokenSaved && /* @__PURE__ */ import_react6.default.createElement("small", null, "\u5DF2\u4FDD\u5B58 Token\uFF0C\u539F\u503C\u4E0D\u56DE\u663E\u3002")) : (transport === "stdio" || authType === "headers") && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-mcp-credentials" }, /* @__PURE__ */ import_react6.default.createElement("p", null, transport === "stdio" ? "\u586B\u5199\u670D\u52A1\u8FDB\u7A0B\u9700\u8981\u7684\u73AF\u5883\u53D8\u91CF\u53CA\u5176\u5B9E\u9645\u503C\u3002" : "\u586B\u5199\u8BF7\u6C42\u5934\u540D\u79F0\u53CA\u5176\u5B8C\u6574\u503C\uFF0C\u4F8B\u5982 X-API-Key\u3002"), entries.map((entry, index) => /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-mcp-credential-row", key: index }, /* @__PURE__ */ import_react6.default.createElement("label", null, transport === "stdio" ? "\u53D8\u91CF\u540D" : "\u8BF7\u6C42\u5934\u540D\u79F0", /* @__PURE__ */ import_react6.default.createElement(
+    ), tokenSaved && /* @__PURE__ */ import_react7.default.createElement("small", null, l("\u5DF2\u4FDD\u5B58 Token\uFF0C\u539F\u503C\u4E0D\u56DE\u663E\u3002"))) : (transport === "stdio" || authType === "headers") && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-mcp-credentials" }, /* @__PURE__ */ import_react7.default.createElement("p", null, transport === "stdio" ? l("\u586B\u5199\u670D\u52A1\u8FDB\u7A0B\u9700\u8981\u7684\u73AF\u5883\u53D8\u91CF\u53CA\u5176\u5B9E\u9645\u503C\u3002") : l("\u586B\u5199\u8BF7\u6C42\u5934\u540D\u79F0\u53CA\u5176\u5B8C\u6574\u503C\uFF0C\u4F8B\u5982 X-API-Key\u3002")), entries.map((entry, index) => /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-mcp-credential-row", key: index }, /* @__PURE__ */ import_react7.default.createElement("label", null, transport === "stdio" ? l("\u53D8\u91CF\u540D") : l("\u8BF7\u6C42\u5934\u540D\u79F0"), /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
-        "aria-label": `\u8BA4\u8BC1\u5B57\u6BB5 ${index + 1}`,
+        "aria-label": l("\u8BA4\u8BC1\u5B57\u6BB5 {0}", index + 1),
         autoComplete: "off",
         value: entry.key,
         disabled: busy,
         onChange: (e) => editEntry(index, "key", e.target.value),
         placeholder: transport === "stdio" ? "API_KEY" : "X-API-Key"
       }
-    )), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u503C", /* @__PURE__ */ import_react6.default.createElement(
+    )), /* @__PURE__ */ import_react7.default.createElement("label", null, l("\u503C"), /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
-        "aria-label": `\u8BA4\u8BC1\u503C ${index + 1}`,
+        "aria-label": l("\u8BA4\u8BC1\u503C {0}", index + 1),
         type: "password",
         autoComplete: "new-password",
         value: entry.value,
         disabled: busy,
         onChange: (e) => editEntry(index, "value", e.target.value),
-        placeholder: entry.saved ? "\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u4FDD\u7559" : "\u586B\u5199\u5B9E\u9645\u503C"
+        placeholder: entry.saved ? l("\u5DF2\u4FDD\u5B58\uFF0C\u7559\u7A7A\u4FDD\u7559") : l("\u586B\u5199\u5B9E\u9645\u503C")
       }
-    )), /* @__PURE__ */ import_react6.default.createElement(
+    )), /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         type: "button",
         disabled: busy,
-        "aria-label": `\u5220\u9664\u8BA4\u8BC1\u5B57\u6BB5 ${index + 1}`,
+        "aria-label": l("\u5220\u9664\u8BA4\u8BC1\u5B57\u6BB5 {0}", index + 1),
         onClick: () => {
           setEntries(
             (rows) => rows.filter((_, i) => i !== index)
@@ -2849,8 +3946,8 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
           setTestResult(null);
         }
       },
-      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "trash", size: 16 })
-    ))), /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash", size: 16 })
+    ))), /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         type: "button",
@@ -2863,19 +3960,19 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
           setTestResult(null);
         }
       },
-      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "plus", size: 16 }),
-      "\u6DFB\u52A0",
-      transport === "stdio" ? "\u73AF\u5883\u53D8\u91CF" : "\u8BF7\u6C42\u5934"
-    )), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u8BA4\u8BC1\u503C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D DSH \u4E3B\u673A\uFF0C\u4E0D\u663E\u793A\u5728\u8D44\u6E90\u6587\u4EF6\u3001\u5BFC\u51FA\u5305\u548C\u6A21\u578B\u63D0\u793A\u8BCD\u4E2D\u3002\u7F16\u8F91\u65F6\u7559\u7A7A\u4FDD\u7559\u5DF2\u4FDD\u5B58\u7684\u503C\uFF0C\u5220\u9664\u5B57\u6BB5\u6216\u5173\u95ED\u8BA4\u8BC1\u5C06\u5728\u4FDD\u5B58\u540E\u79FB\u9664\u3002")), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u8FDE\u63A5\u6D4B\u8BD5\u4F1A\u5C1D\u8BD5\u542F\u52A8\u6216\u8BBF\u95EE\u8BE5\u670D\u52A1\uFF0C\u5E76\u8BFB\u53D6\u5B83\u63D0\u4F9B\u7684\u5DE5\u5177\u3002\u5B8C\u6210\u540E\u4F1A\u65AD\u5F00\u6D4B\u8BD5\u8FDE\u63A5\u3002"), /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "plus", size: 16 }),
+      l("\u6DFB\u52A0"),
+      transport === "stdio" ? l("\u73AF\u5883\u53D8\u91CF") : l("\u8BF7\u6C42\u5934")
+    )), /* @__PURE__ */ import_react7.default.createElement("p", null, l("\u8BA4\u8BC1\u503C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D DSH \u4E3B\u673A\uFF0C\u4E0D\u663E\u793A\u5728\u8D44\u6E90\u6587\u4EF6\u3001\u5BFC\u51FA\u5305\u548C\u6A21\u578B\u63D0\u793A\u8BCD\u4E2D\u3002\u7F16\u8F91\u65F6\u7559\u7A7A\u4FDD\u7559\u5DF2\u4FDD\u5B58\u7684\u503C\uFF0C\u5220\u9664\u5B57\u6BB5\u6216\u5173\u95ED\u8BA4\u8BC1\u5C06\u5728\u4FDD\u5B58\u540E\u79FB\u9664\u3002"))), /* @__PURE__ */ import_react7.default.createElement("p", null, l("\u8FDE\u63A5\u6D4B\u8BD5\u4F1A\u5C1D\u8BD5\u542F\u52A8\u6216\u8BBF\u95EE\u8BE5\u670D\u52A1\uFF0C\u5E76\u8BFB\u53D6\u5B83\u63D0\u4F9B\u7684\u5DE5\u5177\u3002\u5B8C\u6210\u540E\u4F1A\u65AD\u5F00\u6D4B\u8BD5\u8FDE\u63A5\u3002")), /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || !validConnection,
-        onClick: check
+        onClick: check2
       },
-      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "refresh" }),
-      busy ? "\u68C0\u67E5\u4E2D\u2026" : "\u68C0\u67E5\u8FDE\u63A5"
-    ), testResult && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-mcp-result", role: "status" }, /* @__PURE__ */ import_react6.default.createElement("strong", null, "\u2713 \u8FDE\u63A5\u6210\u529F", testResult.tools && ` \xB7 ${testResult.tools.length} \u4E2A\u5DE5\u5177`), testResult.tools?.map((tool) => /* @__PURE__ */ import_react6.default.createElement("p", { key: tool.name }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "mcp", size: 15 }), /* @__PURE__ */ import_react6.default.createElement("b", null, tool.name), tool.description && /* @__PURE__ */ import_react6.default.createElement("span", null, tool.description)))), /* @__PURE__ */ import_react6.default.createElement("p", null, "\u4E5F\u53EF\u4EE5\u8DF3\u8FC7\u68C0\u67E5\uFF0C\u4FDD\u5B58\u4E3A\u5F85\u9A8C\u8BC1\u914D\u7F6E\u3002")), step === 2 && /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "mcp", size: 36 }), /* @__PURE__ */ import_react6.default.createElement("h2", null, name), /* @__PURE__ */ import_react6.default.createElement("p", null, description), /* @__PURE__ */ import_react6.default.createElement("span", null, serverName, " \xB7", " ", transport === "stdio" ? "\u672C\u5730\u8FDB\u7A0B" : "\u8FDC\u7A0B HTTP")), /* @__PURE__ */ import_react6.default.createElement(
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "refresh" }),
+      busy ? l("\u68C0\u67E5\u4E2D\u2026") : l("\u68C0\u67E5\u8FDE\u63A5")
+    ), testResult && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-mcp-result", role: "status" }, /* @__PURE__ */ import_react7.default.createElement("strong", null, l("\u2713 \u8FDE\u63A5\u6210\u529F"), testResult.tools && l(" \xB7 {0} \u4E2A\u5DE5\u5177", testResult.tools.length)), testResult.tools?.map((tool) => /* @__PURE__ */ import_react7.default.createElement("p", { key: tool.name }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "mcp", size: 15 }), /* @__PURE__ */ import_react7.default.createElement("b", null, tool.name), tool.description && /* @__PURE__ */ import_react7.default.createElement("span", null, tool.description)))), /* @__PURE__ */ import_react7.default.createElement("p", null, l("\u4E5F\u53EF\u4EE5\u8DF3\u8FC7\u68C0\u67E5\uFF0C\u4FDD\u5B58\u4E3A\u5F85\u9A8C\u8BC1\u914D\u7F6E\u3002"))), step === 2 && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "mcp", size: 36 }), /* @__PURE__ */ import_react7.default.createElement("h2", null, name), /* @__PURE__ */ import_react7.default.createElement("p", null, description), /* @__PURE__ */ import_react7.default.createElement("span", null, serverName, " \xB7", " ", transport === "stdio" ? l("\u672C\u5730\u8FDB\u7A0B") : l("\u8FDC\u7A0B HTTP"))), /* @__PURE__ */ import_react7.default.createElement(
       ResourceCoverPicker,
       {
         resource: {
@@ -2887,117 +3984,582 @@ function McpWizard({ resource, onClose, onSave, onCheck }) {
         },
         onChange: setCover
       }
-    ), /* @__PURE__ */ import_react6.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react6.default.createElement(
+    ), /* @__PURE__ */ import_react7.default.createElement("label", null, l("\u6807\u7B7E\uFF08\u9009\u586B\uFF09"), /* @__PURE__ */ import_react7.default.createElement(
       "input",
       {
-        "aria-label": "\u6807\u7B7E",
+        "aria-label": l("\u6807\u7B7E"),
         value: tags,
         onChange: (e) => setTags(e.target.value),
-        placeholder: "\u4F8B\u5982\uFF1A\u6587\u4EF6\uFF0C\u641C\u7D22"
+        placeholder: l("\u4F8B\u5982\uFF1A\u6587\u4EF6\uFF0C\u641C\u7D22")
       }
-    )), /* @__PURE__ */ import_react6.default.createElement("p", null, testResult ? "\u2713 \u5DF2\u901A\u8FC7\u8FDE\u63A5\u6D4B\u8BD5" : "\u672A\u9A8C\u8BC1 \xB7 \u4FDD\u5B58\u540E\u53EF\u91CD\u65B0\u68C0\u67E5\u8FDE\u63A5"), /* @__PURE__ */ import_react6.default.createElement("details", null, /* @__PURE__ */ import_react6.default.createElement("summary", null, "\u67E5\u770B mcp.json"), /* @__PURE__ */ import_react6.default.createElement("pre", { className: "gal-skill-preview" }, (() => {
+    )), /* @__PURE__ */ import_react7.default.createElement("p", null, testResult ? l("\u2713 \u5DF2\u901A\u8FC7\u8FDE\u63A5\u6D4B\u8BD5") : l("\u672A\u9A8C\u8BC1 \xB7 \u4FDD\u5B58\u540E\u53EF\u91CD\u65B0\u68C0\u67E5\u8FDE\u63A5")), /* @__PURE__ */ import_react7.default.createElement("details", null, /* @__PURE__ */ import_react7.default.createElement("summary", null, l("\u67E5\u770B mcp.json")), /* @__PURE__ */ import_react7.default.createElement("pre", { className: "gal-skill-preview" }, (() => {
       try {
         return JSON.stringify(config(), null, 2);
       } catch {
-        return "\u8BF7\u68C0\u67E5\u8BA4\u8BC1\u4FE1\u606F\u683C\u5F0F";
+        return l("\u8BF7\u68C0\u67E5\u8BA4\u8BC1\u4FE1\u606F\u683C\u5F0F");
       }
-    })()))), error && /* @__PURE__ */ import_react6.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react6.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react6.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react6.default.createElement("strong", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "folder" }), " ", serverName || "my-mcp", "/"), /* @__PURE__ */ import_react6.default.createElement("div", null, /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "file" }), " mcp.json"))),
-    /* @__PURE__ */ import_react6.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react6.default.createElement(
+    })()))), error && /* @__PURE__ */ import_react7.default.createElement("p", { role: "alert", className: "gal-error" }, l(error))), /* @__PURE__ */ import_react7.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react7.default.createElement("summary", null, l("\u6587\u4EF6\u7ED3\u6784")), /* @__PURE__ */ import_react7.default.createElement("strong", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "folder" }), " ", serverName || "my-mcp", "/"), /* @__PURE__ */ import_react7.default.createElement("div", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "file" }), " mcp.json"))),
+    /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         disabled: busy,
         onClick: step ? () => setStep(step - 1) : onClose
       },
-      step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"
-    ), step < 2 ? /* @__PURE__ */ import_react6.default.createElement(
+      step ? l("\u4E0A\u4E00\u6B65") : l("\u53D6\u6D88")
+    ), step < 2 ? /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || step === 0 && !validName || step === 1 && !validConnection,
         onClick: () => setStep(step + 1)
       },
-      "\u4E0B\u4E00\u6B65 ",
-      /* @__PURE__ */ import_react6.default.createElement(Glyph, { name: "arrow" })
-    ) : /* @__PURE__ */ import_react6.default.createElement(
+      l("\u4E0B\u4E00\u6B65 "),
+      /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "arrow" })
+    ) : /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || parsedTags.length > 20 || parsedTags.some((x) => x.length > 40),
         onClick: save
       },
-      busy ? "\u4FDD\u5B58\u4E2D\u2026" : "\u4FDD\u5B58 MCP"
+      busy ? l("\u4FDD\u5B58\u4E2D\u2026") : l("\u4FDD\u5B58 MCP")
     ))
   ));
 }
 
 // src/client/workflow-wizard.jsx
-var import_react7 = __toESM(require("react"), 1);
+var import_react8 = __toESM(require("react"), 1);
+
+// src/workflow-loops.mjs
+var check = (ok, message) => {
+  if (!ok)
+    throw Object.assign(new Error(message), {
+      status: 400,
+      code: "INVALID_WORKFLOW"
+    });
+};
+function workflowNodeKind(task, loops = []) {
+  return task.kind === "archive" ? "archive" : task.checkpoint ? task.checkpointKind === "gate" || loops.some((loop) => loop.gateId === task.id) ? "gate" : "human" : "task";
+}
+function workflowAncestors(tasks, id) {
+  const found = /* @__PURE__ */ new Set();
+  const visit3 = (id2) => {
+    if (found.has(id2)) return;
+    found.add(id2);
+    tasks.find((t) => t.id === id2)?.dependencies.forEach(visit3);
+  };
+  tasks.find((t) => t.id === id)?.dependencies.forEach(visit3);
+  return found;
+}
+function assertWorkflowDag(tasks) {
+  const ids = new Set(tasks.map((t) => t.id)), done = /* @__PURE__ */ new Set(), visiting = /* @__PURE__ */ new Set();
+  const visit3 = (id) => {
+    check(!visiting.has(id), "\u666E\u901A\u4F9D\u8D56\u4E0D\u80FD\u5F62\u6210\u5FAA\u73AF\uFF0C\u8BF7\u4F7F\u7528\u95E8\u63A7 REJECT \u8FD4\u56DE\u7EBF");
+    if (done.has(id)) return;
+    check(ids.has(id), "\u8282\u70B9\u4F9D\u8D56\u7F3A\u5931");
+    visiting.add(id);
+    tasks.find((t) => t.id === id).dependencies.forEach(visit3);
+    visiting.delete(id);
+    done.add(id);
+  };
+  tasks.forEach((t) => {
+    check(
+      new Set(t.dependencies).size === t.dependencies.length,
+      "\u8282\u70B9\u4F9D\u8D56\u91CD\u590D"
+    );
+    visit3(t.id);
+  });
+}
+function workflowLoopBody(tasks, { gateId, entryId, rejectTaskIds = [] }) {
+  const ancestors = workflowAncestors(tasks, gateId);
+  check(ancestors.has(entryId), "\u5FAA\u73AF\u5165\u53E3\u5FC5\u987B\u4F4D\u4E8E\u95E8\u63A7\u4E0A\u6E38");
+  const body = /* @__PURE__ */ new Set([entryId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const t of tasks)
+      if (ancestors.has(t.id) && !body.has(t.id) && t.dependencies.some((id) => body.has(id))) {
+        body.add(t.id);
+        changed = true;
+      }
+  }
+  for (const id of rejectTaskIds) {
+    check(id !== gateId && !ancestors.has(id), "\u9000\u56DE\u4EFB\u52A1\u4E0D\u80FD\u540C\u65F6\u4F4D\u4E8E\u9996\u8F6E\u8DEF\u5F84");
+    check(
+      tasks.some((task) => task.id === id),
+      "\u9000\u56DE\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\u4E0D\u5B58\u5728"
+    );
+    body.add(id);
+  }
+  return [...body];
+}
+function validateWorkflowLoops(value, tasks, members, { draft = false, requireExecutionSetup = false } = {}) {
+  if (value === void 0) return void 0;
+  check(Array.isArray(value) && value.length <= 16, "\u6700\u591A\u914D\u7F6E 16 \u4E2A\u5FAA\u73AF");
+  const occupied = /* @__PURE__ */ new Set();
+  const loops = value.map((raw) => {
+    check(
+      raw && typeof raw === "object" && typeof raw.gateId === "string" && typeof raw.entryId === "string" && ["human", "ai"].includes(raw.mode),
+      "\u8BF7\u914D\u7F6E\u5FAA\u73AF\u5165\u53E3\u3001\u95E8\u63A7\u548C\u5BA1\u6838\u65B9\u5F0F"
+    );
+    const maxRounds = Number(raw.maxRounds), timeoutMinutes = Number(raw.timeoutMinutes);
+    check(
+      Number.isSafeInteger(maxRounds) && maxRounds >= 1 && maxRounds <= 20,
+      "\u8F6E\u6B21\u4E0A\u9650\u5FC5\u987B\u4E3A 1\u201320\uFF0C\u5305\u542B\u9996\u6B21\u6267\u884C"
+    );
+    check(
+      Number.isSafeInteger(timeoutMinutes) && timeoutMinutes >= 1 && timeoutMinutes <= 1440,
+      "\u6267\u884C\u8D85\u65F6\u5FC5\u987B\u4E3A 1\u20131440 \u5206\u949F"
+    );
+    const returns = raw.rejectTaskIds;
+    check(
+      returns === void 0 || Array.isArray(returns) && returns.length <= 31 && returns.every((id) => typeof id === "string" && id) && new Set(returns).size === returns.length,
+      "\u9000\u56DE\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\u65E0\u6548\u6216\u91CD\u590D"
+    );
+    const loop = {
+      gateId: raw.gateId,
+      entryId: raw.entryId,
+      mode: raw.mode,
+      maxRounds,
+      timeoutMinutes,
+      ...raw.rejectToEntry === true || returns?.length ? { rejectToEntry: true } : {},
+      ...returns?.length ? {
+        rejectTaskIds: [...returns],
+        ...raw.rejectDag === true ? { rejectDag: true } : {}
+      } : {},
+      ...typeof raw.reviewer === "string" && raw.reviewer.trim() ? { reviewer: raw.reviewer.trim() } : {}
+    };
+    const gate = tasks.find((t) => t.id === loop.gateId);
+    check(
+      gate?.checkpoint && gate.checkpointKind !== "acceptance",
+      "\u5FAA\u73AF\u9700\u8981\u72EC\u7ACB\u95E8\u63A7\uFF0C\u9A8C\u6536\u8282\u70B9\u4E0D\u80FD\u4F5C\u4E3A\u5FAA\u73AF\u95E8\u63A7"
+    );
+    const ancestors = workflowAncestors(tasks, gate.id);
+    const connected = !!loop.entryId && ancestors.has(loop.entryId);
+    check(draft || connected, "\u5FAA\u73AF\u5165\u53E3\u5FC5\u987B\u4F4D\u4E8E\u95E8\u63A7\u4E0A\u6E38");
+    const entry = tasks.find((t) => t.id === loop.entryId);
+    check(
+      !loop.entryId || entry && !entry.checkpoint && entry.kind !== "archive",
+      "\u8BF7\u9009\u62E9\u6709\u6548\u7684\u5FAA\u73AF\u5165\u53E3\u4EFB\u52A1"
+    );
+    const body = new Set(
+      connected ? workflowLoopBody(tasks, loop) : [loop.entryId, ...returns || []].filter(Boolean)
+    );
+    check(body.size <= 32 && !body.has(gate.id), "\u5FAA\u73AF\u533A\u57DF\u65E0\u6548");
+    for (const id of [...body, gate.id]) {
+      check(!occupied.has(id), "\u4E0D\u652F\u6301\u5D4C\u5957\u6216\u5171\u4EAB\u8282\u70B9\u7684\u5FAA\u73AF");
+      occupied.add(id);
+    }
+    const returnIds = loop.rejectTaskIds || [];
+    check(!returnIds.includes(loop.entryId), "\u9000\u56DE\u4EFB\u52A1\u4E0D\u80FD\u540C\u65F6\u4F4D\u4E8E\u9996\u8F6E\u8DEF\u5F84");
+    for (const id of body) {
+      const task = tasks.find((t) => t.id === id);
+      check(
+        task && !task.checkpoint && task.kind !== "archive",
+        "\u5FAA\u73AF\u4E0E\u9000\u56DE\u8DEF\u5F84\u5FC5\u987B\u7531\u666E\u901A\u6267\u884C\u4EFB\u52A1\u7EC4\u6210"
+      );
+      if (requireExecutionSetup)
+        check(
+          task.assignee && members.some((m) => m.name === task.assignee),
+          "\u8BF7\u5148\u4E3A\u5FAA\u73AF\u5185\u4EFB\u52A1\u6307\u5B9A\u6709\u6548\u8D1F\u8D23\u4EBA"
+        );
+      const index = returnIds.indexOf(id);
+      if (index >= 0) {
+        check(!ancestors.has(id), "\u9000\u56DE\u4EFB\u52A1\u4E0D\u80FD\u540C\u65F6\u4F4D\u4E8E\u9996\u8F6E\u8DEF\u5F84");
+        if (draft && !connected) continue;
+        const earlier = loop.rejectDag ? returnIds : returnIds.slice(0, index);
+        const later = loop.rejectDag ? returnIds : returnIds.slice(index + 1);
+        check(
+          task.dependencies.every(
+            (dep) => earlier.includes(dep) || ancestors.has(dep) && !body.has(dep)
+          ) && !tasks.some(
+            (other) => other.dependencies.includes(id) && !later.includes(other.id)
+          ),
+          "\u9000\u56DE\u4EFB\u52A1\u53EA\u80FD\u4F9D\u8D56\u9996\u8F6E\u5916\u90E8\u8F93\u5165\u6216\u540C\u4E00\u8DEF\u5F84\u4E2D\u7684\u4EFB\u52A1\uFF0C\u8F93\u51FA\u4E0D\u80FD\u7ED5\u8FC7\u95E8\u63A7"
+        );
+      } else if (connected) {
+        check(
+          !tasks.some(
+            (t) => !body.has(t.id) && t.id !== gate.id && t.dependencies.includes(id)
+          ),
+          "\u5FAA\u73AF\u5185\u7684\u8F93\u51FA\u5FC5\u987B\u7ECF\u8FC7\u95E8\u63A7\u624D\u80FD\u8FDE\u63A5\u73AF\u5916"
+        );
+      }
+    }
+    if (loop.mode === "ai" && requireExecutionSetup) {
+      check(
+        loop.reviewer && members.some((m) => m.name === loop.reviewer),
+        "\u8BF7\u9009\u62E9\u6709\u6548\u7684 AI \u5BA1\u6838\u6210\u5458"
+      );
+      check(
+        !tasks.some((t) => body.has(t.id) && t.assignee === loop.reviewer),
+        "AI \u5BA1\u6838\u6210\u5458\u4E0D\u80FD\u8D1F\u8D23\u5FAA\u73AF\u5185\u4EFB\u52A1\uFF0C\u8BF7\u9009\u62E9\u72EC\u7ACB\u5BA1\u6838\u6210\u5458"
+      );
+    }
+    return loop;
+  });
+  return loops.length ? loops : void 0;
+}
+
+// src/client/workflow-connections.mjs
+var plain = (task) => task && !task.checkpoint && task.kind !== "archive";
+var fail = (message) => {
+  throw new Error(message);
+};
+function configureRejectTarget(tasks, loops = [], gateId, targetId) {
+  const gate = tasks.find((t) => t.id === gateId), target = tasks.find((t) => t.id === targetId);
+  if (!gate?.checkpoint || gate.checkpointKind === "acceptance" || !plain(target))
+    fail("REJECT \u53EA\u80FD\u8FDE\u63A5\u666E\u901A\u4EFB\u52A1");
+  const previous = loops.find((loop) => loop.gateId === gateId);
+  const next = {
+    gateId,
+    entryId: "",
+    mode: gate.reviewMode || "human",
+    maxRounds: 3,
+    timeoutMinutes: 30,
+    rejectToEntry: true,
+    ...previous
+  };
+  if (workflowAncestors(tasks, gateId).has(targetId)) {
+    next.entryId = targetId;
+    next.rejectTaskIds = (next.rejectTaskIds || []).filter(
+      (id) => id !== targetId
+    );
+  } else {
+    next.rejectTaskIds = [
+      .../* @__PURE__ */ new Set([...next.rejectTaskIds || [], targetId])
+    ];
+    next.rejectDag = previous?.rejectTaskIds?.length && !previous.rejectDag ? void 0 : true;
+    next.rejectToEntry = true;
+  }
+  const result = [...loops.filter((loop) => loop.gateId !== gateId), next];
+  validateWorkflowLoops(result, tasks, [], { draft: true });
+  return result;
+}
+function connectWorkflowNodes(tasks, loops = [], from, to) {
+  if (!tasks.some((t) => t.id === from) || !tasks.some((t) => t.id === to) || from === to)
+    fail("\u8BF7\u9009\u62E9\u4E24\u4E2A\u4E0D\u540C\u7684\u4EFB\u52A1\u8282\u70B9");
+  const branch = loops.find((loop) => loop.rejectTaskIds?.includes(from));
+  let nextLoops = loops;
+  if (branch && to === branch.entryId) return { tasks, loops };
+  if (branch && !branch.rejectTaskIds.includes(to))
+    nextLoops = configureRejectTarget(tasks, loops, branch.gateId, to);
+  const next = tasks.map(
+    (task) => task.id === to ? { ...task, dependencies: [.../* @__PURE__ */ new Set([...task.dependencies, from])] } : task
+  );
+  assertWorkflowDag(next);
+  validateWorkflowLoops(nextLoops, next, [], { draft: true });
+  return { tasks: next, loops: nextLoops };
+}
+function removeRejectTask(tasks, loops, gateId, id) {
+  const loop = loops.find((loop2) => loop2.gateId === gateId);
+  const branch = new Set(loop?.rejectTaskIds || []);
+  return {
+    tasks: tasks.map((t) => ({
+      ...t,
+      dependencies: t.dependencies.filter(
+        (dep) => !(t.id === id && branch.has(dep) || branch.has(t.id) && dep === id)
+      )
+    })),
+    loops: loops.map(
+      (l) => l.gateId === gateId ? {
+        ...l,
+        rejectTaskIds: (l.rejectTaskIds || []).filter(
+          (value) => value !== id
+        )
+      } : l
+    )
+  };
+}
+function workflowRejectEdges(tasks, loop) {
+  const ids = loop.rejectTaskIds || [], selected = new Set(ids), edges = [];
+  if (!ids.length)
+    return loop.entryId ? [
+      {
+        from: loop.gateId,
+        to: loop.entryId,
+        kind: "return",
+        gateId: loop.gateId
+      }
+    ] : [];
+  if (!loop.rejectDag) {
+    edges.push({
+      from: loop.gateId,
+      to: ids[0],
+      kind: "reject-start",
+      gateId: loop.gateId
+    });
+    for (let i = 1; i < ids.length; i++)
+      if (!tasks.find((t) => t.id === ids[i])?.dependencies.includes(ids[i - 1]))
+        edges.push({
+          from: ids[i - 1],
+          to: ids[i],
+          kind: "reject-order",
+          gateId: loop.gateId
+        });
+    if (loop.entryId)
+      edges.push({
+        from: ids.at(-1),
+        to: loop.entryId,
+        kind: "reject-end",
+        gateId: loop.gateId
+      });
+    return edges;
+  }
+  for (const id of ids) {
+    if (!tasks.find((t) => t.id === id)?.dependencies.some((dep) => selected.has(dep)))
+      edges.push({
+        from: loop.gateId,
+        to: id,
+        kind: "reject-start",
+        gateId: loop.gateId
+      });
+    if (loop.entryId && !tasks.some((t) => selected.has(t.id) && t.dependencies.includes(id)))
+      edges.push({
+        from: id,
+        to: loop.entryId,
+        kind: "reject-end",
+        gateId: loop.gateId
+      });
+  }
+  return edges;
+}
 
 // src/workflow-template.mjs
 function demand(ok, status, code, message) {
   if (!ok) throw Object.assign(new Error(message), { status, code });
 }
 var object = (v, label) => {
-  demand(v && typeof v === "object" && !Array.isArray(v), 400, "INVALID_WORKFLOW", `${label} \u683C\u5F0F\u65E0\u6548`);
+  demand(
+    v && typeof v === "object" && !Array.isArray(v),
+    400,
+    "INVALID_WORKFLOW",
+    `${label} \u683C\u5F0F\u65E0\u6548`
+  );
   return v;
 };
 var text = (v, label, max, required = false) => {
-  demand(typeof v === "string" && v.length <= max && (!required || v.trim()), 400, "INVALID_WORKFLOW", `${label} \u4E0D\u80FD\u4E3A\u7A7A\u6216\u8D85\u8FC7 ${max} \u5B57\u7B26`);
+  demand(
+    typeof v === "string" && v.length <= max && (!required || v.trim()),
+    400,
+    "INVALID_WORKFLOW",
+    `${label} \u4E0D\u80FD\u4E3A\u7A7A\u6216\u8D85\u8FC7 ${max} \u5B57\u7B26`
+  );
   return v.trim();
 };
 var array = (v, label, max) => {
-  demand(Array.isArray(v) && v.length <= max, 400, "INVALID_WORKFLOW", `${label} \u683C\u5F0F\u65E0\u6548\u6216\u8FC7\u957F`);
+  demand(
+    Array.isArray(v) && v.length <= max,
+    400,
+    "INVALID_WORKFLOW",
+    `${label} \u683C\u5F0F\u65E0\u6548\u6216\u8FC7\u957F`
+  );
   return v;
 };
-function validateWorkflowTemplate(input) {
+var MAX_WORKFLOW_TEXT_LENGTH = 256e3;
+function validateWorkflowTemplate(input, options = {}) {
   const v = object(input, "\u6A21\u677F");
   const members = array(v.members, "\u6210\u5458", 32).map((raw) => {
     const m = object(raw, "\u6210\u5458");
     const access = {};
     for (const key of ["gallerySkill", "galleryMcp"]) {
       if (m[key] === void 0) continue;
-      demand(typeof m[key] === "boolean", 400, "INVALID_WORKFLOW", `${key} \u5FC5\u987B\u662F\u5E03\u5C14\u503C`);
+      demand(
+        typeof m[key] === "boolean",
+        400,
+        "INVALID_WORKFLOW",
+        `${key} \u5FC5\u987B\u662F\u5E03\u5C14\u503C`
+      );
       access[key] = m[key];
     }
-    return { ...access, name: text(m.name, "\u6210\u5458\u540D\u79F0", 80, true), summary: text(m.summary, "\u7B80\u4ECB", 16e3), role: text(m.role, "\u89D2\u8272", 16e3), executionPrompt: text(m.executionPrompt, "\u6267\u884C\u6307\u4EE4", 16e3) };
+    return {
+      ...access,
+      name: text(m.name, "\u6210\u5458\u540D\u79F0", 80, true),
+      summary: text(m.summary, "\u7B80\u4ECB", MAX_WORKFLOW_TEXT_LENGTH),
+      role: text(m.role, "\u89D2\u8272", MAX_WORKFLOW_TEXT_LENGTH),
+      executionPrompt: text(
+        m.executionPrompt,
+        "\u6267\u884C\u6307\u4EE4",
+        MAX_WORKFLOW_TEXT_LENGTH
+      )
+    };
   });
-  demand(members.every((m) => /^[\p{L}\p{N}_-]+$/u.test(m.name) && m.name.toLowerCase() !== "captain") && new Set(members.map((m) => m.name.toLowerCase())).size === members.length, 400, "INVALID_WORKFLOW", "\u6210\u5458\u540D\u79F0\u91CD\u590D\u6216\u65E0\u6548");
+  demand(
+    members.every(
+      (m) => /^[\p{L}\p{N}_-]+$/u.test(m.name) && m.name.toLowerCase() !== "captain"
+    ) && new Set(members.map((m) => m.name.toLowerCase())).size === members.length,
+    400,
+    "INVALID_WORKFLOW",
+    "\u6210\u5458\u540D\u79F0\u91CD\u590D\u6216\u65E0\u6548"
+  );
   const tasks = array(v.tasks, "\u8282\u70B9", 32).map((raw) => {
     const t = object(raw, "\u8282\u70B9"), g = object(t.general, "\u4EFB\u52A1\u8981\u6C42");
     const id = text(t.id, "\u8282\u70B9 ID", 80, true);
-    demand(/^[a-zA-Z0-9_-]+$/.test(id) && typeof t.checkpoint === "boolean", 400, "INVALID_WORKFLOW", "\u8282\u70B9 ID \u6216\u7C7B\u578B\u65E0\u6548");
-    demand(!/^t\d+$/.test(id) || Number.isSafeInteger(Number(id.slice(1))) && Number(id.slice(1)) < Number.MAX_SAFE_INTEGER, 400, "INVALID_WORKFLOW", "\u8282\u70B9\u5E8F\u53F7\u8D85\u51FA\u8303\u56F4");
-    return { id, subject: text(t.subject, "\u8282\u70B9\u540D\u79F0", 200, true), assignee: text(t.assignee, "\u8D1F\u8D23\u4EBA", 80), dependencies: array(t.dependencies, "\u4F9D\u8D56", 32).map((d) => text(d, "\u4F9D\u8D56 ID", 80, true)), checkpoint: t.checkpoint, general: { requirements: text(g.requirements, "\u4EFB\u52A1\u8981\u6C42", 16e3), deliverables: text(g.deliverables, "\u4EA4\u4ED8\u7269", 16e3), acceptance: text(g.acceptance, "\u9A8C\u6536\u6807\u51C6", 16e3) } };
+    demand(
+      /^[a-zA-Z0-9_-]+$/.test(id) && typeof t.checkpoint === "boolean",
+      400,
+      "INVALID_WORKFLOW",
+      "\u8282\u70B9 ID \u6216\u7C7B\u578B\u65E0\u6548"
+    );
+    demand(
+      !/^t\d+$/.test(id) || Number.isSafeInteger(Number(id.slice(1))) && Number(id.slice(1)) < Number.MAX_SAFE_INTEGER,
+      400,
+      "INVALID_WORKFLOW",
+      "\u8282\u70B9\u5E8F\u53F7\u8D85\u51FA\u8303\u56F4"
+    );
+    demand(
+      t.reviewMode === void 0 || t.checkpoint && ["human", "ai"].includes(t.reviewMode),
+      400,
+      "INVALID_WORKFLOW",
+      "\u6A21\u677F\u5BA1\u6838\u65B9\u5F0F\u65E0\u6548"
+    );
+    demand(
+      t.checkpointKind === void 0 || t.checkpoint && ["gate", "acceptance"].includes(t.checkpointKind),
+      400,
+      "INVALID_WORKFLOW",
+      "\u6A21\u677F\u5BA1\u6838\u8282\u70B9\u7C7B\u578B\u65E0\u6548"
+    );
+    demand(
+      t.kind === void 0 || ["work", "archive"].includes(t.kind),
+      400,
+      "INVALID_WORKFLOW",
+      "\u6A21\u677F\u4EFB\u52A1\u7C7B\u578B\u65E0\u6548"
+    );
+    let archive;
+    if (t.kind === "archive") {
+      demand(
+        !t.checkpoint && !t.assignee,
+        400,
+        "INVALID_WORKFLOW",
+        "\u5F52\u6863\u8282\u70B9\u4E0D\u80FD\u8BBE\u7F6E\u8D1F\u8D23\u4EBA\u6216\u95E8\u63A7"
+      );
+      const config = t.archive === void 0 ? {} : object(t.archive, "\u5F52\u6863\u914D\u7F6E");
+      demand(
+        config.copyFiles === void 0 || typeof config.copyFiles === "boolean",
+        400,
+        "INVALID_WORKFLOW",
+        "copyFiles \u5FC5\u987B\u662F\u5E03\u5C14\u503C"
+      );
+      archive = {
+        copyFiles: config.copyFiles === true,
+        paths: [
+          ...new Set(
+            array(config.paths ?? [], "\u5F52\u6863\u8DEF\u5F84", 100).map(
+              (p) => text(p, "\u5F52\u6863\u8DEF\u5F84", 1e3, true)
+            )
+          )
+        ]
+      };
+    }
+    return {
+      id,
+      subject: text(t.subject, "\u8282\u70B9\u540D\u79F0", 200, true),
+      assignee: text(t.assignee, "\u8D1F\u8D23\u4EBA", 80),
+      dependencies: array(t.dependencies, "\u4F9D\u8D56", 32).map(
+        (d) => text(d, "\u4F9D\u8D56 ID", 80, true)
+      ),
+      checkpoint: t.checkpoint,
+      ...t.checkpointKind ? { checkpointKind: t.checkpointKind } : {},
+      ...t.reviewMode ? { reviewMode: t.reviewMode } : {},
+      ...archive ? { kind: "archive", archive } : {},
+      general: {
+        requirements: text(
+          g.requirements,
+          "\u4EFB\u52A1\u8981\u6C42",
+          MAX_WORKFLOW_TEXT_LENGTH
+        ),
+        deliverables: text(g.deliverables, "\u4EA4\u4ED8\u7269", MAX_WORKFLOW_TEXT_LENGTH),
+        acceptance: text(g.acceptance, "\u9A8C\u6536\u6807\u51C6", MAX_WORKFLOW_TEXT_LENGTH)
+      }
+    };
   });
-  demand(tasks.length > 0 && new Set(tasks.map((t) => t.id)).size === tasks.length, 400, "INVALID_WORKFLOW", "\u9700\u8981 1\u201332 \u4E2A\u4E0D\u540C\u7684\u8282\u70B9");
+  demand(
+    tasks.length > 0 && new Set(tasks.map((t) => t.id)).size === tasks.length,
+    400,
+    "INVALID_WORKFLOW",
+    "\u9700\u8981 1\u201332 \u4E2A\u4E0D\u540C\u7684\u8282\u70B9"
+  );
   const ids = new Set(tasks.map((t) => t.id)), names2 = new Set(members.map((m) => m.name));
   for (const t of tasks) {
-    demand(!(t.checkpoint && t.assignee) && (!t.assignee || t.assignee === "captain" || names2.has(t.assignee)), 400, "INVALID_WORKFLOW", "\u8282\u70B9\u8D1F\u8D23\u4EBA\u4E0D\u5B58\u5728\u6216\u4EBA\u5DE5\u8282\u70B9\u5206\u914D\u4E86\u8D1F\u8D23\u4EBA");
-    demand(t.dependencies.every((id) => ids.has(id)) && new Set(t.dependencies).size === t.dependencies.length, 400, "INVALID_WORKFLOW", "\u8282\u70B9\u4F9D\u8D56\u7F3A\u5931\u6216\u91CD\u590D");
+    demand(
+      !(t.checkpoint && t.assignee) && (!t.assignee || t.assignee === "captain" || names2.has(t.assignee)),
+      400,
+      "INVALID_WORKFLOW",
+      "\u8282\u70B9\u8D1F\u8D23\u4EBA\u4E0D\u5B58\u5728\u6216\u4EBA\u5DE5\u8282\u70B9\u5206\u914D\u4E86\u8D1F\u8D23\u4EBA"
+    );
+    demand(
+      t.dependencies.every((id) => ids.has(id)) && new Set(t.dependencies).size === t.dependencies.length,
+      400,
+      "INVALID_WORKFLOW",
+      "\u8282\u70B9\u4F9D\u8D56\u7F3A\u5931\u6216\u91CD\u590D"
+    );
   }
-  const done = /* @__PURE__ */ new Set(), visiting = /* @__PURE__ */ new Set();
-  function visit3(id) {
-    demand(!visiting.has(id), 400, "INVALID_WORKFLOW", "\u8282\u70B9\u4F9D\u8D56\u4EA7\u751F\u5FAA\u73AF");
-    if (done.has(id)) return;
-    visiting.add(id);
-    tasks.find((t) => t.id === id).dependencies.forEach(visit3);
-    visiting.delete(id);
-    done.add(id);
-  }
-  tasks.forEach((t) => visit3(t.id));
+  assertWorkflowDag(tasks);
+  const loops = validateWorkflowLoops(v.loops, tasks, members, options);
   const positions = {};
-  for (const [key, raw] of Object.entries(object(v.positions ?? {}, "\u753B\u5E03\u4F4D\u7F6E"))) {
+  for (const [key, raw] of Object.entries(
+    object(v.positions ?? {}, "\u753B\u5E03\u4F4D\u7F6E")
+  )) {
     const p = object(raw, "\u4F4D\u7F6E");
-    demand(key.startsWith("task:") && ids.has(key.slice(5)) && ["x", "y"].every((k) => typeof p[k] === "number" && Number.isFinite(p[k]) && p[k] >= 0 && p[k] <= 1e4), 400, "INVALID_WORKFLOW", "\u753B\u5E03\u4F4D\u7F6E\u65E0\u6548");
+    demand(
+      key.startsWith("task:") && ids.has(key.slice(5)) && ["x", "y"].every(
+        (k) => typeof p[k] === "number" && Number.isFinite(p[k]) && p[k] >= 0 && p[k] <= 1e4
+      ),
+      400,
+      "INVALID_WORKFLOW",
+      "\u753B\u5E03\u4F4D\u7F6E\u65E0\u6548"
+    );
     positions[key] = { x: p.x, y: p.y };
   }
-  return { name: text(v.name, "\u540D\u79F0", 120, true), description: text(v.description, "\u63CF\u8FF0", 2e3), inputs: text(v.inputs, "\u8F93\u5165", 4e3), tags: [...new Set(array(v.tags, "\u6807\u7B7E", 12).map((t) => text(t, "\u6807\u7B7E", 40, true)))], members, tasks, positions };
+  return {
+    name: text(v.name, "\u540D\u79F0", 120, true),
+    description: text(v.description, "\u63CF\u8FF0", 2e3),
+    inputs: text(v.inputs, "\u8F93\u5165", 4e3),
+    tags: [
+      ...new Set(
+        array(v.tags, "\u6807\u7B7E", 12).map((t) => text(t, "\u6807\u7B7E", 40, true))
+      )
+    ],
+    members,
+    tasks,
+    positions,
+    ...loops ? { loops } : {}
+  };
+}
+function workflowFromResource(resource, options = {}) {
+  const file = resource.files?.find(
+    (f) => f.path === "workflow.json" && f.encoding === "utf8"
+  );
+  demand(file, 400, "INVALID_WORKFLOW", "\u7F3A\u5C11 workflow.json");
+  let definition;
+  try {
+    definition = JSON.parse(file.content);
+  } catch {
+    demand(false, 400, "INVALID_WORKFLOW", "workflow.json \u4E0D\u662F\u6709\u6548 JSON");
+  }
+  return validateWorkflowTemplate(definition, options);
+}
+function workflowTemplateIssues(definition) {
+  const issues = [];
+  try {
+    validateWorkflowTemplate(definition);
+  } catch (error) {
+    issues.push(error.message);
+  }
+  if (definition.tasks.some((t) => !t.general.requirements.trim()))
+    issues.push("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u901A\u7528\u4EFB\u52A1\u8981\u6C42\u6216\u901A\u7528\u68C0\u67E5\u8981\u6C42");
+  return issues;
 }
 
 // src/client/workflow-wizard.jsx
 var nodeWidth = 220;
 var nodeHeight = 110;
 var portY = nodeHeight / 2;
+var nodeTypes = [["agent", "Agent"], ["task", "\u4EFB\u52A1"], ["gate", "\u95E8\u63A7"], ["human", "\u9A8C\u6536"], ["archive", "\u5F52\u6863"]];
+var nodeLabel = (kind) => ({ task: "\u4EFB\u52A1\u8282\u70B9", gate: "\u95E8\u63A7\u5224\u65AD", human: "\u9A8C\u6536\u8282\u70B9", archive: "\u6210\u679C\u5F52\u6863" })[kind];
+var memberInitial = (member) => [...member.snapshot?.name || member.label || "A"][0].toUpperCase();
+var nodeIcon = (kind) => ({ agent: "agent", task: "file", gate: "workflow", human: "user", archive: "download" })[kind];
+var portPoint = (position, side) => side === "reject" ? { x: position.x + nodeWidth / 2, y: position.y + nodeHeight } : { x: position.x + (side === "out" ? nodeWidth : 0), y: position.y + portY };
 var galleryAccess = [
   ["gallerySkill", "\u5141\u8BB8\u4F7F\u7528 Gallery Skill"],
   ["galleryMcp", "\u5141\u8BB8\u4F7F\u7528 Gallery MCP"]
@@ -3043,6 +4605,7 @@ function initial(resource) {
   return {
     definition: {
       ...definition,
+      loops: definition.loops?.map((loop) => ({ ...loop, reviewer: agents.find((a) => (a.memberName || a.id) === loop.reviewer)?.id || loop.reviewer })),
       tasks: definition.tasks.map((t) => ({
         ...t,
         assignee: saved ? agents.find((a) => (a.memberName || a.id) === t.assignee)?.id || t.assignee : t.assignee
@@ -3062,32 +4625,35 @@ function initial(resource) {
 }
 function WorkflowWizard({
   resource,
+  importedResource,
   onClose,
   onSave,
   onList,
   onGet,
   onExtract
 }) {
-  const [cover, setCover] = (0, import_react7.useState)(resource?.metadata?.cover ?? "");
-  const [fullscreen, setFullscreen] = (0, import_react7.useState)(false);
-  const editor = (0, import_react7.useRef)(null), pan = (0, import_react7.useRef)(null), zoomValue = (0, import_react7.useRef)(1), cameraRef = (0, import_react7.useRef)({ x: 0, y: 0 }), boxDrag = (0, import_react7.useRef)(null);
-  const [camera, setCamera] = (0, import_react7.useState)({ x: 0, y: 0 });
-  const [selection, setSelection] = (0, import_react7.useState)([]), [marquee, setMarquee] = (0, import_react7.useState)(null);
+  const l = useGalleryText();
+  const source = resource ?? importedResource;
+  const [cover, setCover] = (0, import_react8.useState)(source?.metadata?.cover ?? "");
+  const [fullscreen, setFullscreen] = (0, import_react8.useState)(false);
+  const editor = (0, import_react8.useRef)(null), pan = (0, import_react8.useRef)(null), zoomValue = (0, import_react8.useRef)(1), cameraRef = (0, import_react8.useRef)({ x: 0, y: 0 }), boxDrag = (0, import_react8.useRef)(null);
+  const [camera, setCamera] = (0, import_react8.useState)({ x: 0, y: 0 });
+  const [selection, setSelection] = (0, import_react8.useState)([]), [marquee, setMarquee] = (0, import_react8.useState)(null);
   function cameraTo(value) {
     cameraRef.current = value;
     setCamera(value);
   }
-  const arrow = (0, import_react7.useId)();
-  const [start] = (0, import_react7.useState)(() => initial(resource));
-  const [draft, setDraft] = (0, import_react7.useState)(start.definition), [agents, setAgents] = (0, import_react7.useState)(start.agents), [positions, setPositions] = (0, import_react7.useState)(start.positions);
-  const [contextMenu, setContextMenu] = (0, import_react7.useState)(null);
-  const connection = (0, import_react7.useRef)(null);
-  const [wire, setWire] = (0, import_react7.useState)(null);
-  const [catalog, setCatalog] = (0, import_react7.useState)([]);
-  const [selected, setSelected] = (0, import_react7.useState)(null), [linkFrom, setLinkFrom] = (0, import_react7.useState)(null), [zoom, setZoom] = (0, import_react7.useState)(1);
-  const [error, setError] = (0, import_react7.useState)(""), [loading, setLoading] = (0, import_react7.useState)(true), [busy, setBusy] = (0, import_react7.useState)(false);
-  const drag = (0, import_react7.useRef)(null), board = (0, import_react7.useRef)(null), view = (0, import_react7.useRef)(null), pendingAgent = (0, import_react7.useRef)(0);
-  (0, import_react7.useEffect)(() => {
+  const arrow = (0, import_react8.useId)();
+  const [start] = (0, import_react8.useState)(() => initial(source));
+  const [draft, setDraft] = (0, import_react8.useState)(start.definition), [agents, setAgents] = (0, import_react8.useState)(start.agents), [positions, setPositions] = (0, import_react8.useState)(start.positions);
+  const [contextMenu, setContextMenu] = (0, import_react8.useState)(null);
+  const connection = (0, import_react8.useRef)(null);
+  const [wire, setWire] = (0, import_react8.useState)(null);
+  const [catalog, setCatalog] = (0, import_react8.useState)([]);
+  const [selected, setSelected] = (0, import_react8.useState)(null), [linkFrom, setLinkFrom] = (0, import_react8.useState)(null), [zoom, setZoom] = (0, import_react8.useState)(1);
+  const [error, setError] = (0, import_react8.useState)(""), [loading, setLoading] = (0, import_react8.useState)(true), [busy, setBusy] = (0, import_react8.useState)(false);
+  const drag = (0, import_react8.useRef)(null), board = (0, import_react8.useRef)(null), view = (0, import_react8.useRef)(null), pendingAgent = (0, import_react8.useRef)(0);
+  (0, import_react8.useEffect)(() => {
     let live = true;
     onList("agent").then((entries) => {
       if (live) setCatalog(entries);
@@ -3112,10 +4678,7 @@ function WorkflowWizard({
     setZoom(next);
   }
   function fitView() {
-    const points = [
-      ...Object.values(positions),
-      ...agents.map((a) => a.position)
-    ];
+    const points = Object.values(positions);
     if (!points.length || !view.current) {
       cameraTo({ x: 0, y: 0 });
       zoomValue.current = 1;
@@ -3136,7 +4699,7 @@ function WorkflowWizard({
     setZoom(z);
     cameraTo({ x: 30 - minX * z, y: 30 - minY * z });
   }
-  (0, import_react7.useEffect)(() => {
+  (0, import_react8.useEffect)(() => {
     fitView();
   }, []);
   function worldPoint(event) {
@@ -3146,7 +4709,7 @@ function WorkflowWizard({
       y: (event.clientY - r.top - cameraRef.current.y) / zoomValue.current
     };
   }
-  (0, import_react7.useEffect)(() => {
+  (0, import_react8.useEffect)(() => {
     const viewport = view.current;
     const wheel = (event) => {
       event.preventDefault();
@@ -3161,7 +4724,7 @@ function WorkflowWizard({
     viewport.addEventListener("wheel", wheel, { passive: false });
     return () => viewport.removeEventListener("wheel", wheel);
   }, []);
-  (0, import_react7.useEffect)(() => {
+  (0, import_react8.useEffect)(() => {
     const change = () => setFullscreen(document.fullscreenElement === editor.current);
     document.addEventListener("fullscreenchange", change);
     return () => document.removeEventListener("fullscreenchange", change);
@@ -3196,6 +4759,40 @@ function WorkflowWizard({
   const updateAgent = (patch) => setAgents(
     (rows) => rows.map((a) => a.id === selected.id ? { ...a, ...patch } : a)
   );
+  const selectedKind = task ? workflowNodeKind(task, draft.loops) : null;
+  const selectedLoop = task && draft.loops?.find((loop) => loop.gateId === task.id);
+  function setLoop(gateId, patch) {
+    setDraft((d) => {
+      const gate = d.tasks.find((t) => t.id === gateId);
+      const previous = d.loops?.find((loop) => loop.gateId === gateId);
+      const next = { gateId, entryId: "", mode: gate?.reviewMode || "human", maxRounds: 3, timeoutMinutes: 30, rejectToEntry: previous ? Boolean(previous.rejectToEntry) : true, ...previous, ...patch };
+      return { ...d, loops: [...(d.loops || []).filter((loop) => loop.gateId !== gateId), next] };
+    });
+  }
+  function setReturn(gateId, entryId) {
+    if (!entryId) {
+      setLoop(gateId, { entryId: "" });
+      return;
+    }
+    try {
+      update({ loops: configureRejectTarget(draft.tasks, draft.loops, gateId, entryId) });
+    } catch (error2) {
+      setError(l(error2.message));
+      return;
+    }
+    setSelected({ kind: "task", id: gateId });
+    setSelection([gateId]);
+    setError("");
+  }
+  let loopBody = [], loopIssue = "";
+  if (selectedLoop) {
+    try {
+      loopBody = workflowLoopBody(draft.tasks, selectedLoop);
+      validateWorkflowLoops(draft.loops, draft.tasks, agents.map((a) => ({ name: a.id })), { requireExecutionSetup: true });
+    } catch (error2) {
+      loopIssue = error2.message;
+    }
+  }
   function add(kind, point) {
     if (busy) return;
     setError("");
@@ -3204,13 +4801,13 @@ function WorkflowWizard({
       y: (70 - cameraRef.current.y) / zoomValue.current + (draft.tasks.length + agents.length) % 4 * 45
     };
     if (kind === "agent") {
-      if (agents.length >= 32) return setError("\u6700\u591A\u6DFB\u52A0 32 \u4E2A Agent");
+      if (agents.length >= 32) return setError(l("\u6700\u591A\u6DFB\u52A0 32 \u4E2A Agent"));
       const id = createResourceIdentifier("a");
       setAgents((rows) => [
         ...rows,
         {
           id,
-          label: "\u9009\u62E9 Agent",
+          label: l("\u9009\u62E9 Agent"),
           resourceId: "",
           skills: [],
           mcps: [],
@@ -3220,21 +4817,23 @@ function WorkflowWizard({
         }
       ]);
       setSelected({ kind: "agent", id });
-      setSelection([id]);
+      setSelection([]);
     } else {
       if (draft.tasks.length >= 32)
-        return setError("\u6700\u591A\u6DFB\u52A0 32 \u4E2A\u4EFB\u52A1\u6216\u4EBA\u5DE5\u8282\u70B9");
+        return setError(l("\u6700\u591A\u6DFB\u52A0 32 \u4E2A\u6D41\u7A0B\u8282\u70B9"));
       const id = createResourceIdentifier("t");
       update({
         tasks: [
           ...draft.tasks,
           {
             id,
-            subject: kind === "human" ? "\u4EBA\u5DE5\u786E\u8BA4" : "\u65B0\u4EFB\u52A1",
+            subject: kind === "human" ? l("\u9A8C\u6536\u786E\u8BA4") : kind === "gate" ? l("\u5BA1\u6838\u5224\u65AD") : kind === "archive" ? l("\u6210\u679C\u5F52\u6863") : l("\u65B0\u4EFB\u52A1"),
             assignee: "",
             dependencies: [],
-            checkpoint: kind === "human",
-            general: { requirements: "", deliverables: "", acceptance: "" }
+            checkpoint: kind === "human" || kind === "gate",
+            ...["human", "gate"].includes(kind) ? { checkpointKind: kind === "gate" ? "gate" : "acceptance", reviewMode: "human" } : {},
+            ...kind === "archive" ? { kind: "archive", archive: { copyFiles: false, paths: [] } } : {},
+            general: { requirements: kind === "archive" ? l("\u6574\u7406\u5E76\u5F52\u6863\u4E0A\u6E38\u4EFB\u52A1\u7684\u6210\u679C\u548C\u8BC1\u636E\u3002") : "", deliverables: "", acceptance: "" }
           }
         ]
       });
@@ -3265,10 +4864,7 @@ function WorkflowWizard({
       x: event.clientX,
       y: event.clientY,
       ids,
-      positions: {
-        ...positions,
-        ...Object.fromEntries(agents.map((a) => [a.id, a.position]))
-      }
+      positions: { ...positions }
     };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -3279,11 +4875,6 @@ function WorkflowWizard({
       x: Math.round(d.positions[id].x + dx),
       y: Math.round(d.positions[id].y + dy)
     });
-    setAgents(
-      (rows) => rows.map(
-        (a) => d.ids.includes(a.id) ? { ...a, position: point(a.id) } : a
-      )
-    );
     setPositions(
       (p) => Object.fromEntries(
         Object.entries(p).map(([id, value]) => [
@@ -3301,24 +4892,9 @@ function WorkflowWizard({
   }
   function connect(to, from = linkFrom) {
     if (!from)
-      return setError("\u5148\u70B9\u51FB\u524D\u7F6E\u8282\u70B9\u53F3\u4FA7\u5706\u70B9\uFF0C\u518D\u70B9\u51FB\u540E\u7EED\u8282\u70B9\u5DE6\u4FA7\u5706\u70B9");
+      return setError(l("\u4ECE\u524D\u7F6E\u8282\u70B9\u7684\u8F93\u51FA\u5706\u70B9\u62D6\u52A8\u5230\u540E\u7EED\u8282\u70B9\u7684\u8F93\u5165\u5706\u70B9"));
     try {
-      const tasks = draft.tasks.map(
-        (t) => t.id === to ? { ...t, dependencies: [.../* @__PURE__ */ new Set([...t.dependencies, from])] } : t
-      );
-      validateWorkflowTemplate({
-        ...draft,
-        name: draft.name || "\u8349\u7A3F",
-        members: agents.map((a) => ({
-          name: a.id,
-          summary: "",
-          role: "",
-          executionPrompt: ""
-        })),
-        tasks: tasks.map((t) => ({ ...t, subject: t.subject || "\u8282\u70B9" })),
-        positions: {}
-      });
-      update({ tasks });
+      update(connectWorkflowNodes(draft.tasks, draft.loops, from, to));
       setError("");
       setLinkFrom(null);
     } catch (e) {
@@ -3339,7 +4915,8 @@ function WorkflowWizard({
     const port = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-flow-port]");
     if (!port || !view.current?.contains(port)) return null;
     const { flowPort, node } = port.dataset;
-    return flowPort !== start2.side && node !== start2.id ? port.dataset : null;
+    const compatible = start2.side === "in" ? ["out", "reject"].includes(flowPort) : flowPort === "in";
+    return compatible && node !== start2.id ? port.dataset : null;
   }
   function moveWire(event) {
     const start2 = connection.current;
@@ -3347,8 +4924,7 @@ function WorkflowWizard({
     const target = wireTarget(event, start2);
     const position = positions[target?.node];
     setWire(position ? {
-      x: position.x + (target.flowPort === "out" ? nodeWidth : 0),
-      y: position.y + portY,
+      ...portPoint(position, target.flowPort),
       target: target.node,
       side: target.flowPort
     } : worldPoint(event));
@@ -3357,10 +4933,9 @@ function WorkflowWizard({
     const start2 = connection.current;
     const target = wireTarget(event, start2);
     if (target) {
-      connect(
-        start2.side === "out" ? target.node : start2.id,
-        start2.side === "out" ? start2.id : target.node
-      );
+      if (start2.side === "reject" || target.flowPort === "reject") {
+        setReturn(start2.side === "reject" ? start2.id : target.node, start2.side === "reject" ? target.node : start2.id);
+      } else connect(start2.side === "out" ? target.node : start2.id, start2.side === "out" ? start2.id : target.node);
     }
     connection.current = null;
     setWire(null);
@@ -3384,7 +4959,7 @@ function WorkflowWizard({
   async function chooseAgent(id) {
     const ticket = ++pendingAgent.current, nodeId = selected.id;
     if (!id) {
-      updateAgent({ resourceId: "", label: "\u9009\u62E9 Agent", snapshot: null });
+      updateAgent({ resourceId: "", label: l("\u9009\u62E9 Agent"), snapshot: null });
       return;
     }
     setBusy(true);
@@ -3421,6 +4996,7 @@ function WorkflowWizard({
     setAgents((rows) => rows.filter((a) => !deleted.has(a.id)));
     setDraft((d) => ({
       ...d,
+      loops: d.loops?.filter((loop) => !deleted.has(loop.gateId)).map((loop) => ({ ...loop, ...deleted.has(loop.entryId) ? { entryId: "" } : {}, rejectTaskIds: loop.rejectTaskIds?.filter((id) => !deleted.has(id)), ...deleted.has(loop.reviewer) ? { reviewer: void 0 } : {} })),
       tasks: d.tasks.filter((t) => !deleted.has(t.id)).map((t) => ({
         ...t,
         assignee: deleted.has(t.assignee) ? "" : t.assignee,
@@ -3440,7 +5016,7 @@ function WorkflowWizard({
     setContextMenu(null);
     view.current?.focus({ preventScroll: true });
   }
-  (0, import_react7.useEffect)(() => {
+  (0, import_react8.useEffect)(() => {
     const key = (event) => {
       if (!editor.current?.contains(event.target)) return;
       if (event.key === "Escape" && contextMenu) {
@@ -3451,13 +5027,13 @@ function WorkflowWizard({
       }
       if (event.key !== "Delete" || event.isComposing || event.target.closest(
         'input,textarea,select,[contenteditable="true"]'
-      ) || !selection.length || busy)
+      ) || !selection.length && selected?.kind !== "agent" || busy)
         return;
       const overlays = document.querySelectorAll("[data-gallery-modal]");
       if (overlays.length && !overlays[overlays.length - 1].contains(editor.current))
         return;
       event.preventDefault();
-      remove();
+      remove(selected?.kind === "agent" ? [selected.id] : selection);
     };
     const outside = (event) => {
       if (!event.target.closest(".gal-flow-context-menu")) setContextMenu(null);
@@ -3468,23 +5044,23 @@ function WorkflowWizard({
       document.removeEventListener("keydown", key, true);
       document.removeEventListener("pointerdown", outside);
     };
-  }, [contextMenu, selection, busy, linkFrom]);
+  }, [contextMenu, selection, selected, busy, linkFrom]);
   async function save() {
     setError("");
     try {
       if (agents.some((a) => !a.resourceId && !a.snapshot))
-        throw Error("\u8BF7\u4E3A\u6BCF\u4E2A Agent \u8282\u70B9\u9009\u62E9\u8D44\u6E90\u5E93\u4E2D\u7684 Agent");
-      if (draft.tasks.some((t) => !t.general.requirements.trim()))
-        throw Error("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u901A\u7528\u4EFB\u52A1\u8981\u6C42\u6216\u901A\u7528\u68C0\u67E5\u8981\u6C42");
+        throw Error(l("\u8BF7\u4E3A\u6BCF\u4E2A\u6210\u5458\u9009\u62E9\u8D44\u6E90\u5E93\u4E2D\u7684 Agent"));
       const value = validateWorkflowTemplate({
         ...draft,
+        loops: draft.loops?.map((loop) => ({ ...loop, reviewer: agents.find((a) => a.id === loop.reviewer)?.snapshot?.name || loop.reviewer })),
         members: agents.map((a) => ({ ...a.snapshot, gallerySkill: a.gallerySkill, galleryMcp: a.galleryMcp })),
         tasks: draft.tasks.map((t) => ({
           ...t,
+          ...t.kind === "archive" ? { archive: { ...t.archive, paths: (t.archive?.paths || []).map((p) => p.trim()).filter(Boolean) } } : {},
           assignee: t.assignee ? agents.find((a) => a.id === t.assignee)?.snapshot?.name || t.assignee : ""
         })),
         positions: {}
-      });
+      }, { draft: true });
       setBusy(true);
       await onSave({
         type: "workflow",
@@ -3499,10 +5075,11 @@ function WorkflowWizard({
           }
         ],
         metadata: {
-          ...withResourceCover(resource?.metadata, cover),
+          ...withResourceCover(source?.metadata, cover),
           format: "dsh-teamflow-template-v1",
           workflowCanvas: {
             version: 1,
+            draft: workflowTemplateIssues(value).length > 0,
             taskPositions: positions,
             agents: agents.map(({ snapshot, ...node }) => ({
               ...node,
@@ -3510,35 +5087,40 @@ function WorkflowWizard({
             }))
           }
         },
-        references: resource?.references || []
+        references: source?.references || []
       });
     } catch (e) {
       setError(e?.rpcError?.message || e.message || String(e));
       setBusy(false);
     }
   }
-  function edge(from, to, key, { fromId, toId, assignment = false }) {
+  const taskActor = (task2) => task2.assignee || draft.loops?.find((loop) => loop.gateId === task2.id && loop.mode === "ai")?.reviewer;
+  function edge(from, to, key, { fromId, toId, returning = false, edgeKind, gateId }) {
     if (!from || !to) return null;
-    const path = `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
-    return /* @__PURE__ */ import_react7.default.createElement("g", { key }, /* @__PURE__ */ import_react7.default.createElement(
+    const bottom = returning && draft.tasks.find((t) => t.id === fromId)?.checkpoint;
+    const path = bottom ? `M${from.x + nodeWidth / 2},${from.y + nodeHeight} C${from.x + nodeWidth / 2},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x - 80},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x},${to.y + portY}` : `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
+    const pass = !returning && workflowNodeKind(draft.tasks.find((t) => t.id === fromId) || {}, draft.loops) === "gate";
+    return /* @__PURE__ */ import_react8.default.createElement("g", { key }, /* @__PURE__ */ import_react8.default.createElement(
       "path",
       {
-        className: assignment ? "assignment" : "",
-        markerEnd: assignment ? void 0 : `url(#${arrow})`,
+        className: returning ? "gal-flow-reject-edge" : pass ? "gal-flow-pass-edge" : "",
+        markerEnd: `url(#${arrow})`,
         d: path
       }
-    ), /* @__PURE__ */ import_react7.default.createElement(
+    ), (pass || returning) && /* @__PURE__ */ import_react8.default.createElement("text", { className: returning ? "gal-flow-reject-label" : "gal-flow-pass-label", x: returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2, y: bottom ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10 }, returning ? l("REJECT \xB7 \u8FD4\u5DE5") : "PASS"), /* @__PURE__ */ import_react8.default.createElement(
       "path",
       {
         className: "gal-flow-edge-hit",
         d: path,
+        "data-edge-return": returning ? "true" : void 0,
+        "data-edge-kind": edgeKind,
+        "data-edge-gate": gateId,
         "data-edge-from": fromId,
-        "data-edge-to": toId,
-        "data-edge-assignment": assignment ? "true" : void 0
+        "data-edge-to": toId
       }
     ));
   }
-  return /* @__PURE__ */ import_react7.default.createElement(
+  return /* @__PURE__ */ import_react8.default.createElement(
     Modal,
     {
       onClose: () => {
@@ -3549,54 +5131,48 @@ function WorkflowWizard({
         if (!busy) onClose();
       }
     },
-    /* @__PURE__ */ import_react7.default.createElement(
+    /* @__PURE__ */ import_react8.default.createElement(
       "section",
       {
         ref: editor,
         className: `gal-dialog gal-flow-editor ${fullscreen ? "gal-flow-fullscreen" : ""}`,
         role: "dialog",
         "aria-modal": "true",
-        "aria-label": resource ? "\u7F16\u8F91 Workflow" : "\u65B0\u5EFA Workflow",
+        "aria-label": resource ? l("\u7F16\u8F91 Workflow") : l("\u65B0\u5EFA Workflow"),
         tabIndex: -1
       },
-      /* @__PURE__ */ import_react7.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react7.default.createElement("h2", null, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "workflow" }), " Workflow \u753B\u5E03"), /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-flow-status" }, "\u7F16\u6392\u8349\u7A3F \xB7 \u6267\u884C\u5BF9\u63A5\u5F85\u63A5\u5165"), /* @__PURE__ */ import_react7.default.createElement(
+      /* @__PURE__ */ import_react8.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react8.default.createElement("h2", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "workflow" }), l(" Workflow \u753B\u5E03")), /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-flow-status" }, l("\u53EF\u4FDD\u5B58\u8349\u7A3F \xB7 \u8865\u5168\u540E\u6CE8\u518C\u5230 TeamFlow")), /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
-          "aria-label": "\u5173\u95ED\u7F16\u8F91",
+          "aria-label": l("\u5173\u95ED\u7F16\u8F91"),
           disabled: busy,
           onClick: async () => {
             if (fullscreen) await toggleFullscreen();
             onClose();
           }
         },
-        /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" })
+        /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "close" })
       )),
-      /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-toolbar" }, /* @__PURE__ */ import_react7.default.createElement("div", null, [
-        ["agent", "Agent"],
-        ["task", "\u4EFB\u52A1"],
-        ["human", "\u4EBA\u5DE5"]
-      ].map(([kind, label]) => /* @__PURE__ */ import_react7.default.createElement(
+      /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-flow-toolbar" }, /* @__PURE__ */ import_react8.default.createElement("div", null, nodeTypes.map(([kind, label]) => /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
           key: kind,
           disabled: busy,
-          draggable: !busy,
+          draggable: !busy && kind !== "agent",
           onDragStart: (e) => e.dataTransfer.setData("application/gallery-node", kind),
           onClick: () => add(kind)
         },
-        /* @__PURE__ */ import_react7.default.createElement(
+        /* @__PURE__ */ import_react8.default.createElement(
           Glyph,
           {
-            name: kind === "human" ? "user" : kind === "task" ? "file" : "agent"
+            name: nodeIcon(kind)
           }
         ),
-        "\u6DFB\u52A0",
-        label,
-        "\u8282\u70B9"
-      ))), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u7F29\u653E", /* @__PURE__ */ import_react7.default.createElement(
+        kind === "agent" ? l("\u6DFB\u52A0Agent\u6210\u5458") : l("\u6DFB\u52A0{0}\u8282\u70B9", l(label))
+      ))), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u7F29\u653E"), /* @__PURE__ */ import_react8.default.createElement(
         "select",
         {
-          "aria-label": "\u753B\u5E03\u7F29\u653E",
+          "aria-label": l("\u753B\u5E03\u7F29\u653E"),
           value: zoom,
           onChange: (e) => zoomAt(
             Number(e.target.value),
@@ -3604,8 +5180,8 @@ function WorkflowWizard({
             view.current.clientHeight / 2
           )
         },
-        [.../* @__PURE__ */ new Set([0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, zoom])].sort((a, b) => a - b).map((z) => /* @__PURE__ */ import_react7.default.createElement("option", { key: z, value: z }, Math.round(z * 100), "%"))
-      )), /* @__PURE__ */ import_react7.default.createElement(
+        [.../* @__PURE__ */ new Set([0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, zoom])].sort((a, b) => a - b).map((z) => /* @__PURE__ */ import_react8.default.createElement("option", { key: z, value: z }, Math.round(z * 100), "%"))
+      )), /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
           onClick: () => {
@@ -3613,25 +5189,46 @@ function WorkflowWizard({
             setSelection([]);
           }
         },
-        "\u6D41\u7A0B\u4FE1\u606F"
-      ), /* @__PURE__ */ import_react7.default.createElement(
+        l("\u6D41\u7A0B\u4FE1\u606F")
+      ), /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
           onClick: () => {
             fitView();
           }
         },
-        "\u91CD\u7F6E\u89C6\u56FE"
-      ), /* @__PURE__ */ import_react7.default.createElement(
+        l("\u91CD\u7F6E\u89C6\u56FE")
+      ), /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
-          "aria-label": fullscreen ? "\u9000\u51FA\u5168\u5C4F" : "\u5168\u5C4F\u753B\u5E03",
+          "aria-label": fullscreen ? l("\u9000\u51FA\u5168\u5C4F") : l("\u5168\u5C4F\u753B\u5E03"),
           onClick: toggleFullscreen
         },
-        fullscreen ? "\u9000\u51FA\u5168\u5C4F" : "\u5168\u5C4F\u753B\u5E03"
+        fullscreen ? l("\u9000\u51FA\u5168\u5C4F") : l("\u5168\u5C4F\u753B\u5E03")
       )),
-      error && /* @__PURE__ */ import_react7.default.createElement("p", { role: "alert", className: "gal-flow-error" }, error, /* @__PURE__ */ import_react7.default.createElement("button", { "aria-label": "\u5173\u95ED\u9519\u8BEF", onClick: () => setError("") }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "close" }))),
-      /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-body" }, /* @__PURE__ */ import_react7.default.createElement(
+      error && /* @__PURE__ */ import_react8.default.createElement("p", { role: "alert", className: "gal-flow-error" }, l(error), /* @__PURE__ */ import_react8.default.createElement("button", { "aria-label": l("\u5173\u95ED\u9519\u8BEF"), onClick: () => setError("") }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "close" }))),
+      /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-flow-body" }, /* @__PURE__ */ import_react8.default.createElement("aside", { className: "gal-flow-roster", "aria-label": l("Agent \u6210\u5458\u5217\u8868") }, /* @__PURE__ */ import_react8.default.createElement("header", null, /* @__PURE__ */ import_react8.default.createElement("strong", null, l("Agent \u6210\u5458")), /* @__PURE__ */ import_react8.default.createElement("span", null, agents.length)), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-flow-roster-list" }, agents.map((a) => {
+        const owned = draft.tasks.filter((t) => taskActor(t) === a.id);
+        const active = selected?.kind === "agent" && selected.id === a.id;
+        return /* @__PURE__ */ import_react8.default.createElement(
+          "button",
+          {
+            key: a.id,
+            type: "button",
+            className: "gal-flow-member",
+            "data-flow-member": a.id,
+            "aria-pressed": active,
+            "aria-label": l("\u7F16\u8F91 Agent \xB7 {0}", a.label),
+            title: a.snapshot?.summary || a.label,
+            onClick: () => {
+              setSelected({ kind: "agent", id: a.id });
+              setSelection([]);
+            }
+          },
+          /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-flow-avatar", "aria-hidden": "true" }, memberInitial(a)),
+          /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-flow-member-copy" }, /* @__PURE__ */ import_react8.default.createElement("strong", null, a.label), /* @__PURE__ */ import_react8.default.createElement("small", null, a.snapshot?.summary || l("\u9009\u62E9\u8D44\u6E90\u5E76\u914D\u7F6E\u6210\u5458")), /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-flow-member-meta" }, /* @__PURE__ */ import_react8.default.createElement("span", null, owned.length, l(" \u4E2A\u8282\u70B9")), /* @__PURE__ */ import_react8.default.createElement("span", { title: `Skill ${a.gallerySkill === false ? l("\u5173\u95ED") : l("\u5F00\u542F")}`, "aria-label": `Skill ${a.gallerySkill === false ? l("\u5173\u95ED") : l("\u5F00\u542F")}`, "data-enabled": a.gallerySkill !== false }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "skill", size: 12 })), /* @__PURE__ */ import_react8.default.createElement("span", { title: `MCP ${a.galleryMcp === false ? l("\u5173\u95ED") : l("\u5F00\u542F")}`, "aria-label": `MCP ${a.galleryMcp === false ? l("\u5173\u95ED") : l("\u5F00\u542F")}`, "data-enabled": a.galleryMcp !== false }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "mcp", size: 12 }))))
+        );
+      }), !agents.length && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u6DFB\u52A0\u6210\u5458\uFF0C\u518D\u4E3A\u4EFB\u52A1\u5206\u914D\u8D1F\u8D23\u4EBA\u3002")))), /* @__PURE__ */ import_react8.default.createElement(
         "div",
         {
           className: "gal-flow-view",
@@ -3686,7 +5283,6 @@ function WorkflowWizard({
               };
               setMarquee(r);
               const nodes = [
-                ...agents.map((a) => ({ id: a.id, p: a.position })),
                 ...Object.entries(positions).map(([id, p]) => ({ id, p }))
               ];
               setSelection([
@@ -3729,11 +5325,11 @@ function WorkflowWizard({
           onDrop: (e) => {
             e.preventDefault();
             const kind = e.dataTransfer.getData("application/gallery-node");
-            if (!["agent", "task", "human"].includes(kind)) return;
+            if (!nodeTypes.some(([type]) => type === kind)) return;
             add(kind, worldPoint(e));
           }
         },
-        /* @__PURE__ */ import_react7.default.createElement("div", { style: { width: "100%", height: "100%" } }, /* @__PURE__ */ import_react7.default.createElement(
+        /* @__PURE__ */ import_react8.default.createElement("div", { style: { width: "100%", height: "100%" } }, /* @__PURE__ */ import_react8.default.createElement(
           "div",
           {
             className: "gal-flow-board",
@@ -3744,7 +5340,7 @@ function WorkflowWizard({
               transform: `translate(${camera.x}px, ${camera.y}px) scale(${zoom})`
             }
           },
-          /* @__PURE__ */ import_react7.default.createElement(
+          /* @__PURE__ */ import_react8.default.createElement(
             "svg",
             {
               className: "gal-flow-edges",
@@ -3752,7 +5348,7 @@ function WorkflowWizard({
               height: 1,
               "aria-hidden": "true"
             },
-            /* @__PURE__ */ import_react7.default.createElement("defs", null, /* @__PURE__ */ import_react7.default.createElement(
+            /* @__PURE__ */ import_react8.default.createElement("defs", null, /* @__PURE__ */ import_react8.default.createElement(
               "marker",
               {
                 id: arrow,
@@ -3763,7 +5359,7 @@ function WorkflowWizard({
                 markerHeight: "7",
                 orient: "auto-start-reverse"
               },
-              /* @__PURE__ */ import_react7.default.createElement(
+              /* @__PURE__ */ import_react8.default.createElement(
                 "polygon",
                 {
                   points: "0 0, 10 5, 0 10",
@@ -3773,9 +5369,9 @@ function WorkflowWizard({
             )),
             wire && connection.current && (() => {
               const start2 = positions[connection.current.id];
-              const from = connection.current.side === "out" ? { x: start2.x + nodeWidth, y: start2.y + portY } : wire;
-              const to = connection.current.side === "out" ? wire : { x: start2.x, y: start2.y + portY };
-              return /* @__PURE__ */ import_react7.default.createElement(
+              const from = connection.current.side !== "in" ? portPoint(start2, connection.current.side) : wire;
+              const to = connection.current.side !== "in" ? wire : { x: start2.x, y: start2.y + portY };
+              return /* @__PURE__ */ import_react8.default.createElement(
                 "path",
                 {
                   className: "gal-flow-wire-preview",
@@ -3785,19 +5381,12 @@ function WorkflowWizard({
             })(),
             draft.tasks.flatMap((t) => [
               ...t.dependencies.map(
-                (id) => edge(positions[id], positions[t.id], id + ":" + t.id, { fromId: id, toId: t.id })
-              ),
-              ...t.assignee ? [
-                edge(
-                  agents.find((a) => a.id === t.assignee)?.position,
-                  positions[t.id],
-                  "a:" + t.id,
-                  { fromId: t.assignee, toId: t.id, assignment: true }
-                )
-              ] : []
-            ])
+                (id) => edge(positions[id], positions[t.id], id + ":" + t.id, { fromId: id, toId: t.id, returning: draft.loops?.some((loop) => loop.rejectTaskIds?.includes(id) && loop.rejectTaskIds.includes(t.id)) })
+              )
+            ]),
+            (draft.loops || []).flatMap((loop) => workflowRejectEdges(draft.tasks, loop).map(({ from, to, kind }) => edge(positions[from], positions[to], `reject:${loop.gateId}:${from}:${to}`, { fromId: from, toId: to, returning: true, edgeKind: kind, gateId: loop.gateId })))
           ),
-          marquee && /* @__PURE__ */ import_react7.default.createElement(
+          marquee && /* @__PURE__ */ import_react8.default.createElement(
             "div",
             {
               className: "gal-flow-marquee",
@@ -3810,28 +5399,23 @@ function WorkflowWizard({
             }
           ),
           [
-            ...agents.map((a) => ({
-              kind: "agent",
-              id: a.id,
-              title: a.label,
-              position: a.position,
-              subtitle: `Skill ${a.gallerySkill === false ? "\u5173\u95ED" : "\u53EF\u7528"} \xB7 MCP ${a.galleryMcp === false ? "\u5173\u95ED" : "\u53EF\u7528"}`
-            })),
             ...draft.tasks.map((t) => ({
               kind: "task",
               id: t.id,
               title: t.subject,
               position: positions[t.id],
               human: t.checkpoint,
-              subtitle: t.checkpoint ? "\u7B49\u5F85\u4EBA\u5DE5\u786E\u8BA4" : agents.find((a) => a.id === t.assignee)?.label || "\u672A\u6307\u5B9A Agent"
+              nodeType: workflowNodeKind(t, draft.loops),
+              subtitle: t.kind === "archive" ? t.archive?.copyFiles ? l("\u5F52\u6863\u6210\u679C\u4E0E\u6587\u4EF6") : l("\u5F52\u6863\u8BC1\u636E\u4E0E\u6458\u8981") : t.checkpoint ? (draft.loops?.find((loop) => loop.gateId === t.id)?.mode || t.reviewMode) === "ai" ? l("AI \u5BA1\u6838") : l("\u4EBA\u5DE5\u5BA1\u6838") : agents.find((a) => a.id === t.assignee)?.label || l("\u672A\u6307\u5B9A Agent")
             }))
-          ].map((n) => /* @__PURE__ */ import_react7.default.createElement(
+          ].map((n) => /* @__PURE__ */ import_react8.default.createElement(
             "article",
             {
-              className: `gal-flow-node ${n.kind} ${n.human ? "human" : ""} ${selection.includes(n.id) ? "selected" : ""}`,
+              className: `gal-flow-node ${n.kind} ${n.nodeType || ""} ${draft.loops?.some((loop) => loop.rejectTaskIds?.includes(n.id)) ? "gal-flow-reject-task" : ""} ${selection.includes(n.id) ? "selected" : ""}`,
               style: { left: n.position.x, top: n.position.y },
               key: n.id,
               "data-flow-node": n.id,
+              "data-member-match": selected?.kind === "agent" && taskActor(draft.tasks.find((t) => t.id === n.id)) === selected.id ? "true" : void 0,
               onPointerDown: (e) => pointerDown(e, n.kind, n.id),
               onPointerMove: move,
               onPointerUp: () => {
@@ -3841,21 +5425,21 @@ function WorkflowWizard({
                 drag.current = null;
               }
             },
-            /* @__PURE__ */ import_react7.default.createElement(
+            /* @__PURE__ */ import_react8.default.createElement(
               "button",
               {
                 className: "gal-flow-grip",
-                "aria-label": `\u79FB\u52A8 ${n.title}`
+                "aria-label": l("\u79FB\u52A8 {0}", n.title)
               },
-              /* @__PURE__ */ import_react7.default.createElement(
+              /* @__PURE__ */ import_react8.default.createElement(
                 Glyph,
                 {
-                  name: n.kind === "agent" ? "agent" : n.human ? "user" : "file"
+                  name: nodeIcon(n.nodeType || n.kind)
                 }
               ),
-              n.kind === "agent" ? "AGENT" : n.human ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"
+              draft.loops?.some((loop) => loop.rejectTaskIds?.includes(n.id)) ? l("\u4EC5\u9000\u56DE\u65F6\u6267\u884C") : n.kind === "agent" ? "AGENT" : l(nodeLabel(n.nodeType))
             ),
-            /* @__PURE__ */ import_react7.default.createElement(
+            /* @__PURE__ */ import_react8.default.createElement(
               "button",
               {
                 className: "gal-flow-node-title",
@@ -3866,14 +5450,33 @@ function WorkflowWizard({
                   }
                 }
               },
-              n.title || "\u672A\u547D\u540D\u8282\u70B9"
+              n.title || l("\u672A\u547D\u540D\u8282\u70B9")
             ),
-            /* @__PURE__ */ import_react7.default.createElement("p", null, n.subtitle),
-            n.kind === "task" && /* @__PURE__ */ import_react7.default.createElement("div", { className: "gal-flow-ports" }, /* @__PURE__ */ import_react7.default.createElement(
+            agents.find((a) => a.id === taskActor(draft.tasks.find((t) => t.id === n.id))) ? (() => {
+              const owner = agents.find((a) => a.id === taskActor(draft.tasks.find((t) => t.id === n.id)));
+              return /* @__PURE__ */ import_react8.default.createElement(
+                "button",
+                {
+                  type: "button",
+                  className: "gal-flow-assignee",
+                  "aria-label": l("\u7F16\u8F91\u8D1F\u8D23\u4EBA \xB7 {0}", owner.label),
+                  title: owner.snapshot?.summary || owner.label,
+                  onPointerDown: (e) => e.stopPropagation(),
+                  onClick: () => {
+                    setSelected({ kind: "agent", id: owner.id });
+                    setSelection([]);
+                  }
+                },
+                /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-flow-avatar", "aria-hidden": "true" }, memberInitial(owner)),
+                /* @__PURE__ */ import_react8.default.createElement("span", null, owner.label),
+                n.nodeType === "gate" && /* @__PURE__ */ import_react8.default.createElement("small", null, l("\u5BA1\u6838"))
+              );
+            })() : /* @__PURE__ */ import_react8.default.createElement("p", null, n.subtitle),
+            n.kind === "task" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-flow-ports" }, /* @__PURE__ */ import_react8.default.createElement(
               "button",
               {
-                "aria-label": "\u8FDE\u5165",
-                title: "\u8F93\u5165\uFF1A\u8FDE\u63A5\u524D\u7F6E\u8282\u70B9",
+                "aria-label": l("\u8FDE\u5165"),
+                title: l("\u8F93\u5165\uFF1A\u8FDE\u63A5\u524D\u7F6E\u8282\u70B9"),
                 className: "gal-flow-port-in",
                 "data-flow-port": "in",
                 "data-snap": wire?.target === n.id && wire.side === "in" ? "true" : void 0,
@@ -3887,12 +5490,12 @@ function WorkflowWizard({
                   setLinkFrom(null);
                 }
               },
-              /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-sr-only" }, "\u8FDE\u5165")
-            ), /* @__PURE__ */ import_react7.default.createElement(
+              /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-sr-only" }, l("\u8FDE\u5165"))
+            ), /* @__PURE__ */ import_react8.default.createElement(
               "button",
               {
-                "aria-label": "\u8FDE\u51FA",
-                title: "\u8F93\u51FA\uFF1A\u8FDE\u63A5\u540E\u7EED\u8282\u70B9",
+                "aria-label": l("\u8FDE\u51FA"),
+                title: n.nodeType === "gate" ? l("PASS\uFF1A\u8FDE\u63A5\u901A\u8FC7\u540E\u6267\u884C\u7684\u8282\u70B9") : l("\u8F93\u51FA\uFF1A\u8FDE\u63A5\u540E\u7EED\u8282\u70B9"),
                 className: "gal-flow-port-out",
                 "aria-pressed": linkFrom === n.id,
                 "data-flow-port": "out",
@@ -3907,19 +5510,37 @@ function WorkflowWizard({
                   setLinkFrom(null);
                 }
               },
-              /* @__PURE__ */ import_react7.default.createElement("span", { className: "gal-sr-only" }, "\u8FDE\u51FA")
+              /* @__PURE__ */ import_react8.default.createElement("span", { className: "gal-sr-only" }, l("\u8FDE\u51FA"))
+            ), n.nodeType === "gate" && /* @__PURE__ */ import_react8.default.createElement(
+              "button",
+              {
+                className: "gal-flow-port-reject",
+                "aria-label": l("REJECT \u8FD4\u56DE"),
+                title: l("REJECT\uFF1A\u62D6\u5230\u5FAA\u73AF\u5165\u53E3\u6216\u9000\u56DE\u5206\u652F\u4EFB\u52A1\u7684\u8F93\u5165\u70B9"),
+                "data-flow-port": "reject",
+                "data-node": n.id,
+                onPointerDown: (e) => startWire(e, n.id, "reject"),
+                onPointerMove: moveWire,
+                onPointerUp: finishWire,
+                onPointerCancel: () => {
+                  connection.current = null;
+                  setWire(null);
+                  setLinkFrom(null);
+                }
+              },
+              /* @__PURE__ */ import_react8.default.createElement("span", null, "REJECT")
             ))
           ))
         ))
-      ), /* @__PURE__ */ import_react7.default.createElement("aside", { className: "gal-flow-inspector" }, loading && /* @__PURE__ */ import_react7.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u5E93\u2026"), !task && !agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, selection.length > 1 && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u5DF2\u9009\u62E9 ", selection.length, " ", "\u4E2A\u8282\u70B9\uFF0C\u62D6\u52A8\u4EFB\u4E00\u9009\u4E2D\u8282\u70B9\u53EF\u4E00\u8D77\u79FB\u52A8\u3002"), /* @__PURE__ */ import_react7.default.createElement("h3", null, "\u6D41\u7A0B\u4FE1\u606F"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
+      ), /* @__PURE__ */ import_react8.default.createElement("aside", { className: "gal-flow-inspector" }, loading && /* @__PURE__ */ import_react8.default.createElement("p", { role: "status" }, l("\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u5E93\u2026")), !task && !agent && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, selection.length > 1 && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u5DF2\u9009\u62E9 "), selection.length, " ", l("\u4E2A\u8282\u70B9\uFF0C\u62D6\u52A8\u4EFB\u4E00\u9009\u4E2D\u8282\u70B9\u53EF\u4E00\u8D77\u79FB\u52A8\u3002")), /* @__PURE__ */ import_react8.default.createElement("h3", null, l("\u6D41\u7A0B\u4FE1\u606F")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u6A21\u677F\u540D\u79F0"), /* @__PURE__ */ import_react8.default.createElement(
         "input",
         {
-          "aria-label": "\u6D41\u7A0B\u540D\u79F0",
+          "aria-label": l("\u6A21\u677F\u540D\u79F0"),
           maxLength: 120,
           value: draft.name,
           onChange: (e) => update({ name: e.target.value })
         }
-      )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react7.default.createElement(
+      )), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u9002\u7528\u8BF4\u660E"), /* @__PURE__ */ import_react8.default.createElement(
         "textarea",
         {
           rows: 3,
@@ -3927,14 +5548,14 @@ function WorkflowWizard({
           value: draft.description,
           onChange: (e) => update({ description: e.target.value })
         }
-      )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u9002\u7528\u8F93\u5165", /* @__PURE__ */ import_react7.default.createElement(
+      )), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u5E94\u7528\u524D\u9700\u8981\u63D0\u4F9B\u7684\u4FE1\u606F"), /* @__PURE__ */ import_react8.default.createElement(
         "textarea",
         {
           maxLength: 4e3,
           value: draft.inputs,
           onChange: (e) => update({ inputs: e.target.value })
         }
-      )), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u6807\u7B7E", /* @__PURE__ */ import_react7.default.createElement(
+      )), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u6807\u7B7E\uFF08\u9017\u53F7\u5206\u9694\uFF09"), /* @__PURE__ */ import_react8.default.createElement(
         "input",
         {
           value: draft.tags.join(", "),
@@ -3942,34 +5563,34 @@ function WorkflowWizard({
             tags: e.target.value.split(/[,，]/).map((x) => x.trim()).filter(Boolean)
           })
         }
-      )), /* @__PURE__ */ import_react7.default.createElement(ResourceCoverPicker, { resource: { ...draft, type: "workflow", cover }, onChange: setCover }), /* @__PURE__ */ import_react7.default.createElement("p", null, "Agent \u7528\u865A\u7EBF\u5173\u8054\u8D1F\u8D23\u4EBA\uFF1B\u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9\u7528\u5B9E\u7EBF\u8868\u793A\u5148\u540E\u4F9D\u8D56\uFF0C\u53F3\u952E\u5355\u51FB\u5B9E\u7EBF\u53EF\u5220\u9664\u4F9D\u8D56\u3002")), agent && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, "Agent \u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u914D\u7F6E\u957F\u671F\u804C\u8D23\u4E0E\u901A\u7528\u6307\u4EE4\uFF1B\u672C\u6B21\u8865\u5145\u6307\u4EE4\u5728\u5E94\u7528\u6A21\u677F\u65F6\u586B\u5199\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D44\u6E90\u5E93 Agent", /* @__PURE__ */ import_react7.default.createElement(
+      )), /* @__PURE__ */ import_react8.default.createElement(ResourceCoverPicker, { resource: { ...draft, type: "workflow", cover }, onChange: setCover }), /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u4ECE\u5DE6\u4FA7\u6210\u5458\u5217\u8868\u914D\u7F6E Agent\uFF0C\u70B9\u51FB\u4EFB\u52A1\u4E0A\u7684\u8D1F\u8D23\u4EBA\u4E5F\u53EF\u7F16\u8F91\u6210\u5458\u3002\u753B\u5E03\u8FDE\u7EBF\u8868\u793A\u4F9D\u8D56\u548C REJECT \u8FD4\u5DE5\u8DEF\u5F84\u3002"))), agent && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, /* @__PURE__ */ import_react8.default.createElement("h3", null, l("Agent \u6210\u5458")), /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u914D\u7F6E\u957F\u671F\u804C\u8D23\u4E0E\u901A\u7528\u6307\u4EE4\uFF1B\u672C\u6B21\u8865\u5145\u6307\u4EE4\u5728\u5E94\u7528\u6A21\u677F\u65F6\u586B\u5199\u3002")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u8D44\u6E90\u5E93 Agent"), /* @__PURE__ */ import_react8.default.createElement(
         "select",
         {
-          "aria-label": "\u8D44\u6E90\u5E93 Agent",
+          "aria-label": l("\u8D44\u6E90\u5E93 Agent"),
           value: agent.resourceId,
           disabled: busy || loading,
           onChange: (e) => chooseAgent(e.target.value)
         },
-        /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u8BF7\u9009\u62E9 Agent"),
-        agent.resourceId && !catalog.some((r) => r.id === agent.resourceId) && /* @__PURE__ */ import_react7.default.createElement("option", { value: agent.resourceId }, agent.label, "\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09"),
-        catalog.map((r) => /* @__PURE__ */ import_react7.default.createElement("option", { key: r.id, value: r.id }, r.name))
-      )), !catalog.length && !loading && /* @__PURE__ */ import_react7.default.createElement("p", null, "\u8D44\u6E90\u5E93\u6682\u65E0 Agent\uFF0C\u8BF7\u5148\u5728 Agent \u5206\u7C7B\u521B\u5EFA\u3002"), /* @__PURE__ */ import_react7.default.createElement(
+        /* @__PURE__ */ import_react8.default.createElement("option", { value: "" }, l("\u8BF7\u9009\u62E9 Agent")),
+        agent.resourceId && !catalog.some((r) => r.id === agent.resourceId) && /* @__PURE__ */ import_react8.default.createElement("option", { value: agent.resourceId }, agent.label, l("\uFF08\u8D44\u6E90\u5DF2\u4E0D\u53EF\u7528\uFF09")),
+        catalog.map((r) => /* @__PURE__ */ import_react8.default.createElement("option", { key: r.id, value: r.id }, r.name))
+      )), !catalog.length && !loading && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u8D44\u6E90\u5E93\u6682\u65E0 Agent\uFF0C\u8BF7\u5148\u5728 Agent \u5206\u7C7B\u521B\u5EFA\u3002")), /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
           type: "button",
           disabled: busy || !agent.resourceId,
           onClick: extractMember
         },
-        "\u63D0\u53D6\u5B57\u6BB5"
+        l("\u63D0\u53D6\u5B57\u6BB5")
       ), [
-        ["name", "\u540D\u79F0"],
-        ["summary", "\u529F\u80FD\u6982\u8FF0"],
-        ["role", "\u957F\u671F\u804C\u8D23"],
-        ["executionPrompt", "\u901A\u7528\u6267\u884C\u6307\u4EE4 PE"]
-      ].map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { key }, label, key === "name" ? /* @__PURE__ */ import_react7.default.createElement(
+        ["name", l("\u540D\u79F0")],
+        ["summary", l("\u804C\u8D23\u6982\u8FF0")],
+        ["role", l("\u89D2\u8272\u804C\u8D23")],
+        ["executionPrompt", l("\u901A\u7528\u6267\u884C\u6307\u4EE4 / PE")]
+      ].map(([key, label]) => /* @__PURE__ */ import_react8.default.createElement("label", { key }, l(label), key === "name" ? /* @__PURE__ */ import_react8.default.createElement(
         "input",
         {
-          "aria-label": `Agent ${label}`,
+          "aria-label": `Agent ${l(label)}`,
           disabled: busy,
           maxLength: 80,
           value: agent.snapshot?.[key] || "",
@@ -3980,13 +5601,13 @@ function WorkflowWizard({
             }
           })
         }
-      ) : /* @__PURE__ */ import_react7.default.createElement(
+      ) : /* @__PURE__ */ import_react8.default.createElement(
         "textarea",
         {
-          "aria-label": `Agent ${label}`,
+          "aria-label": `Agent ${l(label)}`,
           disabled: busy,
           rows: 3,
-          maxLength: 16e3,
+          maxLength: MAX_WORKFLOW_TEXT_LENGTH,
           value: agent.snapshot?.[key] || "",
           onChange: (e) => updateAgent({
             snapshot: {
@@ -3995,88 +5616,107 @@ function WorkflowWizard({
             }
           })
         }
-      ))), galleryAccess.map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { className: "gal-flow-check", key }, /* @__PURE__ */ import_react7.default.createElement(
+      ))), galleryAccess.map(([key, label]) => /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check", key }, /* @__PURE__ */ import_react8.default.createElement(
         "input",
         {
           type: "checkbox",
           checked: agent[key] !== false,
           onChange: (e) => updateAgent({ [key]: e.target.checked })
         }
-      ), label))), task && /* @__PURE__ */ import_react7.default.createElement(import_react7.default.Fragment, null, /* @__PURE__ */ import_react7.default.createElement("h3", null, task.checkpoint ? "\u4EBA\u5DE5\u8282\u70B9" : "\u4EFB\u52A1\u8282\u70B9"), /* @__PURE__ */ import_react7.default.createElement("p", null, "\u586B\u5199\u53EF\u590D\u7528\u7684\u901A\u7528\u8981\u6C42\uFF1B\u5177\u4F53\u9879\u76EE\u7684\u4EFB\u52A1\u8BF4\u660E\u5728\u5E94\u7528\u6A21\u677F\u540E\u751F\u6210\u3002"), /* @__PURE__ */ import_react7.default.createElement("label", null, "\u901A\u7528\u8282\u70B9\u540D\u79F0", /* @__PURE__ */ import_react7.default.createElement(
+      ), l(label)))), task && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, /* @__PURE__ */ import_react8.default.createElement("h3", null, l(nodeLabel(selectedKind))), /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u586B\u5199\u53EF\u590D\u7528\u7684\u901A\u7528\u8981\u6C42\uFF1B\u5177\u4F53\u9879\u76EE\u7684\u4EFB\u52A1\u8BF4\u660E\u5728\u5E94\u7528\u6A21\u677F\u540E\u751F\u6210\u3002")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u901A\u7528\u8282\u70B9\u540D\u79F0"), /* @__PURE__ */ import_react8.default.createElement(
         "input",
         {
-          "aria-label": "\u901A\u7528\u8282\u70B9\u540D\u79F0",
+          "aria-label": l("\u901A\u7528\u8282\u70B9\u540D\u79F0"),
           maxLength: 200,
           value: task.subject,
           onChange: (e) => updateTask({ subject: e.target.value })
         }
-      )), !task.checkpoint && /* @__PURE__ */ import_react7.default.createElement("label", null, "\u8D1F\u8D23 Agent", /* @__PURE__ */ import_react7.default.createElement(
+      )), task.checkpoint && /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u5BA1\u6838\u65B9\u5F0F"), /* @__PURE__ */ import_react8.default.createElement(
         "select",
         {
-          "aria-label": "\u8D1F\u8D23 Agent",
+          "aria-label": l("\u5BA1\u6838\u65B9\u5F0F"),
+          value: selectedLoop?.mode || task.reviewMode || "human",
+          onChange: (e) => {
+            updateTask({ reviewMode: e.target.value });
+            if (selectedLoop) setLoop(task.id, { mode: e.target.value, ...e.target.value === "human" ? { reviewer: void 0 } : {} });
+          }
+        },
+        /* @__PURE__ */ import_react8.default.createElement("option", { value: "human" }, l("\u4EBA\u5DE5\u5BA1\u6838")),
+        /* @__PURE__ */ import_react8.default.createElement("option", { value: "ai" }, l("AI \u5BA1\u6838"))
+      )), selectedKind === "gate" && /* @__PURE__ */ import_react8.default.createElement("section", { className: "gal-flow-loop-settings", "aria-label": l("\u95E8\u63A7\u8DEF\u5F84\u4E0E\u5FAA\u73AF") }, /* @__PURE__ */ import_react8.default.createElement("h4", null, l("PASS \xB7 \u901A\u8FC7\u540E\u7EE7\u7EED")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-flow-pass-targets" }, draft.tasks.filter((t) => t.id !== task.id && !selectedLoop?.rejectTaskIds?.includes(t.id) && !workflowAncestors(draft.tasks, task.id).has(t.id)).map((t) => /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check", key: t.id }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", checked: t.dependencies.includes(task.id), onChange: (e) => {
+        if (e.target.checked) connect(t.id, task.id);
+        else update({ tasks: draft.tasks.map((row) => row.id === t.id ? { ...row, dependencies: row.dependencies.filter((id) => id !== task.id) } : row) });
+      } }), t.subject || l("\u672A\u547D\u540D\u8282\u70B9")))), !draft.tasks.some((t) => t.dependencies.includes(task.id)) && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u901A\u8FC7\u540E\u7ED3\u675F\u6B64\u8DEF\u5F84")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("REJECT \xB7 \u8FD4\u56DE\u5165\u53E3"), /* @__PURE__ */ import_react8.default.createElement("select", { "aria-label": l("REJECT \u8FD4\u56DE\u5165\u53E3"), value: selectedLoop?.entryId || "", onChange: (e) => setLoop(task.id, { entryId: e.target.value }) }, /* @__PURE__ */ import_react8.default.createElement("option", { value: "" }, l("\u7A0D\u540E\u8FDE\u63A5\u5FAA\u73AF\u5165\u53E3")), draft.tasks.filter((t) => !t.checkpoint && t.kind !== "archive" && !selectedLoop?.rejectTaskIds?.includes(t.id)).map((t) => /* @__PURE__ */ import_react8.default.createElement("option", { key: t.id, value: t.id }, t.subject || l("\u672A\u547D\u540D\u8282\u70B9"))))), !selectedLoop && /* @__PURE__ */ import_react8.default.createElement("button", { type: "button", onClick: () => setLoop(task.id, {}) }, l("\u914D\u7F6E REJECT \u5206\u652F")), selectedLoop && /* @__PURE__ */ import_react8.default.createElement("fieldset", { className: "gal-flow-reject-settings" }, /* @__PURE__ */ import_react8.default.createElement("legend", null, l("REJECT \u540E\u6267\u884C\u7684\u4EFB\u52A1")), /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u4EC5\u5728\u9000\u56DE\u65F6\u6267\u884C\uFF0C\u5B8C\u6210\u540E\u8FD4\u56DE\u5FAA\u73AF\u5165\u53E3\u3002\u53EF\u4ECE REJECT \u70B9\u62D6\u7EBF\u5230\u4EFB\u52A1\uFF0C\u518D\u8FDE\u63A5\u5206\u652F\u5185\u4EFB\u52A1\u3002")), draft.tasks.filter((t) => !t.checkpoint && t.kind !== "archive" && !workflowAncestors(draft.tasks, task.id).has(t.id)).map((t) => /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check", key: t.id }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", checked: Boolean(selectedLoop.rejectTaskIds?.includes(t.id)), onChange: (e) => {
+        if (e.target.checked) setReturn(task.id, t.id);
+        else update(removeRejectTask(draft.tasks, draft.loops, task.id, t.id));
+      } }), t.subject || l("\u672A\u547D\u540D\u8282\u70B9")))), selectedLoop && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, selectedLoop.mode === "ai" && /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u72EC\u7ACB\u5BA1\u6838 Agent"), /* @__PURE__ */ import_react8.default.createElement("select", { "aria-label": l("\u72EC\u7ACB\u5BA1\u6838 Agent"), value: selectedLoop.reviewer || "", onChange: (e) => setLoop(task.id, { reviewer: e.target.value }) }, /* @__PURE__ */ import_react8.default.createElement("option", { value: "" }, l("\u9009\u62E9\u72EC\u7ACB\u5BA1\u6838 Agent")), agents.map((a) => /* @__PURE__ */ import_react8.default.createElement("option", { key: a.id, value: a.id }, a.label)))), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09"), /* @__PURE__ */ import_react8.default.createElement("input", { "aria-label": l("\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09"), type: "number", min: 1, max: 20, value: selectedLoop.maxRounds, onChange: (e) => setLoop(task.id, { maxRounds: Number(e.target.value) }) })), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09"), /* @__PURE__ */ import_react8.default.createElement("input", { "aria-label": l("\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09"), type: "number", min: 1, max: 1440, value: selectedLoop.timeoutMinutes, onChange: (e) => setLoop(task.id, { timeoutMinutes: Number(e.target.value) }) })), /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", disabled: Boolean(selectedLoop.rejectTaskIds?.length), checked: Boolean(selectedLoop.rejectToEntry), onChange: (e) => setLoop(task.id, { rejectToEntry: e.target.checked }) }), l("\u9000\u56DE\u65F6\u4ECE\u5165\u53E3\u91CD\u8DD1")), !selectedLoop.rejectToEntry && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u5BA1\u6838\u65F6\u7531 TeamFlow \u6307\u5B9A\u8FD4\u5DE5\u4EFB\u52A1\u53CA\u5176\u4E0B\u6E38\u3002")), !!loopBody.length && /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u5FAA\u73AF\u5185\u4EFB\u52A1\uFF1A"), loopBody.map((id) => draft.tasks.find((t) => t.id === id)?.subject).join(" \u2192 ")), loopIssue && /* @__PURE__ */ import_react8.default.createElement("p", { role: "status", className: "gal-error" }, l(loopIssue)), /* @__PURE__ */ import_react8.default.createElement("button", { type: "button", onClick: () => update({ loops: (draft.loops || []).filter((loop) => loop.gateId !== task.id) }) }, l("\u5220\u9664 REJECT \u8FD4\u56DE\u7EBF")))), selectedKind === "archive" && /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react8.default.createElement("input", { type: "checkbox", checked: Boolean(task.archive?.copyFiles), onChange: (e) => updateTask({ archive: { ...task.archive, copyFiles: e.target.checked } }) }), l("\u590D\u5236\u6210\u679C\u6587\u4EF6")), /* @__PURE__ */ import_react8.default.createElement("p", null, l("\u9ED8\u8BA4\u8BB0\u5F55\u8BC1\u636E\u548C\u6587\u4EF6\u6458\u8981\uFF1B\u5F00\u542F\u540E\u7531 TeamFlow \u6309\u5F52\u6863\u7B56\u7565\u590D\u5236\u6587\u4EF6\u3002")), /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), /* @__PURE__ */ import_react8.default.createElement("textarea", { "aria-label": l("\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), rows: 4, value: (task.archive?.paths || []).join("\n"), onChange: (e) => updateTask({ archive: { ...task.archive, paths: e.target.value.split("\n") } }), placeholder: l("\u7559\u7A7A\u4F7F\u7528\u4E0A\u6E38\u4EA4\u4ED8\u7269\u4E0E\u53D8\u66F4\u6587\u4EF6") }))), !task.checkpoint && task.kind !== "archive" && /* @__PURE__ */ import_react8.default.createElement("label", null, l("\u8D1F\u8D23 Agent"), /* @__PURE__ */ import_react8.default.createElement(
+        "select",
+        {
+          "aria-label": l("\u8D1F\u8D23 Agent"),
           value: task.assignee,
           onChange: (e) => updateTask({ assignee: e.target.value })
         },
-        /* @__PURE__ */ import_react7.default.createElement("option", { value: "" }, "\u7531\u7A7A\u95F2\u6210\u5458\u9886\u53D6"),
-        /* @__PURE__ */ import_react7.default.createElement("option", { value: "captain" }, "Captain\uFF08\u4E3B\u4F1A\u8BDD\uFF09"),
-        agents.map((a) => /* @__PURE__ */ import_react7.default.createElement("option", { key: a.id, value: a.id }, a.label))
+        /* @__PURE__ */ import_react8.default.createElement("option", { value: "" }, l("\u7531\u7A7A\u95F2\u6210\u5458\u9886\u53D6")),
+        /* @__PURE__ */ import_react8.default.createElement("option", { value: "captain" }, l("Captain\uFF08\u4E3B\u4F1A\u8BDD\uFF09")),
+        agents.map((a) => /* @__PURE__ */ import_react8.default.createElement("option", { key: a.id, value: a.id }, a.label))
       )), [
         [
           "requirements",
-          task.checkpoint ? "\u901A\u7528\u68C0\u67E5\u8981\u6C42" : "\u901A\u7528\u4EFB\u52A1\u8981\u6C42"
+          l("\u901A\u7528\u4EFB\u52A1\u8981\u6C42")
         ],
-        ["deliverables", "\u901A\u7528\u4EA4\u4ED8\u7269"],
-        ["acceptance", "\u901A\u7528\u9A8C\u6536\u8981\u6C42"]
-      ].map(([key, label]) => /* @__PURE__ */ import_react7.default.createElement("label", { key }, label, /* @__PURE__ */ import_react7.default.createElement(
+        ["deliverables", l("\u901A\u7528\u4EA4\u4ED8\u7269")],
+        ["acceptance", l("\u901A\u7528\u9A8C\u6536\u8981\u6C42")]
+      ].map(([key, label]) => /* @__PURE__ */ import_react8.default.createElement("label", { key }, l(label), /* @__PURE__ */ import_react8.default.createElement(
         "textarea",
         {
-          "aria-label": label,
+          "aria-label": l(label),
           rows: 3,
-          maxLength: 16e3,
+          maxLength: MAX_WORKFLOW_TEXT_LENGTH,
           value: task.general[key],
           onChange: (e) => updateTask({
             general: { ...task.general, [key]: e.target.value }
           })
         }
-      )))), (task || agent) && /* @__PURE__ */ import_react7.default.createElement("button", { className: "gal-delete", disabled: busy, onClick: remove }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }), "\u5220\u9664\u8282\u70B9"))),
-      contextMenu && /* @__PURE__ */ import_react7.default.createElement(
+      )))), (task || agent) && /* @__PURE__ */ import_react8.default.createElement("button", { className: "gal-delete", disabled: busy, onClick: () => remove(agent ? [agent.id] : selection) }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "trash" }), agent ? l("\u5220\u9664\u6210\u5458") : l("\u5220\u9664\u8282\u70B9")))),
+      contextMenu && /* @__PURE__ */ import_react8.default.createElement(
         "div",
         {
           className: "gal-flow-context-menu",
           role: "group",
-          "aria-label": "\u753B\u5E03\u53F3\u952E\u83DC\u5355",
+          "aria-label": l("\u753B\u5E03\u53F3\u952E\u83DC\u5355"),
           style: { left: contextMenu.x, top: contextMenu.y },
           onPointerDown: (e) => e.stopPropagation()
         },
-        contextMenu.edge ? /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => {
-          const { edgeFrom, edgeTo, edgeAssignment } = contextMenu.edge;
+        contextMenu.edge ? /* @__PURE__ */ import_react8.default.createElement("button", { onClick: () => {
+          const { edgeFrom, edgeTo, edgeKind, edgeGate } = contextMenu.edge;
+          if (edgeKind === "return" || edgeKind === "reject-end") {
+            setLoop(edgeGate, { entryId: "" });
+            setContextMenu(null);
+            return;
+          }
+          if (edgeKind === "reject-start" || edgeKind === "reject-order") {
+            update(removeRejectTask(draft.tasks, draft.loops, edgeGate, edgeTo));
+            setContextMenu(null);
+            return;
+          }
           setDraft((value) => ({
             ...value,
             tasks: value.tasks.map((node) => {
               if (node.id !== edgeTo) return node;
-              if (edgeAssignment) {
-                return node.assignee === edgeFrom ? { ...node, assignee: "" } : node;
-              }
               return { ...node, dependencies: node.dependencies.filter((id) => id !== edgeFrom) };
             })
           }));
           setContextMenu(null);
-        } }, /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }), "\u5220\u9664\u8FDE\u7EBF") : contextMenu.ids.length ? /* @__PURE__ */ import_react7.default.createElement(
+        } }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "trash" }), l("\u5220\u9664\u8FDE\u7EBF")) : contextMenu.ids.length ? /* @__PURE__ */ import_react8.default.createElement(
           "button",
           {
             className: "gal-delete",
             onClick: () => remove(contextMenu.ids)
           },
-          /* @__PURE__ */ import_react7.default.createElement(Glyph, { name: "trash" }),
-          "\u5220\u9664",
-          contextMenu.ids.length > 1 ? ` ${contextMenu.ids.length} \u4E2A` : "",
-          "\u8282\u70B9",
-          /* @__PURE__ */ import_react7.default.createElement("span", null, "Del")
-        ) : [
-          ["agent", "Agent"],
-          ["task", "\u4EFB\u52A1"],
-          ["human", "\u4EBA\u5DE5"]
-        ].map(([kind, label]) => /* @__PURE__ */ import_react7.default.createElement(
+          /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "trash" }),
+          contextMenu.ids.length > 1 ? l("\u5220\u9664 {0} \u4E2A\u8282\u70B9", contextMenu.ids.length) : l("\u5220\u9664\u8282\u70B9"),
+          /* @__PURE__ */ import_react8.default.createElement("span", null, "Del")
+        ) : nodeTypes.map(([kind, label]) => /* @__PURE__ */ import_react8.default.createElement(
           "button",
           {
             key: kind,
@@ -4085,34 +5725,32 @@ function WorkflowWizard({
               setContextMenu(null);
             }
           },
-          /* @__PURE__ */ import_react7.default.createElement(
+          /* @__PURE__ */ import_react8.default.createElement(
             Glyph,
             {
-              name: kind === "agent" ? "agent" : kind === "human" ? "user" : "file"
+              name: nodeIcon(kind)
             }
           ),
-          "\u6DFB\u52A0",
-          label,
-          "\u8282\u70B9"
+          kind === "agent" ? l("\u6DFB\u52A0Agent\u6210\u5458") : l("\u6DFB\u52A0{0}\u8282\u70B9", l(label))
         ))
       ),
-      /* @__PURE__ */ import_react7.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react7.default.createElement("span", { "aria-live": "polite" }, linkFrom ? "\u62D6\u52A8\u8FDE\u7EBF\uFF1A\u677E\u5F00\u5230\u53E6\u4E00\u8282\u70B9\u7684\u5706\u70B9" : `${agents.length} Agent \xB7 ${draft.tasks.length} \u4EFB\u52A1\u4E0E\u4EBA\u5DE5\u8282\u70B9`), linkFrom && /* @__PURE__ */ import_react7.default.createElement("button", { onClick: () => setLinkFrom(null) }, "\u53D6\u6D88\u8FDE\u7EBF"), /* @__PURE__ */ import_react7.default.createElement(
+      /* @__PURE__ */ import_react8.default.createElement("footer", { className: "gal-flow-footer" }, /* @__PURE__ */ import_react8.default.createElement("span", { "aria-live": "polite" }, linkFrom ? l("\u62D6\u52A8\u8FDE\u7EBF\uFF1A\u677E\u5F00\u5230\u53E6\u4E00\u8282\u70B9\u7684\u5706\u70B9") : l("{0} Agent \xB7 {1} \u6D41\u7A0B\u8282\u70B9 \xB7 {2} \u5FAA\u73AF", agents.length, draft.tasks.length, draft.loops?.length || 0)), linkFrom && /* @__PURE__ */ import_react8.default.createElement("button", { onClick: () => setLinkFrom(null) }, l("\u53D6\u6D88\u8FDE\u7EBF")), /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
           className: "gal-primary",
           disabled: busy || loading,
           onClick: save
         },
-        busy ? "\u4FDD\u5B58\u4E2D\u2026" : "\u4FDD\u5B58 Workflow"
+        busy ? l("\u4FDD\u5B58\u4E2D\u2026") : l("\u4FDD\u5B58 Workflow")
       ))
     )
   );
 }
 
 // src/client/agent-wizard.jsx
-var import_react8 = __toESM(require("react"), 1);
+var import_react9 = __toESM(require("react"), 1);
 
-// node_modules/yaml/browser/dist/nodes/identity.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/nodes/identity.js
 var ALIAS = Symbol.for("yaml.alias");
 var DOC = Symbol.for("yaml.document");
 var MAP = Symbol.for("yaml.map");
@@ -4148,7 +5786,7 @@ function isNode(node) {
 }
 var hasAnchor = (node) => (isScalar(node) || isCollection(node)) && !!node.anchor;
 
-// node_modules/yaml/browser/dist/visit.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/visit.js
 var BREAK = Symbol("break visit");
 var SKIP = Symbol("skip children");
 var REMOVE = Symbol("remove node");
@@ -4298,7 +5936,7 @@ function replaceNode(key, path, node) {
   }
 }
 
-// node_modules/yaml/browser/dist/doc/directives.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/doc/directives.js
 var escapeChars = {
   "!": "%21",
   ",": "%2C",
@@ -4461,7 +6099,7 @@ var Directives = class _Directives {
 Directives.defaultYaml = { explicit: false, version: "1.2" };
 Directives.defaultTags = { "!!": "tag:yaml.org,2002:" };
 
-// node_modules/yaml/browser/dist/doc/anchors.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/doc/anchors.js
 function anchorIsValid(anchor) {
   if (/[\x00-\x19\s,[\]{}]/.test(anchor)) {
     const sa = JSON.stringify(anchor);
@@ -4520,7 +6158,7 @@ function createNodeAnchors(doc, prefix) {
   };
 }
 
-// node_modules/yaml/browser/dist/doc/applyReviver.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/doc/applyReviver.js
 function applyReviver(reviver, obj, key, val) {
   if (val && typeof val === "object") {
     if (Array.isArray(val)) {
@@ -4564,7 +6202,7 @@ function applyReviver(reviver, obj, key, val) {
   return reviver.call(obj, key, val);
 }
 
-// node_modules/yaml/browser/dist/nodes/toJS.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/nodes/toJS.js
 function toJS(value, arg, ctx) {
   if (Array.isArray(value))
     return value.map((v, i) => toJS(v, String(i), ctx));
@@ -4587,7 +6225,7 @@ function toJS(value, arg, ctx) {
   return value;
 }
 
-// node_modules/yaml/browser/dist/nodes/Node.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/nodes/Node.js
 var NodeBase = class {
   constructor(type) {
     Object.defineProperty(this, NODE_TYPE, { value: type });
@@ -4613,13 +6251,13 @@ var NodeBase = class {
     };
     const res = toJS(this, "", ctx);
     if (typeof onAnchor === "function")
-      for (const { count, res: res2 } of ctx.anchors.values())
-        onAnchor(res2, count);
+      for (const { count: count2, res: res2 } of ctx.anchors.values())
+        onAnchor(res2, count2);
     return typeof reviver === "function" ? applyReviver(reviver, { "": res }, "", res) : res;
   }
 };
 
-// node_modules/yaml/browser/dist/nodes/Alias.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/nodes/Alias.js
 var Alias = class extends NodeBase {
   constructor(source) {
     super(ALIAS);
@@ -4711,13 +6349,13 @@ function getAliasCount(doc, node, anchors) {
     const anchor = anchors && source && anchors.get(source);
     return anchor ? anchor.count * anchor.aliasCount : 0;
   } else if (isCollection(node)) {
-    let count = 0;
+    let count2 = 0;
     for (const item of node.items) {
       const c = getAliasCount(doc, item, anchors);
-      if (c > count)
-        count = c;
+      if (c > count2)
+        count2 = c;
     }
-    return count;
+    return count2;
   } else if (isPair(node)) {
     const kc = getAliasCount(doc, node.key, anchors);
     const vc = getAliasCount(doc, node.value, anchors);
@@ -4726,7 +6364,7 @@ function getAliasCount(doc, node, anchors) {
   return 1;
 }
 
-// node_modules/yaml/browser/dist/nodes/Scalar.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/nodes/Scalar.js
 var isScalarValue = (value) => !value || typeof value !== "function" && typeof value !== "object";
 var Scalar = class extends NodeBase {
   constructor(value) {
@@ -4746,7 +6384,7 @@ Scalar.PLAIN = "PLAIN";
 Scalar.QUOTE_DOUBLE = "QUOTE_DOUBLE";
 Scalar.QUOTE_SINGLE = "QUOTE_SINGLE";
 
-// node_modules/yaml/browser/dist/doc/createNode.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/doc/createNode.js
 var defaultTagPrefix = "tag:yaml.org,2002:";
 function findTagObject(value, tagName, tags) {
   if (tagName) {
@@ -4812,7 +6450,7 @@ function createNode(value, tagName, ctx) {
   return node;
 }
 
-// node_modules/yaml/browser/dist/nodes/Collection.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/nodes/Collection.js
 function collectionFromPath(schema4, path, value) {
   let v = value;
   for (let i = path.length - 1; i >= 0; --i) {
@@ -4944,7 +6582,7 @@ var Collection = class extends NodeBase {
   }
 };
 
-// node_modules/yaml/browser/dist/stringify/stringifyComment.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/stringify/stringifyComment.js
 var stringifyComment = (str) => str.replace(/^(?!$)(?: $)?/gm, "#");
 function indentComment(comment, indent) {
   if (/^\n+$/.test(comment))
@@ -4953,7 +6591,7 @@ function indentComment(comment, indent) {
 }
 var lineComment = (str, indent, comment) => str.endsWith("\n") ? indentComment(comment, indent) : comment.includes("\n") ? "\n" + indentComment(comment, indent) : (str.endsWith(" ") ? "" : " ") + comment;
 
-// node_modules/yaml/browser/dist/stringify/foldFlowLines.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/stringify/foldFlowLines.js
 var FOLD_FLOW = "flow";
 var FOLD_BLOCK = "block";
 var FOLD_QUOTED = "quoted";
@@ -5080,7 +6718,7 @@ function consumeMoreIndentedLines(text2, i, indent) {
   return end;
 }
 
-// node_modules/yaml/browser/dist/stringify/stringifyString.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/stringify/stringifyString.js
 var getFoldOptions = (ctx, isBlock2) => ({
   indentAtStart: isBlock2 ? ctx.indent.length : ctx.indentAtStart,
   lineWidth: ctx.options.lineWidth,
@@ -5355,7 +6993,7 @@ function stringifyString(item, ctx, onComment, onChompKeep) {
   return res;
 }
 
-// node_modules/yaml/browser/dist/stringify/stringify.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/stringify/stringify.js
 function createStringifyContext(doc, options) {
   const opt = Object.assign({
     blockQuote: true,
@@ -5468,7 +7106,7 @@ function stringify(item, ctx, onComment, onChompKeep) {
 ${ctx.indent}${str}`;
 }
 
-// node_modules/yaml/browser/dist/stringify/stringifyPair.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/stringify/stringifyPair.js
 function stringifyPair({ key, value }, ctx, onComment, onChompKeep) {
   const { allNullValues, doc, indent, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
   let keyComment = isNode(key) && key.comment || null;
@@ -5591,14 +7229,14 @@ ${ctx.indent}`;
   return str;
 }
 
-// node_modules/yaml/browser/dist/log.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/log.js
 function warn(logLevel, warning) {
   if (logLevel === "debug" || logLevel === "warn") {
     console.warn(warning);
   }
 }
 
-// node_modules/yaml/browser/dist/schema/yaml-1.1/merge.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/yaml-1.1/merge.js
 var MERGE_KEY = "<<";
 var merge = {
   identify: (value) => value === MERGE_KEY || typeof value === "symbol" && value.description === MERGE_KEY,
@@ -5648,7 +7286,7 @@ function resolveAliasValue(ctx, value) {
   return ctx && isAlias(value) ? value.resolve(ctx.doc, ctx) : value;
 }
 
-// node_modules/yaml/browser/dist/nodes/addPairToJSMap.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/nodes/addPairToJSMap.js
 function addPairToJSMap(ctx, map2, { key, value }) {
   if (isNode(key) && key.addToJSMap)
     key.addToJSMap(ctx, map2, value);
@@ -5701,7 +7339,7 @@ function stringifyKey(key, jsKey, ctx) {
   return JSON.stringify(jsKey);
 }
 
-// node_modules/yaml/browser/dist/nodes/Pair.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/nodes/Pair.js
 function createPair(key, value, ctx) {
   const k = createNode(key, void 0, ctx);
   const v = createNode(value, void 0, ctx);
@@ -5730,7 +7368,7 @@ var Pair = class _Pair {
   }
 };
 
-// node_modules/yaml/browser/dist/stringify/stringifyCollection.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/stringify/stringifyCollection.js
 function stringifyCollection(collection, ctx, options) {
   const flow = ctx.inFlow ?? collection.flow;
   const stringify4 = flow ? stringifyFlowCollection : stringifyBlockCollection;
@@ -5872,7 +7510,7 @@ function addCommentBefore({ indent, options: { commentString } }, lines, comment
   }
 }
 
-// node_modules/yaml/browser/dist/nodes/YAMLMap.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/nodes/YAMLMap.js
 function findPair(items, key) {
   const k = isScalar(key) ? key.value : key;
   for (const it of items) {
@@ -6003,7 +7641,7 @@ var YAMLMap = class extends Collection {
   }
 };
 
-// node_modules/yaml/browser/dist/schema/common/map.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/common/map.js
 var map = {
   collection: "map",
   default: true,
@@ -6017,7 +7655,7 @@ var map = {
   createNode: (schema4, obj, ctx) => YAMLMap.from(schema4, obj, ctx)
 };
 
-// node_modules/yaml/browser/dist/nodes/YAMLSeq.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/nodes/YAMLSeq.js
 var YAMLSeq = class extends Collection {
   static get tagName() {
     return "tag:yaml.org,2002:seq";
@@ -6121,7 +7759,7 @@ function asItemIndex(key) {
   return typeof idx === "number" && Number.isInteger(idx) && idx >= 0 ? idx : null;
 }
 
-// node_modules/yaml/browser/dist/schema/common/seq.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/common/seq.js
 var seq = {
   collection: "seq",
   default: true,
@@ -6135,7 +7773,7 @@ var seq = {
   createNode: (schema4, obj, ctx) => YAMLSeq.from(schema4, obj, ctx)
 };
 
-// node_modules/yaml/browser/dist/schema/common/string.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/common/string.js
 var string2 = {
   identify: (value) => typeof value === "string",
   default: true,
@@ -6147,7 +7785,7 @@ var string2 = {
   }
 };
 
-// node_modules/yaml/browser/dist/schema/common/null.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/common/null.js
 var nullTag = {
   identify: (value) => value == null,
   createNode: () => new Scalar(null),
@@ -6158,7 +7796,7 @@ var nullTag = {
   stringify: ({ source }, ctx) => typeof source === "string" && nullTag.test.test(source) ? source : ctx.options.nullStr
 };
 
-// node_modules/yaml/browser/dist/schema/core/bool.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/core/bool.js
 var boolTag = {
   identify: (value) => typeof value === "boolean",
   default: true,
@@ -6175,15 +7813,15 @@ var boolTag = {
   }
 };
 
-// node_modules/yaml/browser/dist/stringify/stringifyNumber.js
-function stringifyNumber({ format, minFractionDigits, tag, value }) {
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/stringify/stringifyNumber.js
+function stringifyNumber({ format: format2, minFractionDigits, tag, value }) {
   if (typeof value === "bigint")
     return String(value);
   const num = typeof value === "number" ? value : Number(value);
   if (!isFinite(num))
     return isNaN(num) ? ".nan" : num < 0 ? "-.inf" : ".inf";
   let n = Object.is(value, -0) ? "-0" : JSON.stringify(value);
-  if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n) && !n.includes("e")) {
+  if (!format2 && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n) && !n.includes("e")) {
     let i = n.indexOf(".");
     if (i < 0) {
       i = n.length;
@@ -6196,7 +7834,7 @@ function stringifyNumber({ format, minFractionDigits, tag, value }) {
   return n;
 }
 
-// node_modules/yaml/browser/dist/schema/core/float.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/core/float.js
 var floatNaN = {
   identify: (value) => typeof value === "number",
   default: true,
@@ -6232,7 +7870,7 @@ var float = {
   stringify: stringifyNumber
 };
 
-// node_modules/yaml/browser/dist/schema/core/int.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/core/int.js
 var intIdentify = (value) => typeof value === "bigint" || Number.isInteger(value);
 var intResolve = (str, offset, radix, { intAsBigInt }) => intAsBigInt ? BigInt(str) : parseInt(str.substring(offset), radix);
 function intStringify(node, radix, prefix) {
@@ -6268,7 +7906,7 @@ var intHex = {
   stringify: (node) => intStringify(node, 16, "0x")
 };
 
-// node_modules/yaml/browser/dist/schema/core/schema.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/core/schema.js
 var schema = [
   map,
   seq,
@@ -6283,7 +7921,7 @@ var schema = [
   float
 ];
 
-// node_modules/yaml/browser/dist/schema/json/schema.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/json/schema.js
 function intIdentify2(value) {
   return typeof value === "bigint" || Number.isInteger(value);
 }
@@ -6341,7 +7979,7 @@ var jsonError = {
 };
 var schema2 = [map, seq].concat(jsonScalars, jsonError);
 
-// node_modules/yaml/browser/dist/schema/yaml-1.1/binary.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/yaml-1.1/binary.js
 var binary = {
   identify: (value) => value instanceof Uint8Array,
   // Buffer inherits from Uint8Array
@@ -6394,7 +8032,7 @@ var binary = {
   }
 };
 
-// node_modules/yaml/browser/dist/schema/yaml-1.1/pairs.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/yaml-1.1/pairs.js
 function resolvePairs(seq2, onError) {
   if (isSeq(seq2)) {
     for (let i = 0; i < seq2.items.length; ++i) {
@@ -6460,7 +8098,7 @@ var pairs = {
   createNode: createPairs
 };
 
-// node_modules/yaml/browser/dist/schema/yaml-1.1/omap.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/yaml-1.1/omap.js
 var YAMLOMap = class _YAMLOMap extends YAMLSeq {
   constructor() {
     super();
@@ -6526,7 +8164,7 @@ var omap = {
   createNode: (schema4, iterable, ctx) => YAMLOMap.from(schema4, iterable, ctx)
 };
 
-// node_modules/yaml/browser/dist/schema/yaml-1.1/bool.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/yaml-1.1/bool.js
 function boolStringify({ value, source }, ctx) {
   const boolObj = value ? trueTag : falseTag;
   if (source && boolObj.test.test(source))
@@ -6550,7 +8188,7 @@ var falseTag = {
   stringify: boolStringify
 };
 
-// node_modules/yaml/browser/dist/schema/yaml-1.1/float.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/yaml-1.1/float.js
 var floatNaN2 = {
   identify: (value) => typeof value === "number",
   default: true,
@@ -6589,7 +8227,7 @@ var float2 = {
   stringify: stringifyNumber
 };
 
-// node_modules/yaml/browser/dist/schema/yaml-1.1/int.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/yaml-1.1/int.js
 var intIdentify3 = (value) => typeof value === "bigint" || Number.isInteger(value);
 function intResolve2(str, offset, radix, { intAsBigInt }) {
   const sign = str[0];
@@ -6658,7 +8296,7 @@ var intHex2 = {
   stringify: (node) => intStringify2(node, 16, "0x")
 };
 
-// node_modules/yaml/browser/dist/schema/yaml-1.1/set.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/yaml-1.1/set.js
 var YAMLSet = class _YAMLSet extends YAMLMap {
   constructor(schema4) {
     super(schema4);
@@ -6737,7 +8375,7 @@ var set = {
   }
 };
 
-// node_modules/yaml/browser/dist/schema/yaml-1.1/timestamp.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/yaml-1.1/timestamp.js
 function parseSexagesimal(str, asBigInt) {
   const sign = str[0];
   const parts = sign === "-" || sign === "+" ? str.substring(1) : str;
@@ -6803,20 +8441,20 @@ var timestamp = {
       throw new Error("!!timestamp expects a date, starting with yyyy-mm-dd");
     const [, year, month, day, hour, minute, second] = match.map(Number);
     const millisec = match[7] ? Number((match[7] + "00").substr(1, 3)) : 0;
-    let date = Date.UTC(year, month - 1, day, hour || 0, minute || 0, second || 0, millisec);
+    let date2 = Date.UTC(year, month - 1, day, hour || 0, minute || 0, second || 0, millisec);
     const tz = match[8];
     if (tz && tz !== "Z") {
       let d = parseSexagesimal(tz, false);
       if (Math.abs(d) < 30)
         d *= 60;
-      date -= 6e4 * d;
+      date2 -= 6e4 * d;
     }
-    return new Date(date);
+    return new Date(date2);
   },
   stringify: ({ value }) => value?.toISOString().replace(/(T00:00:00)?\.000Z$/, "") ?? ""
 };
 
-// node_modules/yaml/browser/dist/schema/yaml-1.1/schema.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/yaml-1.1/schema.js
 var schema3 = [
   map,
   seq,
@@ -6841,7 +8479,7 @@ var schema3 = [
   timestamp
 ];
 
-// node_modules/yaml/browser/dist/schema/tags.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/tags.js
 var schemas = /* @__PURE__ */ new Map([
   ["core", schema],
   ["failsafe", [map, seq, string2]],
@@ -6912,7 +8550,7 @@ function getTags(customTags, schemaName, addMergeTag) {
   }, []);
 }
 
-// node_modules/yaml/browser/dist/schema/Schema.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/schema/Schema.js
 var sortMapEntriesByKey = (a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
 var Schema = class _Schema {
   constructor({ compat, customTags, merge: merge2, resolveKnownTags, schema: schema4, sortMapEntries, toStringDefaults }) {
@@ -6933,7 +8571,7 @@ var Schema = class _Schema {
   }
 };
 
-// node_modules/yaml/browser/dist/stringify/stringifyDocument.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/stringify/stringifyDocument.js
 function stringifyDocument(doc, options) {
   const lines = [];
   let hasDirectives = options.directives === true;
@@ -7004,7 +8642,7 @@ function stringifyDocument(doc, options) {
   return lines.join("\n") + "\n";
 }
 
-// node_modules/yaml/browser/dist/doc/Document.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/doc/Document.js
 var Document = class _Document {
   constructor(value, replacer, options) {
     this.commentBefore = null;
@@ -7266,8 +8904,8 @@ var Document = class _Document {
     };
     const res = toJS(this.contents, jsonArg ?? "", ctx);
     if (typeof onAnchor === "function")
-      for (const { count, res: res2 } of ctx.anchors.values())
-        onAnchor(res2, count);
+      for (const { count: count2, res: res2 } of ctx.anchors.values())
+        onAnchor(res2, count2);
     return typeof reviver === "function" ? applyReviver(reviver, { "": res }, "", res) : res;
   }
   /**
@@ -7296,7 +8934,7 @@ function assertCollection(contents) {
   throw new Error("Expected a YAML collection as document contents");
 }
 
-// node_modules/yaml/browser/dist/errors.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/errors.js
 var YAMLError = class extends Error {
   constructor(name, pos, code, message) {
     super();
@@ -7338,12 +8976,12 @@ var prettifyError = (src, lc) => (error) => {
     lineStr = prev + lineStr;
   }
   if (/[^ ]/.test(lineStr)) {
-    let count = 1;
+    let count2 = 1;
     const end = error.linePos[1];
     if (end?.line === line && end.col > col) {
-      count = Math.max(1, Math.min(end.col - col, 80 - ci));
+      count2 = Math.max(1, Math.min(end.col - col, 80 - ci));
     }
-    const pointer = " ".repeat(ci) + "^".repeat(count);
+    const pointer = " ".repeat(ci) + "^".repeat(count2);
     error.message += `:
 
 ${lineStr}
@@ -7352,7 +8990,7 @@ ${pointer}
   }
 };
 
-// node_modules/yaml/browser/dist/compose/resolve-props.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/resolve-props.js
 function resolveProps(tokens, { flow, indicator, next, offset, onError, parentIndent, startOnNewline }) {
   let spaceBefore = false;
   let atNewline = startOnNewline;
@@ -7480,7 +9118,7 @@ function resolveProps(tokens, { flow, indicator, next, offset, onError, parentIn
   };
 }
 
-// node_modules/yaml/browser/dist/compose/util-contains-newline.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/util-contains-newline.js
 function containsNewline(key) {
   if (!key)
     return null;
@@ -7516,7 +9154,7 @@ function containsNewline(key) {
   }
 }
 
-// node_modules/yaml/browser/dist/compose/util-flow-indent-check.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/util-flow-indent-check.js
 function flowIndentCheck(indent, fc, onError) {
   if (fc?.type === "flow-collection") {
     const end = fc.end[0];
@@ -7527,7 +9165,7 @@ function flowIndentCheck(indent, fc, onError) {
   }
 }
 
-// node_modules/yaml/browser/dist/compose/util-map-includes.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/util-map-includes.js
 function mapIncludes(ctx, items, search) {
   const { uniqueKeys } = ctx.options;
   if (uniqueKeys === false)
@@ -7536,7 +9174,7 @@ function mapIncludes(ctx, items, search) {
   return items.some((pair) => isEqual(pair.key, search));
 }
 
-// node_modules/yaml/browser/dist/compose/resolve-block-map.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/resolve-block-map.js
 var startColMsg = "All mapping items must start at the same column";
 function resolveBlockMap({ composeNode: composeNode2, composeEmptyNode: composeEmptyNode2 }, ctx, bm, onError, tag) {
   const NodeClass = tag?.nodeClass ?? YAMLMap;
@@ -7632,7 +9270,7 @@ function resolveBlockMap({ composeNode: composeNode2, composeEmptyNode: composeE
   return map2;
 }
 
-// node_modules/yaml/browser/dist/compose/resolve-block-seq.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/resolve-block-seq.js
 function resolveBlockSeq({ composeNode: composeNode2, composeEmptyNode: composeEmptyNode2 }, ctx, bs, onError, tag) {
   const NodeClass = tag?.nodeClass ?? YAMLSeq;
   const seq2 = new NodeClass(ctx.schema);
@@ -7674,7 +9312,7 @@ function resolveBlockSeq({ composeNode: composeNode2, composeEmptyNode: composeE
   return seq2;
 }
 
-// node_modules/yaml/browser/dist/compose/resolve-end.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/resolve-end.js
 function resolveEnd(end, offset, reqSpace, onError) {
   let comment = "";
   if (end) {
@@ -7711,7 +9349,7 @@ function resolveEnd(end, offset, reqSpace, onError) {
   return { comment, offset };
 }
 
-// node_modules/yaml/browser/dist/compose/resolve-flow-collection.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/resolve-flow-collection.js
 var blockMsg = "Block collections are not allowed within flow collections";
 var isBlock = (token) => token && (token.type === "block-map" || token.type === "block-seq");
 function resolveFlowCollection({ composeNode: composeNode2, composeEmptyNode: composeEmptyNode2 }, ctx, fc, onError, tag) {
@@ -7891,7 +9529,7 @@ function resolveFlowCollection({ composeNode: composeNode2, composeEmptyNode: co
   return coll;
 }
 
-// node_modules/yaml/browser/dist/compose/compose-collection.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/compose-collection.js
 function resolveCollection(CN2, ctx, token, onError, tagName, tag) {
   const coll = token.type === "block-map" ? resolveBlockMap(CN2, ctx, token, onError, tag) : token.type === "block-seq" ? resolveBlockSeq(CN2, ctx, token, onError, tag) : resolveFlowCollection(CN2, ctx, token, onError, tag);
   const Coll = coll.constructor;
@@ -7943,7 +9581,7 @@ function composeCollection(CN2, ctx, token, props, onError) {
   return node;
 }
 
-// node_modules/yaml/browser/dist/compose/resolve-block-scalar.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/resolve-block-scalar.js
 function resolveBlockScalar(ctx, scalar, onError) {
   const start = scalar.offset;
   const header = parseBlockScalarHeader(scalar, ctx.options.strict, onError);
@@ -8119,7 +9757,7 @@ function splitLines(source) {
   return lines;
 }
 
-// node_modules/yaml/browser/dist/compose/resolve-flow-scalar.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/resolve-flow-scalar.js
 function resolveFlowScalar(scalar, strict, onError) {
   const { offset, type, source, end } = scalar;
   let _type;
@@ -8332,7 +9970,7 @@ function parseCharCode(source, offset, length, onError) {
   }
 }
 
-// node_modules/yaml/browser/dist/compose/compose-scalar.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/compose-scalar.js
 function composeScalar(ctx, token, tagToken, onError) {
   const { value, type, comment, range } = token.type === "block-scalar" ? resolveBlockScalar(ctx, token, onError) : resolveFlowScalar(token, ctx.options.strict, onError);
   const tagName = tagToken ? ctx.directives.tagName(tagToken.source, (msg) => onError(tagToken, "TAG_RESOLVE_FAILED", msg)) : null;
@@ -8403,7 +10041,7 @@ function findScalarTagByTest({ atKey, directives, schema: schema4 }, value, toke
   return tag;
 }
 
-// node_modules/yaml/browser/dist/compose/util-empty-scalar-position.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/util-empty-scalar-position.js
 function emptyScalarPosition(offset, before, pos) {
   if (before) {
     pos ?? (pos = before.length);
@@ -8427,7 +10065,7 @@ function emptyScalarPosition(offset, before, pos) {
   return offset;
 }
 
-// node_modules/yaml/browser/dist/compose/compose-node.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/compose-node.js
 var CN = { composeNode, composeEmptyNode };
 function composeNode(ctx, token, props, onError) {
   const atKey = ctx.atKey;
@@ -8520,7 +10158,7 @@ function composeAlias({ options }, { offset, source, end }, onError) {
   return alias;
 }
 
-// node_modules/yaml/browser/dist/compose/compose-doc.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/compose-doc.js
 function composeDoc(options, directives, { offset, start, value, end }, onError) {
   const opts = Object.assign({ _directives: directives }, options);
   const doc = new Document(void 0, opts);
@@ -8553,7 +10191,7 @@ function composeDoc(options, directives, { offset, start, value, end }, onError)
   return doc;
 }
 
-// node_modules/yaml/browser/dist/compose/composer.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/compose/composer.js
 function getErrorPos(src) {
   if (typeof src === "number")
     return [src, src + 1];
@@ -8746,7 +10384,7 @@ ${end.comment}` : end.comment;
   }
 };
 
-// node_modules/yaml/browser/dist/parse/cst-visit.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/parse/cst-visit.js
 var BREAK2 = Symbol("break visit");
 var SKIP2 = Symbol("skip children");
 var REMOVE2 = Symbol("remove item");
@@ -8802,7 +10440,7 @@ function _visit(path, item, visitor) {
   return typeof ctrl === "function" ? ctrl(item, path) : ctrl;
 }
 
-// node_modules/yaml/browser/dist/parse/cst.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/parse/cst.js
 var BOM = "\uFEFF";
 var DOCUMENT = "";
 var FLOW_END = "";
@@ -8867,7 +10505,7 @@ function tokenType(source) {
   return null;
 }
 
-// node_modules/yaml/browser/dist/parse/lexer.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/parse/lexer.js
 function isEmpty(ch) {
   switch (ch) {
     case void 0:
@@ -9449,7 +11087,7 @@ var Lexer = class {
   }
 };
 
-// node_modules/yaml/browser/dist/parse/line-counter.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/parse/line-counter.js
 var LineCounter = class {
   constructor() {
     this.lineStarts = [];
@@ -9474,7 +11112,7 @@ var LineCounter = class {
   }
 };
 
-// node_modules/yaml/browser/dist/parse/parser.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/parse/parser.js
 function includesToken(list, type) {
   for (let i = 0; i < list.length; ++i)
     if (list[i].type === type)
@@ -10337,7 +11975,7 @@ var Parser = class {
   }
 };
 
-// node_modules/yaml/browser/dist/public-api.js
+// ../../workspace/dsh-plugin-gallery/node_modules/yaml/browser/dist/public-api.js
 function parseOptions(options) {
   const prettyErrors = options.prettyErrors !== false;
   const lineCounter = options.lineCounter || prettyErrors && new LineCounter() || null;
@@ -10480,22 +12118,23 @@ function agentIssues({
 // src/client/agent-wizard.jsx
 var steps2 = ["\u57FA\u672C\u4FE1\u606F", "\u884C\u4E3A\u6307\u5F15\u4E0E\u9644\u4EF6", "\u68C0\u67E5\u4FDD\u5B58"];
 function AgentWizard({ resource, importedResource, onClose, onSave }) {
+  const l = useGalleryText();
   const draft = resource || importedResource;
-  const [cover, setCover] = (0, import_react8.useState)(draft?.metadata?.cover ?? "");
-  const [initial2] = (0, import_react8.useState)(() => readAgent(draft));
-  const [step, setStep] = (0, import_react8.useState)(0), [slug, setSlug] = (0, import_react8.useState)(() => initial2.slug || createResourceIdentifier("agent")), [name, setName] = (0, import_react8.useState)(draft?.name || ""), [description, setDescription] = (0, import_react8.useState)(initial2.description), [instructions, setInstructions] = (0, import_react8.useState)(
+  const [cover, setCover] = (0, import_react9.useState)(draft?.metadata?.cover ?? "");
+  const [initial2] = (0, import_react9.useState)(() => readAgent(draft));
+  const [step, setStep] = (0, import_react9.useState)(0), [slug, setSlug] = (0, import_react9.useState)(() => initial2.slug || createResourceIdentifier("agent")), [name, setName] = (0, import_react9.useState)(draft?.name || ""), [description, setDescription] = (0, import_react9.useState)(initial2.description), [instructions, setInstructions] = (0, import_react9.useState)(
     () => [
       initial2.goal && "## \u4EFB\u52A1\u76EE\u6807\n" + initial2.goal,
       initial2.boundaries && "## \u5904\u7406\u8FB9\u754C\n" + initial2.boundaries,
       initial2.instructions
     ].filter(Boolean).join("\n\n")
-  ), [tags, setTags] = (0, import_react8.useState)((draft?.tags || []).join(", ")), [files, setFiles] = (0, import_react8.useState)(
+  ), [tags, setTags] = (0, import_react9.useState)((draft?.tags || []).join(", ")), [files, setFiles] = (0, import_react9.useState)(
     (draft?.files || []).filter(
       (f) => !["AGENT.md", "config.json"].includes(f.path)
     )
-  ), [selected, setSelected] = (0, import_react8.useState)(-1), [error, setError] = (0, import_react8.useState)(""), [busy, setBusy] = (0, import_react8.useState)(false), [preview, setPreview] = (0, import_react8.useState)(false);
-  const heading = (0, import_react8.useRef)(null);
-  (0, import_react8.useEffect)(() => {
+  ), [selected, setSelected] = (0, import_react9.useState)(-1), [error, setError] = (0, import_react9.useState)(""), [busy, setBusy] = (0, import_react9.useState)(false), [preview, setPreview] = (0, import_react9.useState)(false);
+  const heading = (0, import_react9.useRef)(null);
+  (0, import_react9.useEffect)(() => {
     heading.current?.focus();
   }, [step]);
   const parsedTags = [
@@ -10604,17 +12243,17 @@ function AgentWizard({ resource, importedResource, onClose, onSave }) {
     }
   }
   const current = files[selected];
-  return /* @__PURE__ */ import_react8.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react8.default.createElement(
+  return /* @__PURE__ */ import_react9.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react9.default.createElement(
     "section",
     {
       className: "gal-dialog gal-skill-wizard gal-agent-wizard",
       role: "dialog",
       "aria-modal": "true",
-      "aria-label": resource ? "\u7F16\u8F91 Agent" : "\u65B0\u5EFA Agent",
+      "aria-label": resource ? l("\u7F16\u8F91 Agent") : l("\u65B0\u5EFA Agent"),
       tabIndex: -1
     },
-    /* @__PURE__ */ import_react8.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react8.default.createElement("h2", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "agent" }), " ", resource ? "\u7F16\u8F91 Agent" : "\u65B0\u5EFA Agent"), /* @__PURE__ */ import_react8.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react8.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps2.map((title, i) => /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react9.default.createElement("h2", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "agent" }), " ", resource ? l("\u7F16\u8F91 Agent") : l("\u65B0\u5EFA Agent")), /* @__PURE__ */ import_react9.default.createElement("button", { "aria-label": l("\u5173\u95ED\u7F16\u8F91"), disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "close" }))),
+    /* @__PURE__ */ import_react9.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": l("\u521B\u5EFA\u8FDB\u5EA6") }, steps2.map((title, i) => /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         key: title,
@@ -10622,29 +12261,29 @@ function AgentWizard({ resource, importedResource, onClose, onSave }) {
         disabled: busy || i > 0 && !identityOK || i > 1 && !dutiesOK,
         onClick: () => setStep(i)
       },
-      /* @__PURE__ */ import_react8.default.createElement("span", null, i < step ? "\u2713" : i + 1),
-      title
+      /* @__PURE__ */ import_react9.default.createElement("span", null, i < step ? "\u2713" : i + 1),
+      l(title)
     ))),
-    /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react8.default.createElement("main", null, /* @__PURE__ */ import_react8.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps2[step]), step === 0 && /* @__PURE__ */ import_react8.default.createElement(ResourceBasics, { name, onName: setName, description, onDescription: setDescription, identifier: slug, onIdentifier: setSlug, busy }), step === 1 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "\u5199\u6E05\u804C\u8D23\u3001\u5904\u7406\u8FB9\u754C\u3001\u4F55\u65F6\u56DE\u62A5\u548C\u4EA4\u4ED8\u683C\u5F0F\u3002"), /* @__PURE__ */ import_react8.default.createElement(
+    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react9.default.createElement("main", null, /* @__PURE__ */ import_react9.default.createElement("h3", { ref: heading, tabIndex: -1 }, l(steps2[step])), step === 0 && /* @__PURE__ */ import_react9.default.createElement(ResourceBasics, { name, onName: setName, description, onDescription: setDescription, identifier: slug, onIdentifier: setSlug, busy }), step === 1 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react9.default.createElement("p", null, l("\u5199\u6E05\u804C\u8D23\u3001\u5904\u7406\u8FB9\u754C\u3001\u4F55\u65F6\u56DE\u62A5\u548C\u4EA4\u4ED8\u683C\u5F0F\u3002")), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         "aria-pressed": preview,
         onClick: () => setPreview(!preview)
       },
-      preview ? "\u7EE7\u7EED\u7F16\u8F91" : "\u9884\u89C8\u6307\u5F15"
-    ), preview ? /* @__PURE__ */ import_react8.default.createElement("pre", { className: "gal-skill-preview" }, document2) : /* @__PURE__ */ import_react8.default.createElement("label", null, "\u884C\u4E3A\u6307\u5F15", /* @__PURE__ */ import_react8.default.createElement(
+      preview ? l("\u7EE7\u7EED\u7F16\u8F91") : l("\u9884\u89C8\u6307\u5F15")
+    ), preview ? /* @__PURE__ */ import_react9.default.createElement("pre", { className: "gal-skill-preview" }, document2) : /* @__PURE__ */ import_react9.default.createElement("label", null, l("\u884C\u4E3A\u6307\u5F15"), /* @__PURE__ */ import_react9.default.createElement(
       "textarea",
       {
-        "aria-label": "\u884C\u4E3A\u6307\u5F15",
+        "aria-label": l("\u884C\u4E3A\u6307\u5F15"),
         className: "gal-skill-code",
         rows: 10,
         value: instructions,
         onChange: (e) => setInstructions(e.target.value)
       }
-    )), /* @__PURE__ */ import_react8.default.createElement("details", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("summary", null, "\u9644\u5C5E\u6587\u4EF6\u4E0E\u9009\u9879 \xB7 ", files.length, " \u4E2A\u9644\u4EF6"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-folders" }, [
-      ["references", "\u53C2\u8003\u8D44\u6599"],
-      ["assets", "\u7D20\u6750\u6A21\u677F"]
-    ].map(([folder, title]) => /* @__PURE__ */ import_react8.default.createElement(
+    )), /* @__PURE__ */ import_react9.default.createElement("details", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react9.default.createElement("summary", null, l("\u9644\u5C5E\u6587\u4EF6\u4E0E\u9009\u9879 \xB7 "), files.length, l(" \u4E2A\u9644\u4EF6")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-skill-folders" }, [
+      ["references", l("\u53C2\u8003\u8D44\u6599")],
+      ["assets", l("\u7D20\u6750\u6A21\u677F")]
+    ].map(([folder, title]) => /* @__PURE__ */ import_react9.default.createElement(
       "section",
       {
         className: "gal-skill-folder",
@@ -10655,13 +12294,13 @@ function AgentWizard({ resource, importedResource, onClose, onSave }) {
           upload(folder, e.dataTransfer.files);
         }
       },
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "folder", size: 28 }),
-      /* @__PURE__ */ import_react8.default.createElement("h3", null, title),
-      /* @__PURE__ */ import_react8.default.createElement("code", null, folder, "/"),
-      /* @__PURE__ */ import_react8.default.createElement("label", { className: "gal-upload" }, "\u4E0A\u4F20\u6587\u4EF6", /* @__PURE__ */ import_react8.default.createElement(
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "folder", size: 28 }),
+      /* @__PURE__ */ import_react9.default.createElement("h3", null, l(title)),
+      /* @__PURE__ */ import_react9.default.createElement("code", null, folder, "/"),
+      /* @__PURE__ */ import_react9.default.createElement("label", { className: "gal-upload" }, l("\u4E0A\u4F20\u6587\u4EF6"), /* @__PURE__ */ import_react9.default.createElement(
         "input",
         {
-          "aria-label": `\u4E0A\u4F20${title}`,
+          "aria-label": l("\u4E0A\u4F20{0}", l(title)),
           type: "file",
           multiple: true,
           disabled: busy,
@@ -10671,7 +12310,7 @@ function AgentWizard({ resource, importedResource, onClose, onSave }) {
           }
         }
       )),
-      /* @__PURE__ */ import_react8.default.createElement(
+      /* @__PURE__ */ import_react9.default.createElement(
         "button",
         {
           disabled: busy || files.length >= 98,
@@ -10687,31 +12326,31 @@ function AgentWizard({ resource, importedResource, onClose, onSave }) {
             setSelected(files.length);
           }
         },
-        "\u65B0\u5EFA\u6587\u672C"
+        l("\u65B0\u5EFA\u6587\u672C")
       ),
-      /* @__PURE__ */ import_react8.default.createElement("span", null, files.filter((f) => f.path.startsWith(folder + "/")).length, " ", "\u4E2A\u6587\u4EF6")
-    ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-attachments" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-filelist" }, files.map((f, i) => /* @__PURE__ */ import_react8.default.createElement("div", { key: i }, /* @__PURE__ */ import_react8.default.createElement(
+      /* @__PURE__ */ import_react9.default.createElement("span", null, files.filter((f) => f.path.startsWith(folder + "/")).length, " ", l("\u4E2A\u6587\u4EF6"))
+    ))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-skill-attachments" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-skill-filelist" }, files.map((f, i) => /* @__PURE__ */ import_react9.default.createElement("div", { key: i }, /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         onClick: () => setSelected(i),
         "aria-pressed": selected === i
       },
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "file" }),
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file" }),
       f.path
-    ), /* @__PURE__ */ import_react8.default.createElement(
+    ), /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
-        "aria-label": `\u5220\u9664 ${f.path}`,
+        "aria-label": l("\u5220\u9664 {0}", f.path),
         onClick: () => {
           setFiles(files.filter((_, j) => j !== i));
           setSelected(-1);
         }
       },
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "close" })
-    )))), current && /* @__PURE__ */ import_react8.default.createElement("fieldset", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "\u6587\u4EF6\u8DEF\u5F84", /* @__PURE__ */ import_react8.default.createElement(
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "close" })
+    )))), current && /* @__PURE__ */ import_react9.default.createElement("fieldset", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react9.default.createElement("label", null, l("\u6587\u4EF6\u8DEF\u5F84"), /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
-        "aria-label": "\u6587\u4EF6\u8DEF\u5F84",
+        "aria-label": l("\u6587\u4EF6\u8DEF\u5F84"),
         value: current.path,
         onChange: (e) => setFiles(
           files.map(
@@ -10719,10 +12358,10 @@ function AgentWizard({ resource, importedResource, onClose, onSave }) {
           )
         )
       }
-    )), current.encoding === "utf8" ? /* @__PURE__ */ import_react8.default.createElement("label", null, "\u6587\u4EF6\u5185\u5BB9", /* @__PURE__ */ import_react8.default.createElement(
+    )), current.encoding === "utf8" ? /* @__PURE__ */ import_react9.default.createElement("label", null, l("\u6587\u4EF6\u5185\u5BB9"), /* @__PURE__ */ import_react9.default.createElement(
       "textarea",
       {
-        "aria-label": "\u6587\u4EF6\u5185\u5BB9",
+        "aria-label": l("\u6587\u4EF6\u5185\u5BB9"),
         rows: 8,
         value: current.content,
         onChange: (e) => setFiles(
@@ -10731,7 +12370,7 @@ function AgentWizard({ resource, importedResource, onClose, onSave }) {
           )
         )
       }
-    )) : /* @__PURE__ */ import_react8.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u968F\u8D44\u6E90\u4FDD\u5B58\u3002"))))), step === 2 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "agent", size: 36 }), /* @__PURE__ */ import_react8.default.createElement("h2", null, name), /* @__PURE__ */ import_react8.default.createElement("p", null, description), /* @__PURE__ */ import_react8.default.createElement("span", null, files.length + 1 + (hasConfig ? 1 : 0), " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react8.default.createElement(
+    )) : /* @__PURE__ */ import_react9.default.createElement("p", null, l("\u4E8C\u8FDB\u5236\u9644\u4EF6\u968F\u8D44\u6E90\u4FDD\u5B58\u3002")))))), step === 2 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "agent", size: 36 }), /* @__PURE__ */ import_react9.default.createElement("h2", null, name), /* @__PURE__ */ import_react9.default.createElement("p", null, description), /* @__PURE__ */ import_react9.default.createElement("span", null, files.length + 1 + (hasConfig ? 1 : 0), l(" \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58"))), /* @__PURE__ */ import_react9.default.createElement(
       ResourceCoverPicker,
       {
         resource: {
@@ -10743,45 +12382,45 @@ function AgentWizard({ resource, importedResource, onClose, onSave }) {
         },
         onChange: setCover
       }
-    ), /* @__PURE__ */ import_react8.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react8.default.createElement(
+    ), /* @__PURE__ */ import_react9.default.createElement("label", null, l("\u6807\u7B7E\uFF08\u9009\u586B\uFF09"), /* @__PURE__ */ import_react9.default.createElement(
       "input",
       {
-        "aria-label": "\u6807\u7B7E",
+        "aria-label": l("\u6807\u7B7E"),
         value: tags,
         onChange: (e) => setTags(e.target.value),
-        placeholder: "\u4F8B\u5982\uFF1A\u7814\u7A76\uFF0C\u5206\u6790"
+        placeholder: l("\u4F8B\u5982\uFF1A\u7814\u7A76\uFF0C\u5206\u6790")
       }
-    )), issues.length ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "gal-error", role: "alert" }, issues.map((x) => /* @__PURE__ */ import_react8.default.createElement("p", { key: x }, x))) : /* @__PURE__ */ import_react8.default.createElement("p", { className: "gal-skill-ok" }, "\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58"), /* @__PURE__ */ import_react8.default.createElement("details", null, /* @__PURE__ */ import_react8.default.createElement("summary", null, "\u67E5\u770B AGENT.md"), /* @__PURE__ */ import_react8.default.createElement("pre", { className: "gal-skill-preview" }, document2)), hasConfig && /* @__PURE__ */ import_react8.default.createElement("details", null, /* @__PURE__ */ import_react8.default.createElement("summary", null, "\u67E5\u770B config.json"), /* @__PURE__ */ import_react8.default.createElement("pre", { className: "gal-skill-preview" }, JSON.stringify(config, null, 2)))), error && /* @__PURE__ */ import_react8.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react8.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react8.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react8.default.createElement("strong", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "folder" }), " ", slug || "my-agent", "/"), /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "file" }), " AGENT.md"), hasConfig && /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "file" }), " config.json"), files.map((f, i) => /* @__PURE__ */ import_react8.default.createElement("div", { key: i }, /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "file" }), " ", f.path)))),
-    /* @__PURE__ */ import_react8.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react8.default.createElement(
+    )), issues.length ? /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-error", role: "alert" }, issues.map((x) => /* @__PURE__ */ import_react9.default.createElement("p", { key: x }, l(x)))) : /* @__PURE__ */ import_react9.default.createElement("p", { className: "gal-skill-ok" }, l("\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58")), /* @__PURE__ */ import_react9.default.createElement("details", null, /* @__PURE__ */ import_react9.default.createElement("summary", null, l("\u67E5\u770B AGENT.md")), /* @__PURE__ */ import_react9.default.createElement("pre", { className: "gal-skill-preview" }, document2)), hasConfig && /* @__PURE__ */ import_react9.default.createElement("details", null, /* @__PURE__ */ import_react9.default.createElement("summary", null, l("\u67E5\u770B config.json")), /* @__PURE__ */ import_react9.default.createElement("pre", { className: "gal-skill-preview" }, JSON.stringify(config, null, 2)))), error && /* @__PURE__ */ import_react9.default.createElement("p", { role: "alert", className: "gal-error" }, l(error))), /* @__PURE__ */ import_react9.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react9.default.createElement("summary", null, l("\u6587\u4EF6\u7ED3\u6784")), /* @__PURE__ */ import_react9.default.createElement("strong", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "folder" }), " ", slug || "my-agent", "/"), /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file" }), " AGENT.md"), hasConfig && /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file" }), " config.json"), files.map((f, i) => /* @__PURE__ */ import_react9.default.createElement("div", { key: i }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file" }), " ", f.path)))),
+    /* @__PURE__ */ import_react9.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         disabled: busy,
         onClick: step ? () => setStep(step - 1) : onClose
       },
-      step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"
-    ), step < 2 ? /* @__PURE__ */ import_react8.default.createElement(
+      step ? l("\u4E0A\u4E00\u6B65") : l("\u53D6\u6D88")
+    ), step < 2 ? /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || step === 0 && !identityOK || step === 1 && !dutiesOK,
         onClick: () => setStep(step + 1)
       },
-      "\u4E0B\u4E00\u6B65",
-      /* @__PURE__ */ import_react8.default.createElement(Glyph, { name: "arrow" })
-    ) : /* @__PURE__ */ import_react8.default.createElement(
+      l("\u4E0B\u4E00\u6B65"),
+      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "arrow" })
+    ) : /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || !!issues.length,
         onClick: save
       },
-      busy ? "\u4FDD\u5B58\u4E2D\u2026" : "\u4FDD\u5B58 Agent"
+      busy ? l("\u4FDD\u5B58\u4E2D\u2026") : l("\u4FDD\u5B58 Agent")
     ))
   ));
 }
 
 // src/client/resource-start.jsx
-var import_react9 = __toESM(require("react"), 1);
+var import_react10 = __toESM(require("react"), 1);
 
 // src/client/skill-format.mjs
 var SKILL_TEMPLATE = `# \u6267\u884C\u6307\u5F15
@@ -10914,16 +12553,15 @@ ${ATTACHMENTS_END}`;
 
 // src/client/resource-import.mjs
 var IMPORT_LIMIT = 5 * 1024 * 1024;
+var WORKFLOW_BUNDLE_LIMIT = 6 * IMPORT_LIMIT + 1024 * 1024;
 var validPath = (path) => typeof path === "string" && !/^[\\/]|[\\\x00-\x1f]/.test(path) && !/^[a-z]:/i.test(path) && path.split("/").every((p) => p && p !== "." && p !== "..");
-function importResourceFiles(type, input, label = "") {
-  if (!["skill", "agent"].includes(type))
-    throw Error("\u4EC5\u652F\u6301\u5BFC\u5165 Skill \u548C Agent");
+function validateImportFiles(input, limit = IMPORT_LIMIT) {
   if (!Array.isArray(input) || !input.length || input.length > 100)
     throw Error("\u8BF7\u9009\u62E9\u4E00\u4E2A\u8D44\u6E90\uFF0C\u6700\u591A 100 \u4E2A\u6587\u4EF6");
   const seen = /* @__PURE__ */ new Set();
   let total = 0;
   for (const f of input) {
-    if (!validPath(f.path) || seen.has(f.path) || !["utf8", "base64"].includes(f.encoding) || typeof f.content !== "string")
+    if (!validPath(f?.path) || seen.has(f.path) || !["utf8", "base64"].includes(f.encoding) || typeof f.content !== "string")
       throw Error("\u6587\u4EF6\u8DEF\u5F84\u3001\u7F16\u7801\u65E0\u6548\u6216\u5B58\u5728\u91CD\u590D\u6587\u4EF6");
     seen.add(f.path);
     if (f.encoding === "base64" && !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(
@@ -10932,7 +12570,63 @@ function importResourceFiles(type, input, label = "") {
       throw Error("\u9644\u4EF6\u7F16\u7801\u65E0\u6548");
     total += f.encoding === "base64" ? f.content.length * 3 / 4 : new TextEncoder().encode(f.content).length;
   }
-  if (total > IMPORT_LIMIT) throw Error("\u8D44\u6E90\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB");
+  if (total > limit)
+    throw Error(limit === IMPORT_LIMIT ? "\u8D44\u6E90\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB" : "\u8D44\u6E90\u6587\u4EF6\u8D85\u51FA\u5927\u5C0F\u9650\u5236");
+}
+function importWorkflow(source) {
+  validateImportFiles(source.files);
+  const definition = workflowFromResource(source, { draft: true });
+  const saved = source.metadata?.workflowCanvas;
+  const savedAgents = Array.isArray(saved?.agents) ? saved.agents : [];
+  const position = (point, fallback) => Number.isFinite(point?.x) && Number.isFinite(point?.y) ? { x: point.x, y: point.y } : fallback;
+  const agents = definition.members.map((member, index) => {
+    const previous = savedAgents.find(
+      (node) => (node?.memberName || node?.id) === member.name
+    );
+    return {
+      id: createResourceIdentifier("a"),
+      memberName: member.name,
+      label: member.name,
+      resourceId: "",
+      skills: [],
+      mcps: [],
+      position: position(previous?.position, { x: 40, y: 70 + index * 155 })
+    };
+  });
+  const taskPositions = Object.fromEntries(
+    definition.tasks.map((task, index) => [
+      task.id,
+      position(
+        saved?.taskPositions?.[task.id] ?? definition.positions[`task:${task.id}`],
+        { x: 380 + index % 3 * 270, y: 80 + Math.floor(index / 3) * 180 }
+      )
+    ])
+  );
+  const warnings = workflowTemplateIssues(definition);
+  const draft = warnings.length > 0;
+  if (savedAgents.some((node) => node?.resourceId || node?.skills?.length || node?.mcps?.length) || source.references?.length)
+    warnings.push("\u5DF2\u4FDD\u7559\u6210\u5458\u5FEB\u7167\u3002\u5982\u9700\u4F7F\u7528\u539F\u8D44\u6E90\u5E93\u4E2D\u7684\u5F15\u7528\uFF0C\u8BF7\u5728\u5F53\u524D\u5E93\u91CD\u65B0\u9009\u62E9\u8D44\u6E90\u3002");
+  return {
+    resource: {
+      type: "workflow",
+      name: definition.name,
+      description: definition.description,
+      tags: definition.tags,
+      files: [{ path: "workflow.json", encoding: "utf8", content: JSON.stringify(definition) }],
+      metadata: {
+        ...typeof source.metadata?.cover === "string" && source.metadata.cover.length <= 64 ? { cover: source.metadata.cover } : {},
+        format: "dsh-teamflow-template-v1",
+        workflowCanvas: { version: 1, draft, taskPositions, agents }
+      },
+      references: []
+    },
+    warnings
+  };
+}
+function importResourceFiles(type, input, label = "") {
+  if (!["skill", "agent", "workflow"].includes(type))
+    throw Error("\u4EC5\u652F\u6301\u5BFC\u5165 Skill\u3001Agent \u548C Workflow");
+  validateImportFiles(input, type === "workflow" ? WORKFLOW_BUNDLE_LIMIT : IMPORT_LIMIT);
   if (input.length === 1 && /\.json$/i.test(input[0].path)) {
     let bundle;
     try {
@@ -10940,8 +12634,9 @@ function importResourceFiles(type, input, label = "") {
     } catch {
       throw Error("\u8D44\u6E90\u5305 JSON \u65E0\u6CD5\u89E3\u6790");
     }
-    if (bundle.format !== "dsh-gallery-resource" || ![1, 2].includes(bundle.schemaVersion) || bundle.resource?.type !== type)
+    if (bundle?.format !== "dsh-gallery-resource" || ![1, 2].includes(bundle.schemaVersion) || bundle.resource?.type !== type)
       throw Error("\u8BF7\u9009\u62E9\u540C\u7C7B\u578B\u7684 Gallery \u5BFC\u51FA\u8D44\u6E90\u5305");
+    if (type === "workflow") return importWorkflow(bundle.resource);
     const result = importResourceFiles(
       type,
       bundle.resource.files,
@@ -10962,6 +12657,7 @@ function importResourceFiles(type, input, label = "") {
       }
     };
   }
+  if (type === "workflow") throw Error("\u8BF7\u9009\u62E9\u4E00\u4E2A Workflow .gallery.json \u8D44\u6E90\u5305");
   const canonical = type === "skill" ? "SKILL.md" : "AGENT.md";
   let candidates = input.filter((f) => f.path.split("/").at(-1) === canonical);
   if (!candidates.length && input.length === 1 && /\.md$/i.test(input[0].path))
@@ -11088,12 +12784,13 @@ function importResourceFiles(type, input, label = "") {
   if (!description) warnings.unshift("\u672A\u627E\u5230\u63CF\u8FF0\uFF0C\u8BF7\u5728\u57FA\u672C\u4FE1\u606F\u4E2D\u8865\u5145");
   return { resource, warnings };
 }
-async function readBrowserResourceFiles(list) {
+async function readBrowserResourceFiles(list, type) {
   const files = Array.from(list || []);
   if (!files.length || files.length > 100)
     throw Error("\u6700\u591A\u9009\u62E9 100 \u4E2A\u6587\u4EF6\uFF0C\u8BF7\u5355\u72EC\u9009\u62E9\u8D44\u6E90\u76EE\u5F55");
-  if (files.reduce((s, f) => s + f.size, 0) > IMPORT_LIMIT)
-    throw Error("\u8D44\u6E90\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB");
+  const limit = type === "workflow" ? WORKFLOW_BUNDLE_LIMIT : IMPORT_LIMIT;
+  if (files.reduce((s, f) => s + f.size, 0) > limit)
+    throw Error(limit === IMPORT_LIMIT ? "\u8D44\u6E90\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB" : "\u8D44\u6E90\u6587\u4EF6\u8D85\u51FA\u5927\u5C0F\u9650\u5236");
   return Promise.all(
     files.map(async (f) => {
       const bytes = new Uint8Array(await f.arrayBuffer());
@@ -11121,10 +12818,12 @@ function ResourceStart({
   onRead,
   onBrowse
 }) {
-  const label = type === "skill" ? "Skill" : "Agent";
-  const [mode, setMode] = (0, import_react9.useState)("choose"), [source, setSource] = (0, import_react9.useState)("browser"), [busy, setBusy] = (0, import_react9.useState)(false), [error, setError] = (0, import_react9.useState)(""), [result, setResult] = (0, import_react9.useState)(null);
-  const [directory, setDirectory] = (0, import_react9.useState)(null);
-  const [selectedEntry, setSelectedEntry] = (0, import_react9.useState)(null);
+  const l = useGalleryText();
+  const workflow = type === "workflow";
+  const label = { skill: "Skill", agent: "Agent", workflow: "Workflow" }[type];
+  const [mode, setMode] = (0, import_react10.useState)("choose"), [source, setSource] = (0, import_react10.useState)("browser"), [busy, setBusy] = (0, import_react10.useState)(false), [error, setError] = (0, import_react10.useState)(""), [result, setResult] = (0, import_react10.useState)(null);
+  const [directory, setDirectory] = (0, import_react10.useState)(null);
+  const [selectedEntry, setSelectedEntry] = (0, import_react10.useState)(null);
   const clear = () => {
     setResult(null);
     setError("");
@@ -11143,7 +12842,7 @@ function ResourceStart({
   };
   const browse = (next, shortcut) => run(async () => {
     const value = await onBrowse(
-      shortcut ? { shortcut } : next === void 0 ? {} : { path: next }
+      { type, ...shortcut ? { shortcut } : next === void 0 ? {} : { path: next } }
     );
     setDirectory(value);
     setSelectedEntry(null);
@@ -11153,23 +12852,23 @@ function ResourceStart({
   });
   const upload = (files) => run(
     async () => setResult(
-      importResourceFiles(type, await readBrowserResourceFiles(files))
+      importResourceFiles(type, await readBrowserResourceFiles(files, type))
     )
   );
-  return /* @__PURE__ */ import_react9.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react9.default.createElement(
+  return /* @__PURE__ */ import_react10.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react10.default.createElement(
     "section",
     {
       className: "gal-dialog gal-import-dialog",
       role: "dialog",
       "aria-modal": "true",
-      "aria-label": `\u521B\u5EFA ${label}`,
+      "aria-label": l("\u521B\u5EFA {0}", label),
       tabIndex: -1
     },
-    /* @__PURE__ */ import_react9.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h2", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: type }), mode === "choose" ? `\u521B\u5EFA ${label}` : `\u5BFC\u5165\u5DF2\u6709 ${label}`), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u5BFC\u5165\u540E\u53EF\u68C0\u67E5\u548C\u7F16\u8F91\uFF0C\u786E\u8BA4\u4FDD\u5B58\u540E\u624D\u52A0\u5165\u8D44\u6E90\u5E93\u3002")), /* @__PURE__ */ import_react9.default.createElement("button", { "aria-label": "\u5173\u95ED\u521B\u5EFA", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-dialog-body" }, mode === "choose" ? /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-create-options" }, /* @__PURE__ */ import_react9.default.createElement("button", { disabled: busy, onClick: onBlank }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "plus", size: 32 }), /* @__PURE__ */ import_react9.default.createElement("strong", null, "\u4ECE\u96F6\u521B\u5EFA"), /* @__PURE__ */ import_react9.default.createElement("span", null, "\u586B\u5199\u57FA\u672C\u4FE1\u606F\uFF0C\u7F16\u5199\u6307\u5F15\u5E76\u6DFB\u52A0\u9644\u4EF6\u3002")), /* @__PURE__ */ import_react9.default.createElement("button", { disabled: busy, onClick: () => setMode("import") }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "folder", size: 32 }), /* @__PURE__ */ import_react9.default.createElement("strong", null, "\u5BFC\u5165\u5DF2\u6709"), /* @__PURE__ */ import_react9.default.createElement("span", null, "\u4ECE\u672C\u673A\u6587\u4EF6\u6216\u670D\u52A1\u5668\u76EE\u5F55\u8BFB\u53D6\u3002"))) : /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, null, /* @__PURE__ */ import_react9.default.createElement("nav", { className: "gal-import-tabs", "aria-label": "\u5BFC\u5165\u6765\u6E90" }, [
-      ["browser", "\u672C\u673A\u6587\u4EF6"],
-      ["server", "\u670D\u52A1\u5668\u76EE\u5F55"]
-    ].map(([key, name]) => /* @__PURE__ */ import_react9.default.createElement(
+    /* @__PURE__ */ import_react10.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("h2", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: type }), mode === "choose" ? l("\u521B\u5EFA {0}", label) : l("\u5BFC\u5165\u5DF2\u6709 {0}", label)), /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u5BFC\u5165\u540E\u53EF\u68C0\u67E5\u548C\u7F16\u8F91\uFF0C\u786E\u8BA4\u4FDD\u5B58\u540E\u624D\u52A0\u5165\u8D44\u6E90\u5E93\u3002"))), /* @__PURE__ */ import_react10.default.createElement("button", { "aria-label": l("\u5173\u95ED\u521B\u5EFA"), disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "close" }))),
+    /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-dialog-body" }, mode === "choose" ? /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-create-options" }, /* @__PURE__ */ import_react10.default.createElement("button", { disabled: busy, onClick: onBlank }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "plus", size: 32 }), /* @__PURE__ */ import_react10.default.createElement("strong", null, l("\u4ECE\u96F6\u521B\u5EFA")), /* @__PURE__ */ import_react10.default.createElement("span", null, l(workflow ? "\u5728\u7A7A\u767D\u753B\u5E03\u4E0A\u6DFB\u52A0\u5E76\u8FDE\u63A5\u8282\u70B9\u3002" : "\u586B\u5199\u57FA\u672C\u4FE1\u606F\uFF0C\u7F16\u5199\u6307\u5F15\u5E76\u6DFB\u52A0\u9644\u4EF6\u3002"))), /* @__PURE__ */ import_react10.default.createElement("button", { disabled: busy, onClick: () => setMode("import") }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "folder", size: 32 }), /* @__PURE__ */ import_react10.default.createElement("strong", null, l("\u5BFC\u5165\u5DF2\u6709")), /* @__PURE__ */ import_react10.default.createElement("span", null, l("\u4ECE\u672C\u673A\u6587\u4EF6\u6216\u670D\u52A1\u5668\u76EE\u5F55\u8BFB\u53D6\u3002")))) : /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, null, /* @__PURE__ */ import_react10.default.createElement("nav", { className: "gal-import-tabs", "aria-label": l("\u5BFC\u5165\u6765\u6E90") }, [
+      ["browser", l("\u672C\u673A\u6587\u4EF6")],
+      ["server", l("\u670D\u52A1\u5668\u76EE\u5F55")]
+    ].map(([key, name]) => /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
         key,
@@ -11183,63 +12882,63 @@ function ResourceStart({
         }
       },
       name
-    ))), source === "browser" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-local" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "\u9009\u62E9\u4E00\u4E2A ", label, " \u7684 Markdown \u6587\u4EF6\u3001\u5B8C\u6574\u8D44\u6E90\u6587\u4EF6\u5939\uFF0C\u6216 Gallery \u5BFC\u51FA\u7684 JSON \u8D44\u6E90\u5305\u3002"), /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file" }), "\u9009\u62E9\u6587\u4EF6", /* @__PURE__ */ import_react9.default.createElement(
+    ))), source === "browser" && /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-import-local" }, /* @__PURE__ */ import_react10.default.createElement("p", null, workflow ? l("\u8BF7\u9009\u62E9\u4E00\u4E2A Workflow .gallery.json \u8D44\u6E90\u5305") : /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, null, l("\u9009\u62E9\u4E00\u4E2A "), l(label), l(" \u7684 Markdown \u6587\u4EF6\u3001\u5B8C\u6574\u8D44\u6E90\u6587\u4EF6\u5939\uFF0C\u6216 Gallery \u5BFC\u51FA\u7684 JSON \u8D44\u6E90\u5305\u3002"))), /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file" }), l("\u9009\u62E9\u6587\u4EF6"), /* @__PURE__ */ import_react10.default.createElement(
       "input",
       {
         type: "file",
-        accept: ".md,.json",
-        "aria-label": "\u5BFC\u5165\u672C\u673A\u6587\u4EF6",
+        accept: workflow ? ".json" : ".md,.json",
+        "aria-label": l("\u5BFC\u5165\u672C\u673A\u6587\u4EF6"),
         disabled: busy,
         onChange: (e) => {
           upload(e.target.files);
           e.target.value = "";
         }
       }
-    )), /* @__PURE__ */ import_react9.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "folder" }), "\u9009\u62E9\u6587\u4EF6\u5939", /* @__PURE__ */ import_react9.default.createElement(
+    )), !workflow && /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "folder" }), l("\u9009\u62E9\u6587\u4EF6\u5939"), /* @__PURE__ */ import_react10.default.createElement(
       "input",
       {
         type: "file",
         webkitdirectory: "",
         multiple: true,
-        "aria-label": "\u5BFC\u5165\u672C\u673A\u6587\u4EF6\u5939",
+        "aria-label": l("\u5BFC\u5165\u672C\u673A\u6587\u4EF6\u5939"),
         disabled: busy,
         onChange: (e) => {
           upload(e.target.files);
           e.target.value = "";
         }
       }
-    ))), /* @__PURE__ */ import_react9.default.createElement("p", null, "\u6587\u4EF6\u6765\u81EA\u5F53\u524D\u6D4F\u89C8\u5668\u6240\u5728\u7684\u7535\u8111\uFF1B\u8BFB\u53D6 DSH \u4E3B\u673A\u4E0A\u7684\u6587\u4EF6\u8BF7\u5207\u6362\u5230\u670D\u52A1\u5668\u76EE\u5F55\u3002")), source === "server" && /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-server" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-server-toolbar" }, /* @__PURE__ */ import_react9.default.createElement(
+    ))), /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u6587\u4EF6\u6765\u81EA\u5F53\u524D\u6D4F\u89C8\u5668\u6240\u5728\u7684\u7535\u8111\uFF1B\u8BFB\u53D6 DSH \u4E3B\u673A\u4E0A\u7684\u6587\u4EF6\u8BF7\u5207\u6362\u5230\u670D\u52A1\u5668\u76EE\u5F55\u3002"))), source === "server" && /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-import-server" }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-server-toolbar" }, /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
-        "aria-label": "\u4E0A\u4E00\u7EA7",
-        title: "\u8FD4\u56DE\u4E0A\u4E00\u7EA7",
+        "aria-label": l("\u4E0A\u4E00\u7EA7"),
+        title: l("\u8FD4\u56DE\u4E0A\u4E00\u7EA7"),
         disabled: busy || !directory || directory.path === directory.parentPath,
         onClick: () => browse(directory.parentPath)
       },
-      /* @__PURE__ */ import_react9.default.createElement("span", { "aria-hidden": "true" }, "\u2191")
-    ), /* @__PURE__ */ import_react9.default.createElement(
+      /* @__PURE__ */ import_react10.default.createElement("span", { "aria-hidden": "true" }, "\u2191")
+    ), /* @__PURE__ */ import_react10.default.createElement(
       "div",
       {
         className: "gal-file-location",
-        title: directory?.path || "\u670D\u52A1\u5668\u76EE\u5F55"
+        title: directory?.path || l("\u670D\u52A1\u5668\u76EE\u5F55")
       },
-      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "folder", size: 17 }),
-      /* @__PURE__ */ import_react9.default.createElement("span", null, directory?.path || "\u6B63\u5728\u6253\u5F00\u670D\u52A1\u5668\u76EE\u5F55\u2026")
-    ), /* @__PURE__ */ import_react9.default.createElement(
+      /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "folder", size: 17 }),
+      /* @__PURE__ */ import_react10.default.createElement("span", null, directory?.path || l("\u6B63\u5728\u6253\u5F00\u670D\u52A1\u5668\u76EE\u5F55\u2026"))
+    ), /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || !directory,
         onClick: () => read(selectedEntry?.path || directory.path)
       },
-      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "download", size: 16 }),
-      "\u8BFB\u53D6"
-    )), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-file-columns", "aria-hidden": "true" }, /* @__PURE__ */ import_react9.default.createElement("span", null, "\u540D\u79F0"), /* @__PURE__ */ import_react9.default.createElement("span", null, "\u7C7B\u578B")), /* @__PURE__ */ import_react9.default.createElement(
+      /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "download", size: 16 }),
+      l("\u8BFB\u53D6")
+    )), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-file-columns", "aria-hidden": "true" }, /* @__PURE__ */ import_react10.default.createElement("span", null, l("\u540D\u79F0")), /* @__PURE__ */ import_react10.default.createElement("span", null, l("\u7C7B\u578B"))), /* @__PURE__ */ import_react10.default.createElement(
       "div",
       {
         className: "gal-directory-list",
         role: "listbox",
-        "aria-label": "\u670D\u52A1\u5668\u6587\u4EF6",
+        "aria-label": l("\u670D\u52A1\u5668\u6587\u4EF6"),
         "aria-busy": busy,
         onClick: (e) => {
           if (!e.target.closest('[role="option"]')) {
@@ -11248,7 +12947,7 @@ function ResourceStart({
           }
         }
       },
-      directory?.entries.length ? directory.entries.map((entry, index) => /* @__PURE__ */ import_react9.default.createElement(
+      directory?.entries.length ? directory.entries.map((entry, index) => /* @__PURE__ */ import_react10.default.createElement(
         "button",
         {
           type: "button",
@@ -11289,18 +12988,18 @@ function ResourceStart({
             }
           }
         },
-        /* @__PURE__ */ import_react9.default.createElement(
+        /* @__PURE__ */ import_react10.default.createElement(
           Glyph,
           {
             name: entry.directory ? "folder" : "file",
             size: 18
           }
         ),
-        /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-directory-name" }, entry.name, entry.symlink ? " \u2197" : ""),
-        /* @__PURE__ */ import_react9.default.createElement("span", { className: "gal-directory-type" }, entry.directory ? "\u6587\u4EF6\u5939" : /\.json$/i.test(entry.name) ? "\u8D44\u6E90\u5305" : "Markdown")
-      )) : /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-directory-empty" }, busy ? "\u6B63\u5728\u8BFB\u53D6\u76EE\u5F55\u2026" : "\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u6587\u4EF6\u5939")
-    ), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-file-status" }, /* @__PURE__ */ import_react9.default.createElement("span", null, selectedEntry ? `\u5DF2\u9009\u4E2D\uFF1A${selectedEntry.name}` : `${directory?.entries.length ?? 0} \u9879`), /* @__PURE__ */ import_react9.default.createElement("span", null, "\u53CC\u51FB\u6587\u4EF6\u5939\u8FDB\u5165 \xB7 \u672A\u9009\u4E2D\u65F6\u8BFB\u53D6\u5F53\u524D\u76EE\u5F55"))), /* @__PURE__ */ import_react9.default.createElement("p", { className: "gal-import-hint" }, label, " \u4E3B\u6587\u4EF6\u4F1A\u81EA\u52A8\u8BC6\u522B\uFF1B", type === "skill" ? "references / scripts / assets" : "references / assets \u53CA config.json", " ", "\u968F\u8D44\u6E90\u5E26\u5165\u3002\u5BFC\u5165\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D\u6267\u884C\u6587\u4EF6\u3002"), busy && /* @__PURE__ */ import_react9.default.createElement("p", { role: "status" }, "\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u2026"), result && /* @__PURE__ */ import_react9.default.createElement("section", { className: "gal-import-preview", "aria-label": "\u5BFC\u5165\u9884\u89C8" }, /* @__PURE__ */ import_react9.default.createElement("h3", null, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "check" }), "\u5DF2\u8BFB\u53D6 \xB7 ", result.resource.name), /* @__PURE__ */ import_react9.default.createElement("p", null, result.resource.description || "\u63CF\u8FF0\u5C1A\u672A\u586B\u5199\uFF0C\u53EF\u5728\u4E0B\u4E00\u6B65\u8865\u5145\u3002"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "gal-import-files" }, result.resource.files.map((f) => /* @__PURE__ */ import_react9.default.createElement("div", { key: f.path }, /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "file", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("span", null, f.path)))), result.warnings?.length > 0 && /* @__PURE__ */ import_react9.default.createElement("details", { open: true }, /* @__PURE__ */ import_react9.default.createElement("summary", null, "\u9700\u8981\u786E\u8BA4\u7684\u5185\u5BB9\uFF08", result.warnings.length, "\uFF09"), result.warnings.map((text2, i) => /* @__PURE__ */ import_react9.default.createElement("p", { key: i }, text2))))), error && /* @__PURE__ */ import_react9.default.createElement("p", { role: "alert", className: "gal-error" }, error)),
-    /* @__PURE__ */ import_react9.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react9.default.createElement(
+        /* @__PURE__ */ import_react10.default.createElement("span", { className: "gal-directory-name" }, entry.name, entry.symlink ? " \u2197" : ""),
+        /* @__PURE__ */ import_react10.default.createElement("span", { className: "gal-directory-type" }, entry.directory ? l("\u6587\u4EF6\u5939") : /\.json$/i.test(entry.name) ? l("\u8D44\u6E90\u5305") : "Markdown")
+      )) : /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-directory-empty" }, busy ? l("\u6B63\u5728\u8BFB\u53D6\u76EE\u5F55\u2026") : l("\u6B64\u76EE\u5F55\u6CA1\u6709\u53EF\u5BFC\u5165\u7684\u6587\u4EF6\u6216\u6587\u4EF6\u5939"))
+    ), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-file-status" }, /* @__PURE__ */ import_react10.default.createElement("span", null, selectedEntry ? l("\u5DF2\u9009\u4E2D\uFF1A{0}", selectedEntry.name) : l("{0} \u9879", directory?.entries.length ?? 0)), /* @__PURE__ */ import_react10.default.createElement("span", null, l(workflow ? "\u9009\u62E9\u4E00\u4E2A\u8D44\u6E90\u5305\uFF0C\u6216\u8BFB\u53D6\u4EC5\u542B\u4E00\u4E2A .gallery.json \u7684\u76EE\u5F55" : "\u53CC\u51FB\u6587\u4EF6\u5939\u8FDB\u5165 \xB7 \u672A\u9009\u4E2D\u65F6\u8BFB\u53D6\u5F53\u524D\u76EE\u5F55")))), !workflow && /* @__PURE__ */ import_react10.default.createElement("p", { className: "gal-import-hint" }, l(label), l(" \u4E3B\u6587\u4EF6\u4F1A\u81EA\u52A8\u8BC6\u522B\uFF1B"), type === "skill" ? "references / scripts / assets" : l("references / assets \u53CA config.json"), " ", l("\u968F\u8D44\u6E90\u5E26\u5165\u3002\u5BFC\u5165\u53EA\u8BFB\u53D6\u5185\u5BB9\uFF0C\u4E0D\u6267\u884C\u6587\u4EF6\u3002")), busy && /* @__PURE__ */ import_react10.default.createElement("p", { role: "status" }, l("\u6B63\u5728\u8BFB\u53D6\u8D44\u6E90\u2026")), result && /* @__PURE__ */ import_react10.default.createElement("section", { className: "gal-import-preview", "aria-label": l("\u5BFC\u5165\u9884\u89C8") }, /* @__PURE__ */ import_react10.default.createElement("h3", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "check" }), l("\u5DF2\u8BFB\u53D6 \xB7 "), result.resource.name), /* @__PURE__ */ import_react10.default.createElement("p", null, result.resource.description || l("\u63CF\u8FF0\u5C1A\u672A\u586B\u5199\uFF0C\u53EF\u5728\u4E0B\u4E00\u6B65\u8865\u5145\u3002")), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-import-files" }, result.resource.files.map((f) => /* @__PURE__ */ import_react10.default.createElement("div", { key: f.path }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file", size: 15 }), /* @__PURE__ */ import_react10.default.createElement("span", null, f.path)))), result.warnings?.length > 0 && /* @__PURE__ */ import_react10.default.createElement("details", { open: true }, /* @__PURE__ */ import_react10.default.createElement("summary", null, l("\u9700\u8981\u786E\u8BA4\u7684\u5185\u5BB9\uFF08"), result.warnings.length, "\uFF09"), result.warnings.map((text2, i) => /* @__PURE__ */ import_react10.default.createElement("p", { key: i }, text2))))), error && /* @__PURE__ */ import_react10.default.createElement("p", { role: "alert", className: "gal-error" }, l(error))),
+    /* @__PURE__ */ import_react10.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
         disabled: busy,
@@ -11309,22 +13008,22 @@ function ResourceStart({
           clear();
         }
       },
-      mode === "choose" ? "\u53D6\u6D88" : "\u8FD4\u56DE"
-    ), mode === "import" && /* @__PURE__ */ import_react9.default.createElement(
+      mode === "choose" ? l("\u53D6\u6D88") : l("\u8FD4\u56DE")
+    ), mode === "import" && /* @__PURE__ */ import_react10.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || !result,
         onClick: () => onImported(result.resource)
       },
-      "\u8FDB\u5165\u521B\u5EFA\u5411\u5BFC",
-      /* @__PURE__ */ import_react9.default.createElement(Glyph, { name: "arrow" })
+      l(workflow ? "\u6253\u5F00\u753B\u5E03" : "\u8FDB\u5165\u521B\u5EFA\u5411\u5BFC"),
+      /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "arrow" })
     ))
   ));
 }
 
 // src/client/skill-wizard.jsx
-var import_react10 = __toESM(require("react"), 1);
+var import_react11 = __toESM(require("react"), 1);
 var steps3 = ["\u57FA\u672C\u4FE1\u606F", "\u7F16\u5199\u6307\u5F15", "\u68C0\u67E5\u4FDD\u5B58"];
 var folders = [
   ["references", "\u53C2\u8003\u8D44\u6599", "\u6267\u884C\u65F6\u9700\u8981\u67E5\u9605\u7684\u6587\u6863", "file"],
@@ -11332,20 +13031,21 @@ var folders = [
   ["assets", "\u7D20\u6750\u6A21\u677F", "\u6A21\u677F\u3001\u56FE\u7247\u53CA\u5176\u4ED6\u7D20\u6750", "folder"]
 ];
 function Preview({ text: text2 }) {
-  return /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-skill-preview" }, text2.split("\n").map((line, i) => {
-    if (/^### /.test(line)) return /* @__PURE__ */ import_react10.default.createElement("h4", { key: i }, line.slice(4));
-    if (/^## /.test(line)) return /* @__PURE__ */ import_react10.default.createElement("h3", { key: i }, line.slice(3));
-    if (/^# /.test(line)) return /* @__PURE__ */ import_react10.default.createElement("h2", { key: i }, line.slice(2));
-    return /* @__PURE__ */ import_react10.default.createElement("p", { key: i }, line || "\xA0");
+  return /* @__PURE__ */ import_react11.default.createElement("div", { className: "gal-skill-preview" }, text2.split("\n").map((line, i) => {
+    if (/^### /.test(line)) return /* @__PURE__ */ import_react11.default.createElement("h4", { key: i }, line.slice(4));
+    if (/^## /.test(line)) return /* @__PURE__ */ import_react11.default.createElement("h3", { key: i }, line.slice(3));
+    if (/^# /.test(line)) return /* @__PURE__ */ import_react11.default.createElement("h2", { key: i }, line.slice(2));
+    return /* @__PURE__ */ import_react11.default.createElement("p", { key: i }, line || "\xA0");
   }));
 }
 function SkillWizard({ resource, importedResource, onClose, onSave }) {
+  const l = useGalleryText();
   const draft = resource || importedResource;
-  const [cover, setCover] = (0, import_react10.useState)(draft?.metadata?.cover ?? "");
-  const [initial2] = (0, import_react10.useState)(() => readSkill(draft));
-  const [step, setStep] = (0, import_react10.useState)(0), [name, setName] = (0, import_react10.useState)(() => initial2.name || createResourceIdentifier("skill")), [displayName, setDisplayName] = (0, import_react10.useState)(draft?.name || ""), [description, setDescription] = (0, import_react10.useState)(initial2.description), [body, setBody] = (0, import_react10.useState)(initial2.body), [files, setFiles] = (0, import_react10.useState)(initial2.files), [tags, setTags] = (0, import_react10.useState)((draft?.tags || []).join(", ")), [active, setActive] = (0, import_react10.useState)(-1), [preview, setPreview] = (0, import_react10.useState)(false), [error, setError] = (0, import_react10.useState)(""), [busy, setBusy] = (0, import_react10.useState)(false);
-  const heading = (0, import_react10.useRef)(null);
-  (0, import_react10.useEffect)(() => {
+  const [cover, setCover] = (0, import_react11.useState)(draft?.metadata?.cover ?? "");
+  const [initial2] = (0, import_react11.useState)(() => readSkill(draft));
+  const [step, setStep] = (0, import_react11.useState)(0), [name, setName] = (0, import_react11.useState)(() => initial2.name || createResourceIdentifier("skill")), [displayName, setDisplayName] = (0, import_react11.useState)(draft?.name || ""), [description, setDescription] = (0, import_react11.useState)(initial2.description), [body, setBody] = (0, import_react11.useState)(initial2.body), [files, setFiles] = (0, import_react11.useState)(initial2.files), [tags, setTags] = (0, import_react11.useState)((draft?.tags || []).join(", ")), [active, setActive] = (0, import_react11.useState)(-1), [preview, setPreview] = (0, import_react11.useState)(false), [error, setError] = (0, import_react11.useState)(""), [busy, setBusy] = (0, import_react11.useState)(false);
+  const heading = (0, import_react11.useRef)(null);
+  (0, import_react11.useEffect)(() => {
     heading.current?.focus();
   }, [step]);
   const linkedBody = syncSkillAttachments(body, files);
@@ -11355,7 +13055,7 @@ function SkillWizard({ resource, importedResource, onClose, onSave }) {
     linkedBody,
     initial2.frontmatter
   );
-  (0, import_react10.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     setBody((value) => syncSkillAttachments(value, files));
   }, [files]);
   const parsedTags = [
@@ -11364,9 +13064,9 @@ function SkillWizard({ resource, importedResource, onClose, onSave }) {
     )
   ];
   const issues = [
-    ...parsedTags.length > 20 ? ["\u6700\u591A\u6DFB\u52A0 20 \u4E2A\u6807\u7B7E\u3002"] : [],
-    ...parsedTags.some((tag) => tag.length > 40) ? ["\u6BCF\u4E2A\u6807\u7B7E\u6700\u591A 40 \u4E2A\u5B57\u7B26\u3002"] : [],
-    ...!displayName.trim() || displayName.length > 160 ? ["\u8BF7\u586B\u5199\u540D\u79F0\uFF0C\u6700\u591A 160 \u5B57\u7B26\u3002"] : [],
+    ...parsedTags.length > 20 ? [l("\u6700\u591A\u6DFB\u52A0 20 \u4E2A\u6807\u7B7E\u3002")] : [],
+    ...parsedTags.some((tag) => tag.length > 40) ? [l("\u6BCF\u4E2A\u6807\u7B7E\u6700\u591A 40 \u4E2A\u5B57\u7B26\u3002")] : [],
+    ...!displayName.trim() || displayName.length > 160 ? [l("\u8BF7\u586B\u5199\u540D\u79F0\uFF0C\u6700\u591A 160 \u5B57\u7B26\u3002")] : [],
     ...initial2.error ? [initial2.error] : [],
     ...skillIssues(name, description, linkedBody, files)
   ];
@@ -11382,9 +13082,9 @@ function SkillWizard({ resource, importedResource, onClose, onSave }) {
     try {
       const incoming = [];
       if (files.length + list.length > 99)
-        throw new Error("\u6700\u591A\u6DFB\u52A0 99 \u4E2A\u9644\u5C5E\u6587\u4EF6\u3002");
+        throw new Error(l("\u6700\u591A\u6DFB\u52A0 99 \u4E2A\u9644\u5C5E\u6587\u4EF6\u3002"));
       if ([...list].reduce((sum, f) => sum + f.size, 0) > 5 * 1024 * 1024)
-        throw new Error("\u4E0A\u4F20\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB\u3002");
+        throw new Error(l("\u4E0A\u4F20\u6587\u4EF6\u603B\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC7 5 MiB\u3002"));
       for (const file of list) {
         const bytes = new Uint8Array(await file.arrayBuffer());
         let content, encoding;
@@ -11443,17 +13143,17 @@ function SkillWizard({ resource, importedResource, onClose, onSave }) {
     }
   }
   const current = files[active];
-  return /* @__PURE__ */ import_react10.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react10.default.createElement(
+  return /* @__PURE__ */ import_react11.default.createElement(Modal, { onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react11.default.createElement(
     "section",
     {
       className: "gal-dialog gal-skill-wizard",
       role: "dialog",
       "aria-modal": "true",
-      "aria-label": resource ? "\u7F16\u8F91 Skill" : "\u65B0\u5EFA Skill",
+      "aria-label": resource ? l("\u7F16\u8F91 Skill") : l("\u65B0\u5EFA Skill"),
       tabIndex: -1
     },
-    /* @__PURE__ */ import_react10.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react10.default.createElement("h2", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "skill" }), " ", resource ? "\u7F16\u8F91 Skill" : "\u65B0\u5EFA Skill"), /* @__PURE__ */ import_react10.default.createElement("button", { "aria-label": "\u5173\u95ED\u7F16\u8F91", disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "close" }))),
-    /* @__PURE__ */ import_react10.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": "\u521B\u5EFA\u8FDB\u5EA6" }, steps3.map((title, i) => /* @__PURE__ */ import_react10.default.createElement(
+    /* @__PURE__ */ import_react11.default.createElement("header", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react11.default.createElement("h2", null, /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: "skill" }), " ", resource ? l("\u7F16\u8F91 Skill") : l("\u65B0\u5EFA Skill")), /* @__PURE__ */ import_react11.default.createElement("button", { "aria-label": l("\u5173\u95ED\u7F16\u8F91"), disabled: busy, onClick: onClose }, /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: "close" }))),
+    /* @__PURE__ */ import_react11.default.createElement("nav", { className: "gal-skill-steps gal-three-steps", "aria-label": l("\u521B\u5EFA\u8FDB\u5EA6") }, steps3.map((title, i) => /* @__PURE__ */ import_react11.default.createElement(
       "button",
       {
         key: title,
@@ -11461,26 +13161,26 @@ function SkillWizard({ resource, importedResource, onClose, onSave }) {
         "aria-current": step === i ? "step" : void 0,
         onClick: () => go(i)
       },
-      /* @__PURE__ */ import_react10.default.createElement("span", null, i < step ? "\u2713" : i + 1),
-      title
+      /* @__PURE__ */ import_react11.default.createElement("span", null, i < step ? "\u2713" : i + 1),
+      l(title)
     ))),
-    /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react10.default.createElement("main", null, /* @__PURE__ */ import_react10.default.createElement("h3", { ref: heading, tabIndex: -1 }, steps3[step]), step === 0 && /* @__PURE__ */ import_react10.default.createElement(ResourceBasics, { name: displayName, onName: setDisplayName, description, onDescription: setDescription, identifier: name, onIdentifier: setName, busy }), step === 1 && /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react10.default.createElement("p", null, "\u5199\u6E05\u9002\u7528\u573A\u666F\u3001\u6267\u884C\u6B65\u9AA4\u548C\u4EA4\u4ED8\u7ED3\u679C\uFF0C\u53EF\u4EE5\u9644\u4E0A\u8F93\u5165\u4E0E\u8F93\u51FA\u793A\u4F8B\u3002"), /* @__PURE__ */ import_react10.default.createElement(
+    /* @__PURE__ */ import_react11.default.createElement("div", { className: "gal-dialog-body gal-skill-layout" }, /* @__PURE__ */ import_react11.default.createElement("main", null, /* @__PURE__ */ import_react11.default.createElement("h3", { ref: heading, tabIndex: -1 }, l(steps3[step])), step === 0 && /* @__PURE__ */ import_react11.default.createElement(ResourceBasics, { name: displayName, onName: setDisplayName, description, onDescription: setDescription, identifier: name, onIdentifier: setName, busy }), step === 1 && /* @__PURE__ */ import_react11.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react11.default.createElement("p", null, l("\u5199\u6E05\u9002\u7528\u573A\u666F\u3001\u6267\u884C\u6B65\u9AA4\u548C\u4EA4\u4ED8\u7ED3\u679C\uFF0C\u53EF\u4EE5\u9644\u4E0A\u8F93\u5165\u4E0E\u8F93\u51FA\u793A\u4F8B\u3002")), /* @__PURE__ */ import_react11.default.createElement(
       "button",
       {
         "aria-pressed": preview,
         onClick: () => setPreview(!preview)
       },
-      preview ? "\u7EE7\u7EED\u7F16\u8F91" : "\u9884\u89C8\u6B63\u6587"
-    ), preview ? /* @__PURE__ */ import_react10.default.createElement(Preview, { text: body }) : /* @__PURE__ */ import_react10.default.createElement("label", null, "\u6267\u884C\u6307\u5F15", /* @__PURE__ */ import_react10.default.createElement(
+      preview ? l("\u7EE7\u7EED\u7F16\u8F91") : l("\u9884\u89C8\u6B63\u6587")
+    ), preview ? /* @__PURE__ */ import_react11.default.createElement(Preview, { text: body }) : /* @__PURE__ */ import_react11.default.createElement("label", null, l("\u6267\u884C\u6307\u5F15"), /* @__PURE__ */ import_react11.default.createElement(
       "textarea",
       {
-        "aria-label": "\u6267\u884C\u6307\u5F15",
+        "aria-label": l("\u6267\u884C\u6307\u5F15"),
         className: "gal-skill-code",
         rows: 15,
         value: body,
         onChange: (e) => setBody(e.target.value)
       }
-    )), /* @__PURE__ */ import_react10.default.createElement("details", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react10.default.createElement("summary", null, "\u9644\u5C5E\u6587\u4EF6\u4E0E\u9009\u9879 \xB7 ", files.length, " \u4E2A\u9644\u4EF6"), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-skill-folders" }, folders.map(([folder, title, hint, icon]) => /* @__PURE__ */ import_react10.default.createElement(
+    )), /* @__PURE__ */ import_react11.default.createElement("details", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react11.default.createElement("summary", null, l("\u9644\u5C5E\u6587\u4EF6\u4E0E\u9009\u9879 \xB7 "), files.length, l(" \u4E2A\u9644\u4EF6")), /* @__PURE__ */ import_react11.default.createElement("div", { className: "gal-skill-folders" }, folders.map(([folder, title, hint, icon]) => /* @__PURE__ */ import_react11.default.createElement(
       "section",
       {
         key: folder,
@@ -11491,14 +13191,14 @@ function SkillWizard({ resource, importedResource, onClose, onSave }) {
           if (!busy) upload(folder, e.dataTransfer.files);
         }
       },
-      /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: icon, size: 28 }),
-      /* @__PURE__ */ import_react10.default.createElement("h3", null, title),
-      /* @__PURE__ */ import_react10.default.createElement("code", null, folder, "/"),
-      /* @__PURE__ */ import_react10.default.createElement("p", null, hint),
-      /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-upload" }, "\u4E0A\u4F20\u6216\u62D6\u5165", /* @__PURE__ */ import_react10.default.createElement(
+      /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: icon, size: 28 }),
+      /* @__PURE__ */ import_react11.default.createElement("h3", null, l(title)),
+      /* @__PURE__ */ import_react11.default.createElement("code", null, folder, "/"),
+      /* @__PURE__ */ import_react11.default.createElement("p", null, l(hint)),
+      /* @__PURE__ */ import_react11.default.createElement("label", { className: "gal-upload" }, l("\u4E0A\u4F20\u6216\u62D6\u5165"), /* @__PURE__ */ import_react11.default.createElement(
         "input",
         {
-          "aria-label": `\u4E0A\u4F20${title}`,
+          "aria-label": l("\u4E0A\u4F20{0}", l(title)),
           type: "file",
           multiple: true,
           disabled: busy,
@@ -11508,35 +13208,35 @@ function SkillWizard({ resource, importedResource, onClose, onSave }) {
           }
         }
       )),
-      /* @__PURE__ */ import_react10.default.createElement(
+      /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           disabled: busy || files.length >= 99,
           onClick: () => newFile(folder)
         },
-        "\u65B0\u5EFA\u6587\u4EF6"
+        l("\u65B0\u5EFA\u6587\u4EF6")
       ),
-      /* @__PURE__ */ import_react10.default.createElement("span", null, files.filter((f) => f.path.startsWith(folder + "/")).length, " ", "\u4E2A\u6587\u4EF6")
-    ))), /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-skill-attachments" }, files.length > 0 && /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-skill-filelist" }, files.map((f, i) => /* @__PURE__ */ import_react10.default.createElement("div", { key: i }, /* @__PURE__ */ import_react10.default.createElement(
+      /* @__PURE__ */ import_react11.default.createElement("span", null, files.filter((f) => f.path.startsWith(folder + "/")).length, " ", l("\u4E2A\u6587\u4EF6"))
+    ))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "gal-skill-attachments" }, files.length > 0 && /* @__PURE__ */ import_react11.default.createElement("div", { className: "gal-skill-filelist" }, files.map((f, i) => /* @__PURE__ */ import_react11.default.createElement("div", { key: i }, /* @__PURE__ */ import_react11.default.createElement(
       "button",
       {
         onClick: () => setActive(i),
         "aria-pressed": active === i
       },
-      /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file" }),
+      /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: "file" }),
       f.path
-    ), /* @__PURE__ */ import_react10.default.createElement(
+    ), /* @__PURE__ */ import_react11.default.createElement(
       "button",
       {
-        "aria-label": `\u5220\u9664 ${f.path}`,
+        "aria-label": l("\u5220\u9664 {0}", f.path),
         disabled: busy,
         onClick: () => {
           setFiles(files.filter((_, j) => i !== j));
           setActive(-1);
         }
       },
-      /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "close" })
-    )))), current && /* @__PURE__ */ import_react10.default.createElement("fieldset", { disabled: busy, className: "gal-skill-fields" }, /* @__PURE__ */ import_react10.default.createElement("label", null, "\u6587\u4EF6\u8DEF\u5F84", /* @__PURE__ */ import_react10.default.createElement(
+      /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: "close" })
+    )))), current && /* @__PURE__ */ import_react11.default.createElement("fieldset", { disabled: busy, className: "gal-skill-fields" }, /* @__PURE__ */ import_react11.default.createElement("label", null, l("\u6587\u4EF6\u8DEF\u5F84"), /* @__PURE__ */ import_react11.default.createElement(
       "input",
       {
         value: current.path,
@@ -11546,10 +13246,10 @@ function SkillWizard({ resource, importedResource, onClose, onSave }) {
           )
         )
       }
-    )), current.encoding === "utf8" ? /* @__PURE__ */ import_react10.default.createElement("label", null, "\u6587\u4EF6\u5185\u5BB9", /* @__PURE__ */ import_react10.default.createElement(
+    )), current.encoding === "utf8" ? /* @__PURE__ */ import_react11.default.createElement("label", null, l("\u6587\u4EF6\u5185\u5BB9"), /* @__PURE__ */ import_react11.default.createElement(
       "textarea",
       {
-        "aria-label": "\u6587\u4EF6\u5185\u5BB9",
+        "aria-label": l("\u6587\u4EF6\u5185\u5BB9"),
         rows: 8,
         value: current.content,
         onChange: (e) => setFiles(
@@ -11558,7 +13258,7 @@ function SkillWizard({ resource, importedResource, onClose, onSave }) {
           )
         )
       }
-    )) : /* @__PURE__ */ import_react10.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5C06\u539F\u6837\u4FDD\u5B58\u3002"))))), step === 2 && /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "skill", size: 36 }), /* @__PURE__ */ import_react10.default.createElement("h2", null, name), /* @__PURE__ */ import_react10.default.createElement("p", null, description), /* @__PURE__ */ import_react10.default.createElement("span", null, files.length + 1, " \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58")), /* @__PURE__ */ import_react10.default.createElement(
+    )) : /* @__PURE__ */ import_react11.default.createElement("p", null, l("\u4E8C\u8FDB\u5236\u9644\u4EF6\u5C06\u539F\u6837\u4FDD\u5B58\u3002")))))), step === 2 && /* @__PURE__ */ import_react11.default.createElement("div", { className: "gal-skill-fields" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "gal-skill-summary" }, /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: "skill", size: 36 }), /* @__PURE__ */ import_react11.default.createElement("h2", null, name), /* @__PURE__ */ import_react11.default.createElement("p", null, description), /* @__PURE__ */ import_react11.default.createElement("span", null, files.length + 1, l(" \u4E2A\u6587\u4EF6 \xB7 \u6574\u4F53\u4FDD\u5B58"))), /* @__PURE__ */ import_react11.default.createElement(
       ResourceCoverPicker,
       {
         resource: {
@@ -11570,44 +13270,44 @@ function SkillWizard({ resource, importedResource, onClose, onSave }) {
         },
         onChange: setCover
       }
-    ), /* @__PURE__ */ import_react10.default.createElement("label", null, "\u6807\u7B7E\uFF08\u9009\u586B\uFF09", /* @__PURE__ */ import_react10.default.createElement(
+    ), /* @__PURE__ */ import_react11.default.createElement("label", null, l("\u6807\u7B7E\uFF08\u9009\u586B\uFF09"), /* @__PURE__ */ import_react11.default.createElement(
       "input",
       {
-        "aria-label": "\u6807\u7B7E",
+        "aria-label": l("\u6807\u7B7E"),
         value: tags,
         onChange: (e) => setTags(e.target.value),
-        placeholder: "\u4F8B\u5982\uFF1A\u5F00\u53D1\uFF0C\u4EE3\u7801\u5BA1\u67E5"
+        placeholder: l("\u4F8B\u5982\uFF1A\u5F00\u53D1\uFF0C\u4EE3\u7801\u5BA1\u67E5")
       }
-    )), /* @__PURE__ */ import_react10.default.createElement("p", null, "\u7528\u9017\u53F7\u5206\u9694\uFF0C\u6700\u591A 20 \u4E2A\u6807\u7B7E\u3002"), !!parsedTags.length && /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-tags" }, parsedTags.map((tag) => /* @__PURE__ */ import_react10.default.createElement("span", { key: tag }, tag))), issues.length ? /* @__PURE__ */ import_react10.default.createElement("div", { role: "alert", className: "gal-error" }, issues.map((x) => /* @__PURE__ */ import_react10.default.createElement("p", { key: x }, x))) : /* @__PURE__ */ import_react10.default.createElement("p", { className: "gal-skill-ok" }, "\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58"), /* @__PURE__ */ import_react10.default.createElement("details", null, /* @__PURE__ */ import_react10.default.createElement("summary", null, "\u67E5\u770B SKILL.md"), /* @__PURE__ */ import_react10.default.createElement("pre", { className: "gal-skill-preview" }, document2))), error && /* @__PURE__ */ import_react10.default.createElement("p", { role: "alert", className: "gal-error" }, error)), /* @__PURE__ */ import_react10.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react10.default.createElement("summary", null, "\u6587\u4EF6\u7ED3\u6784"), /* @__PURE__ */ import_react10.default.createElement("strong", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "folder" }), " ", name || "my-skill", "/"), /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file" }), " SKILL.md"), folders.map(
-      ([folder]) => files.some((f) => f.path.startsWith(folder + "/")) && /* @__PURE__ */ import_react10.default.createElement("div", { key: folder }, /* @__PURE__ */ import_react10.default.createElement("strong", null, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "folder" }), " ", folder, "/"), files.filter((f) => f.path.startsWith(folder + "/")).map((f, i) => /* @__PURE__ */ import_react10.default.createElement("div", { className: "gal-skill-leaf", key: i }, /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "file" }), f.path.slice(folder.length + 1))))
+    )), /* @__PURE__ */ import_react11.default.createElement("p", null, l("\u7528\u9017\u53F7\u5206\u9694\uFF0C\u6700\u591A 20 \u4E2A\u6807\u7B7E\u3002")), !!parsedTags.length && /* @__PURE__ */ import_react11.default.createElement("div", { className: "gal-tags" }, parsedTags.map((tag) => /* @__PURE__ */ import_react11.default.createElement("span", { key: tag }, tag))), issues.length ? /* @__PURE__ */ import_react11.default.createElement("div", { role: "alert", className: "gal-error" }, issues.map((x) => /* @__PURE__ */ import_react11.default.createElement("p", { key: x }, l(x)))) : /* @__PURE__ */ import_react11.default.createElement("p", { className: "gal-skill-ok" }, l("\u2713 \u683C\u5F0F\u68C0\u67E5\u901A\u8FC7\uFF0C\u53EF\u4EE5\u4FDD\u5B58")), /* @__PURE__ */ import_react11.default.createElement("details", null, /* @__PURE__ */ import_react11.default.createElement("summary", null, l("\u67E5\u770B SKILL.md")), /* @__PURE__ */ import_react11.default.createElement("pre", { className: "gal-skill-preview" }, document2))), error && /* @__PURE__ */ import_react11.default.createElement("p", { role: "alert", className: "gal-error" }, l(error))), /* @__PURE__ */ import_react11.default.createElement("details", { open: true, className: "gal-skill-tree" }, /* @__PURE__ */ import_react11.default.createElement("summary", null, l("\u6587\u4EF6\u7ED3\u6784")), /* @__PURE__ */ import_react11.default.createElement("strong", null, /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: "folder" }), " ", name || "my-skill", "/"), /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: "file" }), " SKILL.md"), folders.map(
+      ([folder]) => files.some((f) => f.path.startsWith(folder + "/")) && /* @__PURE__ */ import_react11.default.createElement("div", { key: folder }, /* @__PURE__ */ import_react11.default.createElement("strong", null, /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: "folder" }), " ", folder, "/"), files.filter((f) => f.path.startsWith(folder + "/")).map((f, i) => /* @__PURE__ */ import_react11.default.createElement("div", { className: "gal-skill-leaf", key: i }, /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: "file" }), f.path.slice(folder.length + 1))))
     ))),
-    /* @__PURE__ */ import_react10.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react10.default.createElement("button", { disabled: busy, onClick: step ? () => go(step - 1) : onClose }, step ? "\u4E0A\u4E00\u6B65" : "\u53D6\u6D88"), step < 2 ? /* @__PURE__ */ import_react10.default.createElement(
+    /* @__PURE__ */ import_react11.default.createElement("footer", { className: "gal-skill-footer" }, /* @__PURE__ */ import_react11.default.createElement("button", { disabled: busy, onClick: step ? () => go(step - 1) : onClose }, step ? l("\u4E0A\u4E00\u6B65") : l("\u53D6\u6D88")), step < 2 ? /* @__PURE__ */ import_react11.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || step === 0 && !basicValid || step === 1 && !bodyValid,
         onClick: () => go(step + 1)
       },
-      "\u4E0B\u4E00\u6B65",
-      /* @__PURE__ */ import_react10.default.createElement(Glyph, { name: "arrow" })
-    ) : /* @__PURE__ */ import_react10.default.createElement(
+      l("\u4E0B\u4E00\u6B65"),
+      /* @__PURE__ */ import_react11.default.createElement(Glyph, { name: "arrow" })
+    ) : /* @__PURE__ */ import_react11.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy || !!issues.length,
         onClick: save
       },
-      busy ? "\u4FDD\u5B58\u4E2D\u2026" : "\u4FDD\u5B58 Skill"
+      busy ? l("\u4FDD\u5B58\u4E2D\u2026") : l("\u4FDD\u5B58 Skill")
     ))
   ));
 }
 
 // src/client/brand-icon.jsx
-var import_react11 = __toESM(require("react"), 1);
+var import_react12 = __toESM(require("react"), 1);
 function BrandIcon({ size = 20 }) {
-  const gradientId = `gal-aurora-${(0, import_react11.useId)().replace(/:/g, "")}`;
+  const gradientId = `gal-aurora-${(0, import_react12.useId)().replace(/:/g, "")}`;
   const paint = `url(#${gradientId})`;
-  return /* @__PURE__ */ import_react11.default.createElement(
+  return /* @__PURE__ */ import_react12.default.createElement(
     "svg",
     {
       className: "gal-brand-icon",
@@ -11618,8 +13318,8 @@ function BrandIcon({ size = 20 }) {
       "aria-hidden": "true",
       focusable: "false"
     },
-    /* @__PURE__ */ import_react11.default.createElement("defs", null, /* @__PURE__ */ import_react11.default.createElement("linearGradient", { id: gradientId, x1: "16", y1: "26", x2: "16", y2: "5", gradientUnits: "userSpaceOnUse" }, /* @__PURE__ */ import_react11.default.createElement("stop", { offset: "0", stopColor: "#12d9af" }), /* @__PURE__ */ import_react11.default.createElement("stop", { offset: "0.48", stopColor: "#35abff" }), /* @__PURE__ */ import_react11.default.createElement("stop", { offset: "1", stopColor: "#9e6aff" }))),
-    /* @__PURE__ */ import_react11.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement("defs", null, /* @__PURE__ */ import_react12.default.createElement("linearGradient", { id: gradientId, x1: "16", y1: "26", x2: "16", y2: "5", gradientUnits: "userSpaceOnUse" }, /* @__PURE__ */ import_react12.default.createElement("stop", { offset: "0", stopColor: "#12d9af" }), /* @__PURE__ */ import_react12.default.createElement("stop", { offset: "0.48", stopColor: "#35abff" }), /* @__PURE__ */ import_react12.default.createElement("stop", { offset: "1", stopColor: "#9e6aff" }))),
+    /* @__PURE__ */ import_react12.default.createElement(
       "path",
       {
         d: "M8 12h16l1 14H7l1-14Z",
@@ -11628,7 +13328,7 @@ function BrandIcon({ size = 20 }) {
         strokeLinejoin: "round"
       }
     ),
-    /* @__PURE__ */ import_react11.default.createElement(
+    /* @__PURE__ */ import_react12.default.createElement(
       "path",
       {
         d: "M12 12V9a4 4 0 0 1 8 0v3",
@@ -11637,10 +13337,10 @@ function BrandIcon({ size = 20 }) {
         strokeLinecap: "round"
       }
     ),
-    /* @__PURE__ */ import_react11.default.createElement("rect", { x: "11", y: "16", width: "4", height: "3", rx: ".8", fill: paint }),
-    /* @__PURE__ */ import_react11.default.createElement("rect", { x: "17", y: "16", width: "4", height: "3", rx: ".8", fill: paint }),
-    /* @__PURE__ */ import_react11.default.createElement("rect", { x: "11", y: "21", width: "4", height: "3", rx: ".8", fill: paint }),
-    /* @__PURE__ */ import_react11.default.createElement("rect", { x: "17", y: "21", width: "4", height: "3", rx: ".8", fill: paint })
+    /* @__PURE__ */ import_react12.default.createElement("rect", { x: "11", y: "16", width: "4", height: "3", rx: ".8", fill: paint }),
+    /* @__PURE__ */ import_react12.default.createElement("rect", { x: "17", y: "16", width: "4", height: "3", rx: ".8", fill: paint }),
+    /* @__PURE__ */ import_react12.default.createElement("rect", { x: "11", y: "21", width: "4", height: "3", rx: ".8", fill: paint }),
+    /* @__PURE__ */ import_react12.default.createElement("rect", { x: "17", y: "21", width: "4", height: "3", rx: ".8", fill: paint })
   );
 }
 
@@ -11671,9 +13371,513 @@ function saveTheme(storage, theme) {
   return true;
 }
 
+// src/client/anime-mascot.jsx
+var import_react13 = __toESM(require("react"), 1);
+function AnimeMascot() {
+  return /* @__PURE__ */ import_react13.default.createElement("svg", { className: "gal-anime-mascot", viewBox: "0 0 240 180", fill: "none", "aria-hidden": "true", focusable: "false" }, /* @__PURE__ */ import_react13.default.createElement("g", { stroke: "#342448", strokeWidth: "3", strokeLinejoin: "round" }, /* @__PURE__ */ import_react13.default.createElement("path", { d: "M52 164c-12-42-8-92 25-112l-7-34 36 17c25-5 42-1 58 10l28-19-2 43c19 26 16 64 3 95", fill: "#b9a8f0" }), /* @__PURE__ */ import_react13.default.createElement("path", { d: "m76 27 7 27 17-12zM183 37l-20 17 18 13z", fill: "#ffaccf" }), /* @__PURE__ */ import_react13.default.createElement("path", { d: "M74 90c0-36 82-39 90 0v29c-2 34-70 40-88 4z", fill: "#ffe9e3" }), /* @__PURE__ */ import_react13.default.createElement("path", { d: "M68 100c-2-45 14-58 47-56 35-3 58 19 56 56l-23-29-14 23-9-27-24 29-1-21-25 32", fill: "#d9caff" }), /* @__PURE__ */ import_react13.default.createElement("path", { d: "M78 157c8-15 26-19 43-19s35 6 44 21l9 21H67z", fill: "#42426b" }), /* @__PURE__ */ import_react13.default.createElement("path", { d: "m101 143 20 18 20-18M117 161l-5 19m14-19 6 19", stroke: "#92efe1" }), /* @__PURE__ */ import_react13.default.createElement("path", { d: "M61 99V84c0-63 119-63 119 0v16", stroke: "#93efe1", strokeWidth: "9" }), /* @__PURE__ */ import_react13.default.createElement("rect", { x: "54", y: "90", width: "19", height: "37", rx: "8", fill: "#ff9eca" }), /* @__PURE__ */ import_react13.default.createElement("rect", { x: "169", y: "90", width: "19", height: "37", rx: "8", fill: "#ff9eca" }), /* @__PURE__ */ import_react13.default.createElement("path", { d: "M177 126c0 12-8 17-25 17", stroke: "#93efe1" }), /* @__PURE__ */ import_react13.default.createElement("ellipse", { cx: "101", cy: "111", rx: "7", ry: "12", fill: "#6658a6" }), /* @__PURE__ */ import_react13.default.createElement("ellipse", { cx: "141", cy: "111", rx: "7", ry: "12", fill: "#6658a6" }), /* @__PURE__ */ import_react13.default.createElement("path", { d: "m115 129 6 4 6-4", strokeLinecap: "round" })), /* @__PURE__ */ import_react13.default.createElement("g", { fill: "#fff" }, /* @__PURE__ */ import_react13.default.createElement("circle", { cx: "99", cy: "107", r: "3" }), /* @__PURE__ */ import_react13.default.createElement("circle", { cx: "139", cy: "107", r: "3" })), /* @__PURE__ */ import_react13.default.createElement("g", { fill: "#ff9ec8", opacity: ".65" }, /* @__PURE__ */ import_react13.default.createElement("ellipse", { cx: "87", cy: "125", rx: "8", ry: "4" }), /* @__PURE__ */ import_react13.default.createElement("ellipse", { cx: "154", cy: "125", rx: "8", ry: "4" })), /* @__PURE__ */ import_react13.default.createElement("path", { d: "m28 48 4 12 12 4-12 4-4 12-4-12-12-4 12-4zM214 107l3 9 9 3-9 3-3 9-3-9-9-3 9-3z", fill: "#94efdf" }), /* @__PURE__ */ import_react13.default.createElement("path", { d: "m202 58 4 7 8 2-6 6 1 8-7-4-8 4 2-8-6-6 8-2z", fill: "#ffb0d5" }));
+}
+
+// src/client/paper-browser.jsx
+var import_react14 = __toESM(require("react"), 1);
+var TYPES = {
+  skill: { name: "Skill", color: "#8063ad", tint: "#ede7f7" },
+  agent: { name: "Agent", color: "#4f7fa9", tint: "#e3edf6" },
+  mcp: { name: "MCP", color: "#418b79", tint: "#e1f0eb" },
+  workflow: { name: "Workflow", color: "#b57c42", tint: "#f4e8db" }
+};
+var author = (r, l) => r.creator?.username || l("\u672A\u8BB0\u5F55");
+var count = (r, l) => (r.usageCount ?? 0).toLocaleString(l.language);
+var palette = (r) => ({
+  "--pb-color": TYPES[r.type]?.color,
+  "--pb-tint": TYPES[r.type]?.tint
+});
+var date = (value, l) => value ? new Date(value).toLocaleDateString(l.language) : l("\u672A\u8BB0\u5F55");
+function PaperCover({ resource, className = "" }) {
+  return /* @__PURE__ */ import_react14.default.createElement("div", { className: `pb-cover ${className}`, style: palette(resource) }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-cover-label" }, resource.type.toUpperCase(), " / GALLERY"), /* @__PURE__ */ import_react14.default.createElement(PaperArt, { type: resource.type }), /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-cover-code" }, TYPES[resource.type]?.name, " COLLECTION"));
+}
+function PaperArt({ type }) {
+  const c = TYPES[type]?.color || "#8063ad";
+  return /* @__PURE__ */ import_react14.default.createElement(
+    "svg",
+    {
+      viewBox: "0 0 360 170",
+      preserveAspectRatio: "xMidYMid meet",
+      "aria-hidden": "true",
+      fill: "none"
+    },
+    type === "skill" && /* @__PURE__ */ import_react14.default.createElement(import_react14.default.Fragment, null, /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "235", cy: "73", r: "65", fill: c, opacity: ".08" }), /* @__PURE__ */ import_react14.default.createElement("g", { transform: "translate(116 22) rotate(-8 60 60)" }, /* @__PURE__ */ import_react14.default.createElement(
+      "rect",
+      {
+        x: "-17",
+        y: "13",
+        width: "96",
+        height: "103",
+        rx: "7",
+        fill: c,
+        opacity: ".13"
+      }
+    ), /* @__PURE__ */ import_react14.default.createElement("rect", { width: "96", height: "110", rx: "7", fill: "#fff" }), /* @__PURE__ */ import_react14.default.createElement(
+      "rect",
+      {
+        x: "16",
+        y: "17",
+        width: "25",
+        height: "7",
+        rx: "3",
+        fill: c,
+        opacity: ".6"
+      }
+    ), /* @__PURE__ */ import_react14.default.createElement(
+      "path",
+      {
+        d: "M16 43h62M16 56h45M16 69h62M16 82h35",
+        stroke: c,
+        strokeWidth: "3",
+        opacity: ".35"
+      }
+    ), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "87", cy: "92", r: "22", fill: c }), /* @__PURE__ */ import_react14.default.createElement("path", { d: "m78 92 7 7 13-15", stroke: "white", strokeWidth: "3" }))),
+    type === "agent" && /* @__PURE__ */ import_react14.default.createElement(import_react14.default.Fragment, null, /* @__PURE__ */ import_react14.default.createElement("ellipse", { cx: "180", cy: "136", rx: "66", ry: "8", fill: c, opacity: ".1" }), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "180", cy: "77", r: "64", stroke: c, strokeOpacity: ".12" }), /* @__PURE__ */ import_react14.default.createElement(
+      "path",
+      {
+        d: "M124 145c2-33 27-47 56-47s54 14 56 47",
+        fill: c,
+        opacity: ".3"
+      }
+    ), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "180", cy: "62", r: "34", fill: "white" }), /* @__PURE__ */ import_react14.default.createElement(
+      "path",
+      {
+        d: "M148 60c-2-25 30-49 55-29 10 8 13 20 10 35-7-4-16-14-18-22-10 12-28 17-47 16",
+        fill: c
+      }
+    ), /* @__PURE__ */ import_react14.default.createElement("path", { d: "M167 77c7 7 16 7 24 0", stroke: c, strokeWidth: "2" }), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "169", cy: "65", r: "2", fill: c }), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "192", cy: "65", r: "2", fill: c }), /* @__PURE__ */ import_react14.default.createElement(
+      "path",
+      {
+        d: "m245 33 3 9 10 3-10 3-3 10-3-10-10-3 10-3z",
+        fill: c,
+        opacity: ".6"
+      }
+    )),
+    type === "mcp" && /* @__PURE__ */ import_react14.default.createElement("g", { stroke: c }, /* @__PURE__ */ import_react14.default.createElement(
+      "path",
+      {
+        d: "M105 100 163 49l80 20-39 58-99-27 138-31M163 49l41 78",
+        strokeWidth: "1.6",
+        opacity: ".4"
+      }
+    ), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "163", cy: "49", r: "13", fill: "#fff" }), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "105", cy: "100", r: "17", fill: c, stroke: "none" }), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "243", cy: "69", r: "22", fill: "#fff" }), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "204", cy: "127", r: "9", fill: c, stroke: "none" }), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "243", cy: "69", r: "10", strokeDasharray: "2 3" }), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "174", cy: "83", r: "65", opacity: ".15" })),
+    type === "workflow" && /* @__PURE__ */ import_react14.default.createElement(import_react14.default.Fragment, null, /* @__PURE__ */ import_react14.default.createElement(
+      "path",
+      {
+        d: "M90 65h85v54h82M175 65h82",
+        stroke: c,
+        strokeWidth: "2",
+        opacity: ".5"
+      }
+    ), /* @__PURE__ */ import_react14.default.createElement("g", { fill: "white" }, /* @__PURE__ */ import_react14.default.createElement("rect", { x: "53", y: "42", width: "78", height: "44", rx: "8" }), /* @__PURE__ */ import_react14.default.createElement("rect", { x: "215", y: "42", width: "78", height: "44", rx: "8" })), /* @__PURE__ */ import_react14.default.createElement("path", { d: "m237 98 23 22-23 22-23-22z", fill: c }), /* @__PURE__ */ import_react14.default.createElement("circle", { cx: "77", cy: "64", r: "7", fill: c, opacity: ".5" }), /* @__PURE__ */ import_react14.default.createElement(
+      "path",
+      {
+        d: "M92 59h24M92 68h16M230 59h48M230 69h30",
+        stroke: c,
+        strokeWidth: "3",
+        opacity: ".35"
+      }
+    ), /* @__PURE__ */ import_react14.default.createElement("path", { d: "m235 114 4 5-4 5", stroke: "white", strokeWidth: "2" }))
+  );
+}
+function PaperCard({ resource: r, busy, onOpen }) {
+  const l = useGalleryText();
+  return /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      className: "pb-card",
+      disabled: busy,
+      onClick: () => onOpen(r),
+      "aria-label": l("\u67E5\u770B {0}", r.name)
+    },
+    /* @__PURE__ */ import_react14.default.createElement(PaperCover, { resource: r }),
+    /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-card-content" }, /* @__PURE__ */ import_react14.default.createElement("h3", null, r.name), /* @__PURE__ */ import_react14.default.createElement("p", { className: "pb-desc" }, r.description || l("\u6682\u65E0\u63CF\u8FF0")), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-tags" }, r.tags?.slice(0, 3).map((t) => /* @__PURE__ */ import_react14.default.createElement("span", { key: t }, t))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-card-foot" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-mini-avatar", style: palette(r) }, [...author(r, l)][0]?.toUpperCase()), /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-author" }, author(r, l)), /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-uses", title: l("\u7D2F\u8BA1\u8C03\u7528\u6B21\u6570") }, "\u2197 ", count(r, l), l(" \u6B21\u8C03\u7528"))))
+  );
+}
+function PaperBrowser({
+  remote,
+  status,
+  refresh,
+  busy,
+  onOpen,
+  onCreate,
+  onError,
+  onRefresh,
+  onStorage,
+  themePicker,
+  dark,
+  onToggleDark
+}) {
+  const l = useGalleryText();
+  const [view, setView] = (0, import_react14.useState)("discover");
+  const [q, setQ] = (0, import_react14.useState)("");
+  const [tag, setTag] = (0, import_react14.useState)("");
+  const [sort, setSort] = (0, import_react14.useState)("usage");
+  const [rows, setRows] = (0, import_react14.useState)([]);
+  const [loading, setLoading] = (0, import_react14.useState)(true);
+  const [loadError, setLoadError] = (0, import_react14.useState)(false);
+  const [page, setPage] = (0, import_react14.useState)(0);
+  const search = (0, import_react14.useRef)(null);
+  (0, import_react14.useEffect)(() => {
+    setPage(0);
+  }, [refresh, status?.storage?.activeLibraryId]);
+  (0, import_react14.useEffect)(() => {
+    let live = true;
+    setLoading(true);
+    setLoadError(false);
+    (async () => {
+      const all = [];
+      for (let offset = 0; ; offset += 100) {
+        const result = await remote.uiList(
+          JSON.stringify({ limit: 100, offset, sort: "usage" })
+        );
+        if (result?.ok === false)
+          throw new Error(result.error?.message || l("\u8D44\u6E90\u52A0\u8F7D\u5931\u8D25"));
+        const data = result?.ok === true ? result.value : result;
+        if (!live) return;
+        all.push(...data.items);
+        if (!data.items.length || all.length >= data.total) break;
+      }
+      if (live) setRows(all);
+    })().catch((e) => {
+      if (live) {
+        setLoadError(true);
+        onError(e?.rpcError?.message || e.message);
+      }
+    }).finally(() => {
+      if (live) setLoading(false);
+    });
+    return () => {
+      live = false;
+    };
+  }, [remote, refresh, status?.storage?.activeLibraryId, onError]);
+  (0, import_react14.useEffect)(() => {
+    const shortcut = (e) => {
+      if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey || document.querySelector("[data-gallery-modal]"))
+        return;
+      if (e.target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName))
+        return;
+      e.preventDefault();
+      search.current?.focus();
+    };
+    document.addEventListener("keydown", shortcut);
+    return () => document.removeEventListener("keydown", shortcut);
+  }, []);
+  const choose = (next) => {
+    setView(next);
+    setTag("");
+    setQ("");
+    setPage(0);
+  };
+  const matches = (r) => [r.name, r.description, author(r, l), ...r.tags || []].join(" ").toLocaleLowerCase().includes(q.trim().toLocaleLowerCase());
+  const relevant = rows.filter(
+    (r) => TYPES[r.type] && (view === "discover" || view === "all" || r.type === view) && matches(r)
+  );
+  const tags = [...new Set(relevant.flatMap((r) => r.tags || []))].sort(
+    (a, b) => a.localeCompare(b)
+  );
+  const filtered = relevant.filter((r) => !tag || r.tags?.includes(tag)).sort(
+    (a, b) => (sort === "usage" ? (b.usageCount ?? 0) - (a.usageCount ?? 0) : new Date(b.updatedAt) - new Date(a.updatedAt)) || a.name.localeCompare(b.name)
+  );
+  const top = (type) => rows.filter((r) => r.type === type && matches(r)).sort(
+    (a, b) => (b.usageCount ?? 0) - (a.usageCount ?? 0) || a.name.localeCompare(b.name)
+  ).slice(0, 3);
+  const featured = top("workflow")[0];
+  const username = status?.storage?.username || l("\u672C\u5730\u7528\u6237");
+  const category = TYPES[view];
+  const nav = (key, label, icon) => /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      key,
+      className: `pb-nav-item ${view === key ? "active" : ""}`,
+      "aria-pressed": view === key,
+      onClick: () => choose(key)
+    },
+    /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: icon, size: 18 }),
+    /* @__PURE__ */ import_react14.default.createElement("span", null, l(label)),
+    key !== "discover" && /* @__PURE__ */ import_react14.default.createElement("small", null, rows.filter((r) => key === "all" || r.type === key).length)
+  );
+  return /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-app" }, /* @__PURE__ */ import_react14.default.createElement("aside", { className: "pb-sidebar" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-brand" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-brand-symbol" }, "g."), "Gallery"), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-side-label" }, "WORKSPACE"), nav("discover", l("\u53D1\u73B0\u8D44\u6E90"), "grid"), nav("all", l("\u5168\u90E8\u8D44\u6E90"), "grid"), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-side-label" }, "COLLECTIONS"), /* @__PURE__ */ import_react14.default.createElement("nav", { className: "pb-side-categories", "aria-label": l("\u8D44\u6E90\u5206\u7C7B") }, Object.entries(TYPES).map(([key, t]) => nav(key, t.name, key))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-profile" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-avatar" }, [...username].slice(0, 2).join("").toUpperCase()), /* @__PURE__ */ import_react14.default.createElement("div", null, /* @__PURE__ */ import_react14.default.createElement("strong", null, username), /* @__PURE__ */ import_react14.default.createElement("small", null, l("\u8D44\u6E90\u5E93 \xB7 "), rows.length, l(" \u4E2A\u8D44\u6E90"))))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-workspace" }, /* @__PURE__ */ import_react14.default.createElement("header", { className: "pb-topbar" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-breadcrumb" }, l("\u5DE5\u4F5C\u533A "), /* @__PURE__ */ import_react14.default.createElement("span", null, "/ Gallery")), /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-theme-label" }, "PAPER COLLECTION"), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-top-right" }, /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      className: "pb-storage",
+      onClick: onStorage,
+      disabled: busy,
+      "aria-label": l("\u5B58\u50A8\u8BBE\u7F6E")
+    },
+    /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: "settings", size: 15 }),
+    /* @__PURE__ */ import_react14.default.createElement("span", null, l(status?.storage?.libraries?.find(
+      (l2) => l2.id === status.storage.activeLibraryId
+    )?.name || "\u672C\u5730\u5B58\u50A8"))
+  ), /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      className: "pb-theme-button",
+      onClick: onToggleDark,
+      "aria-label": dark ? l("\u5207\u6362\u6D45\u8272") : l("\u5207\u6362\u6DF1\u8272"),
+      title: dark ? l("\u5207\u6362\u6D45\u8272") : l("\u5207\u6362\u6DF1\u8272")
+    },
+    "\u25D0"
+  ), themePicker)), /* @__PURE__ */ import_react14.default.createElement("main", { className: "pb-main" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-intro" }, /* @__PURE__ */ import_react14.default.createElement("div", null, /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-eyebrow" }, "YOUR TOOL COLLECTION"), /* @__PURE__ */ import_react14.default.createElement("h1", null, category?.name || (view === "all" ? l("\u5168\u90E8\u8D44\u6E90") : l("\u53D1\u73B0\u8D44\u6E90"))), /* @__PURE__ */ import_react14.default.createElement("p", null, l("\u65B9\u6CD5\u3001\u89D2\u8272\u3001\u5DE5\u5177\u4E0E\u6D41\u7A0B\uFF0C\u5728\u8FD9\u91CC\u5404\u5C31\u5176\u4F4D\u3002"))), /* @__PURE__ */ import_react14.default.createElement("label", { className: "pb-search" }, /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: "search", size: 15 }), /* @__PURE__ */ import_react14.default.createElement(
+    "input",
+    {
+      ref: search,
+      value: q,
+      "aria-label": l("\u641C\u7D22\u8D44\u6E90"),
+      placeholder: l("\u641C\u7D22\u8D44\u6E90\u3001\u7528\u9014\u6216\u4F5C\u8005"),
+      onChange: (e) => {
+        setQ(e.target.value);
+        setPage(0);
+      }
+    }
+  ), /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-key", "aria-hidden": "true" }, "/"))), /* @__PURE__ */ import_react14.default.createElement("nav", { className: "pb-tabs", "aria-label": l("\u6D4F\u89C8\u8D44\u6E90") }, [
+    ["discover", l("\u53D1\u73B0")],
+    ...Object.entries(TYPES).map(([k, v]) => [k, v.name]),
+    ["all", l("\u5168\u90E8")]
+  ].map(([key, label]) => /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      key,
+      "aria-pressed": view === key,
+      className: view === key ? "active" : "",
+      onClick: () => choose(key)
+    },
+    l(label)
+  ))), view === "discover" && !q && /* @__PURE__ */ import_react14.default.createElement("section", { className: "pb-hero" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-hero-text" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-eyebrow" }, "WORKFLOW / COLLECTION"), /* @__PURE__ */ import_react14.default.createElement("h2", null, l("\u4ECE\u8D44\u6599\u5230\u7ED3\u8BBA\uFF0C"), /* @__PURE__ */ import_react14.default.createElement("br", null), l("\u8BA9\u534F\u4F5C\u6709\u4E00\u6761\u6E05\u6670\u7684\u8DEF\u7EBF\u3002")), /* @__PURE__ */ import_react14.default.createElement("p", null, featured ? `${featured.name} \xB7 ${featured.description || l("\u67E5\u770B\u5DE5\u4F5C\u6D41\u4E2D\u7684\u5206\u5DE5\u4E0E\u534F\u4F5C")}` : l("\u8FDE\u63A5\u65B9\u6CD5\u3001\u89D2\u8272\u4E0E\u5DE5\u5177\uFF0C\u6784\u5EFA\u4F60\u7684\u5DE5\u4F5C\u6D41\u3002")), /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      className: "pb-hero-link",
+      disabled: busy || loading,
+      onClick: () => featured ? onOpen(featured) : choose("workflow")
+    },
+    featured ? l("\u67E5\u770B\u6D41\u7A0B") : l("\u6D4F\u89C8 Workflow"),
+    /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: "arrow", size: 15 })
+  )), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-hero-art" }, /* @__PURE__ */ import_react14.default.createElement(PaperArt, { type: "workflow" }))), view === "discover" && /* @__PURE__ */ import_react14.default.createElement(import_react14.default.Fragment, null, /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-section-title" }, /* @__PURE__ */ import_react14.default.createElement("h2", null, l("\u5206\u7C7B\u8C03\u7528\u699C "), /* @__PURE__ */ import_react14.default.createElement("small", null, l("\u6309\u7D2F\u8BA1\u8C03\u7528\u6B21\u6570"))), /* @__PURE__ */ import_react14.default.createElement("span", null, l("\u6BCF\u7C7B TOP 3"))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-rank-grid" }, Object.entries(TYPES).map(([key, t]) => /* @__PURE__ */ import_react14.default.createElement(
+    "section",
+    {
+      className: "pb-rank-panel",
+      key,
+      style: { "--pb-color": t.color, "--pb-tint": t.tint },
+      "aria-label": l("{0} \u8C03\u7528\u699C", t.name)
+    },
+    /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-rank-head" }, /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-rank-icon" }, /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: key, size: 17 })), /* @__PURE__ */ import_react14.default.createElement("h3", null, t.name), /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-rank-arrow" }, "\u2197")),
+    loading ? /* @__PURE__ */ import_react14.default.createElement("p", { className: "pb-rank-empty" }, l("\u6B63\u5728\u52A0\u8F7D\u2026")) : top(key).length ? top(key).map((r, i) => /* @__PURE__ */ import_react14.default.createElement(
+      "button",
+      {
+        key: r.id,
+        className: "pb-rank-row",
+        disabled: busy,
+        onClick: () => onOpen(r)
+      },
+      /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-rank-number" }, i + 1),
+      /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-rank-info" }, /* @__PURE__ */ import_react14.default.createElement("strong", null, r.name), /* @__PURE__ */ import_react14.default.createElement("small", null, author(r, l))),
+      /* @__PURE__ */ import_react14.default.createElement("span", { className: "pb-rank-count", title: l("\u7D2F\u8BA1\u8C03\u7528\u6B21\u6570") }, count(r, l))
+    )) : /* @__PURE__ */ import_react14.default.createElement("p", { className: "pb-rank-empty" }, loadError ? l("\u52A0\u8F7D\u5931\u8D25") : l("\u6682\u65E0\u8D44\u6E90")),
+    /* @__PURE__ */ import_react14.default.createElement(
+      "button",
+      {
+        className: "pb-rank-more",
+        onClick: () => choose(key)
+      },
+      l("\u6D4F\u89C8 "),
+      rows.filter((r) => r.type === key).length,
+      l(" \u4E2A\u8D44\u6E90 \u2192")
+    )
+  )))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-section-title" }, /* @__PURE__ */ import_react14.default.createElement("h2", null, category ? l("{0} \u8D44\u6E90", category.name) : l("\u8D44\u6E90\u4E00\u89C8"), /* @__PURE__ */ import_react14.default.createElement("small", null, filtered.length, l(" \u4E2A\u8D44\u6E90"))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-list-actions" }, category && /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      className: "pb-primary",
+      disabled: busy,
+      onClick: () => onCreate(view)
+    },
+    /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: "plus", size: 16 }),
+    l("\u65B0\u5EFA "),
+    category.name
+  ), /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      className: "pb-refresh",
+      "aria-label": l("\u5237\u65B0"),
+      title: l("\u5237\u65B0\u8D44\u6E90"),
+      disabled: busy || loading,
+      onClick: onRefresh
+    },
+    /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: "refresh", size: 16 })
+  ))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-filter-bar" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-tag-filters", "aria-label": l("\u6807\u7B7E\u7B5B\u9009") }, /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      "aria-pressed": !tag,
+      className: !tag ? "active" : "",
+      onClick: () => {
+        setTag("");
+        setPage(0);
+      }
+    },
+    l("\u5168\u90E8\u6807\u7B7E")
+  ), tags.map((t) => /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      key: t,
+      "aria-pressed": tag === t,
+      className: tag === t ? "active" : "",
+      onClick: () => {
+        setTag(t);
+        setPage(0);
+      }
+    },
+    t
+  ))), /* @__PURE__ */ import_react14.default.createElement(
+    "select",
+    {
+      "aria-label": l("\u8D44\u6E90\u6392\u5E8F"),
+      value: sort,
+      onChange: (e) => {
+        setSort(e.target.value);
+        setPage(0);
+      }
+    },
+    /* @__PURE__ */ import_react14.default.createElement("option", { value: "usage" }, l("\u8C03\u7528\u6700\u591A \u2193")),
+    /* @__PURE__ */ import_react14.default.createElement("option", { value: "updated" }, l("\u6700\u8FD1\u66F4\u65B0 \u2193"))
+  )), loading ? /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-empty", role: "status" }, l("\u6B63\u5728\u52A0\u8F7D\u8D44\u6E90\u2026")) : loadError ? /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-empty" }, /* @__PURE__ */ import_react14.default.createElement("h3", null, l("\u8D44\u6E90\u52A0\u8F7D\u5931\u8D25")), /* @__PURE__ */ import_react14.default.createElement("button", { onClick: onRefresh }, l("\u91CD\u65B0\u52A0\u8F7D"))) : !filtered.length ? /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-empty" }, /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: category ? view : "search", size: 36 }), /* @__PURE__ */ import_react14.default.createElement("h3", null, q || tag ? l("\u6CA1\u6709\u627E\u5230\u5339\u914D\u7684\u8D44\u6E90") : l("\u8FD9\u91CC\u8FD8\u6CA1\u6709\u8D44\u6E90")), /* @__PURE__ */ import_react14.default.createElement("p", null, q || tag ? l("\u6362\u4E00\u4E2A\u5173\u952E\u8BCD\uFF0C\u6216\u6E05\u9664\u7B5B\u9009\u540E\u518D\u8BD5\u8BD5\u3002") : l("\u9009\u62E9\u5206\u7C7B\uFF0C\u521B\u5EFA\u4F60\u7684\u7B2C\u4E00\u4E2A\u8D44\u6E90\u3002")), (q || tag) && /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      onClick: () => {
+        setQ("");
+        setTag("");
+        setPage(0);
+      }
+    },
+    l("\u6E05\u9664\u7B5B\u9009")
+  )) : /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-cards" }, filtered.slice(page * 24, page * 24 + 24).map((r) => /* @__PURE__ */ import_react14.default.createElement(
+    PaperCard,
+    {
+      key: r.id,
+      resource: r,
+      busy,
+      onOpen
+    }
+  ))), filtered.length > 24 && /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-pagination" }, /* @__PURE__ */ import_react14.default.createElement("button", { disabled: !page, onClick: () => setPage((p) => p - 1) }, l("\u4E0A\u4E00\u9875")), /* @__PURE__ */ import_react14.default.createElement("span", null, page + 1, " / ", Math.ceil(filtered.length / 24)), /* @__PURE__ */ import_react14.default.createElement(
+    "button",
+    {
+      disabled: (page + 1) * 24 >= filtered.length,
+      onClick: () => setPage((p) => p + 1)
+    },
+    l("\u4E0B\u4E00\u9875")
+  )), /* @__PURE__ */ import_react14.default.createElement("footer", { className: "pb-footer" }, /* @__PURE__ */ import_react14.default.createElement("span", null, "Gallery / Resource Browser"), /* @__PURE__ */ import_react14.default.createElement("span", null, l("\u7EB8\u5883 \xB7 Paper"))))));
+}
+function PaperDetail({
+  resource: r,
+  busy,
+  error,
+  onClose,
+  onEdit,
+  onDelete,
+  onExport,
+  onPublish
+}) {
+  const l = useGalleryText();
+  const [tab, setTab] = (0, import_react14.useState)("overview");
+  const [guide, setGuide] = (0, import_react14.useState)(false);
+  const files = r.files || [];
+  const mainFile = files.find(
+    (f) => /(^|\/)(SKILL\.md|AGENT\.md|agent\.md|mcp\.json|workflow\.json)$/.test(
+      f.path
+    )
+  ) || files[0];
+  const verification = r.metadata?.mcpVerification;
+  const instructions = {
+    skill: l("\u5728 DSH \u4F1A\u8BDD\u8F93\u5165 /gallery\uFF0C\u9009\u62E9\u6B64 Skill\uFF0C\u8865\u5145\u4EFB\u52A1\u5E76\u53D1\u9001\u3002"),
+    agent: l("\u5728\u4F1A\u8BDD\u4E2D\u8BF7\u6C42\u4F7F\u7528 Gallery Agent\u300C{0}\u300D\u6267\u884C\u4EFB\u52A1\u3002\u5BBF\u4E3B\u9700\u542F\u7528 gallery_agent_list\u3001gallery_agent_run \u53CA\u5B50 Agent \u529F\u80FD\u3002", r.name),
+    mcp: l("MCP \u901A\u8FC7\u5BBF\u4E3B\u6CE8\u518C\u4E3A mcp__<serverName>__<tool> \u5DE5\u5177\uFF1B\u8BA4\u8BC1\u4FE1\u606F\u5728\u7F16\u8F91\u5411\u5BFC\u4E2D\u76F4\u63A5\u586B\u5199\uFF0C\u65E0\u9700\u9884\u5148\u8BBE\u7F6E\u5BBF\u4E3B\u73AF\u5883\u53D8\u91CF\u3002")
+  };
+  return /* @__PURE__ */ import_react14.default.createElement(Modal, { variant: "paper-detail", onClose: () => !busy && onClose() }, /* @__PURE__ */ import_react14.default.createElement(
+    "section",
+    {
+      className: "pb-drawer",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-label": l("\u8D44\u6E90\u8BE6\u60C5"),
+      tabIndex: -1
+    },
+    /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-drawer-top" }, /* @__PURE__ */ import_react14.default.createElement("span", null, TYPES[r.type]?.name, l(" / \u8D44\u6E90\u8BE6\u60C5")), /* @__PURE__ */ import_react14.default.createElement("button", { disabled: busy, onClick: onClose, "aria-label": l("\u5173\u95ED\u8BE6\u60C5") }, /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: "close", size: 17 }))),
+    /* @__PURE__ */ import_react14.default.createElement(PaperCover, { resource: r, className: "pb-drawer-cover" }),
+    /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-drawer-content" }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-eyebrow" }, r.type.toUpperCase(), " \xB7 GALLERY RESOURCE"), /* @__PURE__ */ import_react14.default.createElement("h2", null, r.name), /* @__PURE__ */ import_react14.default.createElement("p", { className: "pb-drawer-description" }, r.description || l("\u6682\u65E0\u63CF\u8FF0")), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-detail-meta" }, /* @__PURE__ */ import_react14.default.createElement("span", null, l("\u4F5C\u8005 "), author(r, l)), /* @__PURE__ */ import_react14.default.createElement("span", { title: l("\u7D2F\u8BA1\u8C03\u7528\u6B21\u6570") }, "\u2197 ", count(r, l), l(" \u6B21\u8C03\u7528")), /* @__PURE__ */ import_react14.default.createElement("span", null, l("\u66F4\u65B0\u4E8E "), date(r.updatedAt, l))), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-detail-actions" }, r.type === "workflow" ? files.some((f) => f.path === "workflow.json") && /* @__PURE__ */ import_react14.default.createElement(
+      "button",
+      {
+        className: "pb-primary",
+        disabled: busy,
+        onClick: onPublish
+      },
+      l("\u6CE8\u518C\u5230 TeamFlow \u2197")
+    ) : /* @__PURE__ */ import_react14.default.createElement(
+      "button",
+      {
+        className: "pb-primary",
+        "aria-expanded": guide,
+        onClick: () => setGuide((v) => !v)
+      },
+      l("\u67E5\u770B\u8C03\u7528\u65B9\u5F0F \u2197")
+    ), r.canEdit && /* @__PURE__ */ import_react14.default.createElement("button", { disabled: busy, onClick: onEdit }, l("\u7F16\u8F91")), /* @__PURE__ */ import_react14.default.createElement("button", { onClick: onExport }, l("\u5BFC\u51FA")), r.canDelete && /* @__PURE__ */ import_react14.default.createElement("button", { className: "pb-delete", disabled: busy, onClick: onDelete }, l("\u5220\u9664"))), guide && /* @__PURE__ */ import_react14.default.createElement("p", { className: "pb-instruction", role: "status" }, instructions[r.type]), error && /* @__PURE__ */ import_react14.default.createElement("p", { role: "alert", className: "gal-error" }, l(error)), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-detail-tabs", role: "tablist", "aria-label": l("\u8BE6\u60C5\u5185\u5BB9") }, [
+      ["overview", l("\u6982\u89C8")],
+      ["files", l("\u6587\u4EF6 {0}", files.length)]
+    ].map(([key, label], i) => /* @__PURE__ */ import_react14.default.createElement(
+      "button",
+      {
+        key,
+        role: "tab",
+        id: `pb-tab-${key}`,
+        "aria-controls": "pb-detail-panel",
+        "aria-selected": tab === key,
+        tabIndex: tab === key ? 0 : -1,
+        onClick: () => setTab(key),
+        onKeyDown: (e) => {
+          if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) {
+            e.preventDefault();
+            const next = e.key === "Home" ? "overview" : e.key === "End" ? "files" : i ? "overview" : "files";
+            setTab(next);
+            e.currentTarget.parentElement.querySelector(`#pb-tab-${next}`).focus();
+          }
+        }
+      },
+      l(label)
+    ))), /* @__PURE__ */ import_react14.default.createElement(
+      "div",
+      {
+        className: "pb-detail-body",
+        role: "tabpanel",
+        id: "pb-detail-panel",
+        "aria-labelledby": `pb-tab-${tab}`,
+        tabIndex: 0
+      },
+      tab === "files" ? /* @__PURE__ */ import_react14.default.createElement(import_react14.default.Fragment, null, /* @__PURE__ */ import_react14.default.createElement("p", null, l("\u67E5\u770B\u8D44\u6E90\u5185\u7684\u6587\u4EF6\u53CA\u9644\u4EF6\u5185\u5BB9\u3002")), files.map((f) => /* @__PURE__ */ import_react14.default.createElement("details", { key: f.path, className: "pb-file" }, /* @__PURE__ */ import_react14.default.createElement("summary", null, /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: "file", size: 16 }), /* @__PURE__ */ import_react14.default.createElement("span", null, f.path), /* @__PURE__ */ import_react14.default.createElement("small", null, f.bytes ?? new Blob([f.content]).size, " B")), f.encoding === "utf8" ? /* @__PURE__ */ import_react14.default.createElement("pre", null, f.content) : /* @__PURE__ */ import_react14.default.createElement("p", null, l("\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u5BFC\u51FA\u7684\u8D44\u6E90\u5305\u4E2D\u3002"))))) : /* @__PURE__ */ import_react14.default.createElement(import_react14.default.Fragment, null, r.type === "mcp" && /* @__PURE__ */ import_react14.default.createElement(import_react14.default.Fragment, null, /* @__PURE__ */ import_react14.default.createElement("h3", null, l("\u8FDE\u63A5\u68C0\u67E5")), /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-instruction" }, verification?.checkedAt ? l("\u5DF2\u901A\u8FC7\u8FDE\u63A5\u68C0\u67E5 \xB7 {0}", date(verification.checkedAt, l)) : l("\u5C1A\u672A\u9A8C\u8BC1\u8FDE\u63A5")), /* @__PURE__ */ import_react14.default.createElement("p", null, l("\u68C0\u67E5\u7ED3\u679C\u662F\u5386\u53F2\u8BB0\u5F55\uFF0C\u4E0D\u4EE3\u8868\u670D\u52A1\u5F53\u524D\u5728\u7EBF\u3002\u53EF\u5728\u7F16\u8F91\u5411\u5BFC\u4E2D\u91CD\u65B0\u68C0\u6D4B\u3002"))), r.type === "workflow" && /* @__PURE__ */ import_react14.default.createElement(import_react14.default.Fragment, null, /* @__PURE__ */ import_react14.default.createElement("h3", null, l("\u5DE5\u4F5C\u6D41")), /* @__PURE__ */ import_react14.default.createElement("p", null, l("\u5728\u7F16\u8F91\u5411\u5BFC\u4E2D\u67E5\u770B\u4EFB\u52A1\u3001Agent\u3001\u4EBA\u5DE5\u8282\u70B9\u53CA\u8FDE\u63A5\u5173\u7CFB\u3002\u6CE8\u518C\u5230 TeamFlow \u540E\uFF0C\u53EF\u4ECE\u6A21\u677F\u5E93\u5E94\u7528\u5230\u4F1A\u8BDD\u3002")), r.metadata?.workflowCanvas?.agents?.some(
+        (a) => a.skills?.length || a.mcps?.length
+      ) && /* @__PURE__ */ import_react14.default.createElement("p", null, l("Skill \u548C MCP \u5F15\u7528\u4FDD\u7559\u5728 Gallery \u4E2D\uFF1BTeamFlow \u6309 Agent \u8282\u70B9\u5F00\u5173\u542F\u7528\u8D44\u6E90\u3002"))), /* @__PURE__ */ import_react14.default.createElement("h3", null, r.type === "skill" ? l("\u6267\u884C\u6307\u5F15") : r.type === "agent" ? l("\u89D2\u8272\u4E0E\u804C\u8D23") : l("\u914D\u7F6E\u5185\u5BB9")), mainFile ? mainFile.encoding === "utf8" ? /* @__PURE__ */ import_react14.default.createElement("pre", { className: "pb-instruction" }, mainFile.content) : /* @__PURE__ */ import_react14.default.createElement("p", null, l("\u4E3B\u6587\u4EF6\u4E3A\u4E8C\u8FDB\u5236\u5185\u5BB9\uFF0C\u8BF7\u5BFC\u51FA\u67E5\u770B\u3002")) : /* @__PURE__ */ import_react14.default.createElement("p", null, l("\u6B64\u8D44\u6E90\u6CA1\u6709\u6587\u4EF6\u3002")), /* @__PURE__ */ import_react14.default.createElement("h3", null, l("\u9644\u5C5E\u6587\u4EF6")), files.filter((f) => f !== mainFile).length ? files.filter((f) => f !== mainFile).map((f) => /* @__PURE__ */ import_react14.default.createElement(
+        "button",
+        {
+          key: f.path,
+          className: "pb-file-link",
+          onClick: () => setTab("files")
+        },
+        /* @__PURE__ */ import_react14.default.createElement(Glyph, { name: "file", size: 16 }),
+        f.path,
+        /* @__PURE__ */ import_react14.default.createElement("span", null, "\u2197")
+      )) : /* @__PURE__ */ import_react14.default.createElement("p", null, l("\u6B64\u8D44\u6E90\u6CA1\u6709\u9644\u5C5E\u6587\u4EF6\u3002"))),
+      /* @__PURE__ */ import_react14.default.createElement("h3", null, l("\u6807\u7B7E")),
+      /* @__PURE__ */ import_react14.default.createElement("div", { className: "pb-tags" }, r.tags?.length ? r.tags.map((t) => /* @__PURE__ */ import_react14.default.createElement("span", { key: t }, t)) : /* @__PURE__ */ import_react14.default.createElement("span", null, l("\u65E0\u6807\u7B7E")))
+    ))
+  ));
+}
+
+// src/client/paper-browser.css
+var paper_browser_default = '/* All Paper layout and material rules stay inside this opt-in theme. */\n.gal[data-theme="folio"] {\n  --g-bg: #f5f5f2;\n  --g-card: #fff;\n  --g-soft: #f0ecff;\n  --g-hover: #f0eff7;\n  --g-ink: #25262c;\n  --g-muted: #777781;\n  --g-line: #e8e8e4;\n  --g-control: #dcdce2;\n  --g-accent: #6c4af5;\n  --g-on-accent: #fff;\n  --g-ring: #9c85f5;\n  --pb-panel: #fff;\n  --pb-soft: #f0ecff;\n  --pb-accent: #6c4af5;\n  padding: 0;\n  color-scheme: light;\n}\n.gal[data-theme="folio"][data-paper-dark="true"] {\n  --g-bg: #18191e;\n  --g-card: #222329;\n  --g-soft: #302a45;\n  --g-hover: #303139;\n  --g-ink: #eeedf3;\n  --g-muted: #a5a4b1;\n  --g-line: #36363e;\n  --g-control: #50505c;\n  --g-accent: #b59bff;\n  --g-on-accent: #211a35;\n  --g-ring: #b59bff;\n  --pb-panel: #222329;\n  --pb-soft: #302a45;\n  --pb-accent: #b59bff;\n  color-scheme: dark;\n}\n.gal .gal-theme-swatch.folio {\n  background: linear-gradient(135deg, #f5f5f2 50%, #a994d1 50%);\n}\n.gal[data-theme="folio"] :is(.pb-app, .pb-drawer) button {\n  border: 0;\n  background: transparent;\n  border-radius: 0;\n  padding: 0;\n  min-height: 0;\n  box-shadow: none;\n}\n.gal[data-theme="folio"] :is(.pb-app, .pb-drawer) button:hover:not(:disabled) {\n  background: var(--g-hover);\n}\n.gal[data-theme="folio"] .pb-app {\n  display: grid;\n  grid-template-columns: 222px minmax(0, 1fr);\n  min-height: 100vh;\n}\n.gal[data-theme="folio"] .pb-sidebar {\n  position: sticky;\n  top: 0;\n  height: 100vh;\n  padding: 32px 20px 22px;\n  border-right: 1px solid var(--g-line);\n  display: flex;\n  flex-direction: column;\n  background: var(--pb-panel);\n}\n.gal[data-theme="folio"] .pb-brand {\n  display: flex;\n  gap: 10px;\n  align-items: center;\n  font-size: 22px;\n  font-weight: 750;\n  letter-spacing: -0.9px;\n  padding: 0 10px 28px;\n}\n.gal[data-theme="folio"] .pb-brand-symbol {\n  display: grid;\n  place-items: center;\n  width: 32px;\n  height: 36px;\n  background: linear-gradient(0deg, #12d9af 0%, #35abff 48%, #9e6aff 100%);\n  color: var(--pb-panel);\n  border-radius: 9px;\n  font-size: 23px;\n  letter-spacing: -4px;\n  padding-right: 4px;\n}\n.gal[data-theme="folio"] .pb-side-label {\n  font-size: 10px;\n  font-weight: 650;\n  letter-spacing: 1.6px;\n  color: var(--g-muted);\n  margin: 20px 12px 10px;\n}\n.gal[data-theme="folio"] button.pb-nav-item {\n  width: 100%;\n  display: flex;\n  justify-content: flex-start;\n  gap: 11px;\n  text-align: left;\n  padding: 10px 13px;\n  border-radius: 8px;\n  color: var(--g-muted);\n  margin: 3px 0;\n}\n.gal[data-theme="folio"] .pb-nav-item.active {\n  background: var(--pb-soft);\n  color: var(--pb-accent);\n  font-weight: 650;\n}\n.gal[data-theme="folio"] .pb-nav-item small {\n  margin-left: auto;\n  font-size: 11px;\n}\n.gal[data-theme="folio"] .pb-profile {\n  display: flex;\n  gap: 10px;\n  align-items: center;\n  margin-top: auto;\n  border-top: 1px solid var(--g-line);\n  padding: 20px 10px 0;\n  font-size: 12px;\n  min-width: 0;\n}\n.gal[data-theme="folio"] .pb-profile > div {\n  min-width: 0;\n}\n.gal[data-theme="folio"] .pb-profile strong {\n  display: block;\n  font-weight: 500;\n  overflow: hidden;\n  text-overflow: ellipsis;\n}\n.gal[data-theme="folio"] .pb-profile small {\n  display: block;\n  color: var(--g-muted);\n  font-size: 10px;\n}\n.gal[data-theme="folio"] .pb-avatar {\n  flex-shrink: 0;\n  width: 31px;\n  height: 31px;\n  background: var(--pb-soft);\n  border-radius: 50%;\n  color: var(--pb-accent);\n  display: grid;\n  place-items: center;\n  font-size: 11px;\n  font-weight: 650;\n}\n.gal[data-theme="folio"] .pb-workspace {\n  min-width: 0;\n}\n.gal[data-theme="folio"] .pb-topbar {\n  min-height: 78px;\n  display: flex;\n  align-items: center;\n  padding: 15px 46px;\n  border-bottom: 1px solid var(--g-line);\n  gap: 20px;\n}\n.gal[data-theme="folio"] .pb-breadcrumb {\n  font-size: 12px;\n  color: var(--g-muted);\n  white-space: nowrap;\n}\n.gal[data-theme="folio"] .pb-breadcrumb span {\n  color: var(--g-ink);\n  margin-left: 12px;\n}\n.gal[data-theme="folio"] .pb-theme-label {\n  border: 1px solid var(--g-line);\n  border-radius: 5px;\n  padding: 2px 7px;\n  font-size: 10px;\n  color: var(--g-muted);\n  white-space: nowrap;\n}\n.gal[data-theme="folio"] .pb-top-right {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  margin-left: auto;\n}\n.gal[data-theme="folio"] button.pb-storage {\n  font-size: 11px;\n  color: var(--g-muted);\n  gap: 6px;\n  border-radius: 5px;\n  padding: 5px;\n}\n.gal[data-theme="folio"] button.pb-theme-button {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  border: 1px solid var(--g-line);\n  font-size: 17px;\n}\n.gal[data-theme="folio"] .pb-main {\n  max-width: 1550px;\n  padding: 40px 46px 60px;\n  margin: auto;\n}\n.gal[data-theme="folio"] .pb-intro {\n  display: flex;\n  align-items: flex-end;\n  justify-content: space-between;\n  gap: 25px;\n  margin-bottom: 28px;\n}\n.gal[data-theme="folio"] .pb-eyebrow {\n  font-size: 10px;\n  letter-spacing: 2px;\n  color: var(--pb-accent);\n  font-weight: 700;\n}\n.gal[data-theme="folio"] .pb-intro h1 {\n  font-size: 35px;\n  letter-spacing: -1.2px;\n  line-height: 1.25;\n  margin: 8px 0 9px;\n  font-weight: 700;\n}\n.gal[data-theme="folio"] .pb-intro p {\n  font-size: 13px;\n  color: var(--g-muted);\n  margin: 0;\n}\n.gal[data-theme="folio"] .pb-search {\n  display: flex;\n  flex-direction: row;\n  margin: 0;\n  font-weight: 400;\n  align-items: center;\n  gap: 10px;\n  background: var(--pb-panel);\n  border: 1px solid var(--g-line);\n  border-radius: 9px;\n  padding: 9px 12px;\n  width: 310px;\n  flex-shrink: 0;\n}\n.gal[data-theme="folio"] .pb-search input {\n  border: 0;\n  padding: 0;\n  border-radius: 0;\n  background: transparent;\n  color: var(--g-ink);\n  width: 100%;\n  min-width: 0;\n  font-size: 12px;\n}\n.gal[data-theme="folio"] .pb-key {\n  font-size: 10px;\n  color: var(--g-muted);\n  border: 1px solid var(--g-line);\n  padding: 0 5px;\n  border-radius: 3px;\n}\n.gal[data-theme="folio"] .pb-tabs {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n  margin-bottom: 22px;\n}\n.gal[data-theme="folio"] .pb-tabs button {\n  padding: 8px 15px;\n  font-size: 12px;\n  color: var(--g-muted);\n  border-radius: 7px;\n}\n.gal[data-theme="folio"] .pb-tabs button.active {\n  background: var(--g-ink);\n  color: var(--pb-panel);\n}\n.gal[data-theme="folio"] .pb-hero {\n  height: 214px;\n  border-radius: 14px;\n  background: #e8e5f6;\n  position: relative;\n  overflow: hidden;\n  display: flex;\n  align-items: center;\n  padding: 35px;\n  margin-bottom: 30px;\n  color: #342950;\n}\n.gal[data-theme="folio"] .pb-hero:after {\n  content: "";\n  position: absolute;\n  width: 500px;\n  height: 500px;\n  right: -40px;\n  top: -220px;\n  border: 1px solid #ffffff90;\n  border-radius: 50%;\n  box-shadow:\n    0 0 0 45px #ffffff20,\n    0 0 0 90px #ffffff20;\n  pointer-events: none;\n}\n.gal[data-theme="folio"] .pb-hero-text {\n  position: relative;\n  z-index: 2;\n  max-width: 65%;\n}\n.gal[data-theme="folio"] .pb-hero h2 {\n  font-size: 26px;\n  line-height: 1.4;\n  letter-spacing: -0.6px;\n  margin: 10px 0;\n  font-weight: 700;\n}\n.gal[data-theme="folio"] .pb-hero p {\n  font-size: 12px;\n  color: #756b88;\n  margin: 0 0 18px;\n  max-width: 440px;\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n}\n.gal[data-theme="folio"] button.pb-hero-link {\n  display: inline-flex;\n  gap: 18px;\n  align-items: center;\n  font-size: 12px;\n  font-weight: 650;\n  border-bottom: 1px solid #34295055;\n  padding: 0 0 4px;\n  color: #342950;\n}\n.gal[data-theme="folio"] .pb-hero-art {\n  position: absolute;\n  right: 8%;\n  width: 320px;\n  height: 240px;\n  transform: rotate(-11deg);\n  z-index: 1;\n  pointer-events: none;\n}\n.gal[data-theme="folio"] .pb-hero-art svg {\n  width: 100%;\n  height: 100%;\n}\n.gal[data-theme="folio"] .pb-section-title {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 12px;\n  margin: 26px 0 15px;\n}\n.gal[data-theme="folio"] .pb-section-title h2 {\n  font-size: 17px;\n  letter-spacing: -0.2px;\n  margin: 0;\n}\n.gal[data-theme="folio"] .pb-section-title h2 small {\n  font-weight: 400;\n  color: var(--g-muted);\n  font-size: 11px;\n  margin-left: 10px;\n}\n.gal[data-theme="folio"] .pb-section-title > span {\n  font-size: 10px;\n  color: var(--g-muted);\n  white-space: nowrap;\n}\n.gal[data-theme="folio"] .pb-rank-grid {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 14px;\n}\n.gal[data-theme="folio"] .pb-rank-panel {\n  border: 1px solid var(--g-line);\n  border-radius: 12px;\n  padding: 18px 17px 12px;\n  background: var(--pb-panel);\n  min-width: 0;\n  display: flex;\n  flex-direction: column;\n}\n.gal[data-theme="folio"] .pb-rank-head {\n  display: flex;\n  gap: 9px;\n  align-items: center;\n  margin-bottom: 15px;\n}\n.gal[data-theme="folio"] .pb-rank-head h3 {\n  font-size: 13px;\n  font-weight: 650;\n}\n.gal[data-theme="folio"] .pb-rank-icon {\n  width: 27px;\n  height: 27px;\n  display: grid;\n  place-items: center;\n  border-radius: 6px;\n  background: var(--pb-tint);\n  color: var(--pb-color);\n}\n.gal[data-theme="folio"] .pb-rank-arrow {\n  margin-left: auto;\n  color: var(--g-muted);\n}\n.gal[data-theme="folio"] button.pb-rank-row {\n  display: flex;\n  width: 100%;\n  gap: 10px;\n  padding: 9px 0;\n  text-align: left;\n}\n.gal[data-theme="folio"] .pb-rank-number {\n  font:\n    italic 14px Georgia,\n    serif;\n  color: #ad98cc;\n  width: 14px;\n  flex-shrink: 0;\n}\n.gal[data-theme="folio"] .pb-rank-row:first-of-type .pb-rank-number {\n  color: var(--pb-color);\n  font-size: 21px;\n  font-weight: 700;\n}\n.gal[data-theme="folio"] .pb-rank-info {\n  flex: 1;\n  min-width: 0;\n}\n.gal[data-theme="folio"] .pb-rank-info strong {\n  display: block;\n  font-size: 11px;\n  font-weight: 650;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.gal[data-theme="folio"] .pb-rank-info small {\n  display: block;\n  font-size: 10px;\n  color: var(--g-muted);\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.gal[data-theme="folio"] .pb-rank-count {\n  font-size: 10px;\n  color: var(--g-muted);\n  font-variant-numeric: tabular-nums;\n}\n.gal[data-theme="folio"] button.pb-rank-more {\n  border-top: 1px solid var(--g-line);\n  padding: 11px 0 0;\n  margin-top: auto;\n  width: 100%;\n  justify-content: flex-start;\n  font-size: 10px;\n  color: var(--g-muted);\n}\n.gal[data-theme="folio"] .pb-rank-empty {\n  color: var(--g-muted);\n  font-size: 11px;\n  padding: 35px 0;\n  text-align: center;\n}\n.gal[data-theme="folio"] .pb-list-actions {\n  display: flex;\n  gap: 10px;\n  align-items: center;\n}\n.gal[data-theme="folio"] button.pb-primary {\n  padding: 9px 14px;\n  background: var(--g-ink);\n  color: var(--pb-panel);\n  border-radius: 7px;\n  font-size: 12px;\n}\n.gal[data-theme="folio"] button.pb-primary:hover:not(:disabled) {\n  background: var(--pb-accent);\n  color: var(--g-on-accent);\n}\n.gal[data-theme="folio"] button.pb-refresh {\n  padding: 6px;\n  border-radius: 6px;\n  color: var(--g-muted);\n}\n.gal[data-theme="folio"] .pb-filter-bar {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 18px;\n}\n.gal[data-theme="folio"] .pb-tag-filters {\n  display: flex;\n  gap: 7px;\n  flex-wrap: wrap;\n}\n.gal[data-theme="folio"] .pb-tag-filters button {\n  font-size: 10px;\n  color: var(--g-muted);\n  border: 1px solid var(--g-line);\n  background: var(--pb-panel);\n  padding: 4px 8px;\n  border-radius: 20px;\n}\n.gal[data-theme="folio"] .pb-tag-filters button.active {\n  border-color: var(--pb-accent);\n  color: var(--pb-accent);\n  background: var(--pb-soft);\n}\n.gal[data-theme="folio"] .pb-filter-bar select {\n  width: auto;\n  max-width: 135px;\n  flex-shrink: 0;\n  font-size: 11px;\n  border: 0;\n  padding: 4px 0 4px 8px;\n  color: var(--g-muted);\n  background: transparent;\n}\n.gal[data-theme="folio"] .pb-cards {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 20px;\n}\n.gal[data-theme="folio"] button.pb-card {\n  display: flex;\n  flex-direction: column;\n  align-items: stretch;\n  gap: 0;\n  text-align: left;\n  border: 1px solid var(--g-line);\n  border-radius: 13px;\n  overflow: hidden;\n  background: var(--pb-panel);\n  min-width: 0;\n  transition:\n    transform 0.18s,\n    box-shadow 0.18s;\n}\n.gal[data-theme="folio"] button.pb-card:hover:not(:disabled) {\n  background: var(--pb-panel);\n  transform: translateY(-4px);\n  box-shadow: 0 12px 30px #2520330d;\n}\n.gal[data-theme="folio"] .pb-cover {\n  height: 152px;\n  background: var(--pb-tint);\n  position: relative;\n  overflow: hidden;\n  color: var(--pb-color);\n  flex-shrink: 0;\n}\n.gal[data-theme="folio"] .pb-cover > svg {\n  width: 100%;\n  height: 100%;\n  display: block;\n}\n.gal[data-theme="folio"] .pb-cover-label {\n  position: absolute;\n  left: 16px;\n  top: 14px;\n  font-size: 8px;\n  letter-spacing: 1.6px;\n  font-weight: 650;\n  z-index: 1;\n}\n.gal[data-theme="folio"] .pb-cover-code {\n  position: absolute;\n  right: 16px;\n  bottom: 11px;\n  font-size: 8px;\n  letter-spacing: 1.6px;\n  opacity: 0.65;\n}\n.gal[data-theme="folio"] .pb-card-content {\n  padding: 19px 19px 15px;\n  width: 100%;\n}\n.gal[data-theme="folio"] .pb-card h3 {\n  font-size: 15px;\n  font-weight: 650;\n  margin: 0 0 5px;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.gal[data-theme="folio"] .pb-desc {\n  color: var(--g-muted);\n  font-size: 12px;\n  line-height: 1.8;\n  min-height: 43px;\n  display: -webkit-box;\n  -webkit-line-clamp: 2;\n  -webkit-box-orient: vertical;\n  overflow: hidden;\n}\n.gal[data-theme="folio"] .pb-tags {\n  display: flex;\n  gap: 6px;\n  flex-wrap: wrap;\n  margin: 12px 0 17px;\n  min-height: 20px;\n}\n.gal[data-theme="folio"] .pb-tags > span {\n  color: var(--g-muted);\n  background: var(--g-bg);\n  padding: 2px 6px;\n  border-radius: 3px;\n  font-size: 10px;\n  overflow-wrap: anywhere;\n}\n.gal[data-theme="folio"] .pb-card-foot {\n  display: flex;\n  align-items: center;\n  gap: 7px;\n  padding-top: 12px;\n  border-top: 1px solid var(--g-line);\n  font-size: 10px;\n  color: var(--g-muted);\n}\n.gal[data-theme="folio"] .pb-mini-avatar {\n  width: 18px;\n  height: 18px;\n  flex-shrink: 0;\n  background: var(--pb-tint);\n  color: var(--pb-color);\n  border-radius: 50%;\n  display: grid;\n  place-items: center;\n  font-size: 8px;\n}\n.gal[data-theme="folio"] .pb-author {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.gal[data-theme="folio"] .pb-uses {\n  margin-left: auto;\n  white-space: nowrap;\n}\n.gal[data-theme="folio"] .pb-empty {\n  min-height: 230px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-direction: column;\n  gap: 14px;\n  color: var(--g-muted);\n  text-align: center;\n}\n.gal[data-theme="folio"] .pb-empty button,\n.gal[data-theme="folio"] .pb-pagination button {\n  border: 1px solid var(--g-line);\n  border-radius: 7px;\n  padding: 7px 12px;\n  font-size: 12px;\n}\n.gal[data-theme="folio"] .pb-pagination {\n  display: flex;\n  gap: 18px;\n  align-items: center;\n  justify-content: center;\n  margin: 25px 0;\n  font-size: 12px;\n}\n.gal[data-theme="folio"] .pb-footer {\n  display: flex;\n  justify-content: space-between;\n  gap: 15px;\n  margin-top: 34px;\n  font-size: 10px;\n  color: var(--g-muted);\n}\n.gal[data-theme="folio"] .gal-alert {\n  margin: 15px 24px;\n}\n.gal[data-theme="folio"] .gal-theme-picker {\n  position: relative;\n}\n.gal[data-theme="folio"] .gal-theme-picker > .gal-icon-button {\n  border: 1px solid var(--g-line);\n  border-radius: 50%;\n  width: 32px;\n  height: 32px;\n  padding: 0;\n}\n.gal[data-theme="folio"] .gal-theme-menu {\n  z-index: 15;\n  max-height: min(610px, 75vh);\n  overflow: auto;\n}\n.gal[data-theme="folio"] .gal-theme-menu button {\n  padding: 9px 12px;\n  border-radius: 7px;\n  min-height: 42px;\n}\n.gal[data-theme="folio"] .gal-overlay.gal-paper-detail-overlay {\n  display: flex;\n  justify-content: flex-end;\n  align-items: stretch;\n  padding: 0;\n  background: #19152638;\n  backdrop-filter: blur(3px);\n}\n.gal[data-theme="folio"] .pb-drawer {\n  width: min(540px, 100%);\n  height: 100%;\n  overflow: auto;\n  background: var(--pb-panel);\n  box-shadow: -20px 0 70px #19112422;\n  outline: none;\n  animation: pb-slide-in 0.23s ease-out;\n}\n.gal[data-theme="folio"] .pb-drawer-top {\n  position: sticky;\n  top: 0;\n  background: var(--pb-panel);\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 17px 27px;\n  z-index: 3;\n  border-bottom: 1px solid var(--g-line);\n  font-size: 11px;\n  color: var(--g-muted);\n}\n.gal[data-theme="folio"] .pb-drawer-top button {\n  border: 1px solid var(--g-line);\n  border-radius: 6px;\n  width: 29px;\n  height: 29px;\n}\n.gal[data-theme="folio"] .pb-drawer-cover {\n  height: 205px;\n}\n.gal[data-theme="folio"] .pb-drawer-content {\n  padding: 27px 32px 40px;\n}\n.gal[data-theme="folio"] .pb-drawer h2 {\n  font-size: 25px;\n  letter-spacing: -0.7px;\n  margin: 10px 0;\n  font-weight: 700;\n}\n.gal[data-theme="folio"] .pb-drawer-description {\n  color: var(--g-muted);\n  font-size: 13px;\n  overflow-wrap: anywhere;\n}\n.gal[data-theme="folio"] .pb-detail-meta {\n  display: flex;\n  gap: 15px;\n  flex-wrap: wrap;\n  font-size: 11px;\n  color: var(--g-muted);\n  margin: 15px 0 23px;\n}\n.gal[data-theme="folio"] .pb-detail-actions {\n  display: flex;\n  gap: 8px;\n  flex-wrap: wrap;\n}\n.gal[data-theme="folio"] .pb-detail-actions button:not(.pb-primary) {\n  padding: 8px 13px;\n  border: 1px solid var(--g-line);\n  border-radius: 7px;\n  font-size: 12px;\n}\n.gal[data-theme="folio"] button.pb-delete {\n  margin-left: auto;\n  color: #b66666;\n}\n.gal[data-theme="folio"] .pb-detail-tabs {\n  display: flex;\n  gap: 25px;\n  border-bottom: 1px solid var(--g-line);\n  margin: 25px 0 23px;\n}\n.gal[data-theme="folio"] .pb-detail-tabs button {\n  padding: 0 0 12px;\n  color: var(--g-muted);\n  font-size: 12px;\n  border-bottom: 2px solid transparent;\n}\n.gal[data-theme="folio"] .pb-detail-tabs button[aria-selected="true"] {\n  color: var(--pb-accent);\n  border-color: var(--pb-accent);\n}\n.gal[data-theme="folio"] .pb-detail-body h3 {\n  font-size: 13px;\n  margin: 22px 0 12px;\n  font-weight: 650;\n}\n.gal[data-theme="folio"] .pb-detail-body p {\n  color: var(--g-muted);\n  font-size: 12px;\n  line-height: 1.9;\n  margin: 10px 0;\n}\n.gal[data-theme="folio"] .pb-instruction {\n  white-space: pre-wrap;\n  word-break: break-word;\n  overflow-wrap: anywhere;\n  font:\n    12px/1.9 ui-monospace,\n    SFMono-Regular,\n    Consolas,\n    monospace;\n  background: var(--g-bg);\n  border: 1px solid var(--g-line);\n  border-radius: 8px;\n  padding: 16px;\n  margin: 14px 0;\n  max-height: 380px;\n  overflow: auto;\n}\n.gal[data-theme="folio"] .pb-file {\n  border: 1px solid var(--g-line);\n  border-radius: 7px;\n  margin: 9px 0;\n  font-size: 12px;\n  overflow: hidden;\n}\n.gal[data-theme="folio"] .pb-file summary {\n  display: flex;\n  gap: 9px;\n  align-items: center;\n  padding: 12px;\n  cursor: pointer;\n}\n.gal[data-theme="folio"] .pb-file summary > span {\n  overflow-wrap: anywhere;\n  min-width: 0;\n}\n.gal[data-theme="folio"] .pb-file summary:before {\n  content: "\u203A";\n  color: var(--g-muted);\n}\n.gal[data-theme="folio"] .pb-file[open] summary:before {\n  transform: rotate(90deg);\n}\n.gal[data-theme="folio"] .pb-file summary small {\n  margin-left: auto;\n  white-space: nowrap;\n  font-size: 10px;\n  color: var(--g-muted);\n}\n.gal[data-theme="folio"] .pb-file pre {\n  padding: 15px;\n  margin: 0;\n  background: var(--g-bg);\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n  max-height: 450px;\n  overflow: auto;\n  font-size: 11px;\n}\n.gal[data-theme="folio"] button.pb-file-link {\n  display: flex;\n  justify-content: flex-start;\n  gap: 9px;\n  width: 100%;\n  padding: 12px 0;\n  border-bottom: 1px solid var(--g-line);\n  font-size: 12px;\n  text-align: left;\n  overflow-wrap: anywhere;\n}\n.gal[data-theme="folio"] .pb-file-link span {\n  margin-left: auto;\n}\n.gal[data-theme="folio"][data-paper-dark="true"] .pb-hero {\n  background: #302a45;\n  color: #e4dbf9;\n}\n.gal[data-theme="folio"][data-paper-dark="true"] .pb-hero p {\n  color: #b8adc9;\n}\n.gal[data-theme="folio"][data-paper-dark="true"] .pb-hero-link {\n  color: #e4dbf9;\n  border-color: #b8adc9;\n}\n.gal[data-theme="folio"][data-paper-dark="true"] .pb-hero:after {\n  opacity: 0.12;\n}\n@keyframes pb-slide-in {\n  from {\n    transform: translateX(100%);\n  }\n  to {\n    transform: translateX(0);\n  }\n}\n@media (max-width: 1200px) {\n  .gal[data-theme="folio"] .pb-main {\n    padding: 30px 28px 45px;\n  }\n  .gal[data-theme="folio"] .pb-topbar {\n    padding: 15px 28px;\n  }\n  .gal[data-theme="folio"] .pb-rank-grid {\n    gap: 10px;\n  }\n  .gal[data-theme="folio"] .pb-rank-panel {\n    padding: 15px 11px 12px;\n  }\n  .gal[data-theme="folio"] .pb-rank-row {\n    gap: 6px;\n  }\n  .gal[data-theme="folio"] .pb-cards {\n    gap: 15px;\n  }\n  .gal[data-theme="folio"] .pb-hero-art {\n    right: 0;\n  }\n}\n@media (max-width: 1050px) {\n  .gal[data-theme="folio"] .pb-app {\n    grid-template-columns: 185px minmax(0, 1fr);\n  }\n  .gal[data-theme="folio"] .pb-sidebar {\n    padding: 30px 12px 20px;\n  }\n  .gal[data-theme="folio"] .pb-rank-grid {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n  .gal[data-theme="folio"] .pb-cards {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n  .gal[data-theme="folio"] .pb-intro {\n    align-items: flex-start;\n    flex-direction: column;\n    gap: 18px;\n  }\n  .gal[data-theme="folio"] .pb-search {\n    width: 100%;\n  }\n  .gal[data-theme="folio"] .pb-theme-label {\n    display: none;\n  }\n  .gal[data-theme="folio"] .pb-hero-art {\n    right: -50px;\n    opacity: 0.6;\n  }\n  .gal[data-theme="folio"] .pb-hero-text {\n    max-width: 85%;\n  }\n}\n@media (max-width: 700px) {\n  .gal[data-theme="folio"] .pb-app {\n    display: block;\n  }\n  .gal[data-theme="folio"] .pb-sidebar {\n    display: none;\n  }\n  .gal[data-theme="folio"] .pb-topbar {\n    padding: 14px 20px;\n    min-height: 66px;\n    gap: 10px;\n  }\n  .gal[data-theme="folio"] .pb-top-right {\n    gap: 9px;\n  }\n  .gal[data-theme="folio"] .pb-storage span {\n    display: none;\n  }\n  .gal[data-theme="folio"] .pb-main {\n    padding: 26px 20px 40px;\n  }\n  .gal[data-theme="folio"] .pb-intro h1 {\n    font-size: 30px;\n  }\n  .gal[data-theme="folio"] .pb-tabs {\n    gap: 3px;\n  }\n  .gal[data-theme="folio"] .pb-tabs button {\n    padding: 7px 11px;\n    font-size: 11px;\n  }\n  .gal[data-theme="folio"] .pb-hero {\n    height: 205px;\n    padding: 22px;\n  }\n  .gal[data-theme="folio"] .pb-hero h2 {\n    font-size: 21px;\n  }\n  .gal[data-theme="folio"] .pb-hero-text {\n    max-width: 100%;\n  }\n  .gal[data-theme="folio"] .pb-hero-art {\n    right: -95px;\n    top: 3px;\n    opacity: 0.18;\n  }\n  .gal[data-theme="folio"] .pb-rank-grid {\n    gap: 10px;\n  }\n  .gal[data-theme="folio"] .pb-rank-count {\n    font-size: 9px;\n  }\n  .gal[data-theme="folio"] .pb-rank-info strong {\n    font-size: 10px;\n  }\n  .gal[data-theme="folio"] .pb-cards {\n    grid-template-columns: minmax(0, 1fr);\n  }\n  .gal[data-theme="folio"] .pb-cover {\n    height: 175px;\n  }\n  .gal[data-theme="folio"] .pb-drawer-cover {\n    height: 190px;\n  }\n  .gal[data-theme="folio"] .pb-filter-bar {\n    flex-wrap: wrap;\n  }\n  .gal[data-theme="folio"] .pb-section-title h2 small {\n    display: inline-block;\n    margin-left: 7px;\n  }\n  .gal[data-theme="folio"] .pb-drawer-content {\n    padding: 24px 22px 30px;\n  }\n  .gal[data-theme="folio"] .pb-detail-actions {\n    gap: 6px;\n  }\n  .gal[data-theme="folio"] .pb-detail-actions button {\n    padding: 8px 10px;\n  }\n}\n@media (prefers-reduced-motion: reduce) {\n  .gal[data-theme="folio"] .pb-drawer {\n    animation: none;\n  }\n  .gal[data-theme="folio"] button.pb-card {\n    transition: none;\n  }\n}\n';
+
 // src/client/index.jsx
 var NS = "dsh-gallery";
-var TYPES = { skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" };
+var TYPES2 = { skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" };
 var blank = () => ({
   type: "skill",
   name: "",
@@ -11683,8 +13887,8 @@ var blank = () => ({
   metadata: {},
   references: []
 });
-var when = (s) => s ? new Date(s).toLocaleString() : "";
-var fail = (e) => e?.rpcError?.message || e?.message || String(e);
+var when = (s, language) => s ? new Date(s).toLocaleString(language) : "";
+var fail2 = (e) => e?.rpcError?.message || e?.message || String(e);
 async function call(remote, name, ...args) {
   const r = await remote[name](...args);
   if (r?.ok === false) throw new Error(r.error?.message || "Gallery \u8BF7\u6C42\u5931\u8D25");
@@ -11698,15 +13902,50 @@ function download(name, value, type = "application/json") {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1e3);
 }
-function Icon({ size = 20 }) {
-  return /* @__PURE__ */ import_react12.default.createElement(BrandIcon, { size });
+function exportResource(content) {
+  download(
+    `${content.name}.gallery.json`,
+    json2(
+      {
+        format: "dsh-gallery-resource",
+        schemaVersion: 2,
+        resource: {
+          type: content.type,
+          name: content.name,
+          description: content.description,
+          tags: content.tags,
+          files: content.files,
+          metadata: content.metadata,
+          references: content.references
+        },
+        source: {
+          libraryId: content.libraryId,
+          id: content.id,
+          digest: content.digest
+        }
+      },
+      null,
+      2
+    )
+  );
 }
-function Gallery({ remote }) {
-  const [theme, setTheme] = (0, import_react12.useState)(() => loadTheme(globalThis.localStorage));
-  const [motionPaused, setMotionPaused] = (0, import_react12.useState)(false);
-  const [themeMenu, setThemeMenu] = (0, import_react12.useState)(false);
-  const themeMenuRef = (0, import_react12.useRef)(null);
-  (0, import_react12.useEffect)(() => {
+function Icon({ size = 20 }) {
+  return /* @__PURE__ */ import_react15.default.createElement(BrandIcon, { size });
+}
+function GalleryContent({ remote }) {
+  const l = useGalleryText();
+  const [theme, setTheme] = (0, import_react15.useState)(() => loadTheme(globalThis.localStorage));
+  const [paperDark, setPaperDark] = (0, import_react15.useState)(() => {
+    try {
+      return globalThis.localStorage?.getItem("dsh-gallery-paper-dark") === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [motionPaused, setMotionPaused] = (0, import_react15.useState)(false);
+  const [themeMenu, setThemeMenu] = (0, import_react15.useState)(false);
+  const themeMenuRef = (0, import_react15.useRef)(null);
+  (0, import_react15.useEffect)(() => {
     if (!themeMenu) return;
     const closeOutside = (event) => {
       if (!themeMenuRef.current?.contains(event.target)) setThemeMenu(false);
@@ -11721,15 +13960,17 @@ function Gallery({ remote }) {
       document.removeEventListener("keydown", closeEscape);
     };
   }, [themeMenu]);
-  const [status, setStatus] = (0, import_react12.useState)(null), [error, setError] = (0, import_react12.useState)(""), [notice, updateNotice] = (0, import_react12.useState)(null), [busy, setBusy] = (0, import_react12.useState)(false);
+  const [status, setStatus] = (0, import_react15.useState)(null), [error, setError] = (0, import_react15.useState)(""), [notice, updateNotice] = (0, import_react15.useState)(null), [busy, setBusy] = (0, import_react15.useState)(false);
   function setNotice(message) {
     updateNotice(message ? { message } : null);
   }
-  (0, import_react12.useEffect)(() => {
+  (0, import_react15.useEffect)(() => {
     if (!notice) return;
     const root = document.createElement("div");
     root.className = "gal gal-toast-host";
     root.dataset.theme = theme;
+    root.lang = l.language;
+    root.dataset.paperDark = String(paperDark);
     const toast = document.createElement("div");
     toast.className = "gal-notice";
     toast.setAttribute("role", "status");
@@ -11738,11 +13979,11 @@ function Gallery({ remote }) {
     mark.textContent = "\u2713";
     mark.setAttribute("aria-hidden", "true");
     const message = document.createElement("span");
-    message.textContent = notice.message;
+    message.textContent = l(notice.message);
     const close = document.createElement("button");
     close.type = "button";
     close.textContent = "\xD7";
-    close.setAttribute("aria-label", "\u5173\u95ED\u63D0\u793A");
+    close.setAttribute("aria-label", l("\u5173\u95ED\u63D0\u793A"));
     close.addEventListener("click", () => updateNotice(null));
     toast.append(mark, message, close);
     root.append(toast);
@@ -11752,18 +13993,18 @@ function Gallery({ remote }) {
       clearTimeout(timer);
       root.remove();
     };
-  }, [notice, theme]);
-  const [boards, setBoards] = (0, import_react12.useState)([]);
-  const [items, setItems] = (0, import_react12.useState)([]), [total, setTotal] = (0, import_react12.useState)(0), [type, setType] = (0, import_react12.useState)(""), [scope, setScope] = (0, import_react12.useState)("all"), [q, setQ] = (0, import_react12.useState)(""), [refresh, setRefresh] = (0, import_react12.useState)(0), [offset, setOffset] = (0, import_react12.useState)(0), [loading, setLoading] = (0, import_react12.useState)(false);
-  const [selected, setSelected] = (0, import_react12.useState)(null), [editor, setEditor] = (0, import_react12.useState)(null);
-  const [creation, setCreation] = (0, import_react12.useState)(null);
-  const [skillWizard, setSkillWizard] = (0, import_react12.useState)(false);
-  const [agentWizard, setAgentWizard] = (0, import_react12.useState)(false);
-  const [mcpWizard, setMcpWizard] = (0, import_react12.useState)(false);
-  const [workflowWizard, setWorkflowWizard] = (0, import_react12.useState)(false);
-  const [storageSettings, setStorageSettings] = (0, import_react12.useState)(null);
-  const [connectionResult, setConnectionResult] = (0, import_react12.useState)("");
-  const [confirmation, setConfirmation] = (0, import_react12.useState)(null);
+  }, [notice, theme, paperDark, l]);
+  const [boards, setBoards] = (0, import_react15.useState)([]);
+  const [items, setItems] = (0, import_react15.useState)([]), [total, setTotal] = (0, import_react15.useState)(0), [type, setType] = (0, import_react15.useState)(""), [scope, setScope] = (0, import_react15.useState)("all"), [q, setQ] = (0, import_react15.useState)(""), [refresh, setRefresh] = (0, import_react15.useState)(0), [offset, setOffset] = (0, import_react15.useState)(0), [loading, setLoading] = (0, import_react15.useState)(false);
+  const [selected, setSelected] = (0, import_react15.useState)(null), [editor, setEditor] = (0, import_react15.useState)(null);
+  const [creation, setCreation] = (0, import_react15.useState)(null);
+  const [skillWizard, setSkillWizard] = (0, import_react15.useState)(false);
+  const [agentWizard, setAgentWizard] = (0, import_react15.useState)(false);
+  const [mcpWizard, setMcpWizard] = (0, import_react15.useState)(false);
+  const [workflowWizard, setWorkflowWizard] = (0, import_react15.useState)(false);
+  const [storageSettings, setStorageSettings] = (0, import_react15.useState)(null);
+  const [connectionResult, setConnectionResult] = (0, import_react15.useState)("");
+  const [confirmation, setConfirmation] = (0, import_react15.useState)(null);
   const confirmAction = (message) => new Promise((resolve) => setConfirmation({ message, resolve }));
   function answerConfirmation(value) {
     const current = confirmation;
@@ -11777,12 +14018,12 @@ function Gallery({ remote }) {
     try {
       return await fn();
     } catch (e) {
-      setError(fail(e));
+      setError(l(fail2(e)));
     } finally {
       setBusy(false);
     }
   }
-  (0, import_react12.useEffect)(() => {
+  (0, import_react15.useEffect)(() => {
     let live = true;
     call(remote, "uiStatus").then((x) => {
       if (live) {
@@ -11792,19 +14033,19 @@ function Gallery({ remote }) {
         }
       }
     }).catch((e) => {
-      if (live) setError(fail(e));
+      if (live) setError(l(fail2(e)));
     });
     return () => {
       live = false;
     };
   }, []);
-  (0, import_react12.useEffect)(() => {
-    if (!status?.ready) return;
+  (0, import_react15.useEffect)(() => {
+    if (!status?.ready || theme === "folio") return;
     let live = true;
     setLoading(true);
     const timer = setTimeout(
       () => (type ? call(remote, "uiList", json2({ type, scope, q, limit: 48, offset })) : Promise.all(
-        Object.keys(TYPES).map(async (key) => ({
+        Object.keys(TYPES2).map(async (key) => ({
           type: key,
           ...await call(
             remote,
@@ -11823,7 +14064,7 @@ function Gallery({ remote }) {
           }
         }
       }).catch((e) => {
-        if (live) setError(fail(e));
+        if (live) setError(l(fail2(e)));
       }).finally(() => {
         if (live) setLoading(false);
       }),
@@ -11835,6 +14076,7 @@ function Gallery({ remote }) {
     };
   }, [
     status?.ready,
+    theme,
     status?.storage?.activeLibraryId,
     type,
     scope,
@@ -11847,32 +14089,32 @@ function Gallery({ remote }) {
     setSelected(r);
     return r;
   }
-  function edit(r) {
+  function edit(r, resourceType = type) {
     setNotice("");
     setError("");
-    if (!r && !type) return;
+    if (!r && !resourceType) return;
     setSelected(null);
-    if (!r && ["skill", "agent"].includes(type)) {
-      setCreation(type);
+    if (!r && ["skill", "agent", "workflow"].includes(resourceType)) {
+      setCreation(resourceType);
       return;
     }
-    if ((r?.type || type) === "skill") {
+    if ((r?.type || resourceType) === "skill") {
       setSkillWizard({ resource: r || null });
       return;
     }
-    if ((r?.type || type) === "agent") {
+    if ((r?.type || resourceType) === "agent") {
       setAgentWizard({ resource: r || null });
       return;
     }
-    if ((r?.type || type) === "mcp") {
+    if ((r?.type || resourceType) === "mcp") {
       setMcpWizard({ resource: r || null });
       return;
     }
-    if ((r?.type || type) === "workflow") {
+    if ((r?.type || resourceType) === "workflow") {
       setWorkflowWizard({ resource: r || null });
       return;
     }
-    const d = r || { ...blank(), type };
+    const d = r || { ...blank(), type: resourceType };
     setEditor({
       id: r?.id,
       revision: r?.revision,
@@ -11884,6 +14126,13 @@ function Gallery({ remote }) {
       newPath: "",
       importError: ""
     });
+  }
+  function startResource(importedResource) {
+    const wizard = { resource: null, importedResource };
+    if (creation === "workflow") setWorkflowWizard(wizard);
+    else if (creation === "skill") setSkillWizard(wizard);
+    else setAgentWizard(wizard);
+    setCreation(null);
   }
   function change(key, value) {
     setEditor((x) => ({ ...x, [key]: value }));
@@ -11906,7 +14155,7 @@ function Gallery({ remote }) {
           const r = bundle.resource;
           if (r.type !== editor.resource.type)
             throw new Error(
-              `\u8D44\u6E90\u5305\u7C7B\u578B\u4E0D\u5339\u914D\uFF0C\u8BF7\u5728 ${TYPES[r.type] || r.type} \u5206\u7C7B\u4E2D\u5BFC\u5165\u3002`
+              l("\u8D44\u6E90\u5305\u7C7B\u578B\u4E0D\u5339\u914D\uFF0C\u8BF7\u5728 {0} \u5206\u7C7B\u4E2D\u5BFC\u5165\u3002", TYPES2[r.type] || r.type)
             );
           setEditor((x) => ({
             ...x,
@@ -11924,7 +14173,7 @@ function Gallery({ remote }) {
       let size = 0;
       for (const f of files) {
         size += f.size;
-        if (size > 5 * 1024 * 1024) throw new Error("\u6587\u4EF6\u603B\u91CF\u4E0D\u80FD\u8D85\u8FC7 5 MiB");
+        if (size > 5 * 1024 * 1024) throw new Error(l("\u6587\u4EF6\u603B\u91CF\u4E0D\u80FD\u8D85\u8FC7 5 MiB"));
         const bytes = new Uint8Array(await f.arrayBuffer());
         let content2, encoding = "utf8";
         try {
@@ -11959,7 +14208,7 @@ function Gallery({ remote }) {
         };
       });
     } catch (e) {
-      setEditor((x) => ({ ...x, importError: fail(e) }));
+      setEditor((x) => ({ ...x, importError: fail2(e) }));
     }
   }
   async function save() {
@@ -11978,17 +14227,17 @@ function Gallery({ remote }) {
     setEditor(null);
     await load(r.id);
     setRefresh((x) => x + 1);
-    setNotice("\u8D44\u6E90\u5DF2\u4FDD\u5B58\u3002");
+    setNotice(l("\u8D44\u6E90\u5DF2\u4FDD\u5B58\u3002"));
   }
   async function closeEditor() {
     if (busy) return;
-    if (await confirmAction("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684\u4FEE\u6539\uFF1F")) setEditor(null);
+    if (await confirmAction(l("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684\u4FEE\u6539\uFF1F"))) setEditor(null);
   }
   function closeStorage() {
     if (busy) return;
     return run(async () => {
       if (!storageSettings.configured) {
-        const storage = await call(remote, "uiConfigureStorage");
+        const storage = await call(remote, "uiConfigureStorage", json2({ type: "internal" }));
         setStatus((x) => ({ ...x, storage }));
       }
       setStorageSettings(null);
@@ -11996,7 +14245,7 @@ function Gallery({ remote }) {
   }
   async function removeResource(resource) {
     if (busy || !await confirmAction(
-      `\u5220\u9664\u300C${resource.name}\u300D\uFF1F\u8D44\u6E90\u548C\u7D2F\u8BA1\u8C03\u7528\u8BB0\u5F55\u5C06\u88AB\u5220\u9664\uFF0C\u65E0\u6CD5\u6062\u590D\u3002`
+      l("\u5220\u9664\u300C{0}\u300D\uFF1F\u8D44\u6E90\u548C\u7D2F\u8BA1\u8C03\u7528\u8BB0\u5F55\u5C06\u88AB\u5220\u9664\uFF0C\u65E0\u6CD5\u6062\u590D\u3002", resource.name)
     ))
       return;
     await run(async () => {
@@ -12009,7 +14258,7 @@ function Gallery({ remote }) {
       setSelected(null);
       setOffset(0);
       setRefresh((x) => x + 1);
-      setNotice("\u8D44\u6E90\u5DF2\u5220\u9664\u3002");
+      setNotice(l("\u8D44\u6E90\u5DF2\u5220\u9664\u3002"));
     });
   }
   const content = selected;
@@ -12018,25 +14267,61 @@ function Gallery({ remote }) {
     setType(t);
     setOffset(0);
   };
-  return /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal", "data-theme": theme, "data-motion-paused": motionPaused }, theme === "astral" && /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-astral-sky", "aria-hidden": "true" }, /* @__PURE__ */ import_react12.default.createElement("svg", { className: "gal-astral-chart", viewBox: "0 0 540 240", fill: "none" }, /* @__PURE__ */ import_react12.default.createElement("g", { stroke: "currentColor", strokeWidth: "0.7" }, /* @__PURE__ */ import_react12.default.createElement("circle", { cx: "270", cy: "68", r: "144" }), /* @__PURE__ */ import_react12.default.createElement("circle", { cx: "270", cy: "68", r: "126", strokeDasharray: "2 5" }), /* @__PURE__ */ import_react12.default.createElement("circle", { cx: "270", cy: "68", r: "106" }), /* @__PURE__ */ import_react12.default.createElement("path", { d: "M24 68h492M270 0v224M133 0l274 136M407 0L133 136", opacity: ".45" })), /* @__PURE__ */ import_react12.default.createElement("circle", { className: "gal-astral-orbit", cx: "376", cy: "68", r: "3.5", fill: "#fff4c9" }), /* @__PURE__ */ import_react12.default.createElement("path", { d: "M270 43l5 20 20 5-20 5-5 20-5-20-20-5 20-5z", fill: "#fff1c9" })), /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-astral-meteor" })), /* @__PURE__ */ import_react12.default.createElement("header", { className: "gal-header" }, /* @__PURE__ */ import_react12.default.createElement("div", null, /* @__PURE__ */ import_react12.default.createElement("h1", null, /* @__PURE__ */ import_react12.default.createElement(BrandIcon, { size: 32 }), "Gallery", theme === "astral" && /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-astral-title" }, "\u938F\u91D1\u661F\u7A79"))), /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-header-actions" }, theme === "astral" && /* @__PURE__ */ import_react12.default.createElement(
+  const themePicker = /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-theme-picker", ref: themeMenuRef }, /* @__PURE__ */ import_react15.default.createElement(
+    "button",
+    {
+      className: "gal-icon-button",
+      "aria-label": l("\u5207\u6362\u4E3B\u9898"),
+      "aria-expanded": themeMenu,
+      title: l("\u4E3B\u9898 \xB7 {0}", l(THEMES.find((item) => item.id === theme)?.label)),
+      onClick: () => setThemeMenu((open) => !open)
+    },
+    /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "palette", size: 20 })
+  ), themeMenu && /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-theme-menu", role: "group", "aria-label": l("\u9009\u62E9\u4E3B\u9898") }, THEMES.map((item) => /* @__PURE__ */ import_react15.default.createElement(
+    "button",
+    {
+      key: item.id,
+      "aria-pressed": theme === item.id,
+      onClick: () => {
+        saveTheme(globalThis.localStorage, item.id);
+        setTheme(item.id);
+        setThemeMenu(false);
+      }
+    },
+    /* @__PURE__ */ import_react15.default.createElement(
+      "span",
+      {
+        className: `gal-theme-swatch ${item.id}`,
+        "aria-hidden": "true"
+      }
+    ),
+    /* @__PURE__ */ import_react15.default.createElement("span", null, /* @__PURE__ */ import_react15.default.createElement("strong", null, l(item.label)), /* @__PURE__ */ import_react15.default.createElement("small", null, l(item.hint))),
+    theme === item.id && /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "check", size: 16 })
+  ))));
+  const openStorage = () => run(async () => {
+    const settings = await call(remote, "uiStorageSettings");
+    setStorageSettings(settings);
+    setConnectionResult("");
+  });
+  const publishWorkflow = () => run(async () => {
+    const result = await call(remote, "uiPublishWorkflow", selected.id);
+    setNotice(l("\u5DF2\u6CE8\u518C\u5230 TeamFlow\uFF1A{0} v{1}", result.name, result.version));
+  });
+  return /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal", lang: l.language, "data-theme": theme, "data-motion-paused": motionPaused, "data-paper-dark": paperDark }, theme === "astral" && /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-astral-sky", "aria-hidden": "true" }, /* @__PURE__ */ import_react15.default.createElement("svg", { className: "gal-astral-chart", viewBox: "0 0 540 240", fill: "none" }, /* @__PURE__ */ import_react15.default.createElement("g", { stroke: "currentColor", strokeWidth: "0.7" }, /* @__PURE__ */ import_react15.default.createElement("circle", { cx: "270", cy: "68", r: "144" }), /* @__PURE__ */ import_react15.default.createElement("circle", { cx: "270", cy: "68", r: "126", strokeDasharray: "2 5" }), /* @__PURE__ */ import_react15.default.createElement("circle", { cx: "270", cy: "68", r: "106" }), /* @__PURE__ */ import_react15.default.createElement("path", { d: "M24 68h492M270 0v224M133 0l274 136M407 0L133 136", opacity: ".45" })), /* @__PURE__ */ import_react15.default.createElement("circle", { className: "gal-astral-orbit", cx: "376", cy: "68", r: "3.5", fill: "#fff4c9" }), /* @__PURE__ */ import_react15.default.createElement("path", { d: "M270 43l5 20 20 5-20 5-5 20-5-20-20-5 20-5z", fill: "#fff1c9" })), /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-astral-meteor" })), (theme !== "folio" || !status?.ready) && /* @__PURE__ */ import_react15.default.createElement("header", { className: "gal-header" }, theme === "anime" && /* @__PURE__ */ import_react15.default.createElement(AnimeMascot, null), /* @__PURE__ */ import_react15.default.createElement("div", null, /* @__PURE__ */ import_react15.default.createElement("h1", null, /* @__PURE__ */ import_react15.default.createElement(BrandIcon, { size: 32 }), "Gallery", theme === "astral" && /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-astral-title" }, l("\u938F\u91D1\u661F\u7A79")))), /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-header-actions" }, theme === "astral" && /* @__PURE__ */ import_react15.default.createElement(
     "button",
     {
       className: "gal-astral-motion",
       type: "button",
       onClick: () => setMotionPaused((paused) => !paused)
     },
-    motionPaused ? "\u7EE7\u7EED\u52A8\u6548" : "\u6682\u505C\u52A8\u6548"
-  ), /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-theme-picker", ref: themeMenuRef }, /* @__PURE__ */ import_react12.default.createElement("button", { className: "gal-icon-button", "aria-label": "\u5207\u6362\u4E3B\u9898", "aria-expanded": themeMenu, title: `\u4E3B\u9898 \xB7 ${THEMES.find((item) => item.id === theme)?.label}`, onClick: () => setThemeMenu((open) => !open) }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "palette", size: 20 })), themeMenu && /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-theme-menu", role: "group", "aria-label": "\u9009\u62E9\u4E3B\u9898" }, THEMES.map((item) => /* @__PURE__ */ import_react12.default.createElement("button", { key: item.id, "aria-pressed": theme === item.id, onClick: () => {
-    saveTheme(globalThis.localStorage, item.id);
-    setTheme(item.id);
-    setThemeMenu(false);
-  } }, /* @__PURE__ */ import_react12.default.createElement("span", { className: `gal-theme-swatch ${item.id}`, "aria-hidden": "true" }), /* @__PURE__ */ import_react12.default.createElement("span", null, /* @__PURE__ */ import_react12.default.createElement("strong", null, item.label), /* @__PURE__ */ import_react12.default.createElement("small", null, item.hint)), theme === item.id && /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "check", size: 16 }))))), /* @__PURE__ */ import_react12.default.createElement(
+    motionPaused ? l("\u7EE7\u7EED\u52A8\u6548") : l("\u6682\u505C\u52A8\u6548")
+  ), themePicker, /* @__PURE__ */ import_react15.default.createElement(
     "button",
     {
       className: "gal-icon-button",
-      "aria-label": "\u5B58\u50A8\u8BBE\u7F6E",
-      title: "\u5B58\u50A8\u8BBE\u7F6E \xB7 " + (status?.storage?.libraries.find(
-        (l) => l.id === status.storage.activeLibraryId
+      "aria-label": l("\u5B58\u50A8\u8BBE\u7F6E"),
+      title: l("\u5B58\u50A8\u8BBE\u7F6E \xB7 ") + l(status?.storage?.libraries.find(
+        (l2) => l2.id === status.storage.activeLibraryId
       )?.name || "\u672C\u5730\u8D44\u6E90\u5E93"),
       disabled: busy || !status?.ready,
       onClick: () => run(async () => {
@@ -12045,8 +14330,37 @@ function Gallery({ remote }) {
         setConnectionResult("");
       })
     },
-    /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "settings", size: 20 })
-  ))), error && /* @__PURE__ */ import_react12.default.createElement("div", { role: "alert", className: "gal-alert" }, error, /* @__PURE__ */ import_react12.default.createElement("button", { "aria-label": "\u5173\u95ED\u9519\u8BEF", onClick: () => setError("") }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "close" }))), !status?.ready ? /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-empty" }, error ? "\u8D44\u6E90\u5E93\u6682\u65F6\u4E0D\u53EF\u7528\uFF0C\u8BF7\u68C0\u67E5\u63D0\u793A\u540E\u5237\u65B0\u3002" : "\u6B63\u5728\u6253\u5F00\u672C\u5730\u8D44\u6E90\u5E93\u2026") : /* @__PURE__ */ import_react12.default.createElement(import_react12.default.Fragment, null, /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-toolbar" }, /* @__PURE__ */ import_react12.default.createElement("nav", { className: "gal-filters", "aria-label": "\u8D44\u6E90\u7C7B\u578B" }, /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "settings", size: 20 })
+  ))), error && /* @__PURE__ */ import_react15.default.createElement("div", { role: "alert", className: "gal-alert" }, l(error), /* @__PURE__ */ import_react15.default.createElement("button", { "aria-label": l("\u5173\u95ED\u9519\u8BEF"), onClick: () => setError("") }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "close" }))), !status?.ready ? /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-empty" }, error ? l("\u8D44\u6E90\u5E93\u6682\u65F6\u4E0D\u53EF\u7528\uFF0C\u8BF7\u68C0\u67E5\u63D0\u793A\u540E\u5237\u65B0\u3002") : l("\u6B63\u5728\u6253\u5F00\u672C\u5730\u8D44\u6E90\u5E93\u2026")) : theme === "folio" ? /* @__PURE__ */ import_react15.default.createElement(
+    PaperBrowser,
+    {
+      remote,
+      status,
+      refresh,
+      busy,
+      onError: setError,
+      onOpen: (r) => run(() => load(r.id)),
+      onCreate: (resourceType) => {
+        chooseFilter(resourceType);
+        edit(null, resourceType);
+      },
+      onRefresh: () => {
+        setError("");
+        setRefresh((x) => x + 1);
+      },
+      onStorage: openStorage,
+      themePicker,
+      dark: paperDark,
+      onToggleDark: () => setPaperDark((current) => {
+        const next = !current;
+        try {
+          globalThis.localStorage?.setItem("dsh-gallery-paper-dark", String(next));
+        } catch {
+        }
+        return next;
+      })
+    }
+  ) : /* @__PURE__ */ import_react15.default.createElement(import_react15.default.Fragment, null, /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-toolbar" }, /* @__PURE__ */ import_react15.default.createElement("nav", { className: "gal-filters", "aria-label": l("\u8D44\u6E90\u7C7B\u578B") }, /* @__PURE__ */ import_react15.default.createElement(
     "button",
     {
       className: !type ? "active" : "",
@@ -12056,9 +14370,9 @@ function Gallery({ remote }) {
         chooseFilter("");
       }
     },
-    /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "grid" }),
-    "\u5168\u90E8"
-  ), Object.entries(TYPES).map(([key, label]) => /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "grid" }),
+    l("\u5168\u90E8")
+  ), Object.entries(TYPES2).map(([key, label]) => /* @__PURE__ */ import_react15.default.createElement(
     "button",
     {
       key,
@@ -12066,41 +14380,41 @@ function Gallery({ remote }) {
       "aria-pressed": type === key,
       onClick: () => chooseFilter(key)
     },
-    /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: key }),
-    label
-  ))), /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-search-wrap" }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "search" }), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: key }),
+    l(label)
+  ))), /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-search-wrap" }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "search" }), /* @__PURE__ */ import_react15.default.createElement(
     "input",
     {
-      "aria-label": "\u641C\u7D22\u8D44\u6E90",
+      "aria-label": l("\u641C\u7D22\u8D44\u6E90"),
       className: "gal-search",
-      placeholder: "\u641C\u7D22\u8D44\u6E90\u3001\u7528\u6237\u540D\u6216\u6807\u7B7E\u2026",
+      placeholder: l("\u641C\u7D22\u8D44\u6E90\u3001\u7528\u6237\u540D\u6216\u6807\u7B7E\u2026"),
       value: q,
       onChange: (e) => {
         setQ(e.target.value);
         setOffset(0);
       }
     }
-  ))), /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-list-heading" }, /* @__PURE__ */ import_react12.default.createElement("span", null, type ? TYPES[type] : "\u8C03\u7528\u699C", " ", /* @__PURE__ */ import_react12.default.createElement("strong", null, total)), /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-list-actions" }, type && /* @__PURE__ */ import_react12.default.createElement(
+  ))), /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-list-heading" }, /* @__PURE__ */ import_react15.default.createElement("span", null, type ? TYPES2[type] : l("\u8C03\u7528\u699C"), " ", /* @__PURE__ */ import_react15.default.createElement("strong", null, total)), /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-list-actions" }, type && /* @__PURE__ */ import_react15.default.createElement(
     "button",
     {
       className: "gal-primary",
       disabled: busy,
       onClick: () => edit(null)
     },
-    /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "plus" }),
-    "\u65B0\u5EFA ",
-    TYPES[type]
-  ), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "plus" }),
+    l("\u65B0\u5EFA "),
+    TYPES2[type]
+  ), /* @__PURE__ */ import_react15.default.createElement(
     "button",
     {
       className: "gal-icon-button",
-      title: "\u5237\u65B0\u8D44\u6E90",
-      "aria-label": "\u5237\u65B0",
+      title: l("\u5237\u65B0\u8D44\u6E90"),
+      "aria-label": l("\u5237\u65B0"),
       disabled: busy,
       onClick: () => setRefresh((x) => x + 1)
     },
-    /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "refresh" })
-  ))), loading ? /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-empty" }, "\u6B63\u5728\u52A0\u8F7D\u8D44\u6E90\u2026") : !type ? /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "refresh" })
+  ))), loading ? /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-empty" }, l("\u6B63\u5728\u52A0\u8F7D\u8D44\u6E90\u2026")) : !type ? /* @__PURE__ */ import_react15.default.createElement(
     Leaderboards,
     {
       boards,
@@ -12109,7 +14423,7 @@ function Gallery({ remote }) {
       onOpen: (r) => run(() => load(r.id)),
       onCategory: chooseFilter
     }
-  ) : items.length === 0 ? /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-empty" }, /* @__PURE__ */ import_react12.default.createElement(Icon, null), /* @__PURE__ */ import_react12.default.createElement("h3", null, q || type || scope !== "all" ? "\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90" : "\u6682\u65E0\u8D44\u6E90"), /* @__PURE__ */ import_react12.default.createElement("p", null, q || type || scope !== "all" ? "\u8BD5\u8BD5\u5176\u4ED6\u5173\u952E\u8BCD\u6216\u5206\u7C7B\u3002" : "\u9009\u62E9\u5206\u7C7B\u540E\u65B0\u5EFA\u8D44\u6E90\u3002")) : /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-resource-grid" }, items.map((r) => /* @__PURE__ */ import_react12.default.createElement(
+  ) : items.length === 0 ? /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-empty" }, /* @__PURE__ */ import_react15.default.createElement(Icon, null), /* @__PURE__ */ import_react15.default.createElement("h3", null, q || type || scope !== "all" ? l("\u6CA1\u6709\u5339\u914D\u7684\u8D44\u6E90") : l("\u6682\u65E0\u8D44\u6E90")), /* @__PURE__ */ import_react15.default.createElement("p", null, q || type || scope !== "all" ? l("\u8BD5\u8BD5\u5176\u4ED6\u5173\u952E\u8BCD\u6216\u5206\u7C7B\u3002") : l("\u9009\u62E9\u5206\u7C7B\u540E\u65B0\u5EFA\u8D44\u6E90\u3002"))) : /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-resource-grid" }, items.map((r) => /* @__PURE__ */ import_react15.default.createElement(
     "button",
     {
       key: r.id,
@@ -12118,82 +14432,74 @@ function Gallery({ remote }) {
       disabled: busy,
       onClick: () => run(() => load(r.id))
     },
-    /* @__PURE__ */ import_react12.default.createElement(ResourceCover, { resource: r }),
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-resource-content" }, /* @__PURE__ */ import_react12.default.createElement("h3", null, r.name), r.description && /* @__PURE__ */ import_react12.default.createElement("p", null, r.description)),
-    /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement(ResourceCover, { resource: r }),
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-resource-content" }, /* @__PURE__ */ import_react15.default.createElement("h3", null, r.name), r.description && /* @__PURE__ */ import_react15.default.createElement("p", null, r.description)),
+    /* @__PURE__ */ import_react15.default.createElement(
       "p",
       {
         className: "gal-card-creator",
-        title: `\u521B\u5EFA\u8005\uFF1A${r.creator?.username || "\u672A\u8BB0\u5F55"}`
+        title: l("\u521B\u5EFA\u8005\uFF1A{0}", r.creator?.username || l("\u672A\u8BB0\u5F55"))
       },
-      /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "user", size: 15 }),
-      r.creator?.username || "\u672A\u8BB0\u5F55"
+      /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "user", size: 15 }),
+      r.creator?.username || l("\u672A\u8BB0\u5F55")
     ),
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-tags" }, r.tags.slice(0, 2).map((t) => /* @__PURE__ */ import_react12.default.createElement("span", { key: t }, t))),
-    /* @__PURE__ */ import_react12.default.createElement("footer", null, hasResourceCover(r.type) && /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-tags" }, r.tags.slice(0, 2).map((t) => /* @__PURE__ */ import_react15.default.createElement("span", { key: t }, t))),
+    /* @__PURE__ */ import_react15.default.createElement("footer", null, hasResourceCover(r.type) && /* @__PURE__ */ import_react15.default.createElement(
       "span",
       {
-        title: "\u7D2F\u8BA1\u8C03\u7528\u6B21\u6570",
-        "aria-label": `\u7D2F\u8BA1\u8C03\u7528 ${r.usageCount ?? 0} \u6B21`
+        title: l("\u7D2F\u8BA1\u8C03\u7528\u6B21\u6570"),
+        "aria-label": l("\u7D2F\u8BA1\u8C03\u7528 {0} \u6B21", r.usageCount ?? 0)
       },
-      /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "usage", size: 15 }),
-      (r.usageCount ?? 0).toLocaleString(),
-      " \u6B21"
-    ), /* @__PURE__ */ import_react12.default.createElement("span", { title: "\u6587\u4EF6\u6570\u91CF" }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "file", size: 15 }), r.fileCount), /* @__PURE__ */ import_react12.default.createElement("span", { title: "\u66F4\u65B0\u65F6\u95F4" }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "clock", size: 15 }), new Date(r.updatedAt).toLocaleDateString()))
-  ))), type && total > 48 && /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-pagination" }, /* @__PURE__ */ import_react12.default.createElement(
+      /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "usage", size: 15 }),
+      (r.usageCount ?? 0).toLocaleString(l.language),
+      l(" \u6B21")
+    ), /* @__PURE__ */ import_react15.default.createElement("span", { title: l("\u6587\u4EF6\u6570\u91CF") }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "file", size: 15 }), r.fileCount), /* @__PURE__ */ import_react15.default.createElement("span", { title: l("\u66F4\u65B0\u65F6\u95F4") }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "clock", size: 15 }), new Date(r.updatedAt).toLocaleDateString(l.language)))
+  ))), type && total > 48 && /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-pagination" }, /* @__PURE__ */ import_react15.default.createElement(
     "button",
     {
       disabled: !offset,
       onClick: () => setOffset((x) => Math.max(0, x - 48))
     },
-    "\u4E0A\u4E00\u9875"
-  ), /* @__PURE__ */ import_react12.default.createElement("span", null, Math.floor(offset / 48) + 1, " / ", Math.ceil(total / 48)), /* @__PURE__ */ import_react12.default.createElement(
+    l("\u4E0A\u4E00\u9875")
+  ), /* @__PURE__ */ import_react15.default.createElement("span", null, Math.floor(offset / 48) + 1, " / ", Math.ceil(total / 48)), /* @__PURE__ */ import_react15.default.createElement(
     "button",
     {
       disabled: offset + 48 >= total,
       onClick: () => setOffset((x) => x + 48)
     },
-    "\u4E0B\u4E00\u9875"
-  ))), creation && /* @__PURE__ */ import_react12.default.createElement(
+    l("\u4E0B\u4E00\u9875")
+  ))), creation && /* @__PURE__ */ import_react15.default.createElement(
     ResourceStart,
     {
       type: creation,
       onClose: () => setCreation(null),
-      onBlank: () => {
-        const setter = creation === "skill" ? setSkillWizard : setAgentWizard;
-        setter({ resource: null });
-        setCreation(null);
-      },
-      onImported: (importedResource) => {
-        const setter = creation === "skill" ? setSkillWizard : setAgentWizard;
-        setter({ resource: null, importedResource });
-        setCreation(null);
-      },
+      onBlank: () => startResource(),
+      onImported: startResource,
       onBrowse: (payload) => call(remote, "uiImportDirectory", json2(payload)),
       onRead: (payload) => call(remote, "uiImportResource", json2(payload))
     }
-  ), workflowWizard && /* @__PURE__ */ import_react12.default.createElement(WorkflowWizard, { onExtract: (resourceId) => call(remote, "uiExtractWorkflowAgent", json2({ resourceId })), onGet: (id) => call(remote, "uiGet", id), onList: async (type2) => {
+  ), workflowWizard && /* @__PURE__ */ import_react15.default.createElement(WorkflowWizard, { onExtract: (resourceId) => call(remote, "uiExtractWorkflowAgent", json2({ resourceId })), onGet: (id) => call(remote, "uiGet", id), onList: async (type2) => {
     const rows = [];
     for (let offset2 = 0; ; offset2 += 100) {
       const page = await call(remote, "uiList", json2({ type: type2, limit: 100, offset: offset2 }));
       rows.push(...page.items);
       if (rows.length >= page.total || !page.items.length) return rows;
     }
-  }, resource: workflowWizard.resource, onClose: async () => {
-    if (await confirmAction("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Workflow\uFF1F")) setWorkflowWizard(false);
+  }, resource: workflowWizard.resource, importedResource: workflowWizard.importedResource, onClose: async () => {
+    if (await confirmAction(l("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Workflow\uFF1F"))) setWorkflowWizard(false);
   }, onSave: async (resource) => {
     const existing = workflowWizard.resource;
     await (existing ? call(remote, "uiUpdate", existing.id, json2({ resource, expectedRevision: existing.revision })) : call(remote, "uiCreate", json2(resource)));
     setSelected(null);
     setWorkflowWizard(false);
     setRefresh((x) => x + 1);
-    setNotice("Workflow \u5DF2\u4FDD\u5B58\u3002");
-  } }), mcpWizard && /* @__PURE__ */ import_react12.default.createElement(
+    setNotice(l("Workflow \u5DF2\u4FDD\u5B58\u3002"));
+  } }), mcpWizard && /* @__PURE__ */ import_react15.default.createElement(
     McpWizard,
     {
       resource: mcpWizard.resource,
       onClose: async () => {
-        if (await confirmAction("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 MCP\uFF1F"))
+        if (await confirmAction(l("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 MCP\uFF1F")))
           setMcpWizard(false);
       },
       onCheck: (config) => call(remote, "uiCheckMcp", json2(config)),
@@ -12208,16 +14514,16 @@ function Gallery({ remote }) {
         setSelected(null);
         setMcpWizard(false);
         setRefresh((x) => x + 1);
-        setNotice("MCP \u5DF2\u4FDD\u5B58\u3002");
+        setNotice(l("MCP \u5DF2\u4FDD\u5B58\u3002"));
       }
     }
-  ), agentWizard && /* @__PURE__ */ import_react12.default.createElement(
+  ), agentWizard && /* @__PURE__ */ import_react15.default.createElement(
     AgentWizard,
     {
       importedResource: agentWizard.importedResource,
       resource: agentWizard.resource,
       onClose: async () => {
-        if (await confirmAction("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Agent\uFF1F"))
+        if (await confirmAction(l("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Agent\uFF1F")))
           setAgentWizard(false);
       },
       onSave: async (resource) => {
@@ -12231,16 +14537,16 @@ function Gallery({ remote }) {
         setSelected(null);
         setAgentWizard(false);
         setRefresh((x) => x + 1);
-        setNotice("Agent \u5DF2\u4FDD\u5B58\u3002");
+        setNotice(l("Agent \u5DF2\u4FDD\u5B58\u3002"));
       }
     }
-  ), skillWizard && /* @__PURE__ */ import_react12.default.createElement(
+  ), skillWizard && /* @__PURE__ */ import_react15.default.createElement(
     SkillWizard,
     {
       importedResource: skillWizard.importedResource,
       resource: skillWizard.resource,
       onClose: async () => {
-        if (await confirmAction("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Skill\uFF1F"))
+        if (await confirmAction(l("\u653E\u5F03\u5C1A\u672A\u4FDD\u5B58\u7684 Skill\uFF1F")))
           setSkillWizard(false);
       },
       onSave: async (resource) => {
@@ -12254,122 +14560,111 @@ function Gallery({ remote }) {
         setSelected(null);
         setSkillWizard(false);
         setRefresh((x) => x + 1);
-        setNotice("Skill \u5DF2\u4FDD\u5B58\u3002");
+        setNotice(l("Skill \u5DF2\u4FDD\u5B58\u3002"));
       }
     }
-  ), selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && /* @__PURE__ */ import_react12.default.createElement(Modal, { onClose: () => !busy && setSelected(null) }, /* @__PURE__ */ import_react12.default.createElement(
+  ), theme === "folio" && selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && /* @__PURE__ */ import_react15.default.createElement(
+    PaperDetail,
+    {
+      key: selected.id,
+      resource: selected,
+      busy,
+      error: l(error),
+      onClose: () => setSelected(null),
+      onEdit: () => edit(selected),
+      onDelete: () => removeResource(selected),
+      onExport: () => exportResource(selected),
+      onPublish: publishWorkflow
+    }
+  ), theme !== "folio" && selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && /* @__PURE__ */ import_react15.default.createElement(Modal, { onClose: () => !busy && setSelected(null) }, /* @__PURE__ */ import_react15.default.createElement(
     "section",
     {
       tabIndex: -1,
       className: "gal-dialog gal-detail",
       role: "dialog",
       "aria-modal": "true",
-      "aria-label": "\u8D44\u6E90\u8BE6\u60C5"
+      "aria-label": l("\u8D44\u6E90\u8BE6\u60C5")
     },
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react12.default.createElement("div", null, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-pill " + selected.type }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: selected.type, size: 16 }), TYPES[selected.type]), /* @__PURE__ */ import_react12.default.createElement("h2", null, content.name), /* @__PURE__ */ import_react12.default.createElement("p", null, "\u521B\u5EFA\u8005\uFF1A", content.creator?.username || "\u672A\u8BB0\u5F55"), /* @__PURE__ */ import_react12.default.createElement("p", null, "\u66F4\u65B0\u4E8E ", when(selected.updatedAt))), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react15.default.createElement("div", null, /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-pill " + selected.type }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: selected.type, size: 16 }), TYPES2[selected.type]), /* @__PURE__ */ import_react15.default.createElement("h2", null, content.name), /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u521B\u5EFA\u8005\uFF1A"), content.creator?.username || l("\u672A\u8BB0\u5F55")), /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u66F4\u65B0\u4E8E "), when(selected.updatedAt, l.language))), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         disabled: busy,
-        "aria-label": "\u5173\u95ED\u8BE6\u60C5",
+        "aria-label": l("\u5173\u95ED\u8BE6\u60C5"),
         onClick: () => setSelected(null)
       },
-      /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "close" })
+      /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "close" })
     )),
-    hasResourceCover(content.type) && /* @__PURE__ */ import_react12.default.createElement(ResourceCover, { resource: content }),
+    hasResourceCover(content.type) && /* @__PURE__ */ import_react15.default.createElement(ResourceCover, { resource: content }),
     selected.type === "workflow" && selected.metadata?.workflowCanvas?.agents?.some(
       (agent) => agent.skills?.length || agent.mcps?.length
-    ) && /* @__PURE__ */ import_react12.default.createElement("p", null, "\u539F\u6709 Skill \u548C MCP \u5F15\u7528\u4FDD\u7559\u5728 Gallery \u4E2D\u3002TeamFlow \u6309 Agent \u8282\u70B9\u7684\u4E24\u4E2A\u5F00\u5173\u542F\u7528\u8D44\u6E90\u3002"),
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-detail-actions" }, selected.type === "workflow" && selected.files.some((f) => f.path === "workflow.json") && /* @__PURE__ */ import_react12.default.createElement("button", { disabled: busy, onClick: () => run(async () => {
+    ) && /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u539F\u6709 Skill \u548C MCP \u5F15\u7528\u4FDD\u7559\u5728 Gallery \u4E2D\u3002TeamFlow \u6309 Agent \u8282\u70B9\u7684\u4E24\u4E2A\u5F00\u5173\u542F\u7528\u8D44\u6E90\u3002")),
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-detail-actions" }, selected.type === "workflow" && selected.files.some((f) => f.path === "workflow.json") && /* @__PURE__ */ import_react15.default.createElement("button", { disabled: busy, onClick: () => run(async () => {
       const result = await call(remote, "uiPublishWorkflow", selected.id);
-      setNotice(`\u5DF2\u6CE8\u518C\u5230 TeamFlow\uFF1A${result.name} v${result.version}`);
-    }) }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "workflow" }), "\u6CE8\u518C\u5230 TeamFlow"), selected.canEdit && /* @__PURE__ */ import_react12.default.createElement("button", { disabled: busy, onClick: () => edit(selected) }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "edit" }), "\u7F16\u8F91\u8D44\u6E90"), /* @__PURE__ */ import_react12.default.createElement(
+      setNotice(l("\u5DF2\u6CE8\u518C\u5230 TeamFlow\uFF1A{0} v{1}", result.name, result.version));
+    }) }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "workflow" }), l("\u6CE8\u518C\u5230 TeamFlow")), selected.canEdit && /* @__PURE__ */ import_react15.default.createElement("button", { disabled: busy, onClick: () => edit(selected) }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "edit" }), l("\u7F16\u8F91\u8D44\u6E90")), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
-        onClick: () => download(
-          `${content.name}.gallery.json`,
-          json2(
-            {
-              format: "dsh-gallery-resource",
-              schemaVersion: 2,
-              resource: {
-                type: content.type,
-                name: content.name,
-                description: content.description,
-                tags: content.tags,
-                files: content.files,
-                metadata: content.metadata,
-                references: content.references
-              },
-              source: {
-                libraryId: selected.libraryId,
-                id: selected.id,
-                digest: selected.digest
-              }
-            },
-            null,
-            2
-          )
-        )
+        onClick: () => exportResource(content)
       },
-      /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "download" }),
-      "\u4E0B\u8F7D\u8D44\u6E90"
-    ), selected.canDelete && /* @__PURE__ */ import_react12.default.createElement(
+      /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "download" }),
+      l("\u4E0B\u8F7D\u8D44\u6E90")
+    ), selected.canDelete && /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         className: "gal-delete",
         disabled: busy,
         onClick: () => removeResource(selected)
       },
-      /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "trash" }),
-      "\u5220\u9664\u8D44\u6E90"
+      /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "trash" }),
+      l("\u5220\u9664\u8D44\u6E90")
     )),
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-dialog-body" }, error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert", className: "gal-error" }, error), hasResourceCover(content.type) && /* @__PURE__ */ import_react12.default.createElement("p", { className: "gal-usage-total" }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "usage" }), " \u7D2F\u8BA1\u8C03\u7528\u6B21\u6570", " ", /* @__PURE__ */ import_react12.default.createElement("strong", null, (content.usageCount ?? 0).toLocaleString()), " ", "\u6B21"), content.type === "mcp" && /* @__PURE__ */ import_react12.default.createElement("p", null, content.metadata?.mcpVerification?.checkedAt ? "\u5DF2\u901A\u8FC7\u8FDE\u63A5\u68C0\u67E5" : "\u672A\u9A8C\u8BC1\u8FDE\u63A5"), /* @__PURE__ */ import_react12.default.createElement("p", { className: "gal-description" }, content.description || "\u6682\u65E0\u63CF\u8FF0"), /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-tags" }, content.tags.map((t) => /* @__PURE__ */ import_react12.default.createElement("span", { key: t }, t))), content.files.map((f) => /* @__PURE__ */ import_react12.default.createElement("details", { className: "gal-file", key: f.path }, /* @__PURE__ */ import_react12.default.createElement("summary", null, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "file", size: 16 }), " ", f.path, /* @__PURE__ */ import_react12.default.createElement("span", null, f.bytes ?? new Blob([f.content]).size, " B")), f.encoding === "utf8" ? /* @__PURE__ */ import_react12.default.createElement("pre", null, f.content) : /* @__PURE__ */ import_react12.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u4E0B\u8F7D\u7684\u8D44\u6E90\u5305\u4E2D\u3002"))))
-  )), editor && /* @__PURE__ */ import_react12.default.createElement(Modal, { onClose: closeEditor }, /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-dialog-body" }, error && /* @__PURE__ */ import_react15.default.createElement("p", { role: "alert", className: "gal-error" }, l(error)), hasResourceCover(content.type) && /* @__PURE__ */ import_react15.default.createElement("p", { className: "gal-usage-total" }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "usage" }), l(" \u7D2F\u8BA1\u8C03\u7528\u6B21\u6570"), " ", /* @__PURE__ */ import_react15.default.createElement("strong", null, (content.usageCount ?? 0).toLocaleString(l.language)), " ", l("\u6B21")), content.type === "mcp" && /* @__PURE__ */ import_react15.default.createElement("p", null, content.metadata?.mcpVerification?.checkedAt ? l("\u5DF2\u901A\u8FC7\u8FDE\u63A5\u68C0\u67E5") : l("\u672A\u9A8C\u8BC1\u8FDE\u63A5")), /* @__PURE__ */ import_react15.default.createElement("p", { className: "gal-description" }, content.description || l("\u6682\u65E0\u63CF\u8FF0")), /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-tags" }, content.tags.map((t) => /* @__PURE__ */ import_react15.default.createElement("span", { key: t }, t))), content.files.map((f) => /* @__PURE__ */ import_react15.default.createElement("details", { className: "gal-file", key: f.path }, /* @__PURE__ */ import_react15.default.createElement("summary", null, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "file", size: 16 }), " ", f.path, /* @__PURE__ */ import_react15.default.createElement("span", null, f.bytes ?? new Blob([f.content]).size, " B")), f.encoding === "utf8" ? /* @__PURE__ */ import_react15.default.createElement("pre", null, f.content) : /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u4E8C\u8FDB\u5236\u9644\u4EF6\u5305\u542B\u5728\u4E0B\u8F7D\u7684\u8D44\u6E90\u5305\u4E2D\u3002")))))
+  )), editor && /* @__PURE__ */ import_react15.default.createElement(Modal, { onClose: closeEditor }, /* @__PURE__ */ import_react15.default.createElement(
     "section",
     {
       tabIndex: -1,
       className: "gal-dialog gal-editor",
       role: "dialog",
       "aria-modal": "true",
-      "aria-label": editor.id ? "\u7F16\u8F91\u8D44\u6E90" : "\u65B0\u5EFA\u8D44\u6E90"
+      "aria-label": editor.id ? l("\u7F16\u8F91\u8D44\u6E90") : l("\u65B0\u5EFA\u8D44\u6E90")
     },
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react12.default.createElement("div", null, /* @__PURE__ */ import_react12.default.createElement("h2", null, editor.id ? "\u7F16\u8F91" : "\u65B0\u5EFA", " ", TYPES[editor.resource.type])), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react15.default.createElement("div", null, /* @__PURE__ */ import_react15.default.createElement("h2", null, editor.id ? l("\u7F16\u8F91") : l("\u65B0\u5EFA"), " ", TYPES2[editor.resource.type])), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
-        "aria-label": "\u5173\u95ED\u7F16\u8F91",
+        "aria-label": l("\u5173\u95ED\u7F16\u8F91"),
         onClick: closeEditor,
         disabled: busy
       },
-      /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "close" })
+      /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "close" })
     )),
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-form-row" }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-type-field" }, /* @__PURE__ */ import_react12.default.createElement("span", null, "\u7C7B\u578B"), /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-editor-type" }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: editor.resource.type }), TYPES[editor.resource.type])), /* @__PURE__ */ import_react12.default.createElement("label", { className: "gal-grow" }, "\u8D44\u6E90\u540D\u79F0", /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-form-row" }, /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-type-field" }, /* @__PURE__ */ import_react15.default.createElement("span", null, l("\u7C7B\u578B")), /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-editor-type" }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: editor.resource.type }), TYPES2[editor.resource.type])), /* @__PURE__ */ import_react15.default.createElement("label", { className: "gal-grow" }, l("\u8D44\u6E90\u540D\u79F0"), /* @__PURE__ */ import_react15.default.createElement(
       "input",
       {
         value: editor.resource.name,
         maxLength: 160,
         onChange: (e) => field("name", e.target.value),
-        placeholder: "\u8F93\u5165\u8D44\u6E90\u540D\u79F0"
+        placeholder: l("\u8F93\u5165\u8D44\u6E90\u540D\u79F0")
       }
-    ))), /* @__PURE__ */ import_react12.default.createElement("label", null, "\u63CF\u8FF0", /* @__PURE__ */ import_react12.default.createElement(
+    ))), /* @__PURE__ */ import_react15.default.createElement("label", null, l("\u63CF\u8FF0"), /* @__PURE__ */ import_react15.default.createElement(
       "textarea",
       {
         rows: 3,
         value: editor.resource.description,
         onChange: (e) => field("description", e.target.value),
-        placeholder: "\u8D44\u6E90\u63CF\u8FF0\uFF08\u9009\u586B\uFF09",
+        placeholder: l("\u8D44\u6E90\u63CF\u8FF0\uFF08\u9009\u586B\uFF09"),
         maxLength: 1e4
       }
-    )), /* @__PURE__ */ import_react12.default.createElement("label", null, "\u6807\u7B7E", /* @__PURE__ */ import_react12.default.createElement(
+    )), /* @__PURE__ */ import_react15.default.createElement("label", null, l("\u6807\u7B7E"), /* @__PURE__ */ import_react15.default.createElement(
       "input",
       {
         value: editor.tags,
         onChange: (e) => change("tags", e.target.value),
-        placeholder: "\u6807\u7B7E\uFF0C\u7528\u9017\u53F7\u5206\u9694"
+        placeholder: l("\u6807\u7B7E\uFF0C\u7528\u9017\u53F7\u5206\u9694")
       }
-    )), /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-file-toolbar" }, /* @__PURE__ */ import_react12.default.createElement("h3", null, "\u8D44\u6E90\u6587\u4EF6 ", /* @__PURE__ */ import_react12.default.createElement("small", null, editor.resource.files.length, " / 100")), /* @__PURE__ */ import_react12.default.createElement("div", null, /* @__PURE__ */ import_react12.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "upload" }), "\u4E0A\u4F20\u6587\u4EF6", /* @__PURE__ */ import_react12.default.createElement(
+    )), /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-file-toolbar" }, /* @__PURE__ */ import_react15.default.createElement("h3", null, l("\u8D44\u6E90\u6587\u4EF6 "), /* @__PURE__ */ import_react15.default.createElement("small", null, editor.resource.files.length, " / 100")), /* @__PURE__ */ import_react15.default.createElement("div", null, /* @__PURE__ */ import_react15.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "upload" }), l("\u4E0A\u4F20\u6587\u4EF6"), /* @__PURE__ */ import_react15.default.createElement(
       "input",
       {
-        "aria-label": "\u4E0A\u4F20\u8D44\u6E90\u6587\u4EF6",
+        "aria-label": l("\u4E0A\u4F20\u8D44\u6E90\u6587\u4EF6"),
         type: "file",
         multiple: true,
         onChange: (e) => {
@@ -12377,10 +14672,10 @@ function Gallery({ remote }) {
           e.target.value = "";
         }
       }
-    )), /* @__PURE__ */ import_react12.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "folder" }), "\u4E0A\u4F20\u6587\u4EF6\u5939", /* @__PURE__ */ import_react12.default.createElement(
+    )), /* @__PURE__ */ import_react15.default.createElement("label", { className: "gal-upload" }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "folder" }), l("\u4E0A\u4F20\u6587\u4EF6\u5939"), /* @__PURE__ */ import_react15.default.createElement(
       "input",
       {
-        "aria-label": "\u4E0A\u4F20\u8D44\u6E90\u6587\u4EF6\u5939",
+        "aria-label": l("\u4E0A\u4F20\u8D44\u6E90\u6587\u4EF6\u5939"),
         type: "file",
         multiple: true,
         webkitdirectory: "",
@@ -12389,22 +14684,22 @@ function Gallery({ remote }) {
           e.target.value = "";
         }
       }
-    )))), editor.importError && /* @__PURE__ */ import_react12.default.createElement("p", { className: "gal-error" }, editor.importError), /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-add-file" }, /* @__PURE__ */ import_react12.default.createElement(
+    )))), editor.importError && /* @__PURE__ */ import_react15.default.createElement("p", { className: "gal-error" }, editor.importError), /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-add-file" }, /* @__PURE__ */ import_react15.default.createElement(
       "input",
       {
-        "aria-label": "\u65B0\u6587\u4EF6\u8DEF\u5F84",
-        placeholder: "\u65B0\u6587\u4EF6\u8DEF\u5F84\uFF0C\u4F8B\u5982 SKILL.md",
+        "aria-label": l("\u65B0\u6587\u4EF6\u8DEF\u5F84"),
+        placeholder: l("\u65B0\u6587\u4EF6\u8DEF\u5F84\uFF0C\u4F8B\u5982 SKILL.md"),
         value: editor.newPath,
         onChange: (e) => change("newPath", e.target.value)
       }
-    ), /* @__PURE__ */ import_react12.default.createElement(
+    ), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         disabled: !editor.newPath.trim(),
         onClick: () => {
           const p = editor.newPath.trim();
           if (editor.resource.files.some((f) => f.path === p)) {
-            change("importError", "\u8BE5\u6587\u4EF6\u5DF2\u5B58\u5728");
+            change("importError", l("\u8BE5\u6587\u4EF6\u5DF2\u5B58\u5728"));
             return;
           }
           setEditor((x) => ({
@@ -12421,8 +14716,8 @@ function Gallery({ remote }) {
           }));
         }
       },
-      "\u6DFB\u52A0\u6587\u672C\u6587\u4EF6"
-    )), /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-file-editor" }, /* @__PURE__ */ import_react12.default.createElement("nav", null, editor.resource.files.map((f, i) => /* @__PURE__ */ import_react12.default.createElement(
+      l("\u6DFB\u52A0\u6587\u672C\u6587\u4EF6")
+    )), /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-file-editor" }, /* @__PURE__ */ import_react15.default.createElement("nav", null, editor.resource.files.map((f, i) => /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         className: i === editor.fileIndex ? "active" : "",
@@ -12430,7 +14725,7 @@ function Gallery({ remote }) {
         onClick: () => change("fileIndex", i)
       },
       f.path
-    )), !editor.resource.files.length && /* @__PURE__ */ import_react12.default.createElement("p", null, "\u53EF\u4E0A\u4F20\u5DF2\u6709\u6587\u4EF6\uFF0C\u4E5F\u53EF\u76F4\u63A5\u521B\u5EFA\u6587\u672C\u6587\u4EF6\u3002")), /* @__PURE__ */ import_react12.default.createElement("div", null, activeFile ? /* @__PURE__ */ import_react12.default.createElement(import_react12.default.Fragment, null, /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-code-head" }, /* @__PURE__ */ import_react12.default.createElement("span", null, activeFile.path), /* @__PURE__ */ import_react12.default.createElement(
+    )), !editor.resource.files.length && /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u53EF\u4E0A\u4F20\u5DF2\u6709\u6587\u4EF6\uFF0C\u4E5F\u53EF\u76F4\u63A5\u521B\u5EFA\u6587\u672C\u6587\u4EF6\u3002"))), /* @__PURE__ */ import_react15.default.createElement("div", null, activeFile ? /* @__PURE__ */ import_react15.default.createElement(import_react15.default.Fragment, null, /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-code-head" }, /* @__PURE__ */ import_react15.default.createElement("span", null, activeFile.path), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         onClick: () => setEditor((x) => ({
@@ -12444,11 +14739,11 @@ function Gallery({ remote }) {
           }
         }))
       },
-      "\u79FB\u9664\u6587\u4EF6"
-    )), activeFile.encoding === "utf8" ? /* @__PURE__ */ import_react12.default.createElement(
+      l("\u79FB\u9664\u6587\u4EF6")
+    )), activeFile.encoding === "utf8" ? /* @__PURE__ */ import_react15.default.createElement(
       "textarea",
       {
-        "aria-label": "\u6587\u4EF6\u5185\u5BB9",
+        "aria-label": l("\u6587\u4EF6\u5185\u5BB9"),
         spellCheck: "false",
         value: activeFile.content,
         onChange: (e) => setEditor((x) => ({
@@ -12461,17 +14756,17 @@ function Gallery({ remote }) {
           }
         }))
       }
-    ) : /* @__PURE__ */ import_react12.default.createElement("p", null, "\u4E8C\u8FDB\u5236\u6587\u4EF6\u5DF2\u4E0A\u4F20\uFF0C\u53EF\u79FB\u9664\u540E\u91CD\u65B0\u4E0A\u4F20\u66FF\u6362\u3002")) : /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-code-placeholder" }, "\u9009\u62E9\u6587\u4EF6\u4EE5\u67E5\u770B\u6216\u7F16\u8F91")))),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("button", { disabled: busy, onClick: closeEditor }, "\u53D6\u6D88"), /* @__PURE__ */ import_react12.default.createElement(
+    ) : /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u4E8C\u8FDB\u5236\u6587\u4EF6\u5DF2\u4E0A\u4F20\uFF0C\u53EF\u79FB\u9664\u540E\u91CD\u65B0\u4E0A\u4F20\u66FF\u6362\u3002"))) : /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-code-placeholder" }, l("\u9009\u62E9\u6587\u4EF6\u4EE5\u67E5\u770B\u6216\u7F16\u8F91"))))),
+    /* @__PURE__ */ import_react15.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("button", { disabled: busy, onClick: closeEditor }, l("\u53D6\u6D88")), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy,
         onClick: () => run(save)
       },
-      busy ? "\u4FDD\u5B58\u4E2D\u2026" : "\u4FDD\u5B58\u8D44\u6E90"
+      busy ? l("\u4FDD\u5B58\u4E2D\u2026") : l("\u4FDD\u5B58\u8D44\u6E90")
     ))
-  )), storageSettings && /* @__PURE__ */ import_react12.default.createElement(Modal, { onClose: closeStorage }, /* @__PURE__ */ import_react12.default.createElement(
+  )), storageSettings && /* @__PURE__ */ import_react15.default.createElement(Modal, { onClose: closeStorage }, /* @__PURE__ */ import_react15.default.createElement(
     "section",
     {
       tabIndex: -1,
@@ -12480,35 +14775,59 @@ function Gallery({ remote }) {
       "aria-modal": "true",
       "aria-labelledby": "gal-storage-title"
     },
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react12.default.createElement("h2", { id: "gal-storage-title" }, storageSettings.configured ? "\u8D44\u6E90\u5E93\u5B58\u50A8" : "\u9009\u62E9\u8D44\u6E90\u5E93\u5B58\u50A8"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react15.default.createElement("h2", { id: "gal-storage-title" }, storageSettings.configured ? l("\u8D44\u6E90\u5E93\u5B58\u50A8") : l("\u9009\u62E9\u8D44\u6E90\u5E93\u5B58\u50A8")), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
-        "aria-label": "\u5173\u95ED\u5B58\u50A8\u8BBE\u7F6E",
+        "aria-label": l("\u5173\u95ED\u5B58\u50A8\u8BBE\u7F6E"),
         disabled: busy,
         onClick: closeStorage
       },
-      /* @__PURE__ */ import_react12.default.createElement(Glyph, { name: "close" })
+      /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "close" })
     )),
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-storage-providers" }, storageSettings.providers.map((provider) => /* @__PURE__ */ import_react12.default.createElement(
-      "div",
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-storage-providers" }, storageSettings.providers.map((provider) => /* @__PURE__ */ import_react15.default.createElement(
+      "button",
       {
+        type: "button",
         key: provider.type,
-        className: provider.available ? "active" : ""
+        className: (storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === provider.type ? "active" : "",
+        "aria-pressed": (storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === provider.type,
+        disabled: busy,
+        onClick: () => {
+          setStorageSettings((x) => ({ ...x, type: provider.type }));
+          setConnectionResult("");
+        }
       },
-      /* @__PURE__ */ import_react12.default.createElement("strong", null, provider.name),
-      /* @__PURE__ */ import_react12.default.createElement("span", null, provider.available ? "\u53EF\u7528" : "\u540E\u7EED\u63A5\u5165")
-    ))), /* @__PURE__ */ import_react12.default.createElement("label", { className: "gal-username-setting" }, "\u7528\u6237\u540D", /* @__PURE__ */ import_react12.default.createElement(
+      /* @__PURE__ */ import_react15.default.createElement("strong", null, l(provider.name))
+    ))), (storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === "service" && /* @__PURE__ */ import_react15.default.createElement(import_react15.default.Fragment, null, /* @__PURE__ */ import_react15.default.createElement("label", { className: "gal-username-setting" }, l("\u670D\u52A1\u5730\u5740"), /* @__PURE__ */ import_react15.default.createElement(
+      "input",
+      {
+        type: "text",
+        placeholder: "109.105.132.53:8088",
+        value: storageSettings.service?.url || "",
+        onChange: (e) => {
+          setStorageSettings((x) => ({ ...x, service: { ...x.service, url: e.target.value } }));
+          setConnectionResult("");
+        }
+      }
+    )), /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u586B\u5199\u670D\u52A1\u5668 IP \u548C\u7AEF\u53E3\u5373\u53EF\uFF0C\u65E0\u9700\u63A5\u5165\u5BC6\u94A5\u6216\u8BC1\u4E66\u3002")), /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u9996\u6B21\u63A5\u5165\u540E\u81EA\u52A8\u4FDD\u5B58\u6B64 DSH \u7684\u72EC\u7ACB\u8EAB\u4EFD\u3002\u6240\u6709\u6210\u5458\u53EF\u67E5\u770B\u548C\u4F7F\u7528\u8D44\u6E90\uFF0C\u4EC5\u521B\u5EFA\u8005\u53EF\u7F16\u8F91\u548C\u5220\u9664\u3002")), /* @__PURE__ */ import_react15.default.createElement("label", { className: "gal-storage-consent" }, /* @__PURE__ */ import_react15.default.createElement(
+      "input",
+      {
+        type: "checkbox",
+        checked: Boolean(storageSettings.service?.allowStdio),
+        onChange: (e) => setStorageSettings((x) => ({ ...x, service: { ...x.service, allowStdio: e.target.checked } }))
+      }
+    ), l("\u5141\u8BB8\u4E2D\u5FC3 stdio MCP \u5728\u6B64 DSH \u6267\u884C\u672C\u673A\u547D\u4EE4\uFF08\u4EC5\u4FE1\u4EFB\u8D44\u6E90\u4F5C\u8005\u65F6\u5F00\u542F\uFF09"))), /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u5207\u6362\u540E\u663E\u793A\u5BF9\u5E94\u8D44\u6E90\u5E93\uFF1B\u5DF2\u6709\u8D44\u6E90\u4FDD\u7559\u5728\u539F\u5904\uFF0C\u4E0D\u81EA\u52A8\u8FC1\u79FB\u3002")), /* @__PURE__ */ import_react15.default.createElement("label", { className: "gal-username-setting" }, l("\u7528\u6237\u540D"), /* @__PURE__ */ import_react15.default.createElement(
       "input",
       {
         value: storageSettings.username || "",
         maxLength: 80,
-        placeholder: "\u65B0\u8D44\u6E90\u7684\u521B\u5EFA\u8005\u540D\u79F0",
+        placeholder: l("\u65B0\u8D44\u6E90\u7684\u521B\u5EFA\u8005\u540D\u79F0"),
         onChange: (e) => setStorageSettings((x) => ({
           ...x,
           username: e.target.value
         }))
       }
-    )), /* @__PURE__ */ import_react12.default.createElement(
+    )), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         disabled: busy || !storageSettings.username?.trim(),
@@ -12518,14 +14837,14 @@ function Gallery({ remote }) {
             "uiSetUsername",
             json2({ username: storageSettings.username })
           );
-          setStorageSettings(storage);
+          setStorageSettings((x) => ({ ...storage, type: x.type, service: x.service || storage.service }));
           setStatus((x) => ({ ...x, storage }));
-          setConnectionResult("\u7528\u6237\u540D\u5DF2\u4FDD\u5B58\uFF0C\u7528\u4E8E\u4E4B\u540E\u521B\u5EFA\u7684\u8D44\u6E90\u3002");
+          setConnectionResult(l("\u7528\u6237\u540D\u5DF2\u4FDD\u5B58\uFF0C\u7528\u4E8E\u4E4B\u540E\u521B\u5EFA\u7684\u8D44\u6E90\u3002"));
         })
       },
-      "\u4FDD\u5B58\u7528\u6237\u540D"
-    ), connectionResult && /* @__PURE__ */ import_react12.default.createElement("p", { role: "status" }, connectionResult), error && /* @__PURE__ */ import_react12.default.createElement("p", { role: "alert" }, error)),
-    /* @__PURE__ */ import_react12.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "gal-local" }, "v0.20.8"), /* @__PURE__ */ import_react12.default.createElement(
+      l("\u4FDD\u5B58\u7528\u6237\u540D")
+    ), connectionResult && /* @__PURE__ */ import_react15.default.createElement("p", { role: "status" }, l(connectionResult)), error && /* @__PURE__ */ import_react15.default.createElement("p", { role: "alert" }, l(error))),
+    /* @__PURE__ */ import_react15.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-local" }, "v0.32.1"), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         disabled: busy,
@@ -12533,59 +14852,75 @@ function Gallery({ remote }) {
           await call(
             remote,
             "uiTestStorage",
-            json2({ libraryId: "local" })
+            json2({ type: storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal"), ...storageSettings.service })
           );
-          setConnectionResult("\u8D44\u6E90\u5E93\u53EF\u7528");
+          setConnectionResult(l("\u8D44\u6E90\u5E93\u53EF\u7528"));
         })
       },
-      "\u68C0\u67E5\u5B58\u50A8"
-    ), /* @__PURE__ */ import_react12.default.createElement(
+      l("\u68C0\u67E5\u5B58\u50A8")
+    ), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         className: "gal-primary",
         disabled: busy,
-        onClick: closeStorage
+        onClick: () => run(async () => {
+          await call(remote, "uiSetUsername", json2({ username: storageSettings.username }));
+          const storage = await call(remote, "uiConfigureStorage", json2({
+            type: storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal"),
+            ...storageSettings.service
+          }));
+          setStatus((x) => ({ ...x, storage }));
+          setSelected(null);
+          setEditor(null);
+          setStorageSettings(null);
+          setOffset(0);
+          setRefresh((x) => x + 1);
+          setNotice(l("\u5B58\u50A8\u8BBE\u7F6E\u5DF2\u4FDD\u5B58"));
+        })
       },
-      busy ? "\u5904\u7406\u4E2D\u2026" : "\u5B8C\u6210"
+      busy ? l("\u5904\u7406\u4E2D\u2026") : l("\u5B8C\u6210")
     ))
-  )), confirmation && /* @__PURE__ */ import_react12.default.createElement(Modal, { confirmation: true, onClose: () => answerConfirmation(false) }, /* @__PURE__ */ import_react12.default.createElement(
+  )), confirmation && /* @__PURE__ */ import_react15.default.createElement(Modal, { confirmation: true, onClose: () => answerConfirmation(false) }, /* @__PURE__ */ import_react15.default.createElement(
     "section",
     {
       tabIndex: -1,
       className: "gal-dialog gal-small",
       role: "alertdialog",
       "aria-modal": "true",
-      "aria-label": "\u786E\u8BA4\u64CD\u4F5C"
+      "aria-label": l("\u786E\u8BA4\u64CD\u4F5C")
     },
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react12.default.createElement("h2", null, "\u786E\u8BA4\u64CD\u4F5C")),
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react12.default.createElement("p", null, confirmation.message)),
-    /* @__PURE__ */ import_react12.default.createElement("div", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react12.default.createElement("button", { autoFocus: true, onClick: () => answerConfirmation(false) }, "\u53D6\u6D88"), /* @__PURE__ */ import_react12.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-dialog-head" }, /* @__PURE__ */ import_react15.default.createElement("h2", null, l("\u786E\u8BA4\u64CD\u4F5C"))),
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-dialog-body" }, /* @__PURE__ */ import_react15.default.createElement("p", null, l(confirmation.message))),
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("button", { autoFocus: true, onClick: () => answerConfirmation(false) }, l("\u53D6\u6D88")), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         className: "gal-primary",
         onClick: () => answerConfirmation(true)
       },
-      "\u786E\u8BA4"
+      l("\u786E\u8BA4")
     ))
   )));
+}
+function Gallery({ remote, t }) {
+  return /* @__PURE__ */ import_react15.default.createElement(GalleryLocale, { t }, /* @__PURE__ */ import_react15.default.createElement(GalleryContent, { remote }));
 }
 var inject = ["remote", "slots", "locale", "inputTriggers"];
 async function apply(ctx) {
   await ctx.remote.$mount(REMOTE);
   const remote = ctx.get("remote.gallery");
   ctx.effect(
-    () => ctx.inputTriggers.registerSource(createGalleryTrigger(remote, Icon))
+    () => ctx.locale.register(NS, {
+      zh: { title: "Gallery", "language.code": "zh" },
+      en: { title: "Gallery", "language.code": "en" }
+    })
   );
   ctx.effect(
-    () => ctx.locale.register(NS, {
-      zh: { title: "Gallery" },
-      en: { title: "Gallery" }
-    })
+    () => ctx.inputTriggers.registerSource(createGalleryTrigger(remote, Icon, () => createGalleryText(ctx.locale.bind?.(NS)?.("language.code"))))
   );
   ctx.effect(() => {
     const s = document.createElement("style");
     s.dataset.gallery = "styles";
-    s.textContent = styles_default;
+    s.textContent = styles_default + "\n" + paper_browser_default;
     document.head.appendChild(s);
     return () => s.remove();
   });

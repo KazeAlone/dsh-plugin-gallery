@@ -1,0 +1,18 @@
+{
+  "name": "编写、复核与成果归档",
+  "description": "独立 AI 门控、有限返工循环与最终人工验收",
+  "tags": ["循环", "审核"], "inputs": "提供目标和验收标准。",
+  "members": [
+    {"name":"writer","summary":"编写与自测","role":"完成任务并保留证据","executionPrompt":"根据目标执行任务，按审核意见改进。","gallerySkill":true,"galleryMcp":false},
+    {"name":"reviewer","summary":"独立审核","role":"审核交付物和证据","executionPrompt":"检查验收标准，决定通过、返工或暂停。","gallerySkill":false,"galleryMcp":true}
+  ],
+  "tasks": [
+    {"id":"write","subject":"编写成果","assignee":"writer","dependencies":[],"checkpoint":false,"general":{"requirements":"按目标编写成果。","deliverables":"成果草稿","acceptance":"满足目标"}},
+    {"id":"verify","subject":"运行自测","assignee":"writer","dependencies":["write"],"checkpoint":false,"general":{"requirements":"验证成果并记录证据。","deliverables":"测试记录","acceptance":"证据可复查"}},
+    {"id":"gate","subject":"独立审核","assignee":"","dependencies":["verify"],"checkpoint":true,"checkpointKind":"gate","reviewMode":"ai","general":{"requirements":"独立核验所有标准。","deliverables":"审核意见","acceptance":"全部达标才通过"}},
+    {"id":"archive","subject":"归档成果","assignee":"","dependencies":["gate"],"checkpoint":false,"kind":"archive","archive":{"copyFiles":true,"paths":["reports","evidence.json"]},"general":{"requirements":"归档通过审核的成果。","deliverables":"成果与证据清单","acceptance":"保留可追溯记录"}},
+    {"id":"accept","subject":"最终验收","assignee":"","dependencies":["archive"],"checkpoint":true,"checkpointKind":"acceptance","reviewMode":"human","general":{"requirements":"由用户确认交付。","deliverables":"验收意见","acceptance":"用户明确确认"}}
+  ],
+  "loops":[{"gateId":"gate","entryId":"write","mode":"ai","reviewer":"reviewer","maxRounds":4,"timeoutMinutes":45,"rejectToEntry":true}],
+  "positions":{"task:write":{"x":40,"y":300},"task:verify":{"x":330,"y":300},"task:gate":{"x":620,"y":300},"task:archive":{"x":950,"y":300},"task:accept":{"x":950,"y":520}}
+}

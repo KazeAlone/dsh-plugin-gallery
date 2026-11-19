@@ -1,3 +1,5 @@
+import { createGalleryText } from "./locale.mjs";
+import { GalleryLocale, useGalleryText } from "./i18n.jsx";
 import React, { useEffect, useRef, useState } from "react";
 
 import { REMOTE } from "../descriptors.mjs";
@@ -14,6 +16,9 @@ import { BrandIcon } from "./brand-icon.jsx";
 import { Glyph } from "./icons.jsx";
 import { ResourceCover, hasResourceCover } from "./resource-cover.jsx";
 import { THEMES, loadTheme, saveTheme } from "./theme.mjs";
+import { AnimeMascot } from "./anime-mascot.jsx";
+import { PaperBrowser, PaperDetail } from "./paper-browser.jsx";
+import paperStyles from "./paper-browser.css";
 
 const NS = "dsh-gallery",
   TYPES = { skill: "Skill", agent: "Agent", mcp: "MCP", workflow: "Workflow" };
@@ -26,7 +31,7 @@ const blank = () => ({
   metadata: {},
   references: [],
 });
-const when = (s) => (s ? new Date(s).toLocaleString() : "");
+const when = (s, language) => (s ? new Date(s).toLocaleString(language) : "");
 const fail = (e) => e?.rpcError?.message || e?.message || String(e);
 async function call(remote, name, ...args) {
   const r = await remote[name](...args);
@@ -42,11 +47,42 @@ function download(name, value, type = "application/json") {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+function exportResource(content) {
+  download(
+    `${content.name}.gallery.json`,
+    json(
+      {
+        format: "dsh-gallery-resource",
+        schemaVersion: 2,
+        resource: {
+          type: content.type,
+          name: content.name,
+          description: content.description,
+          tags: content.tags,
+          files: content.files,
+          metadata: content.metadata,
+          references: content.references,
+        },
+        source: {
+          libraryId: content.libraryId,
+          id: content.id,
+          digest: content.digest,
+        },
+      },
+      null,
+      2,
+    ),
+  );
+}
 function Icon({ size = 20 }) {
   return <BrandIcon size={size} />;
 }
-function Gallery({ remote }) {
+function GalleryContent({ remote }) {
+  const l = useGalleryText();
   const [theme, setTheme] = useState(() => loadTheme(globalThis.localStorage));
+  const [paperDark, setPaperDark] = useState(() => {
+    try { return globalThis.localStorage?.getItem("dsh-gallery-paper-dark") === "true"; } catch { return false; }
+  });
   const [motionPaused, setMotionPaused] = useState(false);
   const [themeMenu, setThemeMenu] = useState(false);
   const themeMenuRef = useRef(null);
@@ -77,6 +113,8 @@ function Gallery({ remote }) {
     const root = document.createElement("div");
     root.className = "gal gal-toast-host";
     root.dataset.theme = theme;
+    root.lang = l.language;
+    root.dataset.paperDark = String(paperDark);
     const toast = document.createElement("div");
     toast.className = "gal-notice";
     toast.setAttribute("role", "status");
@@ -85,11 +123,11 @@ function Gallery({ remote }) {
     mark.textContent = "✓";
     mark.setAttribute("aria-hidden", "true");
     const message = document.createElement("span");
-    message.textContent = notice.message;
+    message.textContent = l(notice.message);
     const close = document.createElement("button");
     close.type = "button";
     close.textContent = "×";
-    close.setAttribute("aria-label", "关闭提示");
+    close.setAttribute("aria-label", l("关闭提示"));
     close.addEventListener("click", () => updateNotice(null));
     toast.append(mark, message, close);
     root.append(toast);
@@ -99,7 +137,7 @@ function Gallery({ remote }) {
       clearTimeout(timer);
       root.remove();
     };
-  }, [notice, theme]);
+  }, [notice, theme, paperDark, l]);
   const [boards, setBoards] = useState([]);
   const [items, setItems] = useState([]),
     [total, setTotal] = useState(0),
@@ -133,7 +171,7 @@ function Gallery({ remote }) {
     try {
       return await fn();
     } catch (e) {
-      setError(fail(e));
+      setError(l(fail(e)));
     } finally {
       setBusy(false);
     }
@@ -150,14 +188,14 @@ function Gallery({ remote }) {
         }
       })
       .catch((e) => {
-        if (live) setError(fail(e));
+        if (live) setError(l(fail(e)));
       });
     return () => {
       live = false;
     };
   }, []);
   useEffect(() => {
-    if (!status?.ready) return;
+    if (!status?.ready || theme === "folio") return;
     let live = true;
     setLoading(true);
     const timer = setTimeout(
@@ -187,7 +225,7 @@ function Gallery({ remote }) {
             }
           })
           .catch((e) => {
-            if (live) setError(fail(e));
+            if (live) setError(l(fail(e)));
           })
           .finally(() => {
             if (live) setLoading(false);
@@ -200,6 +238,7 @@ function Gallery({ remote }) {
     };
   }, [
     status?.ready,
+    theme,
     status?.storage?.activeLibraryId,
     type,
     scope,
@@ -212,32 +251,32 @@ function Gallery({ remote }) {
     setSelected(r);
     return r;
   }
-  function edit(r) {
+  function edit(r, resourceType = type) {
     setNotice("");
     setError("");
-    if (!r && !type) return;
+    if (!r && !resourceType) return;
     setSelected(null);
-    if (!r && ["skill", "agent"].includes(type)) {
-      setCreation(type);
+    if (!r && ["skill", "agent", "workflow"].includes(resourceType)) {
+      setCreation(resourceType);
       return;
     }
-    if ((r?.type || type) === "skill") {
+    if ((r?.type || resourceType) === "skill") {
       setSkillWizard({ resource: r || null });
       return;
     }
-    if ((r?.type || type) === "agent") {
+    if ((r?.type || resourceType) === "agent") {
       setAgentWizard({ resource: r || null });
       return;
     }
-    if ((r?.type || type) === "mcp") {
+    if ((r?.type || resourceType) === "mcp") {
       setMcpWizard({ resource: r || null });
       return;
     }
-    if ((r?.type || type) === "workflow") {
+    if ((r?.type || resourceType) === "workflow") {
       setWorkflowWizard({ resource: r || null });
       return;
     }
-    const d = r || { ...blank(), type };
+    const d = r || { ...blank(), type: resourceType };
     setEditor({
       id: r?.id,
       revision: r?.revision,
@@ -249,6 +288,13 @@ function Gallery({ remote }) {
       newPath: "",
       importError: "",
     });
+  }
+  function startResource(importedResource) {
+    const wizard = { resource: null, importedResource };
+    if (creation === "workflow") setWorkflowWizard(wizard);
+    else if (creation === "skill") setSkillWizard(wizard);
+    else setAgentWizard(wizard);
+    setCreation(null);
   }
   function change(key, value) {
     setEditor((x) => ({ ...x, [key]: value }));
@@ -274,7 +320,7 @@ function Gallery({ remote }) {
           const r = bundle.resource;
           if (r.type !== editor.resource.type)
             throw new Error(
-              `资源包类型不匹配，请在 ${TYPES[r.type] || r.type} 分类中导入。`,
+              l("资源包类型不匹配，请在 {0} 分类中导入。", TYPES[r.type] || r.type),
             );
           setEditor((x) => ({
             ...x,
@@ -292,7 +338,7 @@ function Gallery({ remote }) {
       let size = 0;
       for (const f of files) {
         size += f.size;
-        if (size > 5 * 1024 * 1024) throw new Error("文件总量不能超过 5 MiB");
+        if (size > 5 * 1024 * 1024) throw new Error(l("文件总量不能超过 5 MiB"));
         const bytes = new Uint8Array(await f.arrayBuffer());
         let content,
           encoding = "utf8";
@@ -352,17 +398,17 @@ function Gallery({ remote }) {
     setEditor(null);
     await load(r.id);
     setRefresh((x) => x + 1);
-    setNotice("资源已保存。");
+    setNotice(l("资源已保存。"));
   }
   async function closeEditor() {
     if (busy) return;
-    if (await confirmAction("放弃尚未保存的修改？")) setEditor(null);
+    if (await confirmAction(l("放弃尚未保存的修改？"))) setEditor(null);
   }
   function closeStorage() {
     if (busy) return;
     return run(async () => {
       if (!storageSettings.configured) {
-        const storage = await call(remote, "uiConfigureStorage");
+        const storage = await call(remote, "uiConfigureStorage", json({ type: "internal" }));
         setStatus((x) => ({ ...x, storage }));
       }
       setStorageSettings(null);
@@ -372,7 +418,7 @@ function Gallery({ remote }) {
     if (
       busy ||
       !(await confirmAction(
-        `删除「${resource.name}」？资源和累计调用记录将被删除，无法恢复。`,
+        l("删除「{0}」？资源和累计调用记录将被删除，无法恢复。", resource.name),
       ))
     )
       return;
@@ -386,7 +432,7 @@ function Gallery({ remote }) {
       setSelected(null);
       setOffset(0);
       setRefresh((x) => x + 1);
-      setNotice("资源已删除。");
+      setNotice(l("资源已删除。"));
     });
   }
   const content = selected;
@@ -395,8 +441,55 @@ function Gallery({ remote }) {
     setType(t);
     setOffset(0);
   };
+  const themePicker = (
+    <div className="gal-theme-picker" ref={themeMenuRef}>
+      <button
+        className="gal-icon-button"
+        aria-label={l("切换主题")}
+        aria-expanded={themeMenu}
+        title={l("主题 · {0}", l(THEMES.find((item) => item.id === theme)?.label))}
+        onClick={() => setThemeMenu((open) => !open)}
+      >
+        <Glyph name="palette" size={20} />
+      </button>
+      {themeMenu && (
+        <div className="gal-theme-menu" role="group" aria-label={l("选择主题")}>
+          {THEMES.map((item) => (
+            <button
+              key={item.id}
+              aria-pressed={theme === item.id}
+              onClick={() => {
+                saveTheme(globalThis.localStorage, item.id);
+                setTheme(item.id);
+                setThemeMenu(false);
+              }}
+            >
+              <span
+                className={`gal-theme-swatch ${item.id}`}
+                aria-hidden="true"
+              />
+              <span>
+                <strong>{l(item.label)}</strong>
+                <small>{l(item.hint)}</small>
+              </span>
+              {theme === item.id && <Glyph name="check" size={16} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+  const openStorage = () => run(async () => {
+    const settings = await call(remote, "uiStorageSettings");
+    setStorageSettings(settings);
+    setConnectionResult("");
+  });
+  const publishWorkflow = () => run(async () => {
+    const result = await call(remote, "uiPublishWorkflow", selected.id);
+    setNotice(l("已注册到 TeamFlow：{0} v{1}", result.name, result.version));
+  });
   return (
-    <div className="gal" data-theme={theme} data-motion-paused={motionPaused}>
+    <div className="gal" lang={l.language} data-theme={theme} data-motion-paused={motionPaused} data-paper-dark={paperDark}>
       {theme === "astral" && (
         <div className="gal-astral-sky" aria-hidden="true">
           <svg className="gal-astral-chart" viewBox="0 0 540 240" fill="none">
@@ -414,33 +507,29 @@ function Gallery({ remote }) {
           <span className="gal-astral-meteor" />
         </div>
       )}
-      <header className="gal-header">
+      {(theme !== "folio" || !status?.ready) && <header className="gal-header">
+        {theme === "anime" && <AnimeMascot />}
         <div>
           <h1>
             <BrandIcon size={32} />
             Gallery
-            {theme === "astral" && <span className="gal-astral-title">鎏金星穹</span>}
+            {theme === "astral" && <span className="gal-astral-title">{l("鎏金星穹")}</span>}
           </h1>
         </div>
         <div className="gal-header-actions">
           {theme === "astral" && (
             <button className="gal-astral-motion" type="button"
               onClick={() => setMotionPaused((paused) => !paused)}>
-              {motionPaused ? "继续动效" : "暂停动效"}
+              {motionPaused ? l("继续动效") : l("暂停动效")}
             </button>
           )}
-          <div className="gal-theme-picker" ref={themeMenuRef}>
-            <button className="gal-icon-button" aria-label="切换主题" aria-expanded={themeMenu} title={`主题 · ${THEMES.find(item => item.id === theme)?.label}`} onClick={() => setThemeMenu(open => !open)}><Glyph name="palette" size={20} /></button>
-            {themeMenu && <div className="gal-theme-menu" role="group" aria-label="选择主题">
-              {THEMES.map(item => <button key={item.id} aria-pressed={theme === item.id} onClick={() => { saveTheme(globalThis.localStorage, item.id); setTheme(item.id); setThemeMenu(false); }}><span className={`gal-theme-swatch ${item.id}`} aria-hidden="true" /><span><strong>{item.label}</strong><small>{item.hint}</small></span>{theme === item.id && <Glyph name="check" size={16} />}</button>)}
-            </div>}
-          </div>
+          {themePicker}
           <button
             className="gal-icon-button"
-            aria-label="存储设置"
+            aria-label={l("存储设置")}
             title={
-              "存储设置 · " +
-              (status?.storage?.libraries.find(
+              l("存储设置 · ") +
+              l(status?.storage?.libraries.find(
                 (l) => l.id === status.storage.activeLibraryId,
               )?.name || "本地资源库")
             }
@@ -457,11 +546,11 @@ function Gallery({ remote }) {
             <Glyph name="settings" size={20} />
           </button>
         </div>
-      </header>
+      </header>}
       {error && (
         <div role="alert" className="gal-alert">
-          {error}
-          <button aria-label="关闭错误" onClick={() => setError("")}>
+          {l(error)}
+          <button aria-label={l("关闭错误")} onClick={() => setError("")}>
             <Glyph name="close" />
           </button>
         </div>
@@ -469,13 +558,23 @@ function Gallery({ remote }) {
       {!status?.ready ? (
         <div className="gal-empty">
           {error
-            ? "资源库暂时不可用，请检查提示后刷新。"
-            : "正在打开本地资源库…"}
+            ? l("资源库暂时不可用，请检查提示后刷新。")
+            : l("正在打开本地资源库…")}
         </div>
+      ) : theme === "folio" ? (
+        <PaperBrowser remote={remote} status={status} refresh={refresh} busy={busy}
+          onError={setError} onOpen={r => run(() => load(r.id))}
+          onCreate={resourceType => { chooseFilter(resourceType); edit(null, resourceType); }}
+          onRefresh={() => { setError(""); setRefresh(x => x + 1); }} onStorage={openStorage}
+          themePicker={themePicker} dark={paperDark} onToggleDark={() => setPaperDark(current => {
+            const next = !current;
+            try { globalThis.localStorage?.setItem("dsh-gallery-paper-dark", String(next)); } catch { /* Apply for this visit. */ }
+            return next;
+          })} />
       ) : (
         <>
           <div className="gal-toolbar">
-            <nav className="gal-filters" aria-label="资源类型">
+            <nav className="gal-filters" aria-label={l("资源类型")}>
               <button
                 className={!type ? "active" : ""}
                 aria-pressed={!type}
@@ -484,9 +583,7 @@ function Gallery({ remote }) {
                   chooseFilter("");
                 }}
               >
-                <Glyph name="grid" />
-                全部
-              </button>
+                <Glyph name="grid" />{l("全部")}</button>
               {Object.entries(TYPES).map(([key, label]) => (
                 <button
                   key={key}
@@ -495,16 +592,16 @@ function Gallery({ remote }) {
                   onClick={() => chooseFilter(key)}
                 >
                   <Glyph name={key} />
-                  {label}
+                  {l(label)}
                 </button>
               ))}
             </nav>
             <div className="gal-search-wrap">
               <Glyph name="search" />
               <input
-                aria-label="搜索资源"
+                aria-label={l("搜索资源")}
                 className="gal-search"
-                placeholder="搜索资源、用户名或标签…"
+                placeholder={l("搜索资源、用户名或标签…")}
                 value={q}
                 onChange={(e) => {
                   setQ(e.target.value);
@@ -515,7 +612,7 @@ function Gallery({ remote }) {
           </div>
           <div className="gal-list-heading">
             <span>
-              {type ? TYPES[type] : "调用榜"} <strong>{total}</strong>
+              {type ? TYPES[type] : l("调用榜")} <strong>{total}</strong>
             </span>
             <div className="gal-list-actions">
               {type && (
@@ -524,14 +621,13 @@ function Gallery({ remote }) {
                   disabled={busy}
                   onClick={() => edit(null)}
                 >
-                  <Glyph name="plus" />
-                  新建 {TYPES[type]}
+                  <Glyph name="plus" />{l("新建 ")}{TYPES[type]}
                 </button>
               )}
               <button
                 className="gal-icon-button"
-                title="刷新资源"
-                aria-label="刷新"
+                title={l("刷新资源")}
+                aria-label={l("刷新")}
                 disabled={busy}
                 onClick={() => setRefresh((x) => x + 1)}
               >
@@ -540,7 +636,7 @@ function Gallery({ remote }) {
             </div>
           </div>
           {loading ? (
-            <div className="gal-empty">正在加载资源…</div>
+            <div className="gal-empty">{l("正在加载资源…")}</div>
           ) : !type ? (
             <Leaderboards
               boards={boards}
@@ -553,12 +649,12 @@ function Gallery({ remote }) {
             <div className="gal-empty">
               <Icon />
               <h3>
-                {q || type || scope !== "all" ? "没有匹配的资源" : "暂无资源"}
+                {q || type || scope !== "all" ? l("没有匹配的资源") : l("暂无资源")}
               </h3>
               <p>
                 {q || type || scope !== "all"
-                  ? "试试其他关键词或分类。"
-                  : "选择分类后新建资源。"}
+                  ? l("试试其他关键词或分类。")
+                  : l("选择分类后新建资源。")}
               </p>
             </div>
           ) : (
@@ -578,10 +674,10 @@ function Gallery({ remote }) {
                   </div>
                   <p
                     className="gal-card-creator"
-                    title={`创建者：${r.creator?.username || "未记录"}`}
+                    title={l("创建者：{0}", r.creator?.username || l("未记录"))}
                   >
                     <Glyph name="user" size={15} />
-                    {r.creator?.username || "未记录"}
+                    {r.creator?.username || l("未记录")}
                   </p>
                   <div className="gal-tags">
                     {r.tags.slice(0, 2).map((t) => (
@@ -591,20 +687,19 @@ function Gallery({ remote }) {
                   <footer>
                     {hasResourceCover(r.type) && (
                       <span
-                        title="累计调用次数"
-                        aria-label={`累计调用 ${r.usageCount ?? 0} 次`}
+                        title={l("累计调用次数")}
+                        aria-label={l("累计调用 {0} 次", r.usageCount ?? 0)}
                       >
                         <Glyph name="usage" size={15} />
-                        {(r.usageCount ?? 0).toLocaleString()} 次
-                      </span>
+                        {(r.usageCount ?? 0).toLocaleString(l.language)}{l(" 次")}</span>
                     )}
-                    <span title="文件数量">
+                    <span title={l("文件数量")}>
                       <Glyph name="file" size={15} />
                       {r.fileCount}
                     </span>
-                    <span title="更新时间">
+                    <span title={l("更新时间")}>
                       <Glyph name="clock" size={15} />
-                      {new Date(r.updatedAt).toLocaleDateString()}
+                      {new Date(r.updatedAt).toLocaleDateString(l.language)}
                     </span>
                   </footer>
                 </button>
@@ -616,25 +711,21 @@ function Gallery({ remote }) {
               <button
                 disabled={!offset}
                 onClick={() => setOffset((x) => Math.max(0, x - 48))}
-              >
-                上一页
-              </button>
+              >{l("上一页")}</button>
               <span>
                 {Math.floor(offset / 48) + 1} / {Math.ceil(total / 48)}
               </span>
               <button
                 disabled={offset + 48 >= total}
                 onClick={() => setOffset((x) => x + 48)}
-              >
-                下一页
-              </button>
+              >{l("下一页")}</button>
             </div>
           )}
         </>
       )}
       {creation && <ResourceStart type={creation} onClose={() => setCreation(null)}
-        onBlank={() => { const setter = creation === "skill" ? setSkillWizard : setAgentWizard; setter({resource:null}); setCreation(null); }}
-        onImported={importedResource => { const setter = creation === "skill" ? setSkillWizard : setAgentWizard; setter({resource:null,importedResource}); setCreation(null); }}
+        onBlank={() => startResource()}
+        onImported={startResource}
         onBrowse={payload => call(remote,"uiImportDirectory",json(payload))}
         onRead={payload => call(remote,"uiImportResource",json(payload))} />}
       {workflowWizard && <WorkflowWizard onExtract={(resourceId) => call(remote,"uiExtractWorkflowAgent",json({resourceId}))} onGet={id => call(remote, "uiGet", id)} onList={async type => {
@@ -644,16 +735,16 @@ function Gallery({ remote }) {
           rows.push(...page.items);
           if (rows.length >= page.total || !page.items.length) return rows;
         }
-      }} resource={workflowWizard.resource} onClose={async () => { if (await confirmAction("放弃尚未保存的 Workflow？")) setWorkflowWizard(false); }} onSave={async (resource) => {
+      }} resource={workflowWizard.resource} importedResource={workflowWizard.importedResource} onClose={async () => { if (await confirmAction(l("放弃尚未保存的 Workflow？"))) setWorkflowWizard(false); }} onSave={async (resource) => {
         const existing = workflowWizard.resource;
         await (existing ? call(remote, "uiUpdate", existing.id, json({ resource, expectedRevision: existing.revision })) : call(remote, "uiCreate", json(resource)));
-        setSelected(null); setWorkflowWizard(false); setRefresh(x => x + 1); setNotice("Workflow 已保存。");
+        setSelected(null); setWorkflowWizard(false); setRefresh(x => x + 1); setNotice(l("Workflow 已保存。"));
       }} />}
       {mcpWizard && (
         <McpWizard
           resource={mcpWizard.resource}
           onClose={async () => {
-            if (await confirmAction("放弃尚未保存的 MCP？"))
+            if (await confirmAction(l("放弃尚未保存的 MCP？")))
               setMcpWizard(false);
           }}
           onCheck={(config) => call(remote, "uiCheckMcp", json(config))}
@@ -670,7 +761,7 @@ function Gallery({ remote }) {
             setSelected(null);
             setMcpWizard(false);
             setRefresh((x) => x + 1);
-            setNotice("MCP 已保存。");
+            setNotice(l("MCP 已保存。"));
           }}
         />
       )}
@@ -679,7 +770,7 @@ function Gallery({ remote }) {
           importedResource={agentWizard.importedResource}
           resource={agentWizard.resource}
           onClose={async () => {
-            if (await confirmAction("放弃尚未保存的 Agent？"))
+            if (await confirmAction(l("放弃尚未保存的 Agent？")))
               setAgentWizard(false);
           }}
           onSave={async (resource) => {
@@ -695,7 +786,7 @@ function Gallery({ remote }) {
             setSelected(null);
             setAgentWizard(false);
             setRefresh((x) => x + 1);
-            setNotice("Agent 已保存。");
+            setNotice(l("Agent 已保存。"));
           }}
         />
       )}
@@ -704,7 +795,7 @@ function Gallery({ remote }) {
           importedResource={skillWizard.importedResource}
           resource={skillWizard.resource}
           onClose={async () => {
-            if (await confirmAction("放弃尚未保存的 Skill？"))
+            if (await confirmAction(l("放弃尚未保存的 Skill？")))
               setSkillWizard(false);
           }}
           onSave={async (resource) => {
@@ -720,18 +811,24 @@ function Gallery({ remote }) {
             setSelected(null);
             setSkillWizard(false);
             setRefresh((x) => x + 1);
-            setNotice("Skill 已保存。");
+            setNotice(l("Skill 已保存。"));
           }}
         />
       )}
-      {selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && (
+      {theme === "folio" && selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && (
+        <PaperDetail key={selected.id} resource={selected} busy={busy} error={l(error)}
+          onClose={() => setSelected(null)} onEdit={() => edit(selected)}
+          onDelete={() => removeResource(selected)} onExport={() => exportResource(selected)}
+          onPublish={publishWorkflow} />
+      )}
+      {theme !== "folio" && selected && !editor && !skillWizard && !agentWizard && !mcpWizard && !workflowWizard && (
         <Modal onClose={() => !busy && setSelected(null)}>
           <section
             tabIndex={-1}
             className="gal-dialog gal-detail"
             role="dialog"
             aria-modal="true"
-            aria-label="资源详情"
+            aria-label={l("资源详情")}
           >
             <div className="gal-dialog-head">
               <div>
@@ -740,12 +837,12 @@ function Gallery({ remote }) {
                   {TYPES[selected.type]}
                 </span>
                 <h2>{content.name}</h2>
-                <p>创建者：{content.creator?.username || "未记录"}</p>
-                <p>更新于 {when(selected.updatedAt)}</p>
+                <p>{l("创建者：")}{content.creator?.username || l("未记录")}</p>
+                <p>{l("更新于 ")}{when(selected.updatedAt, l.language)}</p>
               </div>
               <button
                 disabled={busy}
-                aria-label="关闭详情"
+                aria-label={l("关闭详情")}
                 onClick={() => setSelected(null)}
               >
                 <Glyph name="close" />
@@ -756,77 +853,45 @@ function Gallery({ remote }) {
               selected.metadata?.workflowCanvas?.agents?.some(
                 (agent) => agent.skills?.length || agent.mcps?.length,
               ) && (
-                <p>原有 Skill 和 MCP 引用保留在 Gallery 中。TeamFlow 按 Agent 节点的两个开关启用资源。</p>
+                <p>{l("原有 Skill 和 MCP 引用保留在 Gallery 中。TeamFlow 按 Agent 节点的两个开关启用资源。")}</p>
               )}
             <div className="gal-detail-actions">
-              {selected.type === "workflow" && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await call(remote, "uiPublishWorkflow", selected.id); setNotice(`已注册到 TeamFlow：${result.name} v${result.version}`); })}><Glyph name="workflow" />注册到 TeamFlow</button>}
+              {selected.type === "workflow" && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await call(remote, "uiPublishWorkflow", selected.id); setNotice(l("已注册到 TeamFlow：{0} v{1}", result.name, result.version)); })}><Glyph name="workflow" />{l("注册到 TeamFlow")}</button>}
               {selected.canEdit && (
                 <button disabled={busy} onClick={() => edit(selected)}>
-                  <Glyph name="edit" />
-                  编辑资源
-                </button>
+                  <Glyph name="edit" />{l("编辑资源")}</button>
               )}
               <button
                 onClick={() =>
-                  download(
-                    `${content.name}.gallery.json`,
-                    json(
-                      {
-                        format: "dsh-gallery-resource",
-                        schemaVersion: 2,
-                        resource: {
-                          type: content.type,
-                          name: content.name,
-                          description: content.description,
-                          tags: content.tags,
-                          files: content.files,
-                          metadata: content.metadata,
-                          references: content.references,
-                        },
-                        source: {
-                          libraryId: selected.libraryId,
-                          id: selected.id,
-                          digest: selected.digest,
-                        },
-                      },
-                      null,
-                      2,
-                    ),
-                  )
+                  exportResource(content)
                 }
               >
-                <Glyph name="download" />
-                下载资源
-              </button>
+                <Glyph name="download" />{l("下载资源")}</button>
               {selected.canDelete && (
                 <button
                   className="gal-delete"
                   disabled={busy}
                   onClick={() => removeResource(selected)}
                 >
-                  <Glyph name="trash" />
-                  删除资源
-                </button>
+                  <Glyph name="trash" />{l("删除资源")}</button>
               )}
             </div>
             <div className="gal-dialog-body">
               {error && (
                 <p role="alert" className="gal-error">
-                  {error}
+                  {l(error)}
                 </p>
               )}
               {hasResourceCover(content.type) && (
                 <p className="gal-usage-total">
-                  <Glyph name="usage" /> 累计调用次数{" "}
-                  <strong>{(content.usageCount ?? 0).toLocaleString()}</strong>{" "}
-                  次
-                </p>
+                  <Glyph name="usage" />{l(" 累计调用次数")}{" "}
+                  <strong>{(content.usageCount ?? 0).toLocaleString(l.language)}</strong>{" "}{l("次")}</p>
               )}
               {content.type === "mcp" && (
-                <p>{content.metadata?.mcpVerification?.checkedAt ? "已通过连接检查" : "未验证连接"}</p>
+                <p>{content.metadata?.mcpVerification?.checkedAt ? l("已通过连接检查") : l("未验证连接")}</p>
               )}
               <p className="gal-description">
-                {content.description || "暂无描述"}
+                {content.description || l("暂无描述")}
               </p>
               <div className="gal-tags">
                 {content.tags.map((t) => (
@@ -842,7 +907,7 @@ function Gallery({ remote }) {
                   {f.encoding === "utf8" ? (
                     <pre>{f.content}</pre>
                   ) : (
-                    <p>二进制附件包含在下载的资源包中。</p>
+                    <p>{l("二进制附件包含在下载的资源包中。")}</p>
                   )}
                 </details>
               ))}
@@ -857,16 +922,16 @@ function Gallery({ remote }) {
             className="gal-dialog gal-editor"
             role="dialog"
             aria-modal="true"
-            aria-label={editor.id ? "编辑资源" : "新建资源"}
+            aria-label={editor.id ? l("编辑资源") : l("新建资源")}
           >
             <div className="gal-dialog-head">
               <div>
                 <h2>
-                  {editor.id ? "编辑" : "新建"} {TYPES[editor.resource.type]}
+                  {editor.id ? l("编辑") : l("新建")} {TYPES[editor.resource.type]}
                 </h2>
               </div>
               <button
-                aria-label="关闭编辑"
+                aria-label={l("关闭编辑")}
                 onClick={closeEditor}
                 disabled={busy}
               >
@@ -876,50 +941,41 @@ function Gallery({ remote }) {
             <div className="gal-dialog-body">
               <div className="gal-form-row">
                 <div className="gal-type-field">
-                  <span>类型</span>
+                  <span>{l("类型")}</span>
                   <span className="gal-editor-type">
                     <Glyph name={editor.resource.type} />
                     {TYPES[editor.resource.type]}
                   </span>
                 </div>
-                <label className="gal-grow">
-                  资源名称
-                  <input
+                <label className="gal-grow">{l("资源名称")}<input
                     value={editor.resource.name}
                     maxLength={160}
                     onChange={(e) => field("name", e.target.value)}
-                    placeholder="输入资源名称"
+                    placeholder={l("输入资源名称")}
                   />
                 </label>
               </div>
-              <label>
-                描述
-                <textarea
+              <label>{l("描述")}<textarea
                   rows={3}
                   value={editor.resource.description}
                   onChange={(e) => field("description", e.target.value)}
-                  placeholder="资源描述（选填）"
+                  placeholder={l("资源描述（选填）")}
                   maxLength={10000}
                 />
               </label>
-              <label>
-                标签
-                <input
+              <label>{l("标签")}<input
                   value={editor.tags}
                   onChange={(e) => change("tags", e.target.value)}
-                  placeholder="标签，用逗号分隔"
+                  placeholder={l("标签，用逗号分隔")}
                 />
               </label>
               <div className="gal-file-toolbar">
-                <h3>
-                  资源文件 <small>{editor.resource.files.length} / 100</small>
+                <h3>{l("资源文件 ")}<small>{editor.resource.files.length} / 100</small>
                 </h3>
                 <div>
                   <label className="gal-upload">
-                    <Glyph name="upload" />
-                    上传文件
-                    <input
-                      aria-label="上传资源文件"
+                    <Glyph name="upload" />{l("上传文件")}<input
+                      aria-label={l("上传资源文件")}
                       type="file"
                       multiple
                       onChange={(e) => {
@@ -929,10 +985,8 @@ function Gallery({ remote }) {
                     />
                   </label>
                   <label className="gal-upload">
-                    <Glyph name="folder" />
-                    上传文件夹
-                    <input
-                      aria-label="上传资源文件夹"
+                    <Glyph name="folder" />{l("上传文件夹")}<input
+                      aria-label={l("上传资源文件夹")}
                       type="file"
                       multiple
                       webkitdirectory=""
@@ -949,8 +1003,8 @@ function Gallery({ remote }) {
               )}
               <div className="gal-add-file">
                 <input
-                  aria-label="新文件路径"
-                  placeholder="新文件路径，例如 SKILL.md"
+                  aria-label={l("新文件路径")}
+                  placeholder={l("新文件路径，例如 SKILL.md")}
                   value={editor.newPath}
                   onChange={(e) => change("newPath", e.target.value)}
                 />
@@ -959,7 +1013,7 @@ function Gallery({ remote }) {
                   onClick={() => {
                     const p = editor.newPath.trim();
                     if (editor.resource.files.some((f) => f.path === p)) {
-                      change("importError", "该文件已存在");
+                      change("importError", l("该文件已存在"));
                       return;
                     }
                     setEditor((x) => ({
@@ -975,9 +1029,7 @@ function Gallery({ remote }) {
                       },
                     }));
                   }}
-                >
-                  添加文本文件
-                </button>
+                >{l("添加文本文件")}</button>
               </div>
               <div className="gal-file-editor">
                 <nav>
@@ -991,7 +1043,7 @@ function Gallery({ remote }) {
                     </button>
                   ))}
                   {!editor.resource.files.length && (
-                    <p>可上传已有文件，也可直接创建文本文件。</p>
+                    <p>{l("可上传已有文件，也可直接创建文本文件。")}</p>
                   )}
                 </nav>
                 <div>
@@ -1012,13 +1064,11 @@ function Gallery({ remote }) {
                               },
                             }))
                           }
-                        >
-                          移除文件
-                        </button>
+                        >{l("移除文件")}</button>
                       </div>
                       {activeFile.encoding === "utf8" ? (
                         <textarea
-                          aria-label="文件内容"
+                          aria-label={l("文件内容")}
                           spellCheck="false"
                           value={activeFile.content}
                           onChange={(e) =>
@@ -1036,27 +1086,23 @@ function Gallery({ remote }) {
                           }
                         />
                       ) : (
-                        <p>二进制文件已上传，可移除后重新上传替换。</p>
+                        <p>{l("二进制文件已上传，可移除后重新上传替换。")}</p>
                       )}
                     </>
                   ) : (
-                    <div className="gal-code-placeholder">
-                      选择文件以查看或编辑
-                    </div>
+                    <div className="gal-code-placeholder">{l("选择文件以查看或编辑")}</div>
                   )}
                 </div>
               </div>
             </div>
             <footer className="gal-dialog-footer">
-              <button disabled={busy} onClick={closeEditor}>
-                取消
-              </button>
+              <button disabled={busy} onClick={closeEditor}>{l("取消")}</button>
               <button
                 className="gal-primary"
                 disabled={busy}
                 onClick={() => run(save)}
               >
-                {busy ? "保存中…" : "保存资源"}
+                {busy ? l("保存中…") : l("保存资源")}
               </button>
             </footer>
           </section>
@@ -1073,10 +1119,10 @@ function Gallery({ remote }) {
           >
             <div className="gal-dialog-head">
               <h2 id="gal-storage-title">
-                {storageSettings.configured ? "资源库存储" : "选择资源库存储"}
+                {storageSettings.configured ? l("资源库存储") : l("选择资源库存储")}
               </h2>
               <button
-                aria-label="关闭存储设置"
+                aria-label={l("关闭存储设置")}
                 disabled={busy}
                 onClick={closeStorage}
               >
@@ -1086,21 +1132,32 @@ function Gallery({ remote }) {
             <div className="gal-dialog-body">
               <div className="gal-storage-providers">
                 {storageSettings.providers.map((provider) => (
-                  <div
+                  <button
+                    type="button"
                     key={provider.type}
-                    className={provider.available ? "active" : ""}
+                    className={(storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === provider.type ? "active" : ""}
+                    aria-pressed={(storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === provider.type}
+                    disabled={busy}
+                    onClick={() => { setStorageSettings(x => ({ ...x, type: provider.type })); setConnectionResult(""); }}
                   >
-                    <strong>{provider.name}</strong>
-                    <span>{provider.available ? "可用" : "后续接入"}</span>
-                  </div>
+                    <strong>{l(provider.name)}</strong>
+                  </button>
                 ))}
               </div>
-              <label className="gal-username-setting">
-                用户名
-                <input
+              {(storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal")) === "service" && <>
+                <label className="gal-username-setting">{l("服务地址")}<input type="text" placeholder="109.105.132.53:8088" value={storageSettings.service?.url || ""}
+                    onChange={e => { setStorageSettings(x => ({ ...x, service: { ...x.service, url: e.target.value } })); setConnectionResult(""); }} />
+                </label>
+                <p>{l("填写服务器 IP 和端口即可，无需接入密钥或证书。")}</p>
+                <p>{l("首次接入后自动保存此 DSH 的独立身份。所有成员可查看和使用资源，仅创建者可编辑和删除。")}</p>
+                <label className="gal-storage-consent"><input type="checkbox" checked={Boolean(storageSettings.service?.allowStdio)}
+                  onChange={e => setStorageSettings(x => ({ ...x, service: { ...x.service, allowStdio: e.target.checked } }))} />{l("允许中心 stdio MCP 在此 DSH 执行本机命令（仅信任资源作者时开启）")}</label>
+              </>}
+              <p>{l("切换后显示对应资源库；已有资源保留在原处，不自动迁移。")}</p>
+              <label className="gal-username-setting">{l("用户名")}<input
                   value={storageSettings.username || ""}
                   maxLength={80}
-                  placeholder="新资源的创建者名称"
+                  placeholder={l("新资源的创建者名称")}
                   onChange={(e) =>
                     setStorageSettings((x) => ({
                       ...x,
@@ -1118,19 +1175,17 @@ function Gallery({ remote }) {
                       "uiSetUsername",
                       json({ username: storageSettings.username }),
                     );
-                    setStorageSettings(storage);
+                    setStorageSettings(x => ({ ...storage, type: x.type, service: x.service || storage.service }));
                     setStatus((x) => ({ ...x, storage }));
-                    setConnectionResult("用户名已保存，用于之后创建的资源。");
+                    setConnectionResult(l("用户名已保存，用于之后创建的资源。"));
                   })
                 }
-              >
-                保存用户名
-              </button>
-              {connectionResult && <p role="status">{connectionResult}</p>}
-              {error && <p role="alert">{error}</p>}
+              >{l("保存用户名")}</button>
+              {connectionResult && <p role="status">{l(connectionResult)}</p>}
+              {error && <p role="alert">{l(error)}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.20.8</span>
+              <span className="gal-local">v0.32.1</span>
               <button
                 disabled={busy}
                 onClick={() =>
@@ -1138,20 +1193,31 @@ function Gallery({ remote }) {
                     await call(
                       remote,
                       "uiTestStorage",
-                      json({ libraryId: "local" }),
+                      json({ type: storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal"), ...storageSettings.service }),
                     );
-                    setConnectionResult("资源库可用");
+                    setConnectionResult(l("资源库可用"));
                   })
                 }
-              >
-                检查存储
-              </button>
+              >{l("检查存储")}</button>
               <button
                 className="gal-primary"
                 disabled={busy}
-                onClick={closeStorage}
+                onClick={() => run(async () => {
+                  await call(remote, "uiSetUsername", json({ username: storageSettings.username }));
+                  const storage = await call(remote, "uiConfigureStorage", json({
+                    type: storageSettings.type || (storageSettings.activeLibraryId === "center" ? "service" : "internal"),
+                    ...storageSettings.service,
+                  }));
+                  setStatus(x => ({ ...x, storage }));
+                  setSelected(null);
+                  setEditor(null);
+                  setStorageSettings(null);
+                  setOffset(0);
+                  setRefresh(x => x + 1);
+                  setNotice(l("存储设置已保存"));
+                })}
               >
-                {busy ? "处理中…" : "完成"}
+                {busy ? l("处理中…") : l("完成")}
               </button>
             </footer>
           </section>
@@ -1164,24 +1230,20 @@ function Gallery({ remote }) {
             className="gal-dialog gal-small"
             role="alertdialog"
             aria-modal="true"
-            aria-label="确认操作"
+            aria-label={l("确认操作")}
           >
             <div className="gal-dialog-head">
-              <h2>确认操作</h2>
+              <h2>{l("确认操作")}</h2>
             </div>
             <div className="gal-dialog-body">
-              <p>{confirmation.message}</p>
+              <p>{l(confirmation.message)}</p>
             </div>
             <div className="gal-dialog-footer">
-              <button autoFocus onClick={() => answerConfirmation(false)}>
-                取消
-              </button>
+              <button autoFocus onClick={() => answerConfirmation(false)}>{l("取消")}</button>
               <button
                 className="gal-primary"
                 onClick={() => answerConfirmation(true)}
-              >
-                确认
-              </button>
+              >{l("确认")}</button>
             </div>
           </section>
         </Modal>
@@ -1189,23 +1251,26 @@ function Gallery({ remote }) {
     </div>
   );
 }
+function Gallery({ remote, t }) {
+  return <GalleryLocale t={t}><GalleryContent remote={remote} /></GalleryLocale>;
+}
 export const inject = ["remote", "slots", "locale", "inputTriggers"];
 export async function apply(ctx) {
   await ctx.remote.$mount(REMOTE);
   const remote = ctx.get("remote.gallery");
   ctx.effect(() =>
-    ctx.inputTriggers.registerSource(createGalleryTrigger(remote, Icon)),
+    ctx.locale.register(NS, {
+      zh: { title: "Gallery", "language.code": "zh" },
+      en: { title: "Gallery", "language.code": "en" },
+    }),
   );
   ctx.effect(() =>
-    ctx.locale.register(NS, {
-      zh: { title: "Gallery" },
-      en: { title: "Gallery" },
-    }),
+    ctx.inputTriggers.registerSource(createGalleryTrigger(remote, Icon, () => createGalleryText(ctx.locale.bind?.(NS)?.("language.code")))),
   );
   ctx.effect(() => {
     const s = document.createElement("style");
     s.dataset.gallery = "styles";
-    s.textContent = styles;
+    s.textContent = styles + "\n" + paperStyles;
     document.head.appendChild(s);
     return () => s.remove();
   });

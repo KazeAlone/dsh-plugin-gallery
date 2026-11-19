@@ -7,6 +7,7 @@ export class GalleryMcpRuntime {
     this.ctx = ctx;
     this.store = store;
     this.active = new Map();
+    this.resources = [];
     this.connecting = new Set();
     this.pending = Promise.resolve();
   }
@@ -15,7 +16,10 @@ export class GalleryMcpRuntime {
     return this.pending;
   }
   async sync() {
-    const resources = this.store.adapter().read().resources.filter(r => r.type === 'mcp');
+    const config = this.store.read?.();
+    const resources = (await this.store.adapter().read("mcp")).resources.filter(r => r.type === 'mcp' &&
+      !(config?.activeLibraryId === 'center' && !config.service?.allowStdio && r.metadata?.mcp?.transport === 'stdio'));
+    this.resources = resources;
     const wanted = new Map(resources.map(r => [r.id, r]));
     for (const [id, current] of this.active) {
       const resource = wanted.get(id);
@@ -60,5 +64,6 @@ export class GalleryMcpRuntime {
     await this.pending.catch(() => {});
     for (const { fiber } of this.active.values()) await fiber.dispose();
     this.active.clear();
+    this.resources = [];
   }
 }

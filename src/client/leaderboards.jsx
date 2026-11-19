@@ -1,3 +1,4 @@
+import { useGalleryText } from "./i18n.jsx";
 import React from "react";
 import { Glyph } from "./icons.jsx";
 const names = {
@@ -7,6 +8,7 @@ const names = {
   workflow: "Workflow",
 };
 export function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
+  const l = useGalleryText();
   return (
     <div className="gal-leaderboards">
       {Object.entries(names).map(([type, label]) => {
@@ -19,21 +21,21 @@ export function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
           <section
             key={type}
             className={`gal-board ${type}`}
-            aria-label={`${label} 调用榜`}
+            aria-label={l("{0} 调用榜", label)}
           >
             <header className="gal-board-head">
               <div className="gal-board-icon">
                 <Glyph name={type} size={26} />
               </div>
               <div>
-                <h2>{label}</h2>
-                <span>{board.total} 个资源</span>
+                <h2>{l(label)}</h2>
+                <span>{board.total}{l(" 个资源")}</span>
               </div>
               <span className="gal-board-top">TOP 10</span>
             </header>
             <div className="gal-board-columns">
-              <span>排名 / 资源</span>
-              <span>调用次数</span>
+              <span>{l("排名 / 资源")}</span>
+              <span>{l("调用次数")}</span>
             </div>
             {board.items.length ? (
               <ol className="gal-board-list">
@@ -43,7 +45,7 @@ export function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
                       className={`gal-rank-row rank-${i + 1}`}
                       disabled={busy}
                       onClick={() => onOpen(r)}
-                      title={`${r.name} · ${r.creator?.username || "未记录"} · 累计调用 ${r.usageCount ?? 0} 次`}
+                      title={l("{0} · {1} · 累计调用 {2} 次", r.name, r.creator?.username || l("未记录"), r.usageCount ?? 0)}
                     >
                       <span className="gal-rank-number">
                         {i === 0 && <Glyph name="trophy" size={16} />}
@@ -53,7 +55,7 @@ export function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
                         <strong>{r.name}</strong>
                         <span className="gal-rank-author">
                           <Glyph name="user" size={12} />
-                          {r.creator?.username || "未记录"}
+                          {r.creator?.username || l("未记录")}
                         </span>
                         <span className="gal-rank-track" aria-hidden="true">
                           <span
@@ -65,9 +67,9 @@ export function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
                       </span>
                       <span
                         className="gal-rank-count"
-                        aria-label={`累计调用 ${r.usageCount ?? 0} 次`}
+                        aria-label={l("累计调用 {0} 次", r.usageCount ?? 0)}
                       >
-                        {(r.usageCount ?? 0).toLocaleString()}
+                        {(r.usageCount ?? 0).toLocaleString(l.language)}
                       </span>
                     </button>
                   </li>
@@ -76,11 +78,10 @@ export function Leaderboards({ boards, busy, filtered, onOpen, onCategory }) {
             ) : (
               <div className="gal-board-empty">
                 <Glyph name={type} size={36} />
-                <p>{filtered ? "没有匹配的资源" : "暂无资源"}</p>
+                <p>{filtered ? l("没有匹配的资源") : l("暂无资源")}</p>
               </div>
             )}
-            <button className="gal-board-more" onClick={() => onCategory(type)}>
-              查看 {label}
+            <button className="gal-board-more" onClick={() => onCategory(type)}>{l("查看 ")}{l(label)}
               <Glyph name="arrow" size={16} />
             </button>
           </section>

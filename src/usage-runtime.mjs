@@ -1,9 +1,9 @@
 import { digest } from "./model.mjs";
 import { gallerySkillName } from "./skill-provider.mjs";
 
-export function countUsage(ctx, store, id, type, identity) {
+export async function countUsage(ctx, store, id, type, identity) {
   try {
-    store.adapter().recordResourceUse({
+    await store.adapter().recordResourceUse({
       id,
       type,
       usageId: digest(JSON.stringify([type, ...identity])),
@@ -13,14 +13,17 @@ export function countUsage(ctx, store, id, type, identity) {
   }
 }
 
-function countSkill(ctx, store, name, identity) {
+async function countSkill(ctx, store, name, identity) {
   try {
-    const row = store.adapter().read().resources.find(
-      (resource) => resource.type === "skill" && gallerySkillName(resource.id) === name,
+    const row = (await store.adapter().read("skill")).resources.find(
+      (resource) =>
+        resource.type === "skill" && gallerySkillName(resource.id) === name,
     );
-    if (row) countUsage(ctx, store, row.id, "skill", identity);
+    if (row) await countUsage(ctx, store, row.id, "skill", identity);
   } catch (error) {
-    ctx.logger?.warn?.(`Gallery Skill usage could not be recorded: ${error.message}`);
+    ctx.logger?.warn?.(
+      `Gallery Skill usage could not be recorded: ${error.message}`,
+    );
   }
 }
 
@@ -29,8 +32,11 @@ export function registerUsageTracking(ctx, store, getMcpRuntime) {
     const decision = await next();
     if (decision.kind !== "reject" && !signal.aborted) {
       for (const { source } of decision.messages) {
-        if (source.kind === "skill-invocation" && source.name.startsWith("gskill-")) {
-          countSkill(ctx, store, source.name, ["turn", agent.id, turn]);
+        if (
+          source.kind === "skill-invocation" &&
+          source.name.startsWith("gskill-")
+        ) {
+          await countSkill(ctx, store, source.name, ["turn", agent.id, turn]);
         }
       }
     }
@@ -42,13 +48,21 @@ export function registerUsageTracking(ctx, store, getMcpRuntime) {
       ? getMcpRuntime()?.resourceForTool(exec.name)
       : undefined;
     const decision = await next();
-    if (!exec.agent || result.isError || decision.kind !== "accept" || exec.signal.aborted) {
+    if (
+      !exec.agent ||
+      result.isError ||
+      decision.kind !== "accept" ||
+      exec.signal.aborted
+    ) {
       return decision;
     }
     const identity = ["tool", exec.agent.id, exec.callId];
-    if (resourceId) countUsage(ctx, store, resourceId, "mcp", identity);
+    if (resourceId) await countUsage(ctx, store, resourceId, "mcp", identity);
     if (exec.name === "skill" && result.value?.provider === "gallery") {
-      countSkill(ctx, store, result.value.name, identity);
+      await countSkill(ctx, store, result.value.name, identity);
+    }
+    if (exec.name === "gallery_skill_load" && result.value?.id) {
+      await countUsage(ctx, store, result.value.id, "skill", identity);
     }
     return decision;
   });

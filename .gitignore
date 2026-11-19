@@ -3,3 +3,9 @@ node_modules/
 .data/
 *.sqlite*
 *.credentials.json
+
+.env
+center.env
+center-build.env
+public.env
+gallery-center-ca.crt
