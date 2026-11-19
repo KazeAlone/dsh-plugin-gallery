@@ -2,7 +2,7 @@
 
 Gallery 是运行在 DSH 内的资源库，用来创建、整理、共享和调用 **Skill、Agent、MCP 和 Workflow**。默认使用 DSH 内部存储，无需部署数据库，也不增加插件登录或接入码；访问仍由 DSH 宿主认证控制。
 
-当前版本 **0.32.3**。Workflow 对接 TeamFlow **0.2.15**：可将 Gallery 资源注册到 TeamFlow 模板库，也可从 TeamFlow 将模板上传到 Gallery 当前使用的内部库或中心库。
+当前版本 **0.33.0**。Workflow 对接 TeamFlow **0.2.15**：可将 Gallery 资源注册到 TeamFlow 模板库，也可从 TeamFlow 将模板上传到 Gallery 当前使用的内部库或中心库。
 
 ## 快速开始
 
@@ -11,7 +11,7 @@ Gallery 是运行在 DSH 内的资源库，用来创建、整理、共享和调�
 使用内部发布的安装包安装到实际使用的 DSH 配置，例如 `web`（替换为安装包的实际绝对路径）：
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.32.3.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.33.0.tgz --ignore-scripts
 ```
 
 1. 重启对应的 DSH 实例并刷新浏览器，打开侧边栏 **Gallery**。
@@ -105,6 +105,21 @@ Skill 自动识别 `SKILL.md`，带入三类附属目录。Agent 自动识别 `A
 ### MCP
 
 保存有效 MCP 后，Gallery 通过 DSH 官方 MCP 客户端注册 `mcp__<serverName>__<tool>` 工具。在会话中描述要完成的操作，由模型选择可用工具和参数。连接检查成功表示服务可连接，不代表所有会话预设或工具策略都已允许调用。
+
+### 在会话中创建、编辑和删除资源
+
+从 0.33.0 起，模型可以使用统一的 `gallery_resource_*` 工具管理四类资源。例如：「把刚才的审阅流程保存为内部库的 Skill」「修改中心库里的某个 Agent」。需要宿主启用 tools，并允许这些工具；更新后重启 DSH、刷新界面，旧的“只有查询和调用工具”的回答不再适用。
+
+| 工具 | 用途 |
+| --- | --- |
+| `gallery_resource_schema` | 获取指定资源类型的完整格式示例、当前库及限制 |
+| `gallery_resource_list` / `gallery_resource_get` | 搜索四类资源、读取可编辑内容和 revision |
+| `gallery_resource_validate` | 检查格式及目标库，返回问题或规范化内容，不保存 |
+| `gallery_resource_create` | 新建并保存，返回 `saved: true`、资源 ID、目标库及 revision |
+| `gallery_resource_update` | 完整更新资源，要求最新 revision 和创建者权限 |
+| `gallery_resource_delete` | 按用户明确要求删除，要求最新 revision 和创建者权限 |
+
+操作需明确 `libraryId: local`（内部）或 `center`（共享），不会悄悄切换存储；写入成功以返回 ID 为准。MCP 认证只能通过专用写入字段传入，不会在校验、读取或保存结果中回显。保存 MCP 会刷新连接，stdio 可能启动本机进程；保存 Workflow 不会自动注册到 TeamFlow 或启动流程。TeamFlow 成员的 Skill/MCP 开关只授予使用能力，不开放上述管理入口。完整参数与示例见[会话资源管理接口](docs/resource-authoring.md)。
 
 ### 累计调用次数
 

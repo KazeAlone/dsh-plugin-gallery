@@ -16,6 +16,8 @@ import {
   registerGalleryAgentListTool,
   registerGalleryAgentRunTool,
 } from "./agent-runtime.mjs";
+import { GalleryResourceAuthoring } from "./resource-authoring.mjs";
+import { registerResourceTools, MANAGEMENT_TOOLS } from "./resource-tools.mjs";
 import { workflowSharingStatus, uploadWorkflowTemplate } from "./workflow-sharing.mjs";
 import { workflowFromResource } from "./workflow-template.mjs";
 import { syncWorkflowUsage } from "./workflow-usage.mjs";
@@ -66,6 +68,15 @@ export default class GalleryService extends TypertRemoteService {
       getRuntime: () => this.mcpRuntime,
       dispatchMcp: (name, args, exec) => this.dispatchMcp(name, args, exec),
     });
+    this.authoring = new GalleryResourceAuthoring({
+      store: this.store,
+      allowed: (agent) => !this.memberAccess.has(agent),
+      changed: async (type, libraryId) => {
+        if (this.store.read().activeLibraryId !== libraryId) return;
+        this.invalidateSkills();
+        if (type === "mcp") await this.mcpRuntime?.refresh();
+      },
+    });
     this.invalidateSkills = () => {};
     this.mcpRuntime = null;
     ctx.inject(["skills"], (scope) => {
@@ -85,6 +96,7 @@ export default class GalleryService extends TypertRemoteService {
         scope.tools.guard((exec) => this.resourceCallDenial(exec)),
       );
       scope.effect(() => registerDiscoveryTools(scope, this.discovery));
+      scope.effect(() => registerResourceTools(scope, this.authoring));
       scope.effect(() => registerGalleryAgentListTool(scope, this.store));
       scope.effect(() => {
         void runtime
@@ -152,6 +164,8 @@ export default class GalleryService extends TypertRemoteService {
     const { agent, name, arguments: args } = exec;
     const access = this.memberAccess.get(agent);
     const runtime = this.mcpRuntime;
+    if (access && MANAGEMENT_TOOLS.includes(name))
+      return "此成员只有资源使用权限，请在主会话管理 Gallery 资源";
     if (access?.gallerySkill === false && DISCOVERY_TOOLS.skill.includes(name))
       return "此 TeamFlow 成员未启用 Gallery Skill";
     if (
@@ -298,6 +312,7 @@ export default class GalleryService extends TypertRemoteService {
           .map((tool) => tool.name)
           .filter(
             (name) =>
+              MANAGEMENT_TOOLS.includes(name) ||
               (this.mcpRuntime?.ownsTool(name) &&
                 (token.galleryMcp === false ||
                   token.resourceMode === "discovery") &&

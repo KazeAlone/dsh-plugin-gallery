@@ -124,3 +124,7 @@ TeamFlow 在成员激活时调用 setMemberAccess；当 galleryMcp 明确为 tru
 ## 按需资源访问（0.30.0）
 
 新增五个固定搜索/加载/调用工具及同进程 API。通过 `resourceCapabilities()` 检测能力，`setMemberAccess(agent, {..., resourceMode: "discovery"})` 为指定成员启用。原来两个开关仍控制 Skill/MCP 权限；未指定新模式时保留原生行为。消费方不应继续注入全量目录。具体参数、分页上限、权限与原生 MCP 嵌套执行契约见[按需访问说明](resource-discovery.md)。
+
+## 会话资源管理（0.33.0）
+
+Gallery 现在向启用 tools 的普通会话注册七个 `gallery_resource_*` 管理工具，覆盖四类资源的格式示例、列表、读取、校验、创建、更新和删除。它们与 owner 页面 RPC 分开注册，使用当前 DSH 保存的中心身份，不将页面 RPC 的 owner 身份传给模型。写操作显式指定库，更新/删除检查 revision 和所有权，TeamFlow 成员不因使用开关获得管理权限。详情见[参数与调用流程](resource-authoring.md)。
