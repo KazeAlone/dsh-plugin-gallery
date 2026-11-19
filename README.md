@@ -2,7 +2,7 @@
 
 Gallery 是运行在 DSH 内的资源库，用来创建、整理、共享和调用 **Skill、Agent、MCP 和 Workflow**。默认使用 DSH 内部存储，无需部署数据库，也不增加插件登录或接入码；访问仍由 DSH 宿主认证控制。
 
-当前版本 **0.33.1**。Workflow 对接 TeamFlow **0.2.15**：可将 Gallery 资源注册到 TeamFlow 模板库，也可从 TeamFlow 将模板上传到 Gallery 当前使用的内部库或中心库。
+当前版本 **0.33.2**。Workflow 对接 TeamFlow **0.2.15**：可将 Gallery 资源注册到 TeamFlow 模板库，也可从 TeamFlow 将模板上传到 Gallery 当前使用的内部库或中心库。
 
 ## 快速开始
 
@@ -11,7 +11,7 @@ Gallery 是运行在 DSH 内的资源库，用来创建、整理、共享和调�
 使用内部发布的安装包安装到实际使用的 DSH 配置，例如 `web`（替换为安装包的实际绝对路径）：
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.33.1.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.33.2.tgz --ignore-scripts
 ```
 
 1. 重启对应的 DSH 实例并刷新浏览器，打开侧边栏 **Gallery**。
@@ -179,7 +179,7 @@ TeamFlow 0.2.13+ 已接入 Gallery 的按需模式。为成员开启原有两个
 sudo bash scripts/install-center.sh --port 8088
 ```
 
-脚本准备 Docker、PostgreSQL 和 Center，只需对客户端开放 TCP 8088，不必提前单独安装数据库。各 DSH 在存储设置填写 `中心服务器IP:8088`，检查通过后保存，无需手动分发共享密钥或证书。中心地址可配置，没有固定业务服务器 IP。
+脚本准备 Docker、PostgreSQL 和 Center，只需对客户端开放 TCP 8088，不必提前单独安装数据库。各 DSH 在存储设置填写 `中心服务器IP:8088`，检查通过后保存，无需手动分发共享密钥或证书。中心地址可配置，没有固定业务服务器 IP。中心连接默认使用独立 HTTP 客户端直连，避免打包启动器或宿主全局代理改变访问路径；确实需要代理时，在「连接选项」开启「使用宿主代理连接中心服务」。
 
 中心只存资源；Agent、MCP、Workflow 在使用者的 DSH 主机运行。默认部署面向可信公司内网，HTTP 不加密，能访问端口的客户端可以注册读取资源；需要加密或接入控制时使用公司网关。完整操作见[中心服务部署与维护](docs/center-storage.md)。
 

@@ -3,11 +3,12 @@ import { GalleryClient, sameCenterEndpoint } from "./client-api.mjs";
 
 /** Only the DSH host contacts the center; its token is never returned to the UI. */
 export class RemoteGalleryStore {
-  constructor({ url, token, caCertificate }) {
+  constructor({ url, token, caCertificate, useHostProxy }) {
     this.client = new GalleryClient({
       url,
       credential: token,
       caCertificate,
+      useHostProxy,
       timeoutMs: 30000,
     });
   }
@@ -54,6 +55,7 @@ export class RemoteGalleryStore {
         ...previous,
         url: this.client.url,
         caCertificate: this.client.caCertificate,
+        useHostProxy: this.client.useHostProxy,
       }).connect(username);
     }
     const result = await this.client.request("/v2/enroll", {

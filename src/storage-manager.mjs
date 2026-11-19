@@ -77,6 +77,7 @@ export class StorageManager {
               url: service.url,
               hasToken: Boolean(service.token),
               allowStdio: Boolean(service.allowStdio),
+              useHostProxy: Boolean(service.useHostProxy),
               userId: service.userId,
               caCertificate: service.caCertificate || "",
             },
@@ -200,10 +201,20 @@ export class StorageManager {
         "请选择有效的 PEM 格式 CA 根证书",
       );
     }
+    demand(
+      input.useHostProxy === undefined || typeof input.useHostProxy === "boolean",
+      400,
+      "INVALID_PROXY_MODE",
+      "宿主代理选项必须为布尔值",
+    );
     return {
       url,
       token,
       caCertificate,
+      useHostProxy:
+        input.useHostProxy === undefined
+          ? Boolean(previous?.useHostProxy)
+          : input.useHostProxy,
       allowStdio:
         input.allowStdio === undefined
           ? Boolean(previous?.allowStdio)

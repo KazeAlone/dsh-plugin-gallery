@@ -74,6 +74,12 @@ async function verifyTeamflowRegistration(result, fetcher = fetch) {
 
 // src/client/messages-en.mjs
 var english = {
+  "\u8FDE\u63A5\u9009\u9879": "Connection options",
+  "\u4F7F\u7528\u5BBF\u4E3B\u4EE3\u7406\u8FDE\u63A5\u4E2D\u5FC3\u670D\u52A1": "Use the host proxy to connect to the center",
+  "\u9ED8\u8BA4\u76F4\u8FDE\u4E2D\u5FC3\u5730\u5740\uFF1B\u4EC5\u5728\u5FC5\u987B\u7ECF\u8FC7\u4EE3\u7406\u624D\u80FD\u8BBF\u95EE\u65F6\u5F00\u542F\u3002\u4E0E MCP \u670D\u52A1\u7684\u4EE3\u7406\u8BBE\u7F6E\u65E0\u5173\u3002": "Connect directly by default. Enable only when a proxy is required to reach the center. This does not change MCP proxy settings.",
+  "\u5BBF\u4E3B\u4EE3\u7406\u9009\u9879\u5FC5\u987B\u4E3A\u5E03\u5C14\u503C": "Host proxy option must be a boolean",
+  "\u5BBF\u4E3B\u4EE3\u7406\u6A21\u5F0F\u4E0D\u652F\u6301\u8FDE\u63A5\u4E13\u7528 CA\uFF0C\u8BF7\u4F7F\u7528\u7CFB\u7EDF\u4FE1\u4EFB\u7684\u8BC1\u4E66\u6216\u5173\u95ED\u5BBF\u4E3B\u4EE3\u7406": "Host proxy mode does not support a connection-specific CA. Use system-trusted certificates or disable the host proxy.",
+  "\u4E2D\u5FC3\u670D\u52A1\u672A\u8FD4\u56DE JSON\uFF08HTTP {0}\uFF0C\u7C7B\u578B {1}\uFF0C\u63A5\u53E3 {2}\uFF0C\u8FDE\u63A5 {3}\uFF09\uFF0C\u8BF7\u68C0\u67E5\u4E2D\u5FC3\u5730\u5740\u53CA\u4EE3\u7406\u6216\u7F51\u5173": "Center returned non-JSON (HTTP {0}, type {1}, endpoint {2}, connection {3}). Check the center address, proxy or gateway.",
   "\u5DF2\u6CE8\u518C\u5E76\u786E\u8BA4 TeamFlow \u53EF\u8BFB\u53D6\uFF1A{0} v{1}\u3002\u8BF7\u91CD\u65B0\u6253\u5F00\u6A21\u677F\u5E93\u5237\u65B0\u3002": "Registered and verified in TeamFlow: {0} v{1}. Reopen the template library to refresh.",
   "\u6A21\u677F\u6587\u4EF6\u5DF2\u5199\u5165 {0}\uFF0C\u4F46\u65E0\u6CD5\u786E\u8BA4 TeamFlow \u662F\u5426\u5DF2\u8F7D\u5165\uFF0C\u8BF7\u68C0\u67E5\u63D2\u4EF6\u72B6\u6001\u540E\u91CD\u65B0\u6253\u5F00\u6A21\u677F\u5E93\uFF1B\u4E0D\u8981\u8FDE\u7EED\u91CD\u590D\u6CE8\u518C\u3002": "Template saved to {0}, but TeamFlow loading could not be verified. Check plugin status and reopen its library; do not repeatedly register.",
   "\u6A21\u677F\u6587\u4EF6\u5DF2\u5199\u5165 {0}\uFF0C\u4F46 TeamFlow \u6A21\u677F\u63A5\u53E3\u4E0D\u53EF\u7528\uFF1A{1}": "Template saved to {0}, but the TeamFlow template API is unavailable: {1}",
@@ -14854,7 +14860,17 @@ function GalleryContent({ remote }) {
           setConnectionResult("");
         }
       }
-    )), /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u586B\u5199\u670D\u52A1\u5668 IP \u548C\u7AEF\u53E3\u5373\u53EF\uFF0C\u65E0\u9700\u63A5\u5165\u5BC6\u94A5\u6216\u8BC1\u4E66\u3002")), /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u9996\u6B21\u63A5\u5165\u540E\u81EA\u52A8\u4FDD\u5B58\u6B64 DSH \u7684\u72EC\u7ACB\u8EAB\u4EFD\u3002\u6240\u6709\u6210\u5458\u53EF\u67E5\u770B\u548C\u4F7F\u7528\u8D44\u6E90\uFF0C\u4EC5\u521B\u5EFA\u8005\u53EF\u7F16\u8F91\u548C\u5220\u9664\u3002")), /* @__PURE__ */ import_react15.default.createElement("label", { className: "gal-storage-consent" }, /* @__PURE__ */ import_react15.default.createElement(
+    )), /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u586B\u5199\u670D\u52A1\u5668 IP \u548C\u7AEF\u53E3\u5373\u53EF\uFF0C\u65E0\u9700\u63A5\u5165\u5BC6\u94A5\u6216\u8BC1\u4E66\u3002")), /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u9996\u6B21\u63A5\u5165\u540E\u81EA\u52A8\u4FDD\u5B58\u6B64 DSH \u7684\u72EC\u7ACB\u8EAB\u4EFD\u3002\u6240\u6709\u6210\u5458\u53EF\u67E5\u770B\u548C\u4F7F\u7528\u8D44\u6E90\uFF0C\u4EC5\u521B\u5EFA\u8005\u53EF\u7F16\u8F91\u548C\u5220\u9664\u3002")), /* @__PURE__ */ import_react15.default.createElement("details", null, /* @__PURE__ */ import_react15.default.createElement("summary", null, l("\u8FDE\u63A5\u9009\u9879")), /* @__PURE__ */ import_react15.default.createElement("label", { className: "gal-storage-consent" }, /* @__PURE__ */ import_react15.default.createElement(
+      "input",
+      {
+        type: "checkbox",
+        checked: Boolean(storageSettings.service?.useHostProxy),
+        onChange: (e) => {
+          setStorageSettings((x) => ({ ...x, service: { ...x.service, useHostProxy: e.target.checked } }));
+          setConnectionResult("");
+        }
+      }
+    ), l("\u4F7F\u7528\u5BBF\u4E3B\u4EE3\u7406\u8FDE\u63A5\u4E2D\u5FC3\u670D\u52A1")), /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u9ED8\u8BA4\u76F4\u8FDE\u4E2D\u5FC3\u5730\u5740\uFF1B\u4EC5\u5728\u5FC5\u987B\u7ECF\u8FC7\u4EE3\u7406\u624D\u80FD\u8BBF\u95EE\u65F6\u5F00\u542F\u3002\u4E0E MCP \u670D\u52A1\u7684\u4EE3\u7406\u8BBE\u7F6E\u65E0\u5173\u3002"))), /* @__PURE__ */ import_react15.default.createElement("label", { className: "gal-storage-consent" }, /* @__PURE__ */ import_react15.default.createElement(
       "input",
       {
         type: "checkbox",
@@ -14889,7 +14905,7 @@ function GalleryContent({ remote }) {
       },
       l("\u4FDD\u5B58\u7528\u6237\u540D")
     ), connectionResult && /* @__PURE__ */ import_react15.default.createElement("p", { role: "status" }, l(connectionResult)), error && /* @__PURE__ */ import_react15.default.createElement("p", { role: "alert" }, l(error))),
-    /* @__PURE__ */ import_react15.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-local" }, "v0.33.1"), /* @__PURE__ */ import_react15.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-local" }, "v0.33.2"), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         disabled: busy,

@@ -1,4 +1,4 @@
-import { Agent } from "undici";
+import { Agent, fetch as httpFetch } from "undici";
 import { demand, GalleryError } from "./model.mjs";
 export function serviceUrl(value) {
   let url;
@@ -33,9 +33,10 @@ export function sameCenterEndpoint(first, second) {
   if (!first || !second) return false;
   return new URL(serviceUrl(first)).host === new URL(serviceUrl(second)).host;
 }
+// Explicit direct pools; an empty CA key uses Node's normal trust settings.
 const certificateDispatchers = new Map();
 function certificateDispatcher(ca) {
-  if (!ca) return undefined;
+  ca ||= "";
   if (!certificateDispatchers.has(ca)) {
     if (certificateDispatchers.size >= 16) {
       const oldest = certificateDispatchers.keys().next().value;
@@ -45,24 +46,45 @@ function certificateDispatcher(ca) {
         .catch(() => {});
       certificateDispatchers.delete(oldest);
     }
-    certificateDispatchers.set(ca, new Agent({ connect: { ca } }));
+    certificateDispatchers.set(ca, new Agent(ca ? { connect: { ca } } : {}));
   }
   return certificateDispatchers.get(ca);
 }
 /** Host-side SDK. Credentials must never be sent to the browser UI. */
 export class GalleryClient {
-  constructor({ url, credential, timeoutMs = 15000, caCertificate = "" }) {
+  constructor({
+    url,
+    credential,
+    timeoutMs = 15000,
+    caCertificate = "",
+    useHostProxy = false,
+  }) {
     this.url = serviceUrl(url);
     this.credential = credential;
     this.caCertificate = caCertificate;
-    this.dispatcher = certificateDispatcher(caCertificate);
+    demand(
+      typeof useHostProxy === "boolean",
+      400,
+      "INVALID_PROXY_MODE",
+      "宿主代理选项必须为布尔值",
+    );
+    demand(
+      !(useHostProxy && caCertificate),
+      400,
+      "PROXY_CA_UNSUPPORTED",
+      "宿主代理模式不支持连接专用 CA，请使用系统信任的证书或关闭宿主代理",
+    );
+    this.useHostProxy = useHostProxy;
+    this.dispatcher = useHostProxy
+      ? undefined
+      : certificateDispatcher(caCertificate);
     this.timeoutMs = timeoutMs;
   }
   async request(
     path,
     { method = "GET", body, signal, anonymous = false } = {},
   ) {
-    const response = await fetch(this.url + path, {
+    const response = await httpFetch(this.url + path, {
       method,
       ...(this.dispatcher ? { dispatcher: this.dispatcher } : {}),
       redirect: "error",
@@ -70,6 +92,7 @@ export class GalleryClient {
         ? AbortSignal.any([signal, AbortSignal.timeout(this.timeoutMs)])
         : AbortSignal.timeout(this.timeoutMs),
       headers: {
+        Accept: "application/json",
         ...(body ? { "Content-Type": "application/json" } : {}),
         ...(!anonymous && this.credential
           ? { Authorization: `Bearer ${this.credential}` }
@@ -84,7 +107,13 @@ export class GalleryClient {
       throw new GalleryError(
         response.ok ? 502 : response.status,
         "INVALID_SERVICE_RESPONSE",
-        "中心服务未返回 JSON，请检查服务地址和 HTTPS 反向代理配置",
+        `中心服务未返回 JSON（HTTP ${response.status}，类型 ${
+          response.headers
+            .get("content-type")
+            ?.split(";", 1)[0]
+            ?.replace(/[^a-zA-Z0-9/+._-]/g, "")
+            .slice(0, 80) || "unknown"
+        }，接口 ${path.split("?", 1)[0]}，连接 ${this.useHostProxy ? "host-proxy" : "direct"}），请检查中心地址及代理或网关`,
       );
     }
     if (!response.ok)

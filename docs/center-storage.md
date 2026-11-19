@@ -83,3 +83,15 @@ sudo /opt/gallery-db/gallery-center exec center node scripts/center-users.mjs as
 ## 开发验证
 
 `GALLERY_TEST_DATABASE_URL=... node --test test/center.test.mjs` 在随机独立 schema 中验证真实 PostgreSQL、跨用户权限、MCP 加密和免密接入，测试后清理，不清空应用数据。`node --test test/center-installer.test.mjs` 验证新装、旧部署升级、镜像复用及配置保留。
+
+## npx 正常、打包启动连接异常（0.33.2）
+
+Gallery 的中心 HTTP 请求使用自己的 Undici fetch 与连接池，默认直连配置的地址，不依赖宿主改写的 global fetch 或全局代理 dispatcher。MCP 的网络设置保持原样。旧连接没有 useHostProxy 字段时也按直连处理，用户身份、令牌、资源归属和 CA 配置保持不变。
+
+在「存储设置 → 中心服务 → 连接选项」中，默认不勾选「使用宿主代理连接中心服务」。仅当网络确实要求经代理访问中心时开启，此模式使用宿主当前的全局网络 dispatcher；该选项不自行创建或配置代理。保存后持久化到 gallery/storage.json，与客户端加载方式无关。
+
+直连模式继续验证 HTTPS 证书，并支持该连接保存的私有 CA。宿主代理模式不支持连接专用 CA，需要移除该连接专用 CA 并由宿主/系统建立证书信任，或切回直连；不会为了连通而关闭证书校验。
+
+收到非 JSON 时，错误会包含 HTTP 状态、Content-Type 的 MIME 类型、接口路径以及 direct / host-proxy 模式，不回显原始响应正文、认证令牌或请求查询参数。HTTP 200 + text/html 常见于登录页或代理/网关页面，但仅凭此组合不能确定具体是哪一层；应结合实际地址和宿主网络配置排查。网络异常或非 JSON 不会自动重放写请求。
+
+此调整只涉及 Gallery 客户端，不需要迁移数据库、重新创建用户或重建 Center。更新插件并重启 DSH 后生效。测试覆盖全局 fetch 改写、全局代理干扰、显式代理模式、完整 CommonJS 打包及实际中心读写；这不代表已验证每一种私有打包器。

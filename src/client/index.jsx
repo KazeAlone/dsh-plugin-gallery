@@ -1151,6 +1151,11 @@ function GalleryContent({ remote }) {
                 </label>
                 <p>{l("填写服务器 IP 和端口即可，无需接入密钥或证书。")}</p>
                 <p>{l("首次接入后自动保存此 DSH 的独立身份。所有成员可查看和使用资源，仅创建者可编辑和删除。")}</p>
+                <details><summary>{l("连接选项")}</summary>
+                  <label className="gal-storage-consent"><input type="checkbox" checked={Boolean(storageSettings.service?.useHostProxy)}
+                    onChange={e => { setStorageSettings(x => ({ ...x, service: { ...x.service, useHostProxy: e.target.checked } })); setConnectionResult(""); }} />{l("使用宿主代理连接中心服务")}</label>
+                  <p>{l("默认直连中心地址；仅在必须经过代理才能访问时开启。与 MCP 服务的代理设置无关。")}</p>
+                </details>
                 <label className="gal-storage-consent"><input type="checkbox" checked={Boolean(storageSettings.service?.allowStdio)}
                   onChange={e => setStorageSettings(x => ({ ...x, service: { ...x.service, allowStdio: e.target.checked } }))} />{l("允许中心 stdio MCP 在此 DSH 执行本机命令（仅信任资源作者时开启）")}</label>
               </>}
@@ -1186,7 +1191,7 @@ function GalleryContent({ remote }) {
               {error && <p role="alert">{l(error)}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.33.1</span>
+              <span className="gal-local">v0.33.2</span>
               <button
                 disabled={busy}
                 onClick={() =>
