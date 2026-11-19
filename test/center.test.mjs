@@ -569,6 +569,15 @@ test(
     a.setUsername("Alice");
     b.setUsername("Bob");
     await a.configure({ type: "service", url });
+    const originalIdentity = a.read().service.userId;
+    const originalToken = a.read().service.token;
+    await a.configure({ type: "service", url, useHostProxy: true });
+    assert.equal(a.read().service.useHostProxy, true);
+    assert.equal(a.read().service.userId, originalIdentity);
+    await a.configure({ type: "service", url, useHostProxy: false });
+    assert.equal(a.settings().service.useHostProxy, false);
+    assert.equal(a.read().service.userId, originalIdentity);
+    assert.equal(a.read().service.token, originalToken);
     await b.configure({ type: "service", url });
     const template = JSON.parse(
       readFileSync(

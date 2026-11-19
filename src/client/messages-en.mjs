@@ -1,5 +1,11 @@
 // Plugin-owned interface text. Resource content is never translated.
 export const english = {
+  "连接选项": "Connection options",
+  "使用宿主代理连接中心服务": "Use the host proxy to connect to the center",
+  "默认直连中心地址；仅在必须经过代理才能访问时开启。与 MCP 服务的代理设置无关。": "Connect directly by default. Enable only when a proxy is required to reach the center. This does not change MCP proxy settings.",
+  "宿主代理选项必须为布尔值": "Host proxy option must be a boolean",
+  "宿主代理模式不支持连接专用 CA，请使用系统信任的证书或关闭宿主代理": "Host proxy mode does not support a connection-specific CA. Use system-trusted certificates or disable the host proxy.",
+  "中心服务未返回 JSON（HTTP {0}，类型 {1}，接口 {2}，连接 {3}），请检查中心地址及代理或网关": "Center returned non-JSON (HTTP {0}, type {1}, endpoint {2}, connection {3}). Check the center address, proxy or gateway.",
   "已注册并确认 TeamFlow 可读取：{0} v{1}。请重新打开模板库刷新。": "Registered and verified in TeamFlow: {0} v{1}. Reopen the template library to refresh.",
   "模板文件已写入 {0}，但无法确认 TeamFlow 是否已载入，请检查插件状态后重新打开模板库；不要连续重复注册。": "Template saved to {0}, but TeamFlow loading could not be verified. Check plugin status and reopen its library; do not repeatedly register.",
   "模板文件已写入 {0}，但 TeamFlow 模板接口不可用：{1}": "Template saved to {0}, but the TeamFlow template API is unavailable: {1}",
