@@ -577,12 +577,22 @@ test(
       ),
     );
     await a.configure({ type: "internal" });
+    const local = await uploadWorkflowTemplate(a, template, {
+      id: "personal-example",
+      version: 1,
+    });
+    assert.equal(local.libraryId, "local");
+    assert.equal(a.read().activeLibraryId, "local");
+    await assert.rejects(b.getResource(local.id), { status: 404 });
+    await a.configure({ type: "service" });
     const shared = await uploadWorkflowTemplate(a, template, {
       id: "personal-example",
       version: 1,
     });
     assert.equal(shared.reused, false);
-    assert.equal(a.read().activeLibraryId, "local");
+    assert.equal(shared.libraryId, "center");
+    assert.notEqual(shared.id, local.id);
+    assert.equal(a.read().activeLibraryId, "center");
     const received = await b.getResource(shared.id);
     assert.equal(received.creator.username, "Alice");
     assert.equal(received.canEdit, false);
@@ -654,7 +664,7 @@ test(
       assert.equal(actual.canEdit, false);
       assert.equal(actual.metadata.teamflowSource.id, source.id);
       assert.deepEqual(JSON.parse(actual.files[0].content).loops, source.loops);
-      assert.equal(a.read().activeLibraryId, "local");
+      assert.equal(a.read().activeLibraryId, "center");
     }
     await a.configure({ type: "service" });
     const saved = await a.createResource(skill);
