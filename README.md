@@ -2,7 +2,7 @@
 
 Gallery 是运行在 DSH 内的资源库，用来创建、整理、共享和调用 **Skill、Agent、MCP 和 Workflow**。默认使用 DSH 内部存储，无需部署数据库，也不增加插件登录或接入码；访问仍由 DSH 宿主认证控制。
 
-当前版本 **0.33.0**。Workflow 对接 TeamFlow **0.2.15**：可将 Gallery 资源注册到 TeamFlow 模板库，也可从 TeamFlow 将模板上传到 Gallery 当前使用的内部库或中心库。
+当前版本 **0.33.1**。Workflow 对接 TeamFlow **0.2.15**：可将 Gallery 资源注册到 TeamFlow 模板库，也可从 TeamFlow 将模板上传到 Gallery 当前使用的内部库或中心库。
 
 ## 快速开始
 
@@ -11,7 +11,7 @@ Gallery 是运行在 DSH 内的资源库，用来创建、整理、共享和调�
 使用内部发布的安装包安装到实际使用的 DSH 配置，例如 `web`（替换为安装包的实际绝对路径）：
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.33.0.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.33.1.tgz --ignore-scripts
 ```
 
 1. 重启对应的 DSH 实例并刷新浏览器，打开侧边栏 **Gallery**。
@@ -148,7 +148,7 @@ Gallery 负责编辑、保存和共享可复用模板，**TeamFlow 负责应用�
 
 ### 双向保存模板
 
-- **Gallery → TeamFlow**：在 Workflow 详情点击「注册到 TeamFlow」，写入其个人模板库，再到 TeamFlow 应用到会话。默认目录为 `~/.dsh-teamflow/templates`；自定义目录时，给 Gallery 进程设置 `DSH_TEAMFLOW_TEMPLATE_DIR`，与 TeamFlow 的 `templateDirectory` 一致。
+- **Gallery → TeamFlow**：在 Workflow 详情点击「注册到 TeamFlow」，写入其个人模板库，再到 TeamFlow 应用到会话。Gallery 优先读取当前宿主中已启动 TeamFlow 的 `templateDirectory`，默认目录为 `~/.dsh-teamflow/templates`；未检测到插件时才回退 `DSH_TEAMFLOW_TEMPLATE_DIR` 或默认目录。注册后通过 TeamFlow 自身接口核对模板 ID 和版本，确认可读才显示成功；请重新打开模板库刷新列表。接口不可用或未找到时会明确显示文件写入目录，便于排查不同 DSH 实例或目录不一致。
 - **TeamFlow → Gallery**：TeamFlow 0.2.15 模板详情的「上传至 Gallery」将所选内置或个人模板版本上传到 **Gallery 当前选中的库**。内部库存本机，中心库存共享服务器；可先在 Gallery 切换存储再上传。需要 Gallery 0.32.1+。
 
 同一源版本向同一目标库重复上传会复用已有副本，保留 Gallery 中的编辑；新版本另建资源。同一版本内容发生变化时需先保存为新版本。上传不包含执行状态、结果或会话信息。Gallery 本身不提供资源历史回滚。

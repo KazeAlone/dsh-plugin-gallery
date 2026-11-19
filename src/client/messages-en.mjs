@@ -1,5 +1,14 @@
 // Plugin-owned interface text. Resource content is never translated.
 export const english = {
+  "已注册并确认 TeamFlow 可读取：{0} v{1}。请重新打开模板库刷新。": "Registered and verified in TeamFlow: {0} v{1}. Reopen the template library to refresh.",
+  "模板文件已写入 {0}，但无法确认 TeamFlow 是否已载入，请检查插件状态后重新打开模板库；不要连续重复注册。": "Template saved to {0}, but TeamFlow loading could not be verified. Check plugin status and reopen its library; do not repeatedly register.",
+  "模板文件已写入 {0}，但 TeamFlow 模板接口不可用：{1}": "Template saved to {0}, but the TeamFlow template API is unavailable: {1}",
+  "模板文件已写入 {0}，但 TeamFlow 拒绝读取此模板：{1}": "Template saved to {0}, but TeamFlow rejected this record: {1}",
+  "模板文件已写入 {0}，但当前 TeamFlow 模板库中未找到它。请确认两个插件运行在同一 DSH 实例，并检查 TeamFlow 模板目录。": "Template saved to {0}, but it was not found in the current TeamFlow library. Check that both plugins run in the same DSH instance and check its template directory.",
+  "TeamFlow 尚未启动成功，请先检查该插件状态": "TeamFlow is not active. Check its plugin status first.",
+  "检测到多个不同的 TeamFlow 模板目录，无法确定目标，请检查当前宿主配置": "Multiple TeamFlow template directories were found. Check the host configuration before registering.",
+  "TeamFlow 模板目录配置无效": "Invalid TeamFlow template directory configuration",
+
   职责概述: "Responsibility summary",
   角色职责: "Role responsibilities",
   "通用执行指令 / PE": "General execution instructions / PE",
