@@ -1,4 +1,4 @@
-# 公司内网中心资源库（0.29.0）
+# 公司内网中心资源库
 
 中心只存储资源，不运行 Agent、MCP 或 Workflow。所有成员可查看和使用资源；每个 DSH 自动保存独立身份，只有创建者可以编辑、删除自己的资源。
 
@@ -19,7 +19,7 @@ sudo bash scripts/install-center.sh --port 8088
 
 ## 每个用户的 DSH
 
-更新 Gallery 到 **0.29.0** 并重启 DSH，在「存储设置」选择中心服务，填写：
+更新 Gallery 到最新 main（免密接入要求 0.29.0+）并重启 DSH，在「存储设置」选择中心服务，填写：
 
 ```text
 109.105.132.53:8088
@@ -47,6 +47,10 @@ sudo /opt/gallery-db/gallery-center ps
 
 # 查看日志
 sudo /opt/gallery-db/gallery-center logs --tail=50 center
+
+# 停止、重启
+sudo /opt/gallery-db/gallery-center stop
+sudo /opt/gallery-db/gallery-center restart
 
 # 服务器重启后容器会自动启动；也可以手动启动
 sudo /opt/gallery-db/gallery-center up -d

@@ -1,6 +1,6 @@
-# Workflow 门控与循环（0.27.0）
+# Workflow 画布与模板
 
-画布保存 TeamFlow main 0.2.14 的原生模板定义，不执行 Workflow。保存后可从资源详情「注册到 TeamFlow」，再由 TeamFlow 应用和执行。
+画布保存 TeamFlow main 0.2.15 的原生模板定义，不执行 Workflow。保存后可从资源详情「注册到 TeamFlow」，再由 TeamFlow 应用和执行。
 
 ## 成员与节点
 

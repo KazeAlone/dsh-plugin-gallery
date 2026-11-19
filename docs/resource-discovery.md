@@ -1,6 +1,6 @@
-# Skill / MCP 按需访问（0.30.0）
+# Skill / MCP 按需访问
 
-此版本提供 Gallery 侧能力，不修改 TeamFlow。界面仍为 `gallerySkill` 和 `galleryMcp` 两个开关。消费插件可检测 `ctx.gallery.resourceCapabilities()`，然后为真实子 Agent 启用按需模式：
+Gallery 从 0.30.0 起提供按需访问，TeamFlow 从 0.2.13 起已接入。界面仍为 `gallerySkill` 和 `galleryMcp` 两个开关，开启后由 Agent 自己搜索及加载，不需要用户逐条挑选。其他消费插件可检测 `ctx.gallery.resourceCapabilities()`，然后为真实子 Agent 启用按需模式：
 
 ```js
 const stopGalleryAccess = ctx.gallery.setMemberAccess(childAgent, {
@@ -11,7 +11,7 @@ const stopGalleryAccess = ctx.gallery.setMemberAccess(childAgent, {
 // 在子 Agent 生命周期结束时调用 stopGalleryAccess()。
 ```
 
-`resourceMode` 省略或为 `native` 时保留原有接入方式；升级 Gallery 不会擅自改变已有 TeamFlow 会话。TeamFlow 后续需显式启用新模式，并停止自己附加全量 Skill/MCP 列表，才能完整获得上下文节省。
+`resourceMode` 省略或为 `native` 时保留原有接入方式。TeamFlow 0.2.13+ 在新建或恢复成员时显式启用 `discovery`，不再预注入全量 Skill/MCP 列表；更新后重启宿主。其他消费插件也需显式启用该模式，单独升级 Gallery 不会自动改变其接入方式。
 
 ## 模型工具
 
@@ -42,7 +42,7 @@ Skill 只在显式加载后返回指引。附件物化到宿主目录并列出�
 - 重复设置同一成员的访问配置会清理旧过滤器和提示词；旧清理函数不会删除新权限。
 - 搜索与查看 MCP 工具不增加调用次数；原生 MCP 成功执行后计数一次，不在代理层重复计数。
 
-本版优化模型上下文。宿主仍按原有机制连接、注册和刷新 MCP，尚未改为按需建立网络连接；未使用新模式的普通会话保持原有方式。
+按需模式优化模型上下文。宿主仍按原有机制连接、注册和刷新 MCP，尚未改为按需建立网络连接；未使用新模式的普通会话保持原有方式。
 
 ## 同进程 API
 
