@@ -35,8 +35,53 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
+// src/client/teamflow-registration.mjs
+async function verifyTeamflowRegistration(result, fetcher = fetch) {
+  const directory = result.directory || "~/.dsh-teamflow/templates";
+  const prefix = `\u6A21\u677F\u6587\u4EF6\u5DF2\u5199\u5165 ${directory}\uFF0C`;
+  let response, body;
+  try {
+    response = await fetcher("/plugins/dsh-agent-teams/workflow", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "template_list" }),
+      signal: AbortSignal.timeout(15e3)
+    });
+    body = await response.json();
+  } catch {
+    throw new Error(
+      prefix + "\u4F46\u65E0\u6CD5\u786E\u8BA4 TeamFlow \u662F\u5426\u5DF2\u8F7D\u5165\uFF0C\u8BF7\u68C0\u67E5\u63D2\u4EF6\u72B6\u6001\u540E\u91CD\u65B0\u6253\u5F00\u6A21\u677F\u5E93\uFF1B\u4E0D\u8981\u8FDE\u7EED\u91CD\u590D\u6CE8\u518C\u3002"
+    );
+  }
+  if (!response.ok || !Array.isArray(body?.templates))
+    throw new Error(
+      prefix + "\u4F46 TeamFlow \u6A21\u677F\u63A5\u53E3\u4E0D\u53EF\u7528\uFF1A" + (typeof body?.error === "string" ? body.error : `HTTP ${response.status}`)
+    );
+  const template = body.templates.find(
+    (item) => item?.id === result.id && Number.isSafeInteger(item.version) && item.version >= result.version
+  );
+  if (template) return { ...result, verified: true };
+  const rejected = (Array.isArray(body.warnings) ? body.warnings : []).find(
+    (w) => typeof w === "string" && w.includes(`${result.id}.json`)
+  );
+  if (rejected)
+    throw new Error(prefix + "\u4F46 TeamFlow \u62D2\u7EDD\u8BFB\u53D6\u6B64\u6A21\u677F\uFF1A" + rejected);
+  throw new Error(
+    prefix + "\u4F46\u5F53\u524D TeamFlow \u6A21\u677F\u5E93\u4E2D\u672A\u627E\u5230\u5B83\u3002\u8BF7\u786E\u8BA4\u4E24\u4E2A\u63D2\u4EF6\u8FD0\u884C\u5728\u540C\u4E00 DSH \u5B9E\u4F8B\uFF0C\u5E76\u68C0\u67E5 TeamFlow \u6A21\u677F\u76EE\u5F55\u3002"
+  );
+}
+
 // src/client/messages-en.mjs
 var english = {
+  "\u5DF2\u6CE8\u518C\u5E76\u786E\u8BA4 TeamFlow \u53EF\u8BFB\u53D6\uFF1A{0} v{1}\u3002\u8BF7\u91CD\u65B0\u6253\u5F00\u6A21\u677F\u5E93\u5237\u65B0\u3002": "Registered and verified in TeamFlow: {0} v{1}. Reopen the template library to refresh.",
+  "\u6A21\u677F\u6587\u4EF6\u5DF2\u5199\u5165 {0}\uFF0C\u4F46\u65E0\u6CD5\u786E\u8BA4 TeamFlow \u662F\u5426\u5DF2\u8F7D\u5165\uFF0C\u8BF7\u68C0\u67E5\u63D2\u4EF6\u72B6\u6001\u540E\u91CD\u65B0\u6253\u5F00\u6A21\u677F\u5E93\uFF1B\u4E0D\u8981\u8FDE\u7EED\u91CD\u590D\u6CE8\u518C\u3002": "Template saved to {0}, but TeamFlow loading could not be verified. Check plugin status and reopen its library; do not repeatedly register.",
+  "\u6A21\u677F\u6587\u4EF6\u5DF2\u5199\u5165 {0}\uFF0C\u4F46 TeamFlow \u6A21\u677F\u63A5\u53E3\u4E0D\u53EF\u7528\uFF1A{1}": "Template saved to {0}, but the TeamFlow template API is unavailable: {1}",
+  "\u6A21\u677F\u6587\u4EF6\u5DF2\u5199\u5165 {0}\uFF0C\u4F46 TeamFlow \u62D2\u7EDD\u8BFB\u53D6\u6B64\u6A21\u677F\uFF1A{1}": "Template saved to {0}, but TeamFlow rejected this record: {1}",
+  "\u6A21\u677F\u6587\u4EF6\u5DF2\u5199\u5165 {0}\uFF0C\u4F46\u5F53\u524D TeamFlow \u6A21\u677F\u5E93\u4E2D\u672A\u627E\u5230\u5B83\u3002\u8BF7\u786E\u8BA4\u4E24\u4E2A\u63D2\u4EF6\u8FD0\u884C\u5728\u540C\u4E00 DSH \u5B9E\u4F8B\uFF0C\u5E76\u68C0\u67E5 TeamFlow \u6A21\u677F\u76EE\u5F55\u3002": "Template saved to {0}, but it was not found in the current TeamFlow library. Check that both plugins run in the same DSH instance and check its template directory.",
+  "TeamFlow \u5C1A\u672A\u542F\u52A8\u6210\u529F\uFF0C\u8BF7\u5148\u68C0\u67E5\u8BE5\u63D2\u4EF6\u72B6\u6001": "TeamFlow is not active. Check its plugin status first.",
+  "\u68C0\u6D4B\u5230\u591A\u4E2A\u4E0D\u540C\u7684 TeamFlow \u6A21\u677F\u76EE\u5F55\uFF0C\u65E0\u6CD5\u786E\u5B9A\u76EE\u6807\uFF0C\u8BF7\u68C0\u67E5\u5F53\u524D\u5BBF\u4E3B\u914D\u7F6E": "Multiple TeamFlow template directories were found. Check the host configuration before registering.",
+  "TeamFlow \u6A21\u677F\u76EE\u5F55\u914D\u7F6E\u65E0\u6548": "Invalid TeamFlow template directory configuration",
   \u804C\u8D23\u6982\u8FF0: "Responsibility summary",
   \u89D2\u8272\u804C\u8D23: "Role responsibilities",
   "\u901A\u7528\u6267\u884C\u6307\u4EE4 / PE": "General execution instructions / PE",
@@ -14307,8 +14352,8 @@ function GalleryContent({ remote }) {
     setConnectionResult("");
   });
   const publishWorkflow = () => run(async () => {
-    const result = await call(remote, "uiPublishWorkflow", selected.id);
-    setNotice(l("\u5DF2\u6CE8\u518C\u5230 TeamFlow\uFF1A{0} v{1}", result.name, result.version));
+    const result = await verifyTeamflowRegistration(await call(remote, "uiPublishWorkflow", selected.id));
+    setNotice(l("\u5DF2\u6CE8\u518C\u5E76\u786E\u8BA4 TeamFlow \u53EF\u8BFB\u53D6\uFF1A{0} v{1}\u3002\u8BF7\u91CD\u65B0\u6253\u5F00\u6A21\u677F\u5E93\u5237\u65B0\u3002", result.name, result.version));
   });
   return /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal", lang: l.language, "data-theme": theme, "data-motion-paused": motionPaused, "data-paper-dark": paperDark }, theme === "astral" && /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-astral-sky", "aria-hidden": "true" }, /* @__PURE__ */ import_react15.default.createElement("svg", { className: "gal-astral-chart", viewBox: "0 0 540 240", fill: "none" }, /* @__PURE__ */ import_react15.default.createElement("g", { stroke: "currentColor", strokeWidth: "0.7" }, /* @__PURE__ */ import_react15.default.createElement("circle", { cx: "270", cy: "68", r: "144" }), /* @__PURE__ */ import_react15.default.createElement("circle", { cx: "270", cy: "68", r: "126", strokeDasharray: "2 5" }), /* @__PURE__ */ import_react15.default.createElement("circle", { cx: "270", cy: "68", r: "106" }), /* @__PURE__ */ import_react15.default.createElement("path", { d: "M24 68h492M270 0v224M133 0l274 136M407 0L133 136", opacity: ".45" })), /* @__PURE__ */ import_react15.default.createElement("circle", { className: "gal-astral-orbit", cx: "376", cy: "68", r: "3.5", fill: "#fff4c9" }), /* @__PURE__ */ import_react15.default.createElement("path", { d: "M270 43l5 20 20 5-20 5-5 20-5-20-20-5 20-5z", fill: "#fff1c9" })), /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-astral-meteor" }), /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-astral-meteor" })), (theme !== "folio" || !status?.ready) && /* @__PURE__ */ import_react15.default.createElement("header", { className: "gal-header" }, theme === "anime" && /* @__PURE__ */ import_react15.default.createElement(AnimeMascot, null), /* @__PURE__ */ import_react15.default.createElement("div", null, /* @__PURE__ */ import_react15.default.createElement("h1", null, /* @__PURE__ */ import_react15.default.createElement(BrandIcon, { size: 32 }), "Gallery", theme === "astral" && /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-astral-title" }, l("\u938F\u91D1\u661F\u7A79")))), /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-header-actions" }, theme === "astral" && /* @__PURE__ */ import_react15.default.createElement(
     "button",
@@ -14602,8 +14647,8 @@ function GalleryContent({ remote }) {
       (agent) => agent.skills?.length || agent.mcps?.length
     ) && /* @__PURE__ */ import_react15.default.createElement("p", null, l("\u539F\u6709 Skill \u548C MCP \u5F15\u7528\u4FDD\u7559\u5728 Gallery \u4E2D\u3002TeamFlow \u6309 Agent \u8282\u70B9\u7684\u4E24\u4E2A\u5F00\u5173\u542F\u7528\u8D44\u6E90\u3002")),
     /* @__PURE__ */ import_react15.default.createElement("div", { className: "gal-detail-actions" }, selected.type === "workflow" && selected.files.some((f) => f.path === "workflow.json") && /* @__PURE__ */ import_react15.default.createElement("button", { disabled: busy, onClick: () => run(async () => {
-      const result = await call(remote, "uiPublishWorkflow", selected.id);
-      setNotice(l("\u5DF2\u6CE8\u518C\u5230 TeamFlow\uFF1A{0} v{1}", result.name, result.version));
+      const result = await verifyTeamflowRegistration(await call(remote, "uiPublishWorkflow", selected.id));
+      setNotice(l("\u5DF2\u6CE8\u518C\u5E76\u786E\u8BA4 TeamFlow \u53EF\u8BFB\u53D6\uFF1A{0} v{1}\u3002\u8BF7\u91CD\u65B0\u6253\u5F00\u6A21\u677F\u5E93\u5237\u65B0\u3002", result.name, result.version));
     }) }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "workflow" }), l("\u6CE8\u518C\u5230 TeamFlow")), selected.canEdit && /* @__PURE__ */ import_react15.default.createElement("button", { disabled: busy, onClick: () => edit(selected) }, /* @__PURE__ */ import_react15.default.createElement(Glyph, { name: "edit" }), l("\u7F16\u8F91\u8D44\u6E90")), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
@@ -14847,7 +14892,7 @@ function GalleryContent({ remote }) {
       },
       l("\u4FDD\u5B58\u7528\u6237\u540D")
     ), connectionResult && /* @__PURE__ */ import_react15.default.createElement("p", { role: "status" }, l(connectionResult)), error && /* @__PURE__ */ import_react15.default.createElement("p", { role: "alert" }, l(error))),
-    /* @__PURE__ */ import_react15.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-local" }, "v0.33.0"), /* @__PURE__ */ import_react15.default.createElement(
+    /* @__PURE__ */ import_react15.default.createElement("footer", { className: "gal-dialog-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "gal-local" }, "v0.33.1"), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         disabled: busy,

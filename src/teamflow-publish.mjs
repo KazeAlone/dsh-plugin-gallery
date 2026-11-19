@@ -40,7 +40,14 @@ export async function publishToTeamflow(resource, directory = join(homedir(), '.
     for (const file of (await readdir(root)).filter(f => /^[a-f0-9-]{36}\.json$/.test(f))) {
       try {
         const candidate = JSON.parse(await readFile(join(root, file), 'utf8'));
-        if (!candidate.deleted && candidate.gallerySource === resource.id && Array.isArray(candidate.versions) && candidate.versions.length) { record = candidate; break; }
+        if (candidate.deleted || candidate.gallerySource !== resource.id || candidate.id !== file.slice(0,-5) || !Array.isArray(candidate.versions) || !candidate.versions.length) continue;
+        const validHistory = candidate.versions.every((version,index) => {
+          if (version.id !== candidate.id || version.version !== index+1 || !Number.isFinite(version.createdAt) || !Number.isFinite(version.updatedAt)) return false;
+          try { workflowFromResource({files:[{path:'workflow.json',encoding:'utf8',content:JSON.stringify(version)}]}); return true; }
+          catch { return false; }
+        });
+        // Preserve unreadable old files; a fresh valid record can still be registered.
+        if (validHistory) { record = candidate; break; }
       } catch { /* TeamFlow will report damaged records; preserve them. */ }
     }
     record ??= { id: randomUUID(), gallerySource: resource.id, versions: [] };
@@ -50,6 +57,6 @@ export async function publishToTeamflow(resource, directory = join(homedir(), '.
     const temp = join(root, `${record.id}.${randomUUID()}.tmp`);
     try { await writeFile(temp, JSON.stringify(record, null, 2), 'utf8'); await rename(temp, join(root, `${record.id}.json`)); }
     finally { await rm(temp, { force: true }); }
-    return { id: record.id, version: version.version, name: version.name };
+    return { id: record.id, version: version.version, name: version.name, directory: root };
   } finally { await rm(lock, { recursive: true }); }
 }

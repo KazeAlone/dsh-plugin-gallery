@@ -22,6 +22,7 @@ import { workflowSharingStatus, uploadWorkflowTemplate } from "./workflow-sharin
 import { workflowFromResource } from "./workflow-template.mjs";
 import { syncWorkflowUsage } from "./workflow-usage.mjs";
 import { publishToTeamflow } from "./teamflow-publish.mjs";
+import { teamflowTemplateTarget } from "./teamflow-target.mjs";
 import { createSkillProvider } from "./skill-provider.mjs";
 import { registerUsageTracking } from "./usage-runtime.mjs";
 import { registerRuntimeDiagnostics } from "./runtime-diagnostics.mjs";
@@ -504,7 +505,8 @@ export default class GalleryService extends TypertRemoteService {
         "INVALID_TYPE",
         "仅 Workflow 可以安装到 TeamFlow",
       );
-      return publishToTeamflow(resource, process.env.DSH_TEAMFLOW_TEMPLATE_DIR);
+      const target = teamflowTemplateTarget(this.ctx);
+      return { ...await publishToTeamflow(resource, target.directory), directorySource: target.source };
     });
   }
   uiImportDirectory(payload) {

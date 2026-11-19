@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join } from "node:path";
 import { digest } from "./model.mjs";
+import { teamflowTemplateTarget } from "./teamflow-target.mjs";
 
 async function entries(root) {
   try {
@@ -29,7 +29,7 @@ export async function syncWorkflowUsage(ctx, store) {
     const rows = (await adapter.read("workflow")).resources.filter((row) => row.type === "workflow");
     if (!rows.length) return;
     const byResource = new Map(rows.map((row) => [row.id, row]));
-    const templateRoot = process.env.DSH_TEAMFLOW_TEMPLATE_DIR ?? join(homedir(), ".dsh-teamflow", "templates");
+    const templateRoot = teamflowTemplateTarget(ctx).directory;
     const byTemplate = new Map();
     for (const entry of await entries(templateRoot)) {
       if (!entry.isFile() || !/^[a-f0-9-]{36}\.json$/.test(entry.name)) continue;

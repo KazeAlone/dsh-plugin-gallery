@@ -1,3 +1,4 @@
+import { verifyTeamflowRegistration } from "./teamflow-registration.mjs";
 import { createGalleryText } from "./locale.mjs";
 import { GalleryLocale, useGalleryText } from "./i18n.jsx";
 import React, { useEffect, useRef, useState } from "react";
@@ -485,8 +486,8 @@ function GalleryContent({ remote }) {
     setConnectionResult("");
   });
   const publishWorkflow = () => run(async () => {
-    const result = await call(remote, "uiPublishWorkflow", selected.id);
-    setNotice(l("已注册到 TeamFlow：{0} v{1}", result.name, result.version));
+    const result = await verifyTeamflowRegistration(await call(remote, "uiPublishWorkflow", selected.id));
+    setNotice(l("已注册并确认 TeamFlow 可读取：{0} v{1}。请重新打开模板库刷新。", result.name, result.version));
   });
   return (
     <div className="gal" lang={l.language} data-theme={theme} data-motion-paused={motionPaused} data-paper-dark={paperDark}>
@@ -856,7 +857,7 @@ function GalleryContent({ remote }) {
                 <p>{l("原有 Skill 和 MCP 引用保留在 Gallery 中。TeamFlow 按 Agent 节点的两个开关启用资源。")}</p>
               )}
             <div className="gal-detail-actions">
-              {selected.type === "workflow" && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await call(remote, "uiPublishWorkflow", selected.id); setNotice(l("已注册到 TeamFlow：{0} v{1}", result.name, result.version)); })}><Glyph name="workflow" />{l("注册到 TeamFlow")}</button>}
+              {selected.type === "workflow" && selected.files.some(f => f.path === "workflow.json") && <button disabled={busy} onClick={() => run(async () => { const result = await verifyTeamflowRegistration(await call(remote, "uiPublishWorkflow", selected.id)); setNotice(l("已注册并确认 TeamFlow 可读取：{0} v{1}。请重新打开模板库刷新。", result.name, result.version)); })}><Glyph name="workflow" />{l("注册到 TeamFlow")}</button>}
               {selected.canEdit && (
                 <button disabled={busy} onClick={() => edit(selected)}>
                   <Glyph name="edit" />{l("编辑资源")}</button>
@@ -1185,7 +1186,7 @@ function GalleryContent({ remote }) {
               {error && <p role="alert">{l(error)}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.33.0</span>
+              <span className="gal-local">v0.33.1</span>
               <button
                 disabled={busy}
                 onClick={() =>
