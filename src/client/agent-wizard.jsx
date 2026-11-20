@@ -1,3 +1,4 @@
+import { useDraftChanges } from "./draft-changes.mjs";
 import { useGalleryText } from "./i18n.jsx";
 import { createResourceIdentifier } from "./resource-id.mjs";
 import { ResourceBasics } from "./resource-basics.jsx";
@@ -52,6 +53,8 @@ export function AgentWizard({ resource, importedResource, onClose, onSave }) {
         .filter(Boolean),
     ),
   ];
+  const dirty = useDraftChanges({ slug, name, description, instructions, files, tags: parsedTags, cover }, Boolean(importedResource));
+  const requestClose = () => onClose(dirty);
   const goal = "",
     boundaries = "";
   const config = { ...(draft?.metadata?.agent?.config || {}) };
@@ -161,7 +164,7 @@ export function AgentWizard({ resource, importedResource, onClose, onSave }) {
   }
   const current = files[selected];
   return (
-    <Modal onClose={() => !busy && onClose()}>
+    <Modal onClose={() => !busy && requestClose()}>
       <section
         className="gal-dialog gal-skill-wizard gal-agent-wizard"
         role="dialog"
@@ -173,7 +176,7 @@ export function AgentWizard({ resource, importedResource, onClose, onSave }) {
           <h2>
             <Glyph name="agent" /> {resource ? l("编辑 Agent") : l("新建 Agent")}
           </h2>
-          <button aria-label={l("关闭编辑")} disabled={busy} onClick={onClose}>
+          <button aria-label={l("关闭编辑")} disabled={busy} onClick={requestClose}>
             <Glyph name="close" />
           </button>
         </header>
@@ -412,7 +415,7 @@ export function AgentWizard({ resource, importedResource, onClose, onSave }) {
         <footer className="gal-skill-footer">
           <button
             disabled={busy}
-            onClick={step ? () => setStep(step - 1) : onClose}
+            onClick={step ? () => setStep(step - 1) : requestClose}
           >
             {step ? l("上一步") : l("取消")}
           </button>
