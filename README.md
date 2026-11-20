@@ -2,7 +2,7 @@
 
 Gallery 是运行在 DSH 内的资源库，用来创建、整理、共享和调用 **Skill、Agent、MCP 和 Workflow**。默认使用 DSH 内部存储，无需部署数据库，也不增加插件登录或接入码；访问仍由 DSH 宿主认证控制。
 
-当前版本 **0.33.2**。Workflow 对接 TeamFlow **0.2.15**：可将 Gallery 资源注册到 TeamFlow 模板库，也可从 TeamFlow 将模板上传到 Gallery 当前使用的内部库或中心库。
+当前版本 **0.33.3**。Workflow 对接 TeamFlow **0.2.15**：可将 Gallery 资源注册到 TeamFlow 模板库，也可从 TeamFlow 将模板上传到 Gallery 当前使用的内部库或中心库。
 
 ## 快速开始
 
@@ -11,7 +11,7 @@ Gallery 是运行在 DSH 内的资源库，用来创建、整理、共享和调�
 使用内部发布的安装包安装到实际使用的 DSH 配置，例如 `web`（替换为安装包的实际绝对路径）：
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.33.2.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.33.3.tgz --ignore-scripts
 ```
 
 1. 重启对应的 DSH 实例并刷新浏览器，打开侧边栏 **Gallery**。
@@ -35,7 +35,7 @@ npx @deepseek-ai/dsh@0.2.1-rc.5 plugin --profile web add /absolute/path/dsh-plug
 
 - 「全部」展示四类资源的累计调用榜；各分类提供资源浏览、名称/描述/标签搜索、编辑、删除及下载。
 - 资源展示创建者；内部库资源可直接管理，中心库只允许创建者编辑、删除自己的资源。
-- 创建和编辑使用相同的专用向导或 Workflow 画布；成功保存后关闭编辑窗口，并显示自动消失的悬浮通知。
+- 创建和编辑使用相同的专用向导或 Workflow 画布；成功保存后关闭编辑窗口，并显示自动消失的悬浮通知。未改动内容时关闭不再确认；只有实际修改或存在尚未保存的导入内容时才提示放弃修改，改回原样后不再提示。
 - 每个资源最多 **100 个文件、文件内容总计 5 MiB**，支持文本和二进制附件。资源类型创建后固定。
 - 内部库内置由 **ZelongWANG** 创建的四类参考示例。初始化时添加，修改或删除后不会在重启时恢复；中心库不会自动复制这些内部示例。
 

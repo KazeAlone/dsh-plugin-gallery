@@ -1,3 +1,4 @@
+import { useDraftChanges } from "./draft-changes.mjs";
 import { useGalleryText } from "./i18n.jsx";
 import { createResourceIdentifier } from "./resource-id.mjs";
 import { ResourceBasics } from "./resource-basics.jsx";
@@ -68,6 +69,8 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
         .filter(Boolean),
     ),
   ];
+  const dirty = useDraftChanges({ name, displayName, description, body: linkedBody, files, tags: parsedTags, cover }, Boolean(importedResource));
+  const requestClose = () => onClose(dirty);
   const issues = [
     ...(parsedTags.length > 20 ? [l("最多添加 20 个标签。")] : []),
     ...(parsedTags.some((tag) => tag.length > 40)
@@ -157,7 +160,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
   }
   const current = files[active];
   return (
-    <Modal onClose={() => !busy && onClose()}>
+    <Modal onClose={() => !busy && requestClose()}>
       <section
         className="gal-dialog gal-skill-wizard"
         role="dialog"
@@ -169,7 +172,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
           <h2>
             <Glyph name="skill" /> {resource ? l("编辑 Skill") : l("新建 Skill")}
           </h2>
-          <button aria-label={l("关闭编辑")} disabled={busy} onClick={onClose}>
+          <button aria-label={l("关闭编辑")} disabled={busy} onClick={requestClose}>
             <Glyph name="close" />
           </button>
         </header>
@@ -402,7 +405,7 @@ export function SkillWizard({ resource, importedResource, onClose, onSave }) {
           </details>
         </div>
         <footer className="gal-skill-footer">
-          <button disabled={busy} onClick={step ? () => go(step - 1) : onClose}>
+          <button disabled={busy} onClick={step ? () => go(step - 1) : requestClose}>
             {step ? l("上一步") : l("取消")}
           </button>
           {step < 2 ? (

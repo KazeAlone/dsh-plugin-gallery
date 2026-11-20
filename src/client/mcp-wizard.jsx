@@ -1,3 +1,4 @@
+import { useDraftChanges } from "./draft-changes.mjs";
 import { useGalleryText } from "./i18n.jsx";
 import { createResourceIdentifier } from "./resource-id.mjs";
 import { ResourceBasics } from "./resource-basics.jsx";
@@ -75,6 +76,8 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
       : transport === "streamable-http" && authType === "bearer"
         ? [{ key: "Authorization", value: token, saved: tokenSaved }]
         : entries.filter((entry) => entry.key.trim() || entry.value);
+  const dirty = useDraftChanges({ name, description, serverName, transport, command, args, cwd, url, authType, credentials: directEntries.map(({key,value})=>({key,value})), tags, cover });
+  const requestClose = () => onClose(dirty);
   const validCredentials =
     directEntries.every(
       (entry) =>
@@ -198,7 +201,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
     }
   }
   return (
-    <Modal onClose={() => !busy && onClose()}>
+    <Modal onClose={() => !busy && requestClose()}>
       <section
         className="gal-dialog gal-skill-wizard"
         role="dialog"
@@ -210,7 +213,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
           <h2>
             <Glyph name="mcp" /> {resource ? l("编辑 MCP") : l("新建 MCP")}
           </h2>
-          <button aria-label={l("关闭编辑")} disabled={busy} onClick={onClose}>
+          <button aria-label={l("关闭编辑")} disabled={busy} onClick={requestClose}>
             <Glyph name="close" />
           </button>
         </header>
@@ -507,7 +510,7 @@ export function McpWizard({ resource, onClose, onSave, onCheck }) {
         <footer className="gal-skill-footer">
           <button
             disabled={busy}
-            onClick={step ? () => setStep(step - 1) : onClose}
+            onClick={step ? () => setStep(step - 1) : requestClose}
           >
             {step ? l("上一步") : l("取消")}
           </button>

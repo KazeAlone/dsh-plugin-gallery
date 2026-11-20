@@ -1,3 +1,4 @@
+import { draftFingerprint } from "./draft-changes.mjs";
 import { verifyTeamflowRegistration } from "./teamflow-registration.mjs";
 import { createGalleryText } from "./locale.mjs";
 import { GalleryLocale, useGalleryText } from "./i18n.jsx";
@@ -288,6 +289,7 @@ function GalleryContent({ remote }) {
       fileIndex: 0,
       newPath: "",
       importError: "",
+      initialDraft: draftFingerprint({resource:d,tags:d.tags.join(", "),metadata:json(d.metadata,null,2),references:json(d.references,null,2)}),
     });
   }
   function startResource(importedResource) {
@@ -403,7 +405,8 @@ function GalleryContent({ remote }) {
   }
   async function closeEditor() {
     if (busy) return;
-    if (await confirmAction(l("放弃尚未保存的修改？"))) setEditor(null);
+    const dirty = editor && draftFingerprint({resource:editor.resource,tags:editor.tags,metadata:editor.metadata,references:editor.references}) !== editor.initialDraft;
+    if (!dirty || await confirmAction(l("放弃尚未保存的修改？"))) setEditor(null);
   }
   function closeStorage() {
     if (busy) return;
@@ -736,7 +739,7 @@ function GalleryContent({ remote }) {
           rows.push(...page.items);
           if (rows.length >= page.total || !page.items.length) return rows;
         }
-      }} resource={workflowWizard.resource} importedResource={workflowWizard.importedResource} onClose={async () => { if (await confirmAction(l("放弃尚未保存的 Workflow？"))) setWorkflowWizard(false); }} onSave={async (resource) => {
+      }} resource={workflowWizard.resource} importedResource={workflowWizard.importedResource} onClose={async (dirty) => { if (!dirty || await confirmAction(l("放弃尚未保存的 Workflow？"))) setWorkflowWizard(false); }} onSave={async (resource) => {
         const existing = workflowWizard.resource;
         await (existing ? call(remote, "uiUpdate", existing.id, json({ resource, expectedRevision: existing.revision })) : call(remote, "uiCreate", json(resource)));
         setSelected(null); setWorkflowWizard(false); setRefresh(x => x + 1); setNotice(l("Workflow 已保存。"));
@@ -744,8 +747,8 @@ function GalleryContent({ remote }) {
       {mcpWizard && (
         <McpWizard
           resource={mcpWizard.resource}
-          onClose={async () => {
-            if (await confirmAction(l("放弃尚未保存的 MCP？")))
+          onClose={async (dirty) => {
+            if (!dirty || await confirmAction(l("放弃尚未保存的 MCP？")))
               setMcpWizard(false);
           }}
           onCheck={(config) => call(remote, "uiCheckMcp", json(config))}
@@ -770,8 +773,8 @@ function GalleryContent({ remote }) {
         <AgentWizard
           importedResource={agentWizard.importedResource}
           resource={agentWizard.resource}
-          onClose={async () => {
-            if (await confirmAction(l("放弃尚未保存的 Agent？")))
+          onClose={async (dirty) => {
+            if (!dirty || await confirmAction(l("放弃尚未保存的 Agent？")))
               setAgentWizard(false);
           }}
           onSave={async (resource) => {
@@ -795,8 +798,8 @@ function GalleryContent({ remote }) {
         <SkillWizard
           importedResource={skillWizard.importedResource}
           resource={skillWizard.resource}
-          onClose={async () => {
-            if (await confirmAction(l("放弃尚未保存的 Skill？")))
+          onClose={async (dirty) => {
+            if (!dirty || await confirmAction(l("放弃尚未保存的 Skill？")))
               setSkillWizard(false);
           }}
           onSave={async (resource) => {
@@ -1191,7 +1194,7 @@ function GalleryContent({ remote }) {
               {error && <p role="alert">{l(error)}</p>}
             </div>
             <footer className="gal-dialog-footer">
-              <span className="gal-local">v0.33.2</span>
+              <span className="gal-local">v0.33.3</span>
               <button
                 disabled={busy}
                 onClick={() =>

@@ -1,3 +1,4 @@
+import { useDraftChanges } from "./draft-changes.mjs";
 import { useGalleryText } from "./i18n.jsx";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { Modal } from "./modal.jsx";
@@ -118,6 +119,7 @@ export function WorkflowWizard({
   const [draft, setDraft] = useState(start.definition),
     [agents, setAgents] = useState(start.agents),
     [positions, setPositions] = useState(start.positions);
+  const dirty = useDraftChanges({ draft, agents, positions, cover }, Boolean(importedResource));
   const [contextMenu, setContextMenu] = useState(null);
   const connection = useRef(null);
   const [wire, setWire] = useState(null);
@@ -638,7 +640,7 @@ export function WorkflowWizard({
           void toggleFullscreen();
           return;
         }
-        if (!busy) onClose();
+        if (!busy) onClose(dirty);
       }}
     >
       <section
@@ -658,7 +660,7 @@ export function WorkflowWizard({
             disabled={busy}
             onClick={async () => {
               if (fullscreen) await toggleFullscreen();
-              onClose();
+              onClose(dirty);
             }}
           >
             <Glyph name="close" />
