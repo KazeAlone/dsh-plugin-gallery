@@ -145,12 +145,31 @@ export class GalleryResourceAuthoring {
     return {
       libraryId: this.store.read().activeLibraryId,
       resource: resourceExample(type),
-      limits: { files: 100, fileBytes: 5 * 1024 * 1024 },
+      limits: {
+        files: 100,
+        fileBytes: 5 * 1024 * 1024,
+        ...(type === "workflow"
+          ? {
+              members: 64,
+              tasks: 512,
+              dependencies: 511,
+              loops: 256,
+              routeOutcomes: 12,
+              outcomeTargets: 100,
+              rejectTasks: 31,
+            }
+          : {}),
+      },
       instructions: [
         "修改示例后传 resource 对象，不要传 JSON 字符串。",
         "Skill / Agent 以 Markdown 为正文来源；附件与向导一致，保存不会执行附件。",
         "MCP 使用 metadata.mcp，密钥只能写入 resource.mcpCredentials，校验结果不回显，创建时需从原输入带上；stdio 可执行命令，保存会刷新连接。",
         "Workflow 可保存草稿；保存不等于注册或运行 TeamFlow。",
+        ...(type === "workflow"
+          ? [
+              "普通任务可设置 dynamicRoute:{mode:'agent'|'human',outcomes:[{id,label,condition,targets:[]},...]}，需 2–12 个不同状态，每条后续依赖线至少属于一个状态，空 targets 表示结束路径。routeJoin 为当前节点普通上游依赖 ID 数组，用于等待实际启用的分支；动态路由路径不能进入门控循环。只保存配置，不填写 routeDecision 或 routeHistory。",
+            ]
+          : []),
         "先 validate，再 create；update 是完整替换可编辑内容，先 get 并保留未修改字段，携带 libraryId 和 expectedRevision。",
         "保存成功以返回 saved:true 和资源 id 为准；网络中断后先查询核对，不自动重放 create。",
       ],

@@ -1,3 +1,7 @@
+import {
+  parseWorkflowRoute,
+  validateWorkflowRouting,
+} from "./workflow-routing.mjs";
 import { assertWorkflowDag, validateWorkflowLoops } from "./workflow-loops.mjs";
 
 function demand(ok, status, code, message) {
@@ -32,10 +36,13 @@ const array = (v, label, max) => {
   return v;
 };
 export const MAX_WORKFLOW_TEXT_LENGTH = 256000;
+export const MAX_WORKFLOW_MEMBERS = 64;
+export const MAX_WORKFLOW_TASKS = 512;
+export const MAX_WORKFLOW_DEPENDENCIES = MAX_WORKFLOW_TASKS - 1;
 
 export function validateWorkflowTemplate(input, options = {}) {
   const v = object(input, "模板");
-  const members = array(v.members, "成员", 32).map((raw) => {
+  const members = array(v.members, "成员", MAX_WORKFLOW_MEMBERS).map((raw) => {
     const m = object(raw, "成员");
     const access = {};
     for (const key of ["gallerySkill", "galleryMcp"]) {
@@ -70,7 +77,7 @@ export function validateWorkflowTemplate(input, options = {}) {
     "INVALID_WORKFLOW",
     "成员名称重复或无效",
   );
-  const tasks = array(v.tasks, "节点", 32).map((raw) => {
+  const tasks = array(v.tasks, "节点", MAX_WORKFLOW_TASKS).map((raw) => {
     const t = object(raw, "节点"),
       g = object(t.general, "任务要求");
     const id = text(t.id, "节点 ID", 80, true);
@@ -136,12 +143,28 @@ export function validateWorkflowTemplate(input, options = {}) {
       };
     }
     return {
+      ...(t.dynamicRoute === undefined
+        ? {}
+        : { dynamicRoute: parseWorkflowRoute(t.dynamicRoute) }),
+      ...(t.routeJoin === undefined
+        ? {}
+        : {
+            routeJoin: [
+              ...new Set(
+                array(t.routeJoin, "分支汇合", MAX_WORKFLOW_DEPENDENCIES).map(
+                  (id) => text(id, "汇合上游 ID", 80, true),
+                ),
+              ),
+            ],
+          }),
       id,
       subject: text(t.subject, "节点名称", 200, true),
       assignee: text(t.assignee, "负责人", 80),
-      dependencies: array(t.dependencies, "依赖", 32).map((d) =>
-        text(d, "依赖 ID", 80, true),
-      ),
+      dependencies: array(
+        t.dependencies,
+        "依赖",
+        MAX_WORKFLOW_DEPENDENCIES,
+      ).map((d) => text(d, "依赖 ID", 80, true)),
       checkpoint: t.checkpoint,
       ...(t.checkpointKind ? { checkpointKind: t.checkpointKind } : {}),
       ...(t.reviewMode ? { reviewMode: t.reviewMode } : {}),
@@ -161,7 +184,7 @@ export function validateWorkflowTemplate(input, options = {}) {
     tasks.length > 0 && new Set(tasks.map((t) => t.id)).size === tasks.length,
     400,
     "INVALID_WORKFLOW",
-    "需要 1–32 个不同的节点",
+    `需要 1–${MAX_WORKFLOW_TASKS} 个不同的节点`,
   );
   const ids = new Set(tasks.map((t) => t.id)),
     names = new Set(members.map((m) => m.name));
@@ -183,6 +206,7 @@ export function validateWorkflowTemplate(input, options = {}) {
   }
   assertWorkflowDag(tasks);
   const loops = validateWorkflowLoops(v.loops, tasks, members, options);
+  validateWorkflowRouting(tasks, loops);
   const positions = {};
   for (const [key, raw] of Object.entries(
     object(v.positions ?? {}, "画布位置"),

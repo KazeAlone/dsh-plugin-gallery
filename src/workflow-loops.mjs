@@ -1,4 +1,4 @@
-// Portable TeamFlow 0.2.13 template rules. Runtime state stays in TeamFlow.
+// Portable TeamFlow 0.2.15 template rules. Runtime state stays in TeamFlow.
 const check = (ok, message) => {
   if (!ok)
     throw Object.assign(new Error(message), {
@@ -84,7 +84,7 @@ export function validateWorkflowLoops(
   { draft = false, requireExecutionSetup = false } = {},
 ) {
   if (value === undefined) return undefined;
-  check(Array.isArray(value) && value.length <= 16, "最多配置 16 个循环");
+  check(Array.isArray(value) && value.length <= 256, "最多配置 256 个循环");
   const occupied = new Set();
   const loops = value.map((raw) => {
     check(
@@ -153,7 +153,7 @@ export function validateWorkflowLoops(
         ? workflowLoopBody(tasks, loop)
         : [loop.entryId, ...(returns || [])].filter(Boolean),
     );
-    check(body.size <= 32 && !body.has(gate.id), "循环区域无效");
+    check(body.size <= 512 && !body.has(gate.id), "循环区域无效");
     for (const id of [...body, gate.id]) {
       check(!occupied.has(id), "不支持嵌套或共享节点的循环");
       occupied.add(id);
