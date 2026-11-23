@@ -1,3 +1,5 @@
+import { WorkflowRoutingSettings } from "./workflow-routing-settings.jsx";
+import { reconcileWorkflowRouting, disconnectWorkflowRoute } from "../workflow-routing.mjs";
 import { useDraftChanges } from "./draft-changes.mjs";
 import { useGalleryText } from "./i18n.jsx";
 import React, { useEffect, useId, useRef, useState } from "react";
@@ -6,7 +8,7 @@ import { Glyph } from "./icons.jsx";
 import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import { createResourceIdentifier } from "./resource-id.mjs";
 import { configureRejectTarget, connectWorkflowNodes, removeRejectTask, workflowRejectEdges } from "./workflow-connections.mjs";
-import { validateWorkflowTemplate, workflowTemplateIssues, MAX_WORKFLOW_TEXT_LENGTH } from "../workflow-template.mjs";
+import { validateWorkflowTemplate, workflowTemplateIssues, MAX_WORKFLOW_TEXT_LENGTH, MAX_WORKFLOW_MEMBERS, MAX_WORKFLOW_TASKS } from "../workflow-template.mjs";
 import { assertWorkflowDag, workflowNodeKind, workflowAncestors, workflowLoopBody, validateWorkflowLoops } from "../workflow-loops.mjs";
 
 const nodeWidth = 220;
@@ -16,7 +18,7 @@ const nodeTypes = [["agent", "Agent"], ["task", "任务"], ["gate", "门控"], [
 const nodeLabel = kind => ({ task: "任务节点", gate: "门控判断", human: "验收节点", archive: "成果归档" })[kind];
 const memberInitial = member => [...(member.snapshot?.name || member.label || "A")][0].toUpperCase();
 const nodeIcon = kind => ({ agent: "agent", task: "file", gate: "workflow", human: "user", archive: "download" })[kind];
-const portPoint = (position, side) => side === "reject" ? { x: position.x + nodeWidth / 2, y: position.y + nodeHeight } : { x: position.x + (side === "out" ? nodeWidth : 0), y: position.y + portY };
+const portPoint = (position, side, height = nodeHeight) => side === "reject" ? { x: position.x + nodeWidth / 2, y: position.y + height } : { x: position.x + (side === "out" ? nodeWidth : 0), y: position.y + height / 2 };
 
 const galleryAccess = [
   ["gallerySkill", "允许使用 Gallery Skill"],
@@ -172,7 +174,7 @@ export function WorkflowWizard({
     const minX = Math.min(...points.map((p) => p.x)),
       minY = Math.min(...points.map((p) => p.y));
     const maxX = Math.max(...points.map((p) => p.x + nodeWidth)),
-      maxY = Math.max(...points.map((p) => p.y + nodeHeight));
+      maxY = Math.max(...Object.entries(positions).map(([id, p]) => p.y + heightFor(id)));
     const z = Math.max(
       0.25,
       Math.min(
@@ -243,13 +245,13 @@ export function WorkflowWizard({
   const agent = agents.find(
     (a) => selected?.kind === "agent" && a.id === selected.id,
   );
-  const update = (patch) => setDraft((d) => ({ ...d, ...patch }));
+  const update = (patch) => setDraft((d) => ({ ...d, ...patch, ...(patch.tasks ? { tasks: reconcileWorkflowRouting(patch.tasks) } : {}) }));
   const updateTask = (patch) =>
     setDraft((d) => ({
       ...d,
-      tasks: d.tasks.map((t) =>
+      tasks: reconcileWorkflowRouting(d.tasks.map((t) =>
         t.id === selected.id ? { ...t, ...patch } : t,
-      ),
+      )),
     }));
   const updateAgent = (patch) =>
     setAgents((rows) =>
@@ -290,7 +292,7 @@ export function WorkflowWizard({
         ((draft.tasks.length + agents.length) % 4) * 45,
     };
     if (kind === "agent") {
-      if (agents.length >= 32) return setError(l("最多添加 32 个 Agent"));
+      if (agents.length >= MAX_WORKFLOW_MEMBERS) return setError(l("最多添加 {0} 个 Agent", MAX_WORKFLOW_MEMBERS));
       const id = createResourceIdentifier("a");
       setAgents((rows) => [
         ...rows,
@@ -308,8 +310,8 @@ export function WorkflowWizard({
       setSelected({ kind: "agent", id });
       setSelection([]);
     } else {
-      if (draft.tasks.length >= 32)
-        return setError(l("最多添加 32 个流程节点"));
+      if (draft.tasks.length >= MAX_WORKFLOW_TASKS)
+        return setError(l("最多添加 {0} 个流程节点", MAX_WORKFLOW_TASKS));
       const id = createResourceIdentifier("t");
       update({
         tasks: [
@@ -385,22 +387,24 @@ export function WorkflowWizard({
     setMarquee(null);
     event.currentTarget.classList.remove("gal-flow-panning");
   }
-  function connect(to, from = linkFrom) {
+  function connect(to, from = linkFrom, outcomeId) {
     if (!from)
       return setError(l("从前置节点的输出圆点拖动到后续节点的输入圆点"));
     try {
-      update(connectWorkflowNodes(draft.tasks, draft.loops, from, to));
+      const next = connectWorkflowNodes(draft.tasks, draft.loops, from, to);
+      if (outcomeId) next.tasks = next.tasks.map(row => row.id === from && row.dynamicRoute ? { ...row, dynamicRoute: { ...row.dynamicRoute, outcomes: row.dynamicRoute.outcomes.map(outcome => outcome.id === outcomeId ? { ...outcome, targets: [...new Set([...outcome.targets, to])] } : outcome) } } : row);
+      update(next);
       setError("");
       setLinkFrom(null);
     } catch (e) {
       setError(e.message);
     }
   }
-  function startWire(event, id, side) {
+  function startWire(event, id, side, outcomeId) {
     if (event.button !== 0 || busy) return;
     event.preventDefault();
     event.stopPropagation();
-    connection.current = { id, side };
+    connection.current = { id, side, outcomeId };
     setLinkFrom(id);
     setWire(worldPoint(event));
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -420,7 +424,7 @@ export function WorkflowWizard({
     const target = wireTarget(event, start);
     const position = positions[target?.node];
     setWire(position ? {
-      ...portPoint(position, target.flowPort),
+      ...wirePoint(target.node, target.flowPort, target.outcome),
       target: target.node,
       side: target.flowPort,
     } : worldPoint(event));
@@ -431,7 +435,7 @@ export function WorkflowWizard({
     if (target) {
       if (start.side === "reject" || target.flowPort === "reject") {
         setReturn(start.side === "reject" ? start.id : target.node, start.side === "reject" ? target.node : start.id);
-      } else connect(start.side === "out" ? target.node : start.id, start.side === "out" ? start.id : target.node);
+      } else connect(start.side === "out" ? target.node : start.id, start.side === "out" ? start.id : target.node, start.side === "out" ? start.outcomeId : target.outcome);
     }
     connection.current = null;
     setWire(null);
@@ -500,13 +504,13 @@ export function WorkflowWizard({
     setDraft((d) => ({
       ...d,
       loops: d.loops?.filter(loop => !deleted.has(loop.gateId)).map(loop => ({ ...loop, ...(deleted.has(loop.entryId) ? { entryId: "" } : {}), rejectTaskIds: loop.rejectTaskIds?.filter(id => !deleted.has(id)), ...(deleted.has(loop.reviewer) ? { reviewer: undefined } : {}) })),
-      tasks: d.tasks
+      tasks: reconcileWorkflowRouting(d.tasks
         .filter((t) => !deleted.has(t.id))
         .map((t) => ({
           ...t,
           assignee: deleted.has(t.assignee) ? "" : t.assignee,
           dependencies: t.dependencies.filter((id) => !deleted.has(id)),
-        })),
+        }))),
     }));
     setPositions((p) =>
       Object.fromEntries(Object.entries(p).filter(([id]) => !deleted.has(id))),
@@ -612,23 +616,34 @@ export function WorkflowWizard({
     }
   }
   const taskActor = task => task.assignee || draft.loops?.find(loop => loop.gateId === task.id && loop.mode === "ai")?.reviewer;
-  function edge(from, to, key, { fromId, toId, returning = false, edgeKind, gateId }) {
+  function heightFor(id) { return Math.max(nodeHeight, ((draft.tasks.find(row => row.id === id)?.dynamicRoute?.outcomes.length || 0) + 1) * 22); }
+  function wirePoint(id, side, outcomeId) {
+    const point = portPoint(positions[id], side, heightFor(id));
+    const outcomes = draft.tasks.find(row => row.id === id)?.dynamicRoute?.outcomes;
+    const index = outcomes?.findIndex(row => row.id === outcomeId) ?? -1;
+    return side === "out" && index >= 0 ? { ...point, y: positions[id].y + (index + 1) * heightFor(id) / (outcomes.length + 1) } : point;
+  }
+  function edge(from, to, key, { fromId, toId, returning = false, edgeKind, gateId, outcomeId }) {
     if (!from || !to) return null;
+    const outcomes = returning ? [] : (draft.tasks.find(row => row.id === fromId)?.dynamicRoute?.outcomes.filter(row => row.targets.includes(toId) && (!outcomeId || row.id === outcomeId)) || []);
+    const routeLabel = outcomes?.map(row => row.label).join(" / ");
+    const start = wirePoint(fromId, "out", outcomes?.[0]?.id);
+    const end = wirePoint(toId, "in");
     const bottom = returning && draft.tasks.find(t => t.id === fromId)?.checkpoint;
-    const path = bottom ? `M${from.x + nodeWidth / 2},${from.y + nodeHeight} C${from.x + nodeWidth / 2},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x - 80},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x},${to.y + portY}` : `M${from.x + nodeWidth},${from.y + portY} C${from.x + nodeWidth + 70},${from.y + portY} ${to.x - 70},${to.y + portY} ${to.x},${to.y + portY}`;
+    const path = bottom ? `M${from.x + nodeWidth / 2},${from.y + nodeHeight} C${from.x + nodeWidth / 2},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x - 80},${Math.max(from.y, to.y) + nodeHeight + 100} ${to.x},${end.y}` : `M${start.x},${start.y} C${start.x + 70},${start.y} ${to.x - 70},${end.y} ${to.x},${end.y}`;
     const pass = !returning && workflowNodeKind(draft.tasks.find(t => t.id === fromId) || {}, draft.loops) === "gate";
     return (
       <g key={key}>
         <path
-          className={returning ? "gal-flow-reject-edge" : pass ? "gal-flow-pass-edge" : ""}
+          className={returning ? "gal-flow-reject-edge" : routeLabel ? "gal-flow-route-edge" : pass ? "gal-flow-pass-edge" : ""}
           markerEnd={`url(#${arrow})`}
           d={path}
         />
-        {(pass || returning) && <text className={returning ? "gal-flow-reject-label" : "gal-flow-pass-label"} x={returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2} y={bottom ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10}>{returning ? l("REJECT · 返工") : "PASS"}</text>}
+        {(pass || returning || routeLabel) && <text className={returning ? "gal-flow-reject-label" : "gal-flow-pass-label"} x={returning ? (from.x + to.x) / 2 : (from.x + nodeWidth + to.x) / 2} y={bottom ? Math.max(from.y, to.y) + nodeHeight + 70 : (from.y + to.y) / 2 + portY - 10}>{returning ? l("REJECT · 返工") : routeLabel || "PASS"}</text>}
         <path className="gal-flow-edge-hit" d={path}
           data-edge-return={returning ? "true" : undefined}
           data-edge-kind={edgeKind} data-edge-gate={gateId}
-          data-edge-from={fromId} data-edge-to={toId}
+          data-edge-from={fromId} data-edge-to={toId} data-edge-outcome={outcomeId}
  />
       </g>
     );
@@ -814,11 +829,11 @@ export function WorkflowWizard({
                     ...boxDrag.current.base,
                     ...nodes
                       .filter(
-                        ({ p }) =>
+                        ({ id, p }) =>
                           p.x < r.x + r.width &&
                           p.x + nodeWidth > r.x &&
                           p.y < r.y + r.height &&
-                          p.y + nodeHeight > r.y,
+                          p.y + heightFor(id) > r.y,
                       )
                       .map((n) => n.id),
                   ]),
@@ -901,15 +916,14 @@ export function WorkflowWizard({
                   {wire &&
                     connection.current &&
                     (() => {
-                      const start = positions[connection.current.id];
                       const from =
                         connection.current.side !== "in"
-                          ? portPoint(start, connection.current.side)
+                          ? wirePoint(connection.current.id, connection.current.side, connection.current.outcomeId)
                           : wire;
                       const to =
                         connection.current.side !== "in"
                           ? wire
-                          : { x: start.x, y: start.y + portY };
+                          : wirePoint(connection.current.id, "in");
                       return (
                         <path
                           className="gal-flow-wire-preview"
@@ -918,9 +932,10 @@ export function WorkflowWizard({
                       );
                     })()}
                   {draft.tasks.flatMap((t) => [
-                    ...t.dependencies.map((id) =>
-                      edge(positions[id], positions[t.id], id + ":" + t.id, { fromId: id, toId: t.id, returning: draft.loops?.some(loop => loop.rejectTaskIds?.includes(id) && loop.rejectTaskIds.includes(t.id)) }),
-                    ),
+                    ...t.dependencies.flatMap((id) => {
+                      const outcomes = draft.tasks.find(row => row.id === id)?.dynamicRoute?.outcomes.filter(row => row.targets.includes(t.id));
+                      return (outcomes?.length ? outcomes : [undefined]).map(outcome => edge(positions[id], positions[t.id], `${id}:${t.id}:${outcome?.id || "dependency"}`, { fromId: id, toId: t.id, outcomeId: outcome?.id, returning: draft.loops?.some(loop => loop.rejectTaskIds?.includes(id) && loop.rejectTaskIds.includes(t.id)) }));
+                    }),
                   ])}
                   {(draft.loops || []).flatMap(loop => workflowRejectEdges(draft.tasks, loop).map(({ from, to, kind }) => edge(positions[from], positions[to], `reject:${loop.gateId}:${from}:${to}`, { fromId: from, toId: to, returning: true, edgeKind: kind, gateId: loop.gateId })))}
                 </svg>
@@ -951,7 +966,7 @@ export function WorkflowWizard({
                 ].map((n) => (
                   <article
                     className={`gal-flow-node ${n.kind} ${n.nodeType || ""} ${draft.loops?.some(loop => loop.rejectTaskIds?.includes(n.id)) ? "gal-flow-reject-task" : ""} ${selection.includes(n.id) ? "selected" : ""}`}
-                    style={{ left: n.position.x, top: n.position.y }}
+                    style={{ left: n.position.x, top: n.position.y, height: heightFor(n.id) }}
                     key={n.id}
                     data-flow-node={n.id}
                     data-member-match={selected?.kind === "agent" && taskActor(draft.tasks.find(t => t.id === n.id)) === selected.id ? "true" : undefined}
@@ -971,7 +986,7 @@ export function WorkflowWizard({
                       <Glyph
                         name={nodeIcon(n.nodeType || n.kind)}
                       />
-                      {draft.loops?.some(loop => loop.rejectTaskIds?.includes(n.id)) ? l("仅退回时执行") : n.kind === "agent" ? "AGENT" : l(nodeLabel(n.nodeType))}
+                      {draft.loops?.some(loop => loop.rejectTaskIds?.includes(n.id)) ? l("仅退回时执行") : draft.tasks.find(row => row.id === n.id)?.dynamicRoute ? l("动态分支") : n.kind === "agent" ? "AGENT" : l(nodeLabel(n.nodeType))}
                     </button>
                     <button
                       className="gal-flow-node-title"
@@ -1011,7 +1026,7 @@ export function WorkflowWizard({
                         >
                           <span className="gal-sr-only">{l("连入")}</span>
                         </button>
-                        <button
+                        {!draft.tasks.find(row => row.id === n.id)?.dynamicRoute && <button
                           aria-label={l("连出")}
                           title={n.nodeType === "gate" ? l("PASS：连接通过后执行的节点") : l("输出：连接后续节点")}
                           className="gal-flow-port-out"
@@ -1029,7 +1044,12 @@ export function WorkflowWizard({
                           }}
                         >
                           <span className="gal-sr-only">{l("连出")}</span>
-                        </button>
+                        </button>}
+                        {draft.tasks.find(row => row.id === n.id)?.dynamicRoute?.outcomes.map((outcome, index, outcomes) => <button key={outcome.id} className="gal-flow-port-out gal-flow-port-route"
+                          style={{ top: `${(index + 1) * 100 / (outcomes.length + 1)}%` }} aria-label={l("连出 · {0}", outcome.label)} title={outcome.label}
+                          data-flow-port="out" data-node={n.id} data-outcome={outcome.id}
+                          onPointerDown={e => startWire(e, n.id, "out", outcome.id)} onPointerMove={moveWire} onPointerUp={finishWire}
+                          onPointerCancel={() => { connection.current = null; setWire(null); setLinkFrom(null); }} />)}
                         {n.nodeType === "gate" && <button className="gal-flow-port-reject" aria-label={l("REJECT 返回")} title={l("REJECT：拖到循环入口或退回分支任务的输入点")}
                           data-flow-port="reject" data-node={n.id} onPointerDown={e => startWire(e, n.id, "reject")} onPointerMove={moveWire} onPointerUp={finishWire}
                           onPointerCancel={() => { connection.current = null; setWire(null); setLinkFrom(null); }}><span>REJECT</span></button>}
@@ -1177,6 +1197,7 @@ export function WorkflowWizard({
                     onChange={(e) => updateTask({ subject: e.target.value })}
                   />
                 </label>
+                <WorkflowRoutingSettings task={task} tasks={draft.tasks} onChange={updateTask} />
                 {task.checkpoint && <label>{l("审核方式")}<select aria-label={l("审核方式")} value={selectedLoop?.mode || task.reviewMode || "human"}
                     onChange={e => { updateTask({ reviewMode: e.target.value }); if (selectedLoop) setLoop(task.id, { mode: e.target.value, ...(e.target.value === "human" ? { reviewer: undefined } : {}) }); }}>
                     <option value="human">{l("人工审核")}</option><option value="ai">{l("AI 审核")}</option>
@@ -1287,15 +1308,12 @@ export function WorkflowWizard({
           >
             {contextMenu.edge ? (
               <button onClick={() => {
-                const { edgeFrom, edgeTo, edgeKind, edgeGate } = contextMenu.edge;
+                const { edgeFrom, edgeTo, edgeKind, edgeGate, edgeOutcome } = contextMenu.edge;
                 if (edgeKind === "return" || edgeKind === "reject-end") { setLoop(edgeGate, { entryId: "" }); setContextMenu(null); return; }
                 if (edgeKind === "reject-start" || edgeKind === "reject-order") { update(removeRejectTask(draft.tasks, draft.loops, edgeGate, edgeTo)); setContextMenu(null); return; }
                 setDraft((value) => ({
                   ...value,
-                  tasks: value.tasks.map((node) => {
-                    if (node.id !== edgeTo) return node;
-                    return { ...node, dependencies: node.dependencies.filter((id) => id !== edgeFrom) };
-                  }),
+                  tasks: disconnectWorkflowRoute(value.tasks, edgeFrom, edgeTo, edgeOutcome),
                 }));
                 setContextMenu(null);
               }}>

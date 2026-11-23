@@ -2310,3 +2310,9 @@ fieldset.gal-skill-fields {
 
 .gal-flow-reject-settings { border: 1px solid var(--g-line); border-radius: 8px; padding: 10px; margin: 12px 0; }
 .gal-flow-node.gal-flow-reject-task { border-style: dashed; border-color: #ba625e; }
+
+/* Dynamic routing shares each theme's accent and surface palette. */
+.gal-flow-route-outcome { min-width: 0; margin: 12px 0; padding: 10px; border: 1px solid var(--g-line); border-radius: 8px; }
+.gal-flow-route-outcome legend { font-size: 12px; color: var(--g-muted); padding: 0 4px; }
+.gal-flow-route-edge { stroke-dasharray: 6 3; }
+.gal .gal-flow-ports .gal-flow-port-route { background: var(--g-accent); }

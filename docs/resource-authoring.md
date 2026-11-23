@@ -89,3 +89,6 @@
 保存当前库资源后使 Skill 目录失效；MCP 还会刷新连接。显式操作另一已配置库不会切换当前库，也不会将另一库的 MCP 启动到当前运行库。
 
 验证使用真实 DSH ToolRuntime 进行四类资源读写闭环；配置 `GALLERY_TEST_DATABASE_URL` 后另验证真实 PostgreSQL 的跨用户权限、显式库目标、密钥隐藏和更新保留。此测试不等于所有模型和预设的自然语言端到端验证。
+
+
+Workflow 的 `gallery_resource_schema` 返回当前容量：成员 64、任务 512、依赖 511、循环 256。`workflow.json` 中普通任务可设置 `dynamicRoute: {mode:"agent"|"human", outcomes:[{id,label,condition,targets:[]},...]}`（2–12 个唯一状态，每状态最多 100 个目标），每条后续连线至少属于一个状态；空目标表示结束路径。`routeJoin: string[]` 只能引用当前节点非动态路由的上游依赖。动态路由路径不能进入门控循环；循环的额外 REJECT 任务仍最多 31 个。创建和更新会保留这些配置，去除运行决策和历史。
