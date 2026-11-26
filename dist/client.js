@@ -90,6 +90,7 @@ async function verifyTeamflowRegistration(result, fetcher = fetch) {
 
 // src/client/messages-en.mjs
 var english = {
+  "\u52A8\u6001\u8DEF\u7531\u9700\u8981 2\u201312 \u4E2A\u8F93\u51FA\u72B6\u6001\uFF0C\u6BCF\u9879\u987B\u586B\u5199\u540D\u79F0\u3001\u5224\u65AD\u6761\u4EF6\u548C\u6709\u6548\u53BB\u5411\uFF1B\u540C\u540D\u72B6\u6001\u7684\u5224\u65AD\u6761\u4EF6\u987B\u4E0D\u540C": "Dynamic routing requires 2\u201312 outcomes with names, conditions and valid targets. Outcomes with the same name must have different conditions.",
   "\u52A8\u6001\u5206\u652F": "Dynamic branching",
   "\u542F\u7528\u52A8\u6001\u5206\u652F": "Enable dynamic branching",
   "\u5B8C\u6210\u4EFB\u52A1\u540E\uFF0C\u6839\u636E\u7ED3\u679C\u53EA\u9009\u62E9\u4E00\u4E2A\u72B6\u6001\uFF0C\u6267\u884C\u8BE5\u72B6\u6001\u8FDE\u63A5\u7684\u540E\u7EED\u8282\u70B9\u3002": "After the task completes, select one outcome and run its connected downstream nodes.",
@@ -4342,14 +4343,10 @@ function validateWorkflowLoops(value, tasks, members, { draft = false, requireEx
       raw && typeof raw === "object" && typeof raw.gateId === "string" && typeof raw.entryId === "string" && ["human", "ai"].includes(raw.mode),
       "\u8BF7\u914D\u7F6E\u5FAA\u73AF\u5165\u53E3\u3001\u95E8\u63A7\u548C\u5BA1\u6838\u65B9\u5F0F"
     );
-    const maxRounds = Number(raw.maxRounds), timeoutMinutes = Number(raw.timeoutMinutes);
+    const maxRounds = Number(raw.maxRounds);
     check(
       Number.isSafeInteger(maxRounds) && maxRounds >= 1 && maxRounds <= 20,
       "\u8F6E\u6B21\u4E0A\u9650\u5FC5\u987B\u4E3A 1\u201320\uFF0C\u5305\u542B\u9996\u6B21\u6267\u884C"
-    );
-    check(
-      Number.isSafeInteger(timeoutMinutes) && timeoutMinutes >= 1 && timeoutMinutes <= 1440,
-      "\u6267\u884C\u8D85\u65F6\u5FC5\u987B\u4E3A 1\u20131440 \u5206\u949F"
     );
     const returns = raw.rejectTaskIds;
     check(
@@ -4361,7 +4358,6 @@ function validateWorkflowLoops(value, tasks, members, { draft = false, requireEx
       entryId: raw.entryId,
       mode: raw.mode,
       maxRounds,
-      timeoutMinutes,
       ...raw.rejectToEntry === true || returns?.length ? { rejectToEntry: true } : {},
       ...returns?.length ? {
         rejectTaskIds: [...returns],
@@ -4452,7 +4448,7 @@ var check2 = (ok, message) => {
 var text = (value, max) => typeof value === "string" && !!value.trim() && value.length <= max;
 var record = (value) => value && typeof value === "object" && !Array.isArray(value);
 function parseWorkflowRoute(value) {
-  const message = "\u52A8\u6001\u8DEF\u7531\u9700\u8981 2\u201312 \u4E2A\u4E0D\u540C\u7684\u8F93\u51FA\u72B6\u6001\uFF0C\u6BCF\u9879\u987B\u586B\u5199\u540D\u79F0\u3001\u5224\u65AD\u6761\u4EF6\u548C\u6709\u6548\u53BB\u5411";
+  const message = "\u52A8\u6001\u8DEF\u7531\u9700\u8981 2\u201312 \u4E2A\u8F93\u51FA\u72B6\u6001\uFF0C\u6BCF\u9879\u987B\u586B\u5199\u540D\u79F0\u3001\u5224\u65AD\u6761\u4EF6\u548C\u6709\u6548\u53BB\u5411\uFF1B\u540C\u540D\u72B6\u6001\u7684\u5224\u65AD\u6761\u4EF6\u987B\u4E0D\u540C";
   check2(record(value) && ["agent", "human"].includes(value.mode), message);
   check2(
     Array.isArray(value.outcomes) && value.outcomes.length >= 2 && value.outcomes.length <= 12,
@@ -4465,7 +4461,11 @@ function parseWorkflowRoute(value) {
     message
   );
   check2(
-    new Set(value.outcomes.map((outcome) => outcome.id)).size === value.outcomes.length && new Set(value.outcomes.map((outcome) => outcome.label.trim())).size === value.outcomes.length,
+    new Set(value.outcomes.map((outcome) => outcome.id)).size === value.outcomes.length && new Set(
+      value.outcomes.map(
+        (outcome) => JSON.stringify([outcome.label.trim(), outcome.condition.trim()])
+      )
+    ).size === value.outcomes.length,
     message
   );
   return {
@@ -4570,6 +4570,11 @@ function disconnectWorkflowRoute(tasks, from, to, outcomeId) {
     )
   );
 }
+function workflowRouteLabel(outcome, route) {
+  return route?.outcomes.some(
+    (other) => other.id !== outcome.id && other.label.trim() === outcome.label.trim()
+  ) ? `${outcome.label} \xB7 ${outcome.condition}` : outcome.label;
+}
 
 // src/client/workflow-wizard.jsx
 var import_react10 = __toESM(require("react"), 1);
@@ -4589,7 +4594,6 @@ function configureRejectTarget(tasks, loops = [], gateId, targetId) {
     entryId: "",
     mode: gate.reviewMode || "human",
     maxRounds: 3,
-    timeoutMinutes: 30,
     rejectToEntry: true,
     ...previous
   };
@@ -4892,7 +4896,7 @@ function validateWorkflowTemplate(input, options = {}) {
     const p = object(raw, "\u4F4D\u7F6E");
     demand(
       key.startsWith("task:") && ids.has(key.slice(5)) && ["x", "y"].every(
-        (k) => typeof p[k] === "number" && Number.isFinite(p[k]) && p[k] >= 0 && p[k] <= 1e4
+        (k) => typeof p[k] === "number" && Number.isFinite(p[k]) && Math.abs(p[k]) <= 1e4
       ),
       400,
       "INVALID_WORKFLOW",
@@ -4938,6 +4942,22 @@ function workflowTemplateIssues(definition) {
   if (definition.tasks.some((t) => !t.general.requirements.trim()))
     issues.push("\u8BF7\u586B\u5199\u6BCF\u4E2A\u8282\u70B9\u7684\u901A\u7528\u4EFB\u52A1\u8981\u6C42\u6216\u901A\u7528\u68C0\u67E5\u8981\u6C42");
   return issues;
+}
+function workflowCanvasPositions(tasks, canvas = {}, fallback = {}) {
+  const entries = tasks.flatMap(({ id }) => {
+    const point = canvas[id] ?? fallback[`task:${id}`];
+    return Number.isFinite(point?.x) && Number.isFinite(point?.y) ? [[id, point]] : [];
+  });
+  const scale = 1e4 / Math.max(
+    1e4,
+    ...entries.flatMap(([, p]) => [Math.abs(p.x), Math.abs(p.y)])
+  );
+  return Object.fromEntries(
+    entries.map(([id, p]) => [
+      `task:${id}`,
+      { x: p.x * scale, y: p.y * scale }
+    ])
+  );
 }
 
 // src/client/workflow-wizard.jsx
@@ -5155,7 +5175,7 @@ function WorkflowWizard({
     setDraft((d) => {
       const gate = d.tasks.find((t) => t.id === gateId);
       const previous = d.loops?.find((loop) => loop.gateId === gateId);
-      const next = { gateId, entryId: "", mode: gate?.reviewMode || "human", maxRounds: 3, timeoutMinutes: 30, rejectToEntry: previous ? Boolean(previous.rejectToEntry) : true, ...previous, ...patch };
+      const next = { gateId, entryId: "", mode: gate?.reviewMode || "human", maxRounds: 3, rejectToEntry: previous ? Boolean(previous.rejectToEntry) : true, ...previous, ...patch };
       return { ...d, loops: [...(d.loops || []).filter((loop) => loop.gateId !== gateId), next] };
     });
   }
@@ -5451,7 +5471,7 @@ function WorkflowWizard({
           ...t.kind === "archive" ? { archive: { ...t.archive, paths: (t.archive?.paths || []).map((p) => p.trim()).filter(Boolean) } } : {},
           assignee: t.assignee ? agents.find((a) => a.id === t.assignee)?.snapshot?.name || t.assignee : ""
         })),
-        positions: {}
+        positions: workflowCanvasPositions(draft.tasks, positions, draft.positions)
       }, { draft: true });
       setBusy(true);
       await onSave({
@@ -5499,7 +5519,7 @@ function WorkflowWizard({
   function edge(from, to, key, { fromId, toId, returning = false, edgeKind, gateId, outcomeId }) {
     if (!from || !to) return null;
     const outcomes = returning ? [] : draft.tasks.find((row) => row.id === fromId)?.dynamicRoute?.outcomes.filter((row) => row.targets.includes(toId) && (!outcomeId || row.id === outcomeId)) || [];
-    const routeLabel = outcomes?.map((row) => row.label).join(" / ");
+    const routeLabel = outcomes?.map((row) => workflowRouteLabel(row, draft.tasks.find((task2) => task2.id === fromId)?.dynamicRoute)).join(" / ");
     const start2 = wirePoint(fromId, "out", outcomes?.[0]?.id);
     const end = wirePoint(toId, "in");
     const bottom = returning && draft.tasks.find((t) => t.id === fromId)?.checkpoint;
@@ -5923,8 +5943,8 @@ function WorkflowWizard({
                 key: outcome.id,
                 className: "gal-flow-port-out gal-flow-port-route",
                 style: { top: `${(index + 1) * 100 / (outcomes.length + 1)}%` },
-                "aria-label": l("\u8FDE\u51FA \xB7 {0}", outcome.label),
-                title: outcome.label,
+                "aria-label": l("\u8FDE\u51FA \xB7 {0}", workflowRouteLabel(outcome, draft.tasks.find((row) => row.id === n.id)?.dynamicRoute)),
+                title: workflowRouteLabel(outcome, draft.tasks.find((row) => row.id === n.id)?.dynamicRoute),
                 "data-flow-port": "out",
                 "data-node": n.id,
                 "data-outcome": outcome.id,
@@ -6075,7 +6095,7 @@ function WorkflowWizard({
       } }), t.subject || l("\u672A\u547D\u540D\u8282\u70B9")))), !draft.tasks.some((t) => t.dependencies.includes(task.id)) && /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u901A\u8FC7\u540E\u7ED3\u675F\u6B64\u8DEF\u5F84")), /* @__PURE__ */ import_react10.default.createElement("label", null, l("REJECT \xB7 \u8FD4\u56DE\u5165\u53E3"), /* @__PURE__ */ import_react10.default.createElement("select", { "aria-label": l("REJECT \u8FD4\u56DE\u5165\u53E3"), value: selectedLoop?.entryId || "", onChange: (e) => setLoop(task.id, { entryId: e.target.value }) }, /* @__PURE__ */ import_react10.default.createElement("option", { value: "" }, l("\u7A0D\u540E\u8FDE\u63A5\u5FAA\u73AF\u5165\u53E3")), draft.tasks.filter((t) => !t.checkpoint && t.kind !== "archive" && !selectedLoop?.rejectTaskIds?.includes(t.id)).map((t) => /* @__PURE__ */ import_react10.default.createElement("option", { key: t.id, value: t.id }, t.subject || l("\u672A\u547D\u540D\u8282\u70B9"))))), !selectedLoop && /* @__PURE__ */ import_react10.default.createElement("button", { type: "button", onClick: () => setLoop(task.id, {}) }, l("\u914D\u7F6E REJECT \u5206\u652F")), selectedLoop && /* @__PURE__ */ import_react10.default.createElement("fieldset", { className: "gal-flow-reject-settings" }, /* @__PURE__ */ import_react10.default.createElement("legend", null, l("REJECT \u540E\u6267\u884C\u7684\u4EFB\u52A1")), /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u4EC5\u5728\u9000\u56DE\u65F6\u6267\u884C\uFF0C\u5B8C\u6210\u540E\u8FD4\u56DE\u5FAA\u73AF\u5165\u53E3\u3002\u53EF\u4ECE REJECT \u70B9\u62D6\u7EBF\u5230\u4EFB\u52A1\uFF0C\u518D\u8FDE\u63A5\u5206\u652F\u5185\u4EFB\u52A1\u3002")), draft.tasks.filter((t) => !t.checkpoint && t.kind !== "archive" && !workflowAncestors(draft.tasks, task.id).has(t.id)).map((t) => /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-flow-check", key: t.id }, /* @__PURE__ */ import_react10.default.createElement("input", { type: "checkbox", checked: Boolean(selectedLoop.rejectTaskIds?.includes(t.id)), onChange: (e) => {
         if (e.target.checked) setReturn(task.id, t.id);
         else update(removeRejectTask(draft.tasks, draft.loops, task.id, t.id));
-      } }), t.subject || l("\u672A\u547D\u540D\u8282\u70B9")))), selectedLoop && /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, null, selectedLoop.mode === "ai" && /* @__PURE__ */ import_react10.default.createElement("label", null, l("\u72EC\u7ACB\u5BA1\u6838 Agent"), /* @__PURE__ */ import_react10.default.createElement("select", { "aria-label": l("\u72EC\u7ACB\u5BA1\u6838 Agent"), value: selectedLoop.reviewer || "", onChange: (e) => setLoop(task.id, { reviewer: e.target.value }) }, /* @__PURE__ */ import_react10.default.createElement("option", { value: "" }, l("\u9009\u62E9\u72EC\u7ACB\u5BA1\u6838 Agent")), agents.map((a) => /* @__PURE__ */ import_react10.default.createElement("option", { key: a.id, value: a.id }, a.label)))), /* @__PURE__ */ import_react10.default.createElement("label", null, l("\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09"), /* @__PURE__ */ import_react10.default.createElement("input", { "aria-label": l("\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09"), type: "number", min: 1, max: 20, value: selectedLoop.maxRounds, onChange: (e) => setLoop(task.id, { maxRounds: Number(e.target.value) }) })), /* @__PURE__ */ import_react10.default.createElement("label", null, l("\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09"), /* @__PURE__ */ import_react10.default.createElement("input", { "aria-label": l("\u6BCF\u8F6E\u8D85\u65F6\uFF08\u5206\u949F\uFF09"), type: "number", min: 1, max: 1440, value: selectedLoop.timeoutMinutes, onChange: (e) => setLoop(task.id, { timeoutMinutes: Number(e.target.value) }) })), /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react10.default.createElement("input", { type: "checkbox", disabled: Boolean(selectedLoop.rejectTaskIds?.length), checked: Boolean(selectedLoop.rejectToEntry), onChange: (e) => setLoop(task.id, { rejectToEntry: e.target.checked }) }), l("\u9000\u56DE\u65F6\u4ECE\u5165\u53E3\u91CD\u8DD1")), !selectedLoop.rejectToEntry && /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u5BA1\u6838\u65F6\u7531 TeamFlow \u6307\u5B9A\u8FD4\u5DE5\u4EFB\u52A1\u53CA\u5176\u4E0B\u6E38\u3002")), !!loopBody.length && /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u5FAA\u73AF\u5185\u4EFB\u52A1\uFF1A"), loopBody.map((id) => draft.tasks.find((t) => t.id === id)?.subject).join(" \u2192 ")), loopIssue && /* @__PURE__ */ import_react10.default.createElement("p", { role: "status", className: "gal-error" }, l(loopIssue)), /* @__PURE__ */ import_react10.default.createElement("button", { type: "button", onClick: () => update({ loops: (draft.loops || []).filter((loop) => loop.gateId !== task.id) }) }, l("\u5220\u9664 REJECT \u8FD4\u56DE\u7EBF")))), selectedKind === "archive" && /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, null, /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react10.default.createElement("input", { type: "checkbox", checked: Boolean(task.archive?.copyFiles), onChange: (e) => updateTask({ archive: { ...task.archive, copyFiles: e.target.checked } }) }), l("\u590D\u5236\u6210\u679C\u6587\u4EF6")), /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u9ED8\u8BA4\u8BB0\u5F55\u8BC1\u636E\u548C\u6587\u4EF6\u6458\u8981\uFF1B\u5F00\u542F\u540E\u7531 TeamFlow \u6309\u5F52\u6863\u7B56\u7565\u590D\u5236\u6587\u4EF6\u3002")), /* @__PURE__ */ import_react10.default.createElement("label", null, l("\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), /* @__PURE__ */ import_react10.default.createElement("textarea", { "aria-label": l("\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), rows: 4, value: (task.archive?.paths || []).join("\n"), onChange: (e) => updateTask({ archive: { ...task.archive, paths: e.target.value.split("\n") } }), placeholder: l("\u7559\u7A7A\u4F7F\u7528\u4E0A\u6E38\u4EA4\u4ED8\u7269\u4E0E\u53D8\u66F4\u6587\u4EF6") }))), !task.checkpoint && task.kind !== "archive" && /* @__PURE__ */ import_react10.default.createElement("label", null, l("\u8D1F\u8D23 Agent"), /* @__PURE__ */ import_react10.default.createElement(
+      } }), t.subject || l("\u672A\u547D\u540D\u8282\u70B9")))), selectedLoop && /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, null, selectedLoop.mode === "ai" && /* @__PURE__ */ import_react10.default.createElement("label", null, l("\u72EC\u7ACB\u5BA1\u6838 Agent"), /* @__PURE__ */ import_react10.default.createElement("select", { "aria-label": l("\u72EC\u7ACB\u5BA1\u6838 Agent"), value: selectedLoop.reviewer || "", onChange: (e) => setLoop(task.id, { reviewer: e.target.value }) }, /* @__PURE__ */ import_react10.default.createElement("option", { value: "" }, l("\u9009\u62E9\u72EC\u7ACB\u5BA1\u6838 Agent")), agents.map((a) => /* @__PURE__ */ import_react10.default.createElement("option", { key: a.id, value: a.id }, a.label)))), /* @__PURE__ */ import_react10.default.createElement("label", null, l("\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09"), /* @__PURE__ */ import_react10.default.createElement("input", { "aria-label": l("\u8F6E\u6B21\u4E0A\u9650\uFF08\u5305\u542B\u9996\u6B21\uFF09"), type: "number", min: 1, max: 20, value: selectedLoop.maxRounds, onChange: (e) => setLoop(task.id, { maxRounds: Number(e.target.value) }) })), /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react10.default.createElement("input", { type: "checkbox", disabled: Boolean(selectedLoop.rejectTaskIds?.length), checked: Boolean(selectedLoop.rejectToEntry), onChange: (e) => setLoop(task.id, { rejectToEntry: e.target.checked }) }), l("\u9000\u56DE\u65F6\u4ECE\u5165\u53E3\u91CD\u8DD1")), !selectedLoop.rejectToEntry && /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u5BA1\u6838\u65F6\u7531 TeamFlow \u6307\u5B9A\u8FD4\u5DE5\u4EFB\u52A1\u53CA\u5176\u4E0B\u6E38\u3002")), !!loopBody.length && /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u5FAA\u73AF\u5185\u4EFB\u52A1\uFF1A"), loopBody.map((id) => draft.tasks.find((t) => t.id === id)?.subject).join(" \u2192 ")), loopIssue && /* @__PURE__ */ import_react10.default.createElement("p", { role: "status", className: "gal-error" }, l(loopIssue)), /* @__PURE__ */ import_react10.default.createElement("button", { type: "button", onClick: () => update({ loops: (draft.loops || []).filter((loop) => loop.gateId !== task.id) }) }, l("\u5220\u9664 REJECT \u8FD4\u56DE\u7EBF")))), selectedKind === "archive" && /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, null, /* @__PURE__ */ import_react10.default.createElement("label", { className: "gal-flow-check" }, /* @__PURE__ */ import_react10.default.createElement("input", { type: "checkbox", checked: Boolean(task.archive?.copyFiles), onChange: (e) => updateTask({ archive: { ...task.archive, copyFiles: e.target.checked } }) }), l("\u590D\u5236\u6210\u679C\u6587\u4EF6")), /* @__PURE__ */ import_react10.default.createElement("p", null, l("\u9ED8\u8BA4\u8BB0\u5F55\u8BC1\u636E\u548C\u6587\u4EF6\u6458\u8981\uFF1B\u5F00\u542F\u540E\u7531 TeamFlow \u6309\u5F52\u6863\u7B56\u7565\u590D\u5236\u6587\u4EF6\u3002")), /* @__PURE__ */ import_react10.default.createElement("label", null, l("\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), /* @__PURE__ */ import_react10.default.createElement("textarea", { "aria-label": l("\u5F52\u6863\u8DEF\u5F84\uFF08\u6BCF\u884C\u4E00\u4E2A\uFF09"), rows: 4, value: (task.archive?.paths || []).join("\n"), onChange: (e) => updateTask({ archive: { ...task.archive, paths: e.target.value.split("\n") } }), placeholder: l("\u7559\u7A7A\u4F7F\u7528\u4E0A\u6E38\u4EA4\u4ED8\u7269\u4E0E\u53D8\u66F4\u6587\u4EF6") }))), !task.checkpoint && task.kind !== "archive" && /* @__PURE__ */ import_react10.default.createElement("label", null, l("\u8D1F\u8D23 Agent"), /* @__PURE__ */ import_react10.default.createElement(
         "select",
         {
           "aria-label": l("\u8D1F\u8D23 Agent"),

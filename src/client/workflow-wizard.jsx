@@ -1,5 +1,5 @@
 import { WorkflowRoutingSettings } from "./workflow-routing-settings.jsx";
-import { reconcileWorkflowRouting, disconnectWorkflowRoute } from "../workflow-routing.mjs";
+import { reconcileWorkflowRouting, disconnectWorkflowRoute, workflowRouteLabel } from "../workflow-routing.mjs";
 import { useDraftChanges } from "./draft-changes.mjs";
 import { useGalleryText } from "./i18n.jsx";
 import React, { useEffect, useId, useRef, useState } from "react";
@@ -8,7 +8,7 @@ import { Glyph } from "./icons.jsx";
 import { ResourceCoverPicker, withResourceCover } from "./resource-cover.jsx";
 import { createResourceIdentifier } from "./resource-id.mjs";
 import { configureRejectTarget, connectWorkflowNodes, removeRejectTask, workflowRejectEdges } from "./workflow-connections.mjs";
-import { validateWorkflowTemplate, workflowTemplateIssues, MAX_WORKFLOW_TEXT_LENGTH, MAX_WORKFLOW_MEMBERS, MAX_WORKFLOW_TASKS } from "../workflow-template.mjs";
+import { validateWorkflowTemplate, workflowTemplateIssues, MAX_WORKFLOW_TEXT_LENGTH, MAX_WORKFLOW_MEMBERS, MAX_WORKFLOW_TASKS, workflowCanvasPositions } from "../workflow-template.mjs";
 import { assertWorkflowDag, workflowNodeKind, workflowAncestors, workflowLoopBody, validateWorkflowLoops } from "../workflow-loops.mjs";
 
 const nodeWidth = 220;
@@ -263,7 +263,7 @@ export function WorkflowWizard({
     setDraft(d => {
       const gate = d.tasks.find(t => t.id === gateId);
       const previous = d.loops?.find(loop => loop.gateId === gateId);
-      const next = { gateId, entryId: "", mode: gate?.reviewMode || "human", maxRounds: 3, timeoutMinutes: 30, rejectToEntry: previous ? Boolean(previous.rejectToEntry) : true, ...previous, ...patch };
+      const next = { gateId, entryId: "", mode: gate?.reviewMode || "human", maxRounds: 3, rejectToEntry: previous ? Boolean(previous.rejectToEntry) : true, ...previous, ...patch };
       return { ...d, loops: [...(d.loops || []).filter(loop => loop.gateId !== gateId), next] };
     });
   }
@@ -580,7 +580,7 @@ export function WorkflowWizard({
               t.assignee
             : "",
         })),
-        positions: {},
+        positions: workflowCanvasPositions(draft.tasks, positions, draft.positions),
       }, { draft: true });
       setBusy(true);
       await onSave({
@@ -626,7 +626,7 @@ export function WorkflowWizard({
   function edge(from, to, key, { fromId, toId, returning = false, edgeKind, gateId, outcomeId }) {
     if (!from || !to) return null;
     const outcomes = returning ? [] : (draft.tasks.find(row => row.id === fromId)?.dynamicRoute?.outcomes.filter(row => row.targets.includes(toId) && (!outcomeId || row.id === outcomeId)) || []);
-    const routeLabel = outcomes?.map(row => row.label).join(" / ");
+    const routeLabel = outcomes?.map(row => workflowRouteLabel(row, draft.tasks.find(task => task.id === fromId)?.dynamicRoute)).join(" / ");
     const start = wirePoint(fromId, "out", outcomes?.[0]?.id);
     const end = wirePoint(toId, "in");
     const bottom = returning && draft.tasks.find(t => t.id === fromId)?.checkpoint;
@@ -1046,7 +1046,7 @@ export function WorkflowWizard({
                           <span className="gal-sr-only">{l("连出")}</span>
                         </button>}
                         {draft.tasks.find(row => row.id === n.id)?.dynamicRoute?.outcomes.map((outcome, index, outcomes) => <button key={outcome.id} className="gal-flow-port-out gal-flow-port-route"
-                          style={{ top: `${(index + 1) * 100 / (outcomes.length + 1)}%` }} aria-label={l("连出 · {0}", outcome.label)} title={outcome.label}
+                          style={{ top: `${(index + 1) * 100 / (outcomes.length + 1)}%` }} aria-label={l("连出 · {0}", workflowRouteLabel(outcome, draft.tasks.find(row => row.id === n.id)?.dynamicRoute))} title={workflowRouteLabel(outcome, draft.tasks.find(row => row.id === n.id)?.dynamicRoute)}
                           data-flow-port="out" data-node={n.id} data-outcome={outcome.id}
                           onPointerDown={e => startWire(e, n.id, "out", outcome.id)} onPointerMove={moveWire} onPointerUp={finishWire}
                           onPointerCancel={() => { connection.current = null; setWire(null); setLinkFrom(null); }} />)}
@@ -1236,7 +1236,6 @@ export function WorkflowWizard({
                       </select>
                     </label>}
                     <label>{l("轮次上限（包含首次）")}<input aria-label={l("轮次上限（包含首次）")} type="number" min={1} max={20} value={selectedLoop.maxRounds} onChange={e => setLoop(task.id, { maxRounds: Number(e.target.value) })} /></label>
-                    <label>{l("每轮超时（分钟）")}<input aria-label={l("每轮超时（分钟）")} type="number" min={1} max={1440} value={selectedLoop.timeoutMinutes} onChange={e => setLoop(task.id, { timeoutMinutes: Number(e.target.value) })} /></label>
                     <label className="gal-flow-check"><input type="checkbox" disabled={Boolean(selectedLoop.rejectTaskIds?.length)} checked={Boolean(selectedLoop.rejectToEntry)} onChange={e => setLoop(task.id, { rejectToEntry: e.target.checked })} />{l("退回时从入口重跑")}</label>
                     {!selectedLoop.rejectToEntry && <p>{l("审核时由 TeamFlow 指定返工任务及其下游。")}</p>}
                     {!!loopBody.length && <p>{l("循环内任务：")}{loopBody.map(id => draft.tasks.find(t => t.id === id)?.subject).join(" → ")}</p>}

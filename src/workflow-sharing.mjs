@@ -19,8 +19,49 @@ export function workflowSharingStatus(store) {
   return {
     available: true,
     libraryId,
-    configured: libraryId === "local" || Boolean(service?.url && service.userId && service.token),
+    configured:
+      libraryId === "local" ||
+      Boolean(service?.url && service.userId && service.token),
   };
+}
+
+// Reconstruct only the removed timeout field in its former canonical order.
+// Matching the stored source hash still detects every meaningful source edit.
+function legacySourceMatches(clean, loops, expected) {
+  if (!clean.loops?.length || !Array.isArray(loops)) return false;
+  const legacyLoops = clean.loops.map(
+    ({ gateId, entryId, mode, maxRounds, ...rest }) => ({
+      gateId,
+      entryId,
+      mode,
+      maxRounds,
+      timeoutMinutes: loops.find((loop) => loop?.gateId === gateId)
+        ?.timeoutMinutes,
+      ...rest,
+    }),
+  );
+  if (
+    legacyLoops.some(
+      (loop) =>
+        !Number.isSafeInteger(loop.timeoutMinutes) ||
+        loop.timeoutMinutes < 1 ||
+        loop.timeoutMinutes > 1440,
+    )
+  )
+    return false;
+  return digest(JSON.stringify({ ...clean, loops: legacyLoops })) === expected;
+}
+function writeRegistry(file, registry) {
+  const temp = file + "." + randomUUID();
+  try {
+    writeFileSync(temp, JSON.stringify(registry) + "\n", {
+      mode: 0o600,
+      flag: "wx",
+    });
+    renameSync(temp, file);
+  } finally {
+    rmSync(temp, { force: true });
+  }
 }
 
 /** Upload to the library selected when the request begins. */
@@ -96,20 +137,49 @@ export async function uploadWorkflowTemplate(
     );
     const previous = registry.entries[key];
     if (previous) {
+      let existing;
+      let matches =
+        previous.sourceDigest === sourceDigest ||
+        legacySourceMatches(clean, definition.loops, previous.sourceDigest);
+      if (!matches) {
+        try {
+          existing = await adapter.getResource(previous.id);
+        } catch (error) {
+          if (error.status !== 404) throw error;
+        }
+        let saved;
+        try {
+          saved = JSON.parse(
+            existing?.files?.find((file) => file.path === "workflow.json")
+              ?.content,
+          );
+        } catch {
+          /* No recoverable legacy timeout. */
+        }
+        matches = legacySourceMatches(
+          clean,
+          saved?.loops,
+          previous.sourceDigest,
+        );
+      }
       demand(
-        previous.sourceDigest === sourceDigest,
+        matches,
         409,
         "SOURCE_VERSION_CHANGED",
         "同一模板版本的内容已变化，请先另存为新版本",
       );
       try {
-        const existing = await adapter.getResource(previous.id);
+        existing ??= await adapter.getResource(previous.id);
         demand(
           existing.canEdit === true && existing.type === "workflow",
           403,
           "UPLOAD_NOT_OWNED",
           "模板副本不属于当前用户，请先检查 Gallery 身份",
         );
+        if (previous.sourceDigest !== sourceDigest) {
+          previous.sourceDigest = sourceDigest;
+          writeRegistry(file, registry);
+        }
         return {
           id: existing.id,
           name: existing.name,
@@ -146,16 +216,7 @@ export async function uploadWorkflowTemplate(
       { username: store.username() },
     );
     registry.entries[key] = { id: created.id, sourceDigest };
-    const temp = file + "." + randomUUID();
-    try {
-      writeFileSync(temp, JSON.stringify(registry) + "\n", {
-        mode: 0o600,
-        flag: "wx",
-      });
-      renameSync(temp, file);
-    } finally {
-      rmSync(temp, { force: true });
-    }
+    writeRegistry(file, registry);
     return {
       id: created.id,
       name: created.name,
