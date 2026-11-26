@@ -15,7 +15,7 @@ const record = (value) =>
 // Portable configuration only: decisions, history and execution state never enter templates.
 export function parseWorkflowRoute(value) {
   const message =
-    "动态路由需要 2–12 个不同的输出状态，每项须填写名称、判断条件和有效去向";
+    "动态路由需要 2–12 个输出状态，每项须填写名称、判断条件和有效去向；同名状态的判断条件须不同";
   check(record(value) && ["agent", "human"].includes(value.mode), message);
   check(
     Array.isArray(value.outcomes) &&
@@ -41,8 +41,11 @@ export function parseWorkflowRoute(value) {
   check(
     new Set(value.outcomes.map((outcome) => outcome.id)).size ===
       value.outcomes.length &&
-      new Set(value.outcomes.map((outcome) => outcome.label.trim())).size ===
-        value.outcomes.length,
+      new Set(
+        value.outcomes.map((outcome) =>
+          JSON.stringify([outcome.label.trim(), outcome.condition.trim()]),
+        ),
+      ).size === value.outcomes.length,
     message,
   );
   return {
@@ -175,4 +178,13 @@ export function disconnectWorkflowRoute(tasks, from, to, outcomeId) {
         : task,
     ),
   );
+}
+
+export function workflowRouteLabel(outcome, route) {
+  return route?.outcomes.some(
+    (other) =>
+      other.id !== outcome.id && other.label.trim() === outcome.label.trim(),
+  )
+    ? `${outcome.label} · ${outcome.condition}`
+    : outcome.label;
 }

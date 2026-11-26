@@ -219,8 +219,7 @@ export function validateWorkflowTemplate(input, options = {}) {
           (k) =>
             typeof p[k] === "number" &&
             Number.isFinite(p[k]) &&
-            p[k] >= 0 &&
-            p[k] <= 10000,
+            Math.abs(p[k]) <= 10000,
         ),
       400,
       "INVALID_WORKFLOW",
@@ -267,4 +266,27 @@ export function workflowTemplateIssues(definition) {
   if (definition.tasks.some((t) => !t.general.requirements.trim()))
     issues.push("请填写每个节点的通用任务要求或通用检查要求");
   return issues;
+}
+
+// Preserve signed native coordinates. Legacy unbounded canvas metadata only
+// scales when it exceeds TeamFlow's range; never translate in-range layouts.
+export function workflowCanvasPositions(tasks, canvas = {}, fallback = {}) {
+  const entries = tasks.flatMap(({ id }) => {
+    const point = canvas[id] ?? fallback[`task:${id}`];
+    return Number.isFinite(point?.x) && Number.isFinite(point?.y)
+      ? [[id, point]]
+      : [];
+  });
+  const scale =
+    10000 /
+    Math.max(
+      10000,
+      ...entries.flatMap(([, p]) => [Math.abs(p.x), Math.abs(p.y)]),
+    );
+  return Object.fromEntries(
+    entries.map(([id, p]) => [
+      `task:${id}`,
+      { x: p.x * scale, y: p.y * scale },
+    ]),
+  );
 }

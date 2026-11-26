@@ -1,5 +1,6 @@
 // Plugin-owned interface text. Resource content is never translated.
 export const english = {
+  "动态路由需要 2–12 个输出状态，每项须填写名称、判断条件和有效去向；同名状态的判断条件须不同": "Dynamic routing requires 2–12 outcomes with names, conditions and valid targets. Outcomes with the same name must have different conditions.",
   "动态分支": "Dynamic branching",
   "启用动态分支": "Enable dynamic branching",
   "完成任务后，根据结果只选择一个状态，执行该状态连接的后续节点。": "After the task completes, select one outcome and run its connected downstream nodes.",

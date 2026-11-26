@@ -31,7 +31,7 @@ test('publishing creates compatible immutable TeamFlow versions', async () => {
     const record = JSON.parse(await readFile(join(root, `${first.id}.json`), 'utf8'));
     assert.equal(record.versions.length, 2); assert.equal(record.versions[0].tasks[1].checkpoint, true);
     assert.deepEqual(record.versions[0].positions, {
-      'task:t1': { x: 0, y: 30 }, 'task:t2': { x: 420, y: 60 },
+      'task:t1': { x: -120, y: 30 }, 'task:t2': { x: 300, y: 60 },
     });
     assert.deepEqual(record.versions[0].members, definition().members);
     assert.equal(record.versions[0].workflowCanvas, undefined);

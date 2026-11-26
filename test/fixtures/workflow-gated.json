@@ -13,6 +13,6 @@
     {"id":"archive","subject":"归档成果","assignee":"","dependencies":["gate"],"checkpoint":false,"kind":"archive","archive":{"copyFiles":true,"paths":["reports","evidence.json"]},"general":{"requirements":"归档通过审核的成果。","deliverables":"成果与证据清单","acceptance":"保留可追溯记录"}},
     {"id":"accept","subject":"最终验收","assignee":"","dependencies":["archive"],"checkpoint":true,"checkpointKind":"acceptance","reviewMode":"human","general":{"requirements":"由用户确认交付。","deliverables":"验收意见","acceptance":"用户明确确认"}}
   ],
-  "loops":[{"gateId":"gate","entryId":"write","mode":"ai","reviewer":"reviewer","maxRounds":4,"timeoutMinutes":45,"rejectToEntry":true}],
+  "loops":[{"gateId":"gate","entryId":"write","mode":"ai","reviewer":"reviewer","maxRounds":4,"rejectToEntry":true}],
   "positions":{"task:write":{"x":40,"y":300},"task:verify":{"x":330,"y":300},"task:gate":{"x":620,"y":300},"task:archive":{"x":950,"y":300},"task:accept":{"x":950,"y":520}}
 }

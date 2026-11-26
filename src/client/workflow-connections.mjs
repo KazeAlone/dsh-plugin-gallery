@@ -23,7 +23,6 @@ export function configureRejectTarget(tasks, loops = [], gateId, targetId) {
     entryId: "",
     mode: gate.reviewMode || "human",
     maxRounds: 3,
-    timeoutMinutes: 30,
     rejectToEntry: true,
     ...previous,
   };

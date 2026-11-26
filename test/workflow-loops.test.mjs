@@ -83,9 +83,6 @@ test("loops reject cycles, overlaps, invalid topology, review conflicts and unbo
       v.loops[0].maxRounds = 21;
     },
     (v) => {
-      v.loops[0].timeoutMinutes = 1441;
-    },
-    (v) => {
       v.tasks[3].assignee = "writer";
     },
     (v) => {

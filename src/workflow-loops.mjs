@@ -95,17 +95,10 @@ export function validateWorkflowLoops(
         ["human", "ai"].includes(raw.mode),
       "请配置循环入口、门控和审核方式",
     );
-    const maxRounds = Number(raw.maxRounds),
-      timeoutMinutes = Number(raw.timeoutMinutes);
+    const maxRounds = Number(raw.maxRounds);
     check(
       Number.isSafeInteger(maxRounds) && maxRounds >= 1 && maxRounds <= 20,
       "轮次上限必须为 1–20，包含首次执行",
-    );
-    check(
-      Number.isSafeInteger(timeoutMinutes) &&
-        timeoutMinutes >= 1 &&
-        timeoutMinutes <= 1440,
-      "执行超时必须为 1–1440 分钟",
     );
     const returns = raw.rejectTaskIds;
     check(
@@ -121,7 +114,6 @@ export function validateWorkflowLoops(
       entryId: raw.entryId,
       mode: raw.mode,
       maxRounds,
-      timeoutMinutes,
       ...(raw.rejectToEntry === true || returns?.length
         ? { rejectToEntry: true }
         : {}),

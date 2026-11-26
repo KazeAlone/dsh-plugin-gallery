@@ -105,6 +105,7 @@ test("routing validation preserves portable fields and rejects invalid state, co
     },
     (v) => {
       v.tasks[0].dynamicRoute.outcomes[1].label = " Approved ";
+      v.tasks[0].dynamicRoute.outcomes[1].condition = v.tasks[0].dynamicRoute.outcomes[0].condition;
     },
     (v) => {
       v.tasks[0].dynamicRoute.outcomes[0].condition = "";
@@ -397,8 +398,10 @@ test(
     await store.initialize();
     const { user } = await store.enroll("Author"),
       { user: reader } = await store.enroll("Reader");
-    const value = fresh(),
-      saved = await store.createResource(resource(value), user);
+    const value = fresh();
+    value.positions = { "task:decide": { x: -600, y: -300 } };
+    value.tasks[0].dynamicRoute.outcomes[1].label = value.tasks[0].dynamicRoute.outcomes[0].label;
+    const saved = await store.createResource(resource(value), user);
     assert.deepEqual(
       workflowFromResource(await store.getResource(saved.id, reader)),
       value,
