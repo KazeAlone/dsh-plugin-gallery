@@ -1,3 +1,4 @@
+import { installConversationMcp } from "./conversation-mcp.mjs";
 import { browseServerDirectory, importResource } from "./resource-import.mjs";
 import { registerMemberMcpGuidance } from "./member-mcp-guidance.mjs";
 import { extractWorkflowAgent } from "./workflow-extraction.mjs";
@@ -93,6 +94,14 @@ export default class GalleryService extends TypertRemoteService {
     ctx.inject(["tools"], (scope) => {
       const runtime = new GalleryMcpRuntime(scope, this.store);
       this.mcpRuntime = runtime;
+      scope.effect(() => {
+        const conversations = installConversationMcp(scope, this);
+        this.conversationMcp = conversations;
+        return () => {
+          conversations.dispose();
+          if (this.conversationMcp === conversations) this.conversationMcp = null;
+        };
+      });
       scope.effect(() =>
         scope.tools.guard((exec) => this.resourceCallDenial(exec)),
       );
@@ -177,7 +186,7 @@ export default class GalleryService extends TypertRemoteService {
     )
       return "此 TeamFlow 成员未启用 Gallery MCP";
     if (
-      access?.resourceMode === "discovery" &&
+      (access?.resourceMode === "discovery" || (!access && this.conversationMcp)) &&
       runtime?.ownsTool(name) &&
       !this.mcpDispatches
         .get(agent)
@@ -228,6 +237,7 @@ export default class GalleryService extends TypertRemoteService {
     this.mcpDispatches.set(exec.agent, permits);
     try {
       this.memberToolUpdates.get(exec.agent)?.();
+      this.conversationMcp?.refresh(exec.agent);
       const tools = exec.agent.ctx.get("tools");
       const result = await tools.execute({
         name,
@@ -249,6 +259,7 @@ export default class GalleryService extends TypertRemoteService {
     } finally {
       permits.splice(permits.indexOf(permit), 1);
       this.memberToolUpdates.get(exec.agent)?.();
+      this.conversationMcp?.refresh(exec.agent);
     }
   }
   async ownerCall(fn) {
@@ -297,6 +308,7 @@ export default class GalleryService extends TypertRemoteService {
     this.memberAccessDisposers.get(agent)?.();
     const token = { ...access };
     this.memberAccess.set(agent, token);
+    this.conversationMcp?.refresh(agent);
     this.invalidateSkills();
     let stopListener,
       stopFilter,
@@ -342,6 +354,7 @@ export default class GalleryService extends TypertRemoteService {
       stopAssembly?.();
       if (this.memberAccess.get(agent) !== token) return;
       this.memberAccess.delete(agent);
+      this.conversationMcp?.refresh(agent);
       if (this.memberToolUpdates.get(agent) === update)
         this.memberToolUpdates.delete(agent);
       if (this.memberAccessDisposers.get(agent) === cleanup)

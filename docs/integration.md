@@ -128,3 +128,6 @@ TeamFlow 在成员激活时调用 setMemberAccess；当 galleryMcp 明确为 tru
 ## 会话资源管理（0.33.0）
 
 Gallery 现在向启用 tools 的普通会话注册七个 `gallery_resource_*` 管理工具，覆盖四类资源的格式示例、列表、读取、校验、创建、更新和删除。它们与 owner 页面 RPC 分开注册，使用当前 DSH 保存的中心身份，不将页面 RPC 的 owner 身份传给模型。写操作显式指定库，更新/删除检查 revision 和所有权，TeamFlow 成员不因使用开关获得管理权限。详情见[参数与调用流程](resource-authoring.md)。
+
+
+Gallery 0.35.0 默认对未设置成员权限的普通会话隐藏全量 Gallery MCP 工具及初始化说明，采用 `gallery_mcp_search/tools/call`。显式 `setMemberAccess` 配置优先，`native` 成员保留原生方式，`discovery` 成员保留按需方式，关闭开关继续拒绝调用。此默认策略不把普通会话标记为 TeamFlow 成员，不限制资源管理、Skill 或其他插件工具。

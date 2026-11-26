@@ -1,6 +1,6 @@
 # Skill / MCP 按需访问
 
-Gallery 从 0.30.0 起提供按需访问，TeamFlow 从 0.2.13 起已接入。界面仍为 `gallerySkill` 和 `galleryMcp` 两个开关，开启后由 Agent 自己搜索及加载，不需要用户逐条挑选。其他消费插件可检测 `ctx.gallery.resourceCapabilities()`，然后为真实子 Agent 启用按需模式：
+Gallery 从 0.30.0 起提供按需访问，TeamFlow 从 0.2.13 起已接入。0.35.0 起普通会话的 Gallery MCP 默认也采用按需访问，Skill 保持原有目录和 `/gallery` 入口。界面仍为 `gallerySkill` 和 `galleryMcp` 两个开关，开启后由 Agent 自己搜索及加载，不需要用户逐条挑选。其他消费插件可检测 `ctx.gallery.resourceCapabilities()`，然后为真实子 Agent 启用按需模式：
 
 ```js
 const stopGalleryAccess = ctx.gallery.setMemberAccess(childAgent, {
@@ -11,7 +11,7 @@ const stopGalleryAccess = ctx.gallery.setMemberAccess(childAgent, {
 // 在子 Agent 生命周期结束时调用 stopGalleryAccess()。
 ```
 
-`resourceMode` 省略或为 `native` 时保留原有接入方式。TeamFlow 0.2.13+ 在新建或恢复成员时显式启用 `discovery`，不再预注入全量 Skill/MCP 列表；更新后重启宿主。其他消费插件也需显式启用该模式，单独升级 Gallery 不会自动改变其接入方式。
+`resourceMode` 省略或为 `native` 时保留原有接入方式。TeamFlow 0.2.13+ 在新建或恢复成员时显式启用 `discovery`，不再预注入全量 Skill/MCP 列表；更新后重启宿主。消费插件调用 `setMemberAccess` 的配置保持优先；未配置成员权限的普通会话默认仅对 Gallery MCP 启用按需模式。
 
 ## 模型工具
 
@@ -42,10 +42,19 @@ Skill 只在显式加载后返回指引。附件物化到宿主目录并列出�
 - 重复设置同一成员的访问配置会清理旧过滤器和提示词；旧清理函数不会删除新权限。
 - 搜索与查看 MCP 工具不增加调用次数；原生 MCP 成功执行后计数一次，不在代理层重复计数。
 
-按需模式优化模型上下文。宿主仍按原有机制连接、注册和刷新 MCP，尚未改为按需建立网络连接；未使用新模式的普通会话保持原有方式。
+按需模式优化模型上下文。宿主仍按原有机制连接、注册和刷新 MCP，尚未改为按需建立网络连接；普通会话默认隐藏 Gallery MCP 的原生工具定义及服务初始化指引，保留三个 MCP 搜索、查看、调用入口。DSH 另外配置的 MCP、Skill 和资源管理接口不受此默认规则影响。
 
 ## 同进程 API
 
 `ctx.gallery` 还提供 `searchSkills(query, exec)`、`loadSkill(input, exec)`、`searchMcp(query, exec)`、`getMcpTools(input, exec)`、`callMcpTool(input, exec)`。前四个传真实 `{agent, signal?}`；`callMcpTool` 必须传由 DSH 提供的完整工具执行上下文（含 token、callId、signal），不要自行伪造。一般让 Agent 调用上表工具即可。
 
 这些方法不注册为浏览器 RPC，既有 owner UI 接口保持不变。中心存储沿用现有分页 API，不增加数据库表，不需要迁移数据。
+
+
+## 普通会话默认行为（0.35.0）
+
+用户可以直接说“用 Gallery 的论文知识库查询多模态检索”，或“有哪些可用的 Gallery MCP”。模型通过 `gallery_mcp_search → gallery_mcp_tools → gallery_mcp_call` 自行查找服务、查看参数、调用工具，用户无需填写资源 ID 或 JSON。仅在任务相关时优先查询 Gallery，搜索无结果可调整关键词或翻页，失败须如实说明。
+
+规则同时应用于插件载入时已经打开的会话、新会话和恢复会话，监听后续 MCP 工具增删；原生 MCP 工具只在该 Agent 的嵌套执行期间短暂放行，直接猜名调用被拒绝。其他宿主限制、认证、取消和累计调用次数保持原有语义。TeamFlow 显式成员配置优先，关闭 MCP 后仍不能搜索或调用；释放成员配置后恢复普通会话默认规则。
+
+更新插件并重启 DSH 生效。此次改动只影响宿主会话，不要求更新中心服务，也不改变数据库结构；尚未实现 MCP 按需建立连接。

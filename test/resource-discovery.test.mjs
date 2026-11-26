@@ -1,4 +1,7 @@
 import test from "node:test";
+import { installConversationMcp } from "../src/conversation-mcp.mjs";
+import { GalleryResourceAuthoring } from "../src/resource-authoring.mjs";
+import { registerResourceTools } from "../src/resource-tools.mjs";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -468,6 +471,9 @@ test("official HTTP MCP: search/inspect/call with saved credentials and no inher
   });
   const agent = makeAgent("live-reader"),
     other = makeAgent("native-reader");
+  ctx.provide("agents", { list: () => [agent, other] });
+  service.conversationMcp = installConversationMcp(ctx, service);
+  t.after(() => service.conversationMcp.dispose());
   service.setMemberAccess(agent, {
     gallerySkill: true,
     galleryMcp: true,
@@ -490,7 +496,7 @@ test("official HTTP MCP: search/inspect/call with saved credentials and no inher
   assert.ok(!JSON.stringify(prompt).includes("SERVER-CATALOG-INSTRUCTIONS"));
   const nativePrompt = await ctx.systemPrompt.assemble({ scope: other });
   assert.ok(
-    JSON.stringify(nativePrompt).includes("SERVER-CATALOG-INSTRUCTIONS"),
+    !JSON.stringify(nativePrompt).includes("SERVER-CATALOG-INSTRUCTIONS"),
   );
   const tools = await call(agent, "gallery_mcp_tools", { id: row.id });
   assert.equal(tools.isError, false, JSON.stringify(tools));
@@ -513,4 +519,245 @@ test("official HTTP MCP: search/inspect/call with saved credentials and no inher
   assert.ok(!JSON.stringify(result).includes("saved-page-key"));
   assert.equal(requests, 1);
   assert.equal(store.getResource(row.id).usageCount, 1);
+  assert.ok(
+    !ctx.tools
+      .schemas(other)
+      .some((tool) => tool.name.startsWith("mcp__papers__")),
+  );
+  const ordinaryCall = await call(
+    other,
+    "gallery_mcp_call",
+    {
+      id: row.id,
+      tool: "mcp__papers__search",
+      arguments: { query: "ordinary conversation" },
+    },
+    "ordinary-live-call",
+  );
+  assert.equal(ordinaryCall.isError, false, JSON.stringify(ordinaryCall));
+  assert.match(
+    JSON.stringify(ordinaryCall.content),
+    /Internal papers: ordinary conversation/,
+  );
+  assert.equal(requests, 2);
+  assert.equal(store.getResource(row.id).usageCount, 2);
+});
+
+test("ordinary conversation MCP discovery covers hydration, late agents and tools, management, Skills, external MCP and cleanup", async (t) => {
+  const { ctx, store, service, makeAgent, call, toolIds } = setup(t, true);
+  store.createResource(skill);
+  const row = store.createResource({
+    type: "mcp",
+    name: "Papers",
+    description: "Research library",
+    files: [],
+    metadata: {
+      mcp: {
+        serverName: "papers",
+        transport: "streamable-http",
+        url: "http://example.invalid/mcp",
+        credentialKeys: [],
+      },
+    },
+  });
+  service.mcpRuntime.active.set(row.id, {});
+  const early = makeAgent("already-open");
+  ctx.provide("agents", { list: () => [early] });
+  service.conversationMcp = installConversationMcp(ctx, service);
+  t.after(() => service.conversationMcp.dispose());
+  let executions = 0,
+    nested;
+  const add = (name, owned = true) => {
+    if (owned) toolIds.set(name, row.id);
+    const off = ctx.tools.register(
+      defineTool({
+        name,
+        description: "A catalog entry " + name,
+        parameters: { query: { type: "string" } },
+        output: {
+          schema: { type: "json" },
+          render: (_a, v) => [{ type: "text", text: JSON.stringify(v) }],
+        },
+        execute: async (args, exec) => {
+          executions++;
+          nested = exec;
+          return { answer: args.query || "ok" };
+        },
+      }),
+    );
+    t.after(off);
+    return off;
+  };
+  for (let i = 0; i < 200; i++) add(`mcp__papers__search_${i}`);
+  add("mcp__external__lookup", false);
+  t.after(
+    ctx.systemPrompt.section({
+      name: "mcp:papers",
+      order: 100,
+      text: "HUGE-GALLERY-CATALOG",
+    }),
+  );
+  t.after(
+    ctx.systemPrompt.section({
+      name: "mcp:external",
+      order: 100,
+      text: "EXTERNAL-INSTRUCTIONS",
+    }),
+  );
+  const author = new GalleryResourceAuthoring({ store });
+  t.after(registerResourceTools(ctx, author));
+  await new Promise((resolve) => setImmediate(resolve));
+  const names = () => ctx.tools.schemas(early).map((tool) => tool.name);
+  assert(!names().some((name) => name.startsWith("mcp__papers__")));
+  assert(names().includes("mcp__external__lookup"));
+  assert(names().includes("gallery_resource_create"));
+  assert((await service.skillProvider.list({ scope: early })).length > 0);
+  assert.equal(
+    (await call(early, "gallery_resource_schema", { type: "skill" })).isError,
+    false,
+  );
+  const prompt = JSON.stringify(
+    await ctx.systemPrompt.assemble({ scope: early }),
+  );
+  assert(!prompt.includes("HUGE-GALLERY-CATALOG"));
+  assert(!prompt.includes("mcp__papers__search_199"));
+  assert(prompt.includes("EXTERNAL-INSTRUCTIONS"));
+  assert(prompt.includes("gallery_mcp_search"));
+  const search = await call(early, "gallery_mcp_search", { q: "Papers" });
+  assert.equal(search.value.items[0].id, row.id);
+  const listed = await call(early, "gallery_mcp_tools", { id: row.id });
+  assert.equal(listed.value.tools.length, 5);
+  assert.equal(listed.value.total, 200);
+  assert.equal(store.getResource(row.id).usageCount, 0);
+  assert.equal((await call(early, "mcp__papers__search_0", {})).isError, true);
+  const result = await call(
+    early,
+    "gallery_mcp_call",
+    {
+      id: row.id,
+      tool: "mcp__papers__search_0",
+      arguments: { query: "agents" },
+    },
+    "ordinary-call",
+  );
+  assert.equal(result.isError, false, JSON.stringify(result));
+  assert.equal(result.value.value.answer, "agents");
+  assert.equal(nested.agent, early);
+  assert.equal(nested.rootCallId, "ordinary-call");
+  assert(nested.parent);
+  assert.equal(store.getResource(row.id).usageCount, 1);
+  assert.equal(executions, 1);
+  assert(!names().includes("mcp__papers__search_0"));
+  const restriction = early.ctx.tools.restrict({
+    deny: ["mcp__papers__search_0"],
+  });
+  assert.equal(
+    (
+      await call(
+        early,
+        "gallery_mcp_call",
+        { id: row.id, tool: "mcp__papers__search_0" },
+        "denied",
+      )
+    ).isError,
+    true,
+  );
+  restriction();
+  assert.equal(executions, 1);
+  const late = makeAgent("new-conversation");
+  await ctx.serial(ctx, "agent/created", {
+    agent: late,
+    source: { kind: "web" },
+  });
+  const legacy = makeAgent("rc3-conversation");
+  ctx.emit(ctx, "agent/session-start", { agent: legacy });
+  for (const agent of [late, legacy])
+    assert(
+      !ctx.tools
+        .schemas(agent)
+        .some((tool) => tool.name.startsWith("mcp__papers__")),
+    );
+  const native = service.setMemberAccess(early, {
+    galleryMcp: true,
+    resourceMode: "native",
+  });
+  assert(names().includes("mcp__papers__search_0"));
+  assert.equal(
+    (await ctx.systemPrompt.assemble({ scope: early })).sections.find(
+      (section) => section.name === "gallery.conversation-mcp.already-open",
+    )?.text,
+    "",
+  );
+  native();
+  assert(!names().includes("mcp__papers__search_0"));
+  const member = service.setMemberAccess(early, {
+    galleryMcp: false,
+    resourceMode: "discovery",
+  });
+  assert.equal((await call(early, "gallery_mcp_search", {})).isError, true);
+  member();
+  assert.equal((await call(early, "gallery_mcp_search", {})).isError, false);
+  const offLate = add("mcp__papers__new_tool");
+  await new Promise((resolve) => setImmediate(resolve));
+  assert(!names().includes("mcp__papers__new_tool"));
+  offLate();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert(!names().some((name) => name.startsWith("mcp__papers__")));
+  service.conversationMcp.dispose();
+  service.conversationMcp.dispose();
+  assert(names().includes("mcp__papers__search_0"));
+  assert(
+    JSON.stringify(await ctx.systemPrompt.assemble({ scope: early })).includes(
+      "HUGE-GALLERY-CATALOG",
+    ),
+  );
+});
+
+test("Gallery host constructor installs ordinary MCP defaults for an already-open agent", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "gallery-host-defaults-"));
+  const previous = process.env.DSH_HOME;
+  process.env.DSH_HOME = root;
+  const ctx = new Context();
+  new SystemPrompt(ctx, { includeHarnessIdentity: false });
+  new ToolRuntime(ctx);
+  ctx.provide("typert", { register: () => () => {} });
+  const agent = { id: "host-open" };
+  const scope = createScope(ctx, agent);
+  agent.ctx = scope.ctx;
+  ctx.provide("agents", { list: () => [agent] });
+  // Install then remove examples once so this isolated host connects no subprocesses.
+  const { installReferenceExamples } = await import(
+    "../src/builtin-examples.mjs"
+  );
+  const store = new StorageManager(join(root, "gallery"));
+  installReferenceExamples(store.adapter("local"));
+  store.adapter().write((rows) => {
+    const row = rows[0];
+    rows.length = 0;
+    return row;
+  });
+  let fiber;
+  try {
+    fiber = ctx.plugin(GalleryService);
+    for (let i = 0; i < 50 && !ctx.get("gallery")?.conversationMcp; i++)
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    const service = ctx.get("gallery");
+    assert(service?.conversationMcp, "host installed default MCP discovery");
+    const prompt = JSON.stringify(
+      await ctx.systemPrompt.assemble({ scope: agent }),
+    );
+    assert(prompt.includes("Gallery MCP 按需访问"));
+    assert(!service.memberAccess.has(agent));
+    assert(
+      ctx.tools
+        .schemas(agent)
+        .some((tool) => tool.name === "gallery_resource_create"),
+    );
+  } finally {
+    await fiber?.dispose();
+    await scope.dispose();
+    if (previous === undefined) delete process.env.DSH_HOME;
+    else process.env.DSH_HOME = previous;
+    rmSync(root, { recursive: true, force: true });
+  }
 });
