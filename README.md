@@ -2,7 +2,7 @@
 
 Gallery 是运行在 DSH 内的资源库，用来创建、整理、共享和调用 **Skill、Agent、MCP 和 Workflow**。默认使用 DSH 内部存储，无需部署数据库，也不增加插件登录或接入码；访问仍由 DSH 宿主认证控制。
 
-当前版本 **0.34.1**。Workflow 对接 TeamFlow **0.2.15**：可将 Gallery 资源注册到 TeamFlow 模板库，也可从 TeamFlow 将模板上传到 Gallery 当前使用的内部库或中心库。
+当前版本 **0.35.0**。Workflow 对接 TeamFlow **0.2.15**：可将 Gallery 资源注册到 TeamFlow 模板库，也可从 TeamFlow 将模板上传到 Gallery 当前使用的内部库或中心库。
 
 ## 快速开始
 
@@ -11,7 +11,7 @@ Gallery 是运行在 DSH 内的资源库，用来创建、整理、共享和调�
 使用内部发布的安装包安装到实际使用的 DSH 配置，例如 `web`（替换为安装包的实际绝对路径）：
 
 ```bash
-dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.34.1.tgz --ignore-scripts
+dsh plugin --profile web add /absolute/path/dsh-plugin-gallery-0.35.0.tgz --ignore-scripts
 ```
 
 1. 重启对应的 DSH 实例并刷新浏览器，打开侧边栏 **Gallery**。
@@ -131,6 +131,12 @@ Skill 自动识别 `SKILL.md`，带入三类附属目录。Agent 自动识别 `A
 | Workflow | 已注册模板在 TeamFlow 中启动实例后同步计数，同一实例去重 |
 
 浏览、搜索、选中建议、连接测试以及单纯保存资源不会增加调用次数。
+
+## 普通会话中的 MCP
+
+Gallery MCP 默认按需使用：可以直接说“用 Gallery 的论文知识库查询某个方向”或“有哪些可用的 MCP”，模型通过搜索、查看工具参数、调用三个入口完成操作，无需用户填写 ID 或 JSON。普通会话不再预注入所有 Gallery MCP 工具定义和服务初始化说明，减少上下文占用。相关任务优先使用 Gallery，调用是否发生仍由模型根据任务判断。
+
+Skill、`/gallery`、资源管理接口及 DSH 另外配置的 MCP 保持原有行为；TeamFlow 成员开关继续生效。MCP 仍会连接并在宿主注册，本次没有改为按需建立连接。更新插件并重启 DSH 即可，0.34.1 升至 0.35.0 无需更新中心服务或迁移数据库。详见[按需访问](docs/resource-discovery.md)。
 
 ## Workflow 与 TeamFlow
 
